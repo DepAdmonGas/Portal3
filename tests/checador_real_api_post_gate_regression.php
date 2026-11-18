@@ -117,14 +117,17 @@ try {
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php') ?: '';
-$assert(strpos($serviceSource, "if (strtoupper(\$method) === 'POST' && !self::realApiPostOperationsEnabled())") !== false
+$assert(str_contains($serviceSource, "if (strtoupper(\$method) === 'POST'")
+    && str_contains($serviceSource, '!self::realApiPostOperationsEnabled()')
     && str_contains($controllerSource, "'api_post_disabled' =>")
-    && str_contains($viewSource, 'Las operaciones POST reales de Checador están deshabilitadas'),
-    'POST gate is enforced centrally, reported in Spanish and surfaced in the UI');
-$assert(str_contains($controllerSource, '$apiPostOperationsEnabled = $demoMode || $realApiPostOperationsEnabled')
+    && str_contains($controllerSource, 'Las operaciones de consulta que requieren POST están deshabilitadas'),
+    'POST gate is enforced centrally, reported in Spanish and surfaced through the controller response');
+$assert(str_contains($controllerSource, '$apiPostOperationsEnabled = $m01DemoMode')
+    && str_contains($controllerSource, '? false')
+    && str_contains($controllerSource, ': ($demoMode || $realApiPostOperationsEnabled)')
     && str_contains($serviceSource, 'if ($this->demoScenario !== null)')
     && str_contains($serviceSource, '$this->demoResponse($method, $path'),
-    'demo responses remain on their separate local adapter and do not use the real API POST opt-in');
+    'M01 demo writes stay closed while other demo reads use their separate local adapter');
 
 printf("CHECADOR_REAL_API_POST_GATE_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

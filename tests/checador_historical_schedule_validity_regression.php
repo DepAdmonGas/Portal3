@@ -191,9 +191,10 @@ $assert(str_contains($controller, 'scheduleHistoryQueryParameters')
     && str_contains($weeklyView, '/checador/horarios-turnos?')
     && !str_contains($weeklyView, 'schedule_history='), 'V8C20A canonical history filters, pagination and weekly links do not use screen-selection flags');
 $assert(str_contains($templateAdminView, 'Turnos disponibles') && str_contains($templateAdminView, 'id="m04-template-table"')
-    && str_contains($controller, 'getShiftTemplates($currentUser, 1, 200, $workplaceId)')
+    && str_contains($controller, 'new ChecadorShiftTemplateSqlReadService()')
+    && str_contains($controller, 'getShiftTemplates($currentUser, $workplaceId, 1, 200)')
     && str_contains($controller, 'getShiftTemplateVersion(')
-    && str_contains($templateScript, 'pageLength: 25'), 'V8C20B original schedule catalog is rendered from scoped V2 reads with its original DataTable');
+    && str_contains($templateScript, 'pageLength: 25'), 'V8C20B original schedule catalog is rendered from authorized, locality-scoped SQL reads with its original DataTable');
 $assert(str_contains($weeklyView, 'Ver historial')
     && str_contains($weeklyView, "'worker_id' => \$workerId, 'date' => (string) \$weekStart")
     && str_contains($weeklyView, '/checador/horarios-turnos?'), 'V8C20C each weekly worker row links directly to the clean, selected-worker history route');

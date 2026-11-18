@@ -12,9 +12,11 @@ use App\Core\Request;
 use App\Core\Session;
 use App\Core\View;
 use App\Services\ChecadorAccessService;
+use App\Services\ChecadorAttendancePolicyStoreService;
 use App\Services\ChecadorRolComodinesService;
 use App\Services\ChecadorV2PermissionService;
 use App\Services\ChecadorDailyReadService;
+use App\Services\ChecadorShiftTemplateSqlReadService;
 use App\Services\ChecadorConfigurationReadService;
 use App\Services\ChecadorOperationalPeriod;
 use App\Services\ChecadorPresentationFormatter;
@@ -1663,23 +1665,28 @@ final class ChecadorController extends BaseController
         $wantsJson = str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json');
         $input = Request::all();
         $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $positionIdProvided = array_key_exists('position_id', $input) && $input['position_id'] !== null;
         $positionId = self::positiveInteger($input['position_id'] ?? null);
         $nameValue = $input['name'] ?? $input['position_name'] ?? null;
         $name = is_string($nameValue) ? trim($nameValue) : '';
         $redirect = self::configurationHref($workplaceId);
         $user = Auth::user();
-        $jsonFail = static function (int $status, string $message): never {
-            JsonResponse::send(['ok' => false, 'message' => $message], $status, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
+        $jsonFail = static function (int $status, string $message, array $metadata = []): never {
+            JsonResponse::send(array_merge(['ok' => false, 'message' => $message], $metadata), $status, ['Cache-Control' => 'private, no-store', 'Vary' => 'Accept']);
         };
         if (!$user) {
             if ($wantsJson) $jsonFail(401, 'La sesión ya no es válida. Inicia sesión nuevamente.');
             self::configurationFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
             self::redirect($redirect);
         }
-        if ($wantsJson && !\App\Core\CsrfToken::validate(trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')))) {
-            $jsonFail(419, 'Actualiza la página antes de guardar el puesto.');
+        $csrfToken = trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $input['_csrf_token'] ?? ''));
+        if (!\App\Core\CsrfToken::validate($csrfToken)) {
+            if ($wantsJson) $jsonFail(419, 'Actualiza la página antes de guardar el puesto.');
+            self::configurationFeedback('error', 'Actualiza la página antes de guardar el puesto.', $workplaceId);
+            self::redirect($redirect);
         }
-        if ($workplaceId === null || $name === '' || (!$wantsJson && ($input['confirm_position'] ?? '') !== '1')) {
+        if ($workplaceId === null || $name === '' || ($positionIdProvided && $positionId === null)
+            || (!$wantsJson && ($input['confirm_position'] ?? '') !== '1')) {
             if ($wantsJson) $jsonFail(422, 'Completa el nombre del puesto y vuelve a intentarlo.');
             self::configurationFeedback('error', 'Completa el nombre y confirma el cambio. No se guardó ningún puesto.', $workplaceId);
             self::redirect($redirect);
@@ -1695,7 +1702,7 @@ final class ChecadorController extends BaseController
             $error = (string) ($saved['error'] ?? '');
             $status = match ($error) {
                 'permission_denied' => 403, 'duplicate_position', 'position_not_found' => 409,
-                'invalid_position_name' => 422, 'm11_write_disabled' => 503, default => 502,
+                'invalid_position_name' => 422, 'm11_write_disabled' => 503, default => 500,
             };
             $message = match ($error) {
                 'permission_denied' => 'No tienes permiso para administrar el catálogo institucional de puestos.',
@@ -1705,7 +1712,9 @@ final class ChecadorController extends BaseController
                 'invalid_position_name' => 'El nombre del puesto no es válido.',
                 default => 'No fue posible guardar y confirmar el puesto.',
             };
-            $jsonFail($status, $message);
+            $jsonFail($status, $message, $error === 'position_write_failed'
+                ? ['diagnostic_id' => $saved['diagnostic_id'] ?? null]
+                : []);
         }
         if ($saved['ok'] ?? false) {
             self::configurationFeedback('success', 'El puesto se guardó y se confirmó mediante lectura posterior.', $workplaceId);
@@ -2010,13 +2019,38 @@ final class ChecadorController extends BaseController
                 };
                 $fail($kind, $status === 409 ? 'Ya existe un conflicto con ese turno.' : 'No se pudo confirmar el turno. Actualiza el catálogo antes de reintentar.', $status);
             }
-            $template = $result['data'] ?? null;
-            if (!is_array($template)) $fail('schedule_template_readback_unconfirmed', 'No se confirmó el turno mediante lectura posterior.', 502);
+            $writtenTemplate = $result['data'] ?? null;
+            if (!is_array($writtenTemplate)
+                || !is_string($writtenTemplate['clave'] ?? null)
+                || (int) ($writtenTemplate['id'] ?? 0) < 1
+                || (int) ($writtenTemplate['version'] ?? 0) < 1
+                || strtoupper((string) ($writtenTemplate['scope'] ?? '')) !== 'STATION'
+                || (int) ($writtenTemplate['id_estacion'] ?? 0) !== $workplaceId) {
+                $fail('schedule_template_readback_unconfirmed', 'No se confirmó el turno mediante lectura posterior.', 502);
+            }
+            $sqlReader = new ChecadorShiftTemplateSqlReadService();
+            $sqlReadback = $sqlReader->getShiftTemplateVersion(
+                $user,
+                (string) $writtenTemplate['clave'],
+                (int) $writtenTemplate['version'],
+                $workplaceId,
+                (int) $writtenTemplate['id'],
+                'STATION',
+                $workplaceId
+            );
+            $template = $sqlReadback['data'] ?? null;
+            if (!($sqlReadback['ok'] ?? false) || !is_array($template)
+                || ($template['segmentos'] ?? null) !== $segments
+                || self::editableScheduleTemplateFields($template['segmentos'] ?? null) === null
+                || trim((string) ($template['segmentos'][0]['hora_inicio_local'] ?? '')) === ''
+                || trim((string) ($template['segmentos'][array_key_last($template['segmentos'])]['hora_fin_local'] ?? '')) === '') {
+                $fail('schedule_template_readback_unconfirmed', 'La plantilla no quedó confirmada con sus segmentos persistidos. No vuelvas a guardar; consulta el catálogo antes de reintentar.', 502);
+            }
             JsonResponse::send([
                 'ok' => true,
                 'message' => $operation === 'customize'
-                    ? 'La personalización local fue confirmada mediante lectura posterior.'
-                    : 'El turno fue confirmado mediante lectura posterior.',
+                    ? 'La personalización local y sus horas persistidas fueron confirmadas mediante lectura SQL.'
+                    : 'El turno y sus horas persistidas fueron confirmados mediante lectura SQL.',
                 'template' => $template,
             ], $operation === 'create' ? 201 : 200, $headers);
         } catch (\Throwable) {
@@ -2220,9 +2254,14 @@ final class ChecadorController extends BaseController
         bool $demoMode,
         ?string $demoScenario
     ): void {
+        $scheduleHistoryAllowed = true;
+        $templateCatalogAccess = $workplaceId === null
+            ? ['allowed' => false, 'reason' => 'invalid_workplace', 'workplaces' => []]
+            : ChecadorAccessService::authorizeShiftTemplateCatalogRead($workplaceId);
         if ($workplaceId !== null) {
             $scheduleAccess = ChecadorAccessService::authorizeScheduling($workplaceId, 'leer');
-            if (!($scheduleAccess['allowed'] ?? false)) {
+            $scheduleHistoryAllowed = (bool) ($scheduleAccess['allowed'] ?? false);
+            if (!$scheduleHistoryAllowed && !($templateCatalogAccess['allowed'] ?? false)) {
                 self::renderAccessDenied((string) ($scheduleAccess['reason'] ?? 'scheduling_permission_denied'), $workplaceId);
                 return;
             }
@@ -2255,7 +2294,7 @@ final class ChecadorController extends BaseController
             // Never let this read fall through to the live API in demo mode.
             $historyError = 'demo_history_unavailable';
             $effectiveScheduleError = 'demo_history_unavailable';
-        } elseif ($workplaceId !== null && $workerId !== null && self::isCivilDate($date) && $currentUser !== null) {
+        } elseif ($scheduleHistoryAllowed && $workplaceId !== null && $workerId !== null && self::isCivilDate($date) && $currentUser !== null) {
             $roster = self::scheduleHistoryWorkerRoster($workplaceId, $date, $currentUser, $workerId);
             $selectedWorkerName = trim((string) ($roster['workers'][0]['full_name'] ?? ''));
             if (!($roster['ok'] ?? false) || $selectedWorkerName === '') {
@@ -2306,20 +2345,26 @@ final class ChecadorController extends BaseController
 
         if ($workplaceId !== null && !$demoMode && $currentUser !== null) {
             try {
-                $reader ??= new ChecadorDailyReadService();
-                $catalog = $reader->getShiftTemplates($currentUser, 1, 200, $workplaceId);
+                $templateReader = new ChecadorShiftTemplateSqlReadService();
+                $catalog = $templateReader->getShiftTemplates($currentUser, $workplaceId, 1, 200);
                 if (($catalog['ok'] ?? false) === true) {
                     $templateCatalogStatus = 'received';
                     $catalogItems = $catalog['data']['items'];
                     foreach (array_slice($catalogItems, 0, 50) as $template) {
-                        $detail = $reader->getShiftTemplateVersion(
+                        $detail = $templateReader->getShiftTemplateVersion(
                             $currentUser,
                             (string) $template['clave'],
                             (int) $template['version'],
-                            $workplaceId
+                            $workplaceId,
+                            (int) $template['id'],
+                            (string) $template['scope'],
+                            $template['id_estacion'] === null ? null : (int) $template['id_estacion']
                         );
                         if (($detail['ok'] ?? false) !== true) {
-                            $templateCatalogStatus = 'partial';
+                            $detailError = (string) ($detail['error']['kind'] ?? 'database_unavailable');
+                            $templateCatalogStatus = $detailError === 'permission_denied'
+                                ? 'permission_denied'
+                                : ($detailError === 'database_unavailable' ? 'database_error' : 'partial');
                             continue;
                         }
                         $scheduleTemplates[] = array_merge($template, $detail['data'], [
@@ -2332,9 +2377,10 @@ final class ChecadorController extends BaseController
                     }
                     unset($template);
                     $localTemplateByKey = [];
+                    $catalogWorkplaceId = (int) ($templateCatalogAccess['catalog_workplace_id'] ?? $workplaceId);
                     foreach ($scheduleTemplates as $template) {
                         if (strtoupper((string) ($template['scope'] ?? '')) === 'STATION'
-                            && (int) ($template['id_estacion'] ?? 0) === $workplaceId) {
+                            && (int) ($template['id_estacion'] ?? 0) === $catalogWorkplaceId) {
                             $localTemplateByKey[(string) ($template['clave'] ?? '')] = $template;
                         }
                     }
@@ -2355,21 +2401,40 @@ final class ChecadorController extends BaseController
                         }
                     }
                     unset($template);
-                    if (count($catalogItems) > 50) {
+                    if ($templateCatalogStatus === 'database_error') {
+                        $templateCatalogMessage = 'Ocurrió un error SQL al leer el detalle de los horarios. Revisa el registro técnico.';
+                    } elseif ($templateCatalogStatus === 'permission_denied') {
+                        $templateCatalogMessage = 'No tienes autorización para consultar los horarios de esta localidad.';
+                    } elseif (count($catalogItems) > 50) {
                         $templateCatalogStatus = 'partial';
                         $templateCatalogMessage = 'Se alcanzó el límite seguro de detalle de 50 plantillas. La lista puede estar incompleta.';
                     } elseif ($templateCatalogStatus === 'partial') {
                         $templateCatalogMessage = 'No se pudo leer el detalle de todas las plantillas recibidas.';
                     } else {
-                        $templateCatalogMessage = count($scheduleTemplates) . ' horarios recibidos. El contrato API no publica un total; la consulta no confirma por sí sola que no existan más.';
+                        $templateCatalogMessage = count($scheduleTemplates) . ' horarios recibidos. El catálogo local no publica un total; la consulta no confirma por sí sola que no existan más.';
                     }
                 } else {
-                    $templateCatalogStatus = 'unavailable';
-                    $templateCatalogMessage = 'No se pudo consultar el catálogo V2.';
+                    if (($catalog['error']['kind'] ?? '') === 'permission_denied') {
+                        $templateCatalogStatus = 'permission_denied';
+                        $templateCatalogMessage = 'No tienes autorización para consultar los horarios de esta localidad.';
+                    } else {
+                        $templateCatalogStatus = 'database_error';
+                        $templateCatalogMessage = 'Ocurrió un error SQL al leer el catálogo de horarios. Revisa el registro técnico.';
+                    }
                 }
-            } catch (\Throwable) {
-                $templateCatalogStatus = 'unavailable';
-                $templateCatalogMessage = 'No se pudo consultar el catálogo V2.';
+            } catch (\Throwable $exception) {
+                try {
+                    Logger::warning('Checador M04 schedule catalog rendering failed', [
+                        'operation' => 'm04_schedule_catalog_render',
+                        'source' => 'portal3_sql_reader',
+                        'error_kind' => 'local_render_failure',
+                        'exception_class' => $exception::class,
+                    ]);
+                } catch (\Throwable) {
+                    // Diagnostic logging must never change the page response.
+                }
+                $templateCatalogStatus = 'render_error';
+                $templateCatalogMessage = 'Ocurrió un error al procesar la lectura del catálogo de horarios.';
             }
         } elseif ($demoMode) {
             $templateCatalogStatus = 'unavailable';

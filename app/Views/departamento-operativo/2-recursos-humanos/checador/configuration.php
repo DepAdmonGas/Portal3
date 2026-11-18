@@ -277,7 +277,7 @@ $readerProfileItemsJson = htmlspecialchars(
                     <template x-if="!current && !next">
                         <div class="col-12">
                             <?php if (($attendancePolicyState['status'] ?? '') === 'LEGACY_UNVERSIONED'): ?>
-                                <p class="alert alert-info py-2 mb-0" role="status">No hay una política V2 confirmada vigente para esta localidad. Los valores anteriores no se presentan como configuración V2 persistida.</p>
+                                <p class="alert alert-info py-2 mb-0" role="status">Aún no hay una configuración de asistencia vigente para esta localidad.</p>
                             <?php elseif (!in_array(($attendancePolicyState['status'] ?? ''), ['VERSIONED', 'LEGACY_UNVERSIONED'], true)): ?>
                                 <p class="alert alert-warning py-2 mb-0" role="status">
                                     No fue posible consultar la configuración persistida para esta localidad. No se muestran valores como confirmados.

@@ -433,19 +433,28 @@
                 const segments = Array.isArray(template.segmentos) ? [...template.segmentos].sort((a, b) => Number(a.ordinal || 0) - Number(b.ordinal || 0)) : [];
                 const work = segments.filter(segment => String(segment.tipo_segmento || '').toUpperCase() === 'WORK');
                 const breaks = segments.filter(segment => String(segment.tipo_segmento || '').toUpperCase() === 'BREAK');
-                const row = [this.escapeHtml(this.cleanTemplateName(template.nombre)), work.length ? this.endpointMarkup(work[0], 'hora_inicio_local', 'dia_offset_inicio') : '—',
-                    breaks.length ? breaks.map(s => this.endpointMarkup(s, 'hora_inicio_local', 'dia_offset_inicio')).join('<br>') : '—',
-                    breaks.length ? breaks.map(s => this.endpointMarkup(s, 'hora_fin_local', 'dia_offset_fin')).join('<br>') : '—',
-                    work.length ? this.endpointMarkup(work[work.length - 1], 'hora_fin_local', 'dia_offset_fin') : '—',
-                    Number(template.es_activo) === 1 ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>',
-                    this.actionMarkup(template)];
-                const node = this.table.row.add(row).draw(false).node();
-                if (!node) return false;
-                node.dataset.templateKey = String(template.clave); node.dataset.templateVersion = String(template.version);
+                const node = document.createElement('tr');
+                node.dataset.templateKey = String(template.clave);
+                node.dataset.templateVersion = String(template.version);
+                const cells = [
+                    ['th', this.escapeHtml(this.cleanTemplateName(template.nombre))],
+                    ['td', work.length ? this.endpointMarkup(work[0], 'hora_inicio_local', 'dia_offset_inicio') : '—'],
+                    ['td', breaks.length ? breaks.map(s => this.endpointMarkup(s, 'hora_inicio_local', 'dia_offset_inicio')).join('<br>') : '—'],
+                    ['td', breaks.length ? breaks.map(s => this.endpointMarkup(s, 'hora_fin_local', 'dia_offset_fin')).join('<br>') : '—'],
+                    ['td', work.length ? this.endpointMarkup(work[work.length - 1], 'hora_fin_local', 'dia_offset_fin') : '—'],
+                    ['td', Number(template.es_activo) === 1 ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>'],
+                    ['td', this.actionMarkup(template)],
+                ];
+                cells.forEach(([tagName, markup], index) => {
+                    const cell = document.createElement(tagName);
+                    if (index === 0) cell.scope = 'row';
+                    cell.innerHTML = markup;
+                    node.appendChild(cell);
+                });
                 formatTableTimes(node);
-                this.table.row(node).invalidate('dom').draw(false);
-                const first = node.querySelector('td:first-child');
-                if (first) { const th = document.createElement('th'); th.scope = 'row'; th.innerHTML = first.innerHTML; node.replaceChild(th, first); }
+                const addedRow = this.table.row.add(node);
+                if (!addedRow.node()) return false;
+                addedRow.draw(false);
                 return true;
             },
 
@@ -570,11 +579,23 @@
                         this.error = 'El servidor no confirmó que el turno pertenece al catálogo de esta localidad. Consulta M04 antes de volver a guardar.';
                         return;
                     }
-                    const confirmedSegments = Array.isArray(confirmed.segmentos) ? confirmed.segmentos : segments;
+                    const confirmedSegments = Array.isArray(confirmed.segmentos) ? [...confirmed.segmentos] : null;
+                    if (!confirmedSegments || confirmedSegments.length === 0) {
+                        this.error = 'El servidor no confirmó horas persistidas para el turno. No vuelvas a guardar; actualiza el catálogo para verificarlo.';
+                        return;
+                    }
 
                     confirmedSegments.sort((a, b) => Number(a.ordinal || 0) - Number(b.ordinal || 0));
                     const workSegs = confirmedSegments.filter(s => String(s.tipo_segmento || '').toUpperCase() === 'WORK');
                     const breakSegs = confirmedSegments.filter(s => String(s.tipo_segmento || '').toUpperCase() === 'BREAK');
+                    const validTime = value => /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(String(value || ''));
+                    if (workSegs.length === 0 || confirmedSegments.some(segment =>
+                        !validTime(segment.hora_inicio_local) || !validTime(segment.hora_fin_local)
+                        || ![0, 1].includes(Number(segment.dia_offset_inicio))
+                        || ![0, 1].includes(Number(segment.dia_offset_fin)))) {
+                        this.error = 'El servidor no confirmó una entrada y salida persistidas válidas. No vuelvas a guardar; actualiza el catálogo para verificarlo.';
+                        return;
+                    }
 
                     const colTurno = this.escapeHtml(confirmed.nombre || name);
                     if (!this.table) {
@@ -597,8 +618,8 @@
                         }
                     }
                     this.success = this.customizationSource
-                        ? `La personalización local de «${confirmed.nombre || name}» fue confirmada mediante lectura posterior.`
-                        : `El turno «${confirmed.nombre || name}» fue registrado y confirmado mediante lectura posterior de la API.`;
+                        ? `La personalización local de «${confirmed.nombre || name}» fue confirmada mediante lectura SQL posterior.`
+                        : `El turno «${confirmed.nombre || name}» fue registrado y confirmado mediante lectura SQL posterior.`;
                     this.modal?.hide();
                 } catch (failure) {
                     const status = Number(failure?.response?.status || 0);

@@ -169,7 +169,7 @@ document.addEventListener('alpine:init', () => {
             } catch (failure) {
                 const status = Number(failure?.response?.status || 0);
                 const body = failure?.response?.data || {};
-                this.error = body.message || (status === 401
+                const message = body.message || (status === 401
                     ? 'Tu sesión expiró. Inicia sesión nuevamente.'
                     : status === 403
                         ? 'No tienes permiso para modificar el catálogo de puestos.'
@@ -180,6 +180,9 @@ document.addEventListener('alpine:init', () => {
                                 : status >= 500
                                     ? 'El servidor no pudo confirmar el cambio. Intenta de nuevo más tarde.'
                                     : (failure?.message || 'No se pudo guardar el puesto. Revisa los datos e inténtalo de nuevo.'));
+                this.error = body.diagnostic_id
+                    ? `${message} Referencia: ${String(body.diagnostic_id).replace(/[^a-f0-9]/gi, '').slice(0, 32)}`
+                    : message;
             } finally {
                 this.loading = false;
             }

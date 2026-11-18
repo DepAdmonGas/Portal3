@@ -174,7 +174,8 @@ $assert(!str_contains($html, 'Ver historial')
     && str_contains($html, 'id="m11-change-history"'), 'unsupported policy-version history action is absent while the independent M11 audit history remains');
 $assert(str_contains($html, 'data-checador-configuration-datatable') && str_contains($html, 'id="m11-devices-table"')
     && str_contains($html, 'class="table-responsive"'), 'server-read device list uses the existing institutional DataTable and responsive wrapper');
-$assert(str_contains($html, 'No hay una política V2 confirmada vigente')
+$assert(str_contains($html, 'Aún no hay una configuración de asistencia vigente para esta localidad.')
+    && str_contains($html, '<template x-if="!current && !next">')
     && !str_contains($html, '0 minutos</dd>') && !str_contains($html, '0 días</dd>'), 'missing V2 policy is not displayed as a persisted default');
 $failedPolicy = $fixture;
 $failedPolicy['policy'] = ['status' => 'attendance_policy_read_failed', 'data' => null];
