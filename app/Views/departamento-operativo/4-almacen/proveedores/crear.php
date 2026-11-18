@@ -115,7 +115,7 @@
 
 <div class="col-md-2">
 <label class="form-label mb-1">* Moneda:</label>
-<select class="form-select" x-model="form.Moneda">
+<select class="form-select" x-model="form.Moneda" :style="errors.Moneda ? 'border: 2px solid #A52525 !important;' : ''" @change="errors.Moneda = false">
 <option value="MXN">MXN</option>
 <option value="USD">USD</option>
 </select>

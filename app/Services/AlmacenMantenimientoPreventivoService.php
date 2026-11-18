@@ -41,7 +41,8 @@ class AlmacenMantenimientoPreventivoService
     public const DOWNLOAD_TIPO       = 'mantenimiento-preventivo';
     public const DOWNLOAD_TIPO_PRUEBA = 'prueba-eficiencia';
 
-    public const UPLOAD_FOLDER        = 'public/uploads/archivos/mantenimiento-preventivo/';
+    // Replica la ruta relativa del legacy: archivos/mantenimiento/.
+    public const UPLOAD_FOLDER        = 'public/uploads/archivos/mantenimiento/';
     public const UPLOAD_FOLDER_PRUEBA = 'public/uploads/archivos/prueba-eficiencia/';
 
     public const STATUS_LABELS   = [0 => 'Pendiente', 1 => 'En proceso', 2 => 'Finalizado'];
@@ -1006,13 +1007,11 @@ class AlmacenMantenimientoPreventivoService
 
         $fecha2 = trim((string)($data['fecha2'] ?? $data['Fecha2'] ?? ''));
 
-        if ($fecha2 === '') {
-            $fecha2 = '0000-00-00';
-        } elseif (!self::esFechaValida($fecha2, false)) {
-            return $fail('La fecha del próximo mantenimiento no es válida.');
+        if (!self::esFechaValida($fecha2, true)) {
+            return $fail('La próxima fecha de mantenimiento es obligatoria y debe ser válida.');
         }
 
-        $costoRaw = trim((string)($data['costo'] ?? $data['Costos'] ?? ''));
+        $costoRaw = str_replace(',', '', trim((string)($data['costo'] ?? $data['Costos'] ?? '')));
 
         if ($costoRaw === '' || !is_numeric($costoRaw) || (float)$costoRaw < 0) {
             return $fail('El costo es obligatorio y debe ser un número mayor o igual a cero.');

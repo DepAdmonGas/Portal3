@@ -237,7 +237,12 @@ final class OrdenMantenimientoController extends BaseController
     public function toggleSubarea(): void
     {
         if (!Service::permissions()['editar']) JsonResponse::forbidden('No tienes permiso para editar subáreas.');
-        $result = Service::toggleSubarea((int)(Request::input('id_subarea') ?? 0), (int)(Request::input('estatus') ?? -1));
+        $result = Service::toggleSubarea(
+            (int)(Request::input('id_subarea') ?? 0),
+            (int)(Request::input('estatus') ?? -1),
+            (int)(Request::input('id_area') ?? 0),
+            (string)(Request::input('nombre') ?? '')
+        );
         JsonResponse::custom($result, $result['code'] ?? 200);
     }
 

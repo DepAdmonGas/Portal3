@@ -82,6 +82,29 @@ document.addEventListener('alpine:init', () => {
 
         pozo: { pozo: '', ppm: '', ubicacion: '' },
 
+        formatearPPM(valor) {
+            const digitos = String(valor ?? '').replace(/\D/g, '');
+            return digitos.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        },
+
+        formatearPPMTexto(valor) {
+            const texto = String(valor ?? '');
+            return texto === 'S/I' ? texto : this.formatearPPM(texto);
+        },
+
+        capturarPPM(event, campo, grupo = 'form') {
+            const digitos = String(event.target.value ?? '').replace(/\D/g, '');
+            event.target.value = this.formatearPPM(digitos);
+
+            if (grupo === 'pozo') {
+                this.pozo[campo] = digitos;
+                if (campo === 'ppm') this.erroresPozo.ppm = false;
+                return;
+            }
+
+            this.form['Elemento' + campo] = digitos;
+        },
+
         init() {
             const c = document.getElementById('container');
 
@@ -230,43 +253,30 @@ document.addEventListener('alpine:init', () => {
         validar() {
             this.limpiarErrores();
 
-            const faltan = [];
-
             if (!this.form.Fecha) {
                 this.errores.Fecha = true;
-                faltan.push('la fecha');
             }
 
-            const etiquetas = {
-                Elemento1: 'el tipo de medición',
-                Elemento2: 'el verificador',
-                Elemento3: 'las observaciones'
-            };
-
-            Object.keys(etiquetas).forEach((k) => {
+            ['Elemento1', 'Elemento2', 'Elemento3'].forEach((k) => {
                 if (!String(this.form[k] === undefined || this.form[k] === null ? '' : this.form[k]).trim()) {
                     this.errores[k] = true;
-                    faltan.push(etiquetas[k]);
                 }
             });
 
             if (!this.form.Encargado) {
                 this.errores.Encargado = true;
-                faltan.push('el encargado de la estación');
             }
 
             if (!this.pad1 || this.pad1.isEmpty()) {
                 this.errores.firma1 = true;
-                faltan.push('la firma de quien toma la medición');
             }
 
             if (!this.pad2 || this.pad2.isEmpty()) {
                 this.errores.firma2 = true;
-                faltan.push('la firma por la estación');
             }
 
-            if (faltan.length) {
-                this.notify('error', 'Falta ' + faltan.join(', ') + '.');
+            if (Object.values(this.errores).some(Boolean)) {
+                this.notify('error', 'Completa los campos obligatorios.');
                 return false;
             }
 
@@ -337,7 +347,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (!ok) {
-                this.notify('error', 'Falta el pozo o el PPM.');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 
@@ -401,6 +411,15 @@ document.addEventListener('alpine:init', () => {
         porN: {},
         generales: [],
         mediciones: [],
+
+        formatearPPM(valor) {
+            return String(valor ?? '').replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        },
+
+        formatearPPMTexto(valor) {
+            const texto = String(valor ?? '');
+            return texto === 'S/I' ? texto : this.formatearPPM(texto);
+        },
 
         init() {
             const c = this.$el;

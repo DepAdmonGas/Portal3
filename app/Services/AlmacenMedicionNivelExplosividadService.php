@@ -96,8 +96,7 @@ class AlmacenMedicionNivelExplosividadService
 
     /**
      * Opciones de pozo por estación, tal como el modal legacy
-     * (modal-pozo-motobombas.php). Las estaciones 8 y 14 no tenían lista: el
-     * select quedaba vacío y no se podía dar de alta ningún pozo.
+     * (modal-pozo-motobombas.php). La estación 8 no tiene opciones configuradas.
      */
     public const POZOS_POR_ESTACION = [
         1 => [
@@ -136,6 +135,12 @@ class AlmacenMedicionNivelExplosividadService
             'POZO DE OBSERVACIÓN 1', 'POZO DE OBSERVACIÓN 2', 'POZO DE OBSERVACIÓN 3',
             'POZO DE OBSERVACIÓN 4', 'POZO DE OBSERVACIÓN 5', 'MOTOBOMBA SUPER 1',
             'MOTOBOMBA PREMIUM 2', 'MANIFUEL',
+        ],
+        14 => [
+            'POZO DE OBSERVACIÓN 1', 'POZO DE OBSERVACIÓN 2',
+            'POZO DE OBSERVACIÓN 3', 'POZO DE OBSERVACIÓN 4',
+            'MOTOBOMBA TANQUE 1', 'MOTOBOMBA TANQUE 2',
+            'MOTOBOMBA TANQUE 3', 'MOTOBOMBA TANQUE 4',
         ],
     ];
 
@@ -403,17 +408,28 @@ class AlmacenMedicionNivelExplosividadService
             ];
         }
 
-        $firmas = [];
+        $firmasRegistradas = [];
 
-        foreach (NivelExplosividadFirma::where('id_reporte', $id)->get() as $f) {
+        foreach (NivelExplosividadFirma::where('id_reporte', $id)->get() as $firma) {
+            $firmasRegistradas[(string)$firma->tipo_firma] = $firma;
+        }
+
+        $firmas = [];
+        foreach ([self::TIPO_FIRMA_TOMA, self::TIPO_FIRMA_ESTACION] as $tipoFirma) {
+            $firma = $firmasRegistradas[$tipoFirma] ?? null;
+            $nombreArchivo = $firma ? basename((string)$firma->imagen_firma) : '';
+            $imagenDisponible = $nombreArchivo !== '' && is_file(self::getFirmasDir() . $nombreArchivo);
+
             $firmas[] = [
-                'tipo'      => (string)$f->tipo_firma,
-                'id_usuario' => (int)$f->id_usuario,
-                'usuario'   => self::nombreUsuario((int)$f->id_usuario),
-                'imagen'    => (string)$f->imagen_firma,
-                // El legacy servía la firma desde departamento-operativo/imgs/firma/.
-                'url'       => $f->imagen_firma
-                    ? '/uploads/firmas/' . rawurlencode((string)$f->imagen_firma)
+                'tipo'               => $tipoFirma,
+                'registrada'         => $firma !== null,
+                'imagen_disponible'  => $imagenDisponible,
+                'id_usuario'         => $firma ? (int)$firma->id_usuario : 0,
+                'usuario'            => $firma ? self::nombreUsuario((int)$firma->id_usuario) : '',
+                'imagen'             => $nombreArchivo,
+                // Sólo se ofrece la imagen cuando existe físicamente en uploads/firmas.
+                'url'                => $imagenDisponible
+                    ? '/uploads/firmas/' . rawurlencode($nombreArchivo)
                     : '',
             ];
         }
@@ -524,6 +540,8 @@ class AlmacenMedicionNivelExplosividadService
         if (!$permisos['puedeEditar']) {
             return self::error('No tienes permiso para registrar mediciones.', 403);
         }
+
+        $data = self::normalizarCantidadesPPM($data);
 
         $idReporte = (int)($data['idReporte'] ?? 0);
         $reporte   = self::getRegistro($idReporte);
@@ -665,10 +683,14 @@ class AlmacenMedicionNivelExplosividadService
 
         $pozo = trim((string)($data['PozoMotobomba'] ?? ''));
         $ubic = trim((string)($data['Ubicacion'] ?? ''));
-        $ppm  = trim((string)($data['PPM'] ?? ''));
+        $ppm  = trim(str_replace(',', '', (string)($data['PPM'] ?? '')));
 
         if ($pozo === '') {
             return self::error('El pozo es obligatorio.', 422);
+        }
+
+        if (!in_array($pozo, self::getOpcionesPozo((int)$reporte->id_estacion), true)) {
+            return self::error('El pozo seleccionado no pertenece a las opciones de esta estación.', 422);
         }
 
         if ($ppm === '') {
@@ -791,6 +813,19 @@ class AlmacenMedicionNivelExplosividadService
         }
 
         return $errores;
+    }
+
+    /** Quita separadores de miles que la vista agrega a los campos PPM. */
+    private static function normalizarCantidadesPPM(array $data): array
+    {
+        foreach (range(4, 18) as $n) {
+            $campo = 'Elemento' . $n;
+            if (array_key_exists($campo, $data)) {
+                $data[$campo] = str_replace(',', '', (string)$data[$campo]);
+            }
+        }
+
+        return $data;
     }
 
     /* ------------------------------------------------------------------ */

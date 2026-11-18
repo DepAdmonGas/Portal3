@@ -33,6 +33,7 @@ document.addEventListener('alpine:init', () => {
         editarRegistroId: 0,
         editarRegistroLabel: '',
         costoEdicion: 0,
+        errorCostoEdicion: false,
         guardando: false,
 
         // Evidencias (modal)
@@ -40,6 +41,7 @@ document.addEventListener('alpine:init', () => {
         evidenciaRegistroId: 0,
         evidenciaRegistroLabel: '',
         subiendo: false,
+        errorEvidencia: false,
 
         // Comentarios (offcanvas)
         comentarios: [],
@@ -204,6 +206,7 @@ document.addEventListener('alpine:init', () => {
             this.editarRegistroLabel = String(parseInt(item.orden || '0', 10) || '0').padStart(2, '0');
             this.editarReg = {};
             this.costoEdicion = 0;
+            this.errorCostoEdicion = false;
 
             // Igual que comentarios/evidencias: el modal del día se cierra.
             if (this.modales.dia) {
@@ -214,6 +217,7 @@ document.addEventListener('alpine:init', () => {
                 const { data } = await axios.post(this.BASE + '/detalle', { id: item.id });
                 this.editarReg = data.data || {};
                 this.costoEdicion = this.editarReg.costo ?? 0;
+                this.errorCostoEdicion = false;
             } catch (e) {
                 this.editarReg = {};
                 this.error(e);
@@ -230,12 +234,19 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            const costo = this.parseCostoModal(this.costoEdicion);
+            if (costo === null || !Number.isFinite(costo) || costo < 0) {
+                this.errorCostoEdicion = true;
+                this.notificarCamposObligatorios();
+                return;
+            }
+
             this.guardando = true;
 
             try {
                 const { data } = await axios.post(this.BASE + '/editar-costo', {
                     id: this.editarRegistroId,
-                    costo: this.costoEdicion
+                    costo: String(this.costoEdicion ?? '').replace(/,/g, '')
                 });
 
                 if (!data.success) {
@@ -264,6 +275,7 @@ document.addEventListener('alpine:init', () => {
             this.evidenciaRegistroId = item.id;
             this.evidenciaRegistroLabel = String(parseInt(item.orden || '0', 10) || '0').padStart(2, '0');
             this.evidencias = [];
+            this.errorEvidencia = false;
 
             // Igual que comentarios: el modal del día se cierra para que el de
             // evidencias no quede apilado encima.
@@ -312,7 +324,8 @@ document.addEventListener('alpine:init', () => {
             const input = document.getElementById('inputEvidenciaModal');
 
             if (!input || !input.files || input.files.length === 0) {
-                this.showAlert('warning', 'Sin archivo', 'Selecciona un archivo.');
+                this.errorEvidencia = true;
+                this.notificarCamposObligatorios();
                 return;
             }
 
@@ -428,6 +441,58 @@ document.addEventListener('alpine:init', () => {
         /* ------------------------------------------------------------ */
         /* Utilidades de UI                                              */
         /* ------------------------------------------------------------ */
+
+        parseCostoModal(valor) {
+            const texto = String(valor ?? '').replace(/,/g, '').trim();
+            if (texto === '') return null;
+            const numero = Number(texto);
+            return Number.isFinite(numero) ? numero : NaN;
+        },
+
+        formatoCostoModal(valor) {
+            const texto = String(valor ?? '').replace(/,/g, '').trim();
+            if (texto === '' || !/^-?\d*(?:\.\d{0,2})?$/.test(texto)) return '';
+            const negativo = texto.startsWith('-');
+            const partes = (negativo ? texto.slice(1) : texto).split('.');
+            const entero = (partes[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return (negativo ? '-' : '') + (partes.length > 1 ? `${entero}.${partes[1]}` : entero);
+        },
+
+        capturarCostoModal(evento) {
+            const input = evento && evento.target;
+            if (!input) return;
+
+            const caret = input.selectionStart ?? input.value.length;
+            const digitosAntes = input.value.slice(0, caret).replace(/[^0-9.]/g, '').length;
+            let limpio = input.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const punto = limpio.indexOf('.');
+            if (punto !== -1) {
+                limpio = limpio.slice(0, punto + 1) + limpio.slice(punto + 1).replace(/\./g, '').slice(0, 2);
+            }
+
+            const partes = limpio.split('.');
+            const entero = (partes[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formateado = partes.length > 1 ? `${entero}.${partes[1]}` : entero;
+            input.value = formateado;
+            this.costoEdicion = limpio;
+            this.errorCostoEdicion = false;
+
+            let nuevaPosicion = 0;
+            let contados = 0;
+            while (nuevaPosicion < formateado.length && contados < digitosAntes) {
+                if (/[0-9.]/.test(formateado[nuevaPosicion])) contados++;
+                nuevaPosicion++;
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
+        notificarCamposObligatorios() {
+            if (window.Notify && typeof window.Notify.error === 'function') {
+                window.Notify.error('Completa los campos obligatorios.');
+            } else if (typeof this.showAlert === 'function') {
+                this.showAlert('error', 'Error', 'Completa los campos obligatorios.');
+            }
+        },
 
         colorFila(estatus) {
             return ['#ffb6af', '#fcfcda', '#b0f2c2'][estatus] || '#ffffff';

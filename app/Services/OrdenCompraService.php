@@ -285,6 +285,10 @@ public static function getDetalleCompleto(int $id): ?array
 
     public static function guardarEstacion(int $idOrden, int $idEstacion): bool
     {
+        if ($idOrden <= 0 || $idEstacion <= 0 || !OpOrdenCompra::find($idOrden) || !RhLocalidad::find($idEstacion)) {
+            return false;
+        }
+
         OpOrdenCompraRazonSocial::updateOrCreate(
             ['id_ordencompra' => $idOrden],
             ['id_estacion' => $idEstacion]
@@ -309,6 +313,14 @@ public static function getDetalleCompleto(int $id): ?array
 
     public static function agregarProveedor(int $idOrden, array $data): array
     {
+        if ($idOrden <= 0 || !OpOrdenCompra::find($idOrden)
+            || trim((string)($data['razon_social'] ?? '')) === ''
+            || trim((string)($data['direccion'] ?? '')) === ''
+            || trim((string)($data['contacto'] ?? '')) === ''
+            || trim((string)($data['email'] ?? '')) === '') {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
         $prov = OpOrdenCompraProveedor::create([
             'id_ordencompra' => $idOrden,
             'razon_social'   => $data['razon_social'],
@@ -328,6 +340,13 @@ public static function getDetalleCompleto(int $id): ?array
 
     public static function editarProveedor(int $idProveedor, array $data): array
     {
+        if (trim((string)($data['razon_social'] ?? '')) === ''
+            || trim((string)($data['direccion'] ?? '')) === ''
+            || trim((string)($data['contacto'] ?? '')) === ''
+            || trim((string)($data['email'] ?? '')) === '') {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
         $prov = OpOrdenCompraProveedor::find($idProveedor);
         if (!$prov) return ['success' => false, 'message' => 'Proveedor no encontrado.'];
 
@@ -366,6 +385,10 @@ public static function getDetalleCompleto(int $id): ?array
 
     public static function actualizarCostosProveedor(int $idProveedor, int $tipo, float $valor): bool
     {
+        if ($idProveedor <= 0 || !in_array($tipo, [1, 2], true) || $valor < 0) {
+            return false;
+        }
+
         $prov = OpOrdenCompraProveedor::find($idProveedor);
         if (!$prov) return false;
 
@@ -380,6 +403,17 @@ public static function getDetalleCompleto(int $id): ?array
 
     public static function agregarArticulo(int $idOrden, array $data): array
     {
+        $idProveedor = (int)($data['id_proveedor'] ?? 0);
+        $unidades = (float)($data['unidades'] ?? 0);
+        $precioUnitario = (float)($data['precio_unitario'] ?? 0);
+        if ($idOrden <= 0 || !OpOrdenCompra::find($idOrden)
+            || $idProveedor <= 0
+            || !OpOrdenCompraProveedor::where('id', $idProveedor)->where('id_ordencompra', $idOrden)->exists()
+            || trim((string)($data['concepto'] ?? '')) === ''
+            || $unidades <= 0 || $precioUnitario <= 0) {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
         $art = OpOrdenCompraArticulo::create([
             'id_ordencompra'  => $idOrden,
             'id_proveedor'    => (int)$data['id_proveedor'],
@@ -402,6 +436,15 @@ public static function getDetalleCompleto(int $id): ?array
 
     public static function agregarRefacturacion(int $idOrden, array $data): array
     {
+        $cantidad = (float)($data['cantidad'] ?? 0);
+        $importe = (float)($data['importe'] ?? 0);
+        if ($idOrden <= 0 || !OpOrdenCompra::find($idOrden)
+            || (int)($data['id_estacion'] ?? 0) <= 0
+            || trim((string)($data['descripcion'] ?? '')) === ''
+            || $cantidad <= 0 || $importe <= 0) {
+            return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'code' => 422];
+        }
+
         $rf = OpOrdenCompraRefacturacion::create([
             'id_ordencompra' => $idOrden,
             'id_estacion'    => (int)$data['id_estacion'],

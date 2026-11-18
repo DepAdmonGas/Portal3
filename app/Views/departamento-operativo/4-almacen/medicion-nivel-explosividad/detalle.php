@@ -72,7 +72,7 @@
 <template x-for="m in mediciones" :key="m.n">
 <div class="col-12 col-md-4 col-xl-3">
 <label class="form-label mb-1" x-text="m.etiqueta + ':'"></label>
-<div x-text="m.texto + ' PPM'"></div>
+<div x-text="formatearPPMTexto(m.texto) + ' PPM'"></div>
 </div>
 </template>
 </div>
@@ -128,7 +128,7 @@
 <template x-for="p in detalle.pozos || []" :key="p.id ?? p.pozo">
 <tr>
 <td class="text-center align-middle" x-text="p.pozo || ''"></td>
-<td class="text-center align-middle" x-text="p.ppm != null ? p.ppm : ''"></td>
+<td class="text-center align-middle" x-text="p.ppm != null ? formatearPPM(p.ppm) : ''"></td>
 <td class="text-center align-middle" x-text="p.ubicacion || ''"></td>
 </tr>
 </template>
@@ -163,8 +163,8 @@
                 <div class="card-header bg-primary text-white py-3 border-0">
                     <div class="d-flex align-items-center">
                         <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px; height:50px;">
-                            <template x-if="f.url"><i class="ti ti-circle-check fs-6 text-success"></i></template>
-                            <template x-if="!f.url"><i class="ti ti-clock-hour-4 fs-6 text-warning"></i></template>
+                            <template x-if="f.registrada"><i class="ti ti-circle-check fs-6 text-success"></i></template>
+                            <template x-if="!f.registrada"><i class="ti ti-clock-hour-4 fs-6 text-warning"></i></template>
                         </div>
                         <div class="ms-3 overflow-hidden">
                             <h6 class="mb-0 text-white" x-text="f.tipo || 'FIRMA'"></h6>
@@ -186,24 +186,32 @@
                 </div>
                 </template>
 
-                <template x-if="!f.url">
+                <template x-if="!f.url && f.registrada">
                 <div class="d-flex flex-column flex-grow-1">
                 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4 flex-grow-1">
                     <i class="ti ti-signature-off text-muted mb-3" style="font-size: 80px;"></i>
-                    <h6 class="text-muted mb-0" x-text="'¡Falta la firma de ' + (f.tipo || 'Vo.Bo.') + '!'"></h6>
+                    <h6 class="text-muted mb-0">La firma está registrada, pero su imagen no está disponible.</h6>
                 </div>
                 <div class="card-footer bg-light text-center mt-auto border-top">
-                    <small class="text-muted">Pendiente de firma electrónica</small>
+                    <h6 class="mb-0 fw-semibold text-truncate" x-text="f.usuario || ''"></h6>
+                </div>
+                </div>
+                </template>
+
+                <template x-if="!f.registrada">
+                <div class="d-flex flex-column flex-grow-1">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4 flex-grow-1">
+                    <i class="ti ti-signature-off text-muted mb-3" style="font-size: 80px;"></i>
+                    <h6 class="text-muted mb-0" x-text="f.tipo === 'FIRMA DE QUIEN TOMA MEDICIÓN' ? 'Sin firma registrada.' : '¡Falta la firma de la estación!'"></h6>
+                </div>
+                <div class="card-footer bg-light text-center mt-auto border-top">
+                    <small class="text-muted">Pendiente de firma</small>
                 </div>
                 </div>
                 </template>
 
             </div>
         </div>
-    </template>
-
-    <template x-if="(detalle.firmas || []).length === 0">
-        <div class="col-12 text-secondary"><small>No se encontró información</small></div>
     </template>
 
     </div>

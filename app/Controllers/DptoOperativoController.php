@@ -165,26 +165,33 @@ return;
 $usuario = Auth::user();
 
 $modulo = ModuloDptoOperativoService::getPermiso($usuario->id, 'almacen');
+$submenusAsignados = $modulo['submenus'] ?? [];
+$tieneAccesoMantenimiento = in_array(
+    'mantenimiento',
+    array_column($submenusAsignados, 'clave'),
+    true
+);
+$clavesTarjetasMantenimiento = [
+    'terminales-punto-venta',
+    'calibracion-dispensarios',
+    'mantenimiento-preventivo',
+    'medicion-nivel-explosividad',
+    'maquinaria-equipos',
+];
 
 /*
 * La card se lee de modulos_sub_dpto_operativo por clave para que nombre e icono
 * se mantengan sincronizados con Configuración, sin duplicarlos en el código.
+* El submódulo "Mantenimiento" da acceso a las cinco tarjetas de esta sección.
 */
-$cards = \App\Models\ModuloSubDptoOperativo::whereIn('clave', [
-    'calibracion-dispensarios',
-    'medicion-nivel-explosividad',
-    'maquinaria-equipos',
-    'mantenimiento-preventivo',
-    'terminales-punto-venta',
-    'orden-mantenimiento'
-])
-->where('id_modulo', 4)
-->where('activo', 1)
-->whereIn('id', array_map(
-    static fn (array $submenu): int => (int) ($submenu['id_sub_modulo'] ?? 0),
-    $modulo['submenus'] ?? []
-))
-->get();
+$cards = $tieneAccesoMantenimiento
+    ? \App\Models\ModuloSubDptoOperativo::whereIn('clave', $clavesTarjetasMantenimiento)
+        ->where('id_modulo', 4)
+        ->where('activo', 1)
+        ->get()
+        ->sortBy(static fn ($card): int => (int) array_search($card->clave, $clavesTarjetasMantenimiento, true))
+        ->values()
+    : collect();
 
 $submenus = [];
 foreach ($cards as $c) {

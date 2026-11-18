@@ -26,6 +26,14 @@ document.addEventListener('alpine:init', () => {
 
         previewFilas: [],
         guardando: false,
+        errores: {
+            estadoActual: false,
+            fechaInicio: false,
+            tipoMantenimiento: false,
+            frecuencia: false,
+            fallaDescripcion: false,
+            costoMantenimiento: false
+        },
 
         nuevo: {
             tipoMantenimiento: '',
@@ -91,6 +99,51 @@ document.addEventListener('alpine:init', () => {
             this.cargarPreview();
         },
 
+        parseCosto(valor) {
+            const texto = String(valor ?? '').replace(/,/g, '').trim();
+            if (texto === '') return null;
+            const numero = Number(texto);
+            return Number.isFinite(numero) ? numero : NaN;
+        },
+
+        formatoCosto(valor) {
+            const texto = String(valor ?? '').replace(/,/g, '').trim();
+            if (texto === '' || !/^-?\d*(?:\.\d{0,2})?$/.test(texto)) return '';
+            const negativo = texto.startsWith('-');
+            const sinSigno = negativo ? texto.slice(1) : texto;
+            const partes = sinSigno.split('.');
+            const entero = (partes[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return (negativo ? '-' : '') + (partes.length > 1 ? `${entero}.${partes[1]}` : entero);
+        },
+
+        capturarCosto(evento) {
+            const input = evento && evento.target;
+            if (!input) return;
+
+            const caret = input.selectionStart ?? input.value.length;
+            const digitosAntes = input.value.slice(0, caret).replace(/[^0-9.]/g, '').length;
+            let limpio = input.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const punto = limpio.indexOf('.');
+            if (punto !== -1) {
+                limpio = limpio.slice(0, punto + 1) + limpio.slice(punto + 1).replace(/\./g, '').slice(0, 2);
+            }
+
+            const partes = limpio.split('.');
+            const entero = (partes[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formateado = partes.length > 1 ? `${entero}.${partes[1]}` : entero;
+            input.value = formateado;
+            this.nuevo.costoMantenimiento = limpio;
+            this.errores.costoMantenimiento = false;
+
+            let nuevaPosicion = 0;
+            let contados = 0;
+            while (nuevaPosicion < formateado.length && contados < digitosAntes) {
+                if (/[0-9.]/.test(formateado[nuevaPosicion])) contados++;
+                nuevaPosicion++;
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
         async cargarPreview() {
             try {
                 const { data } = await axios.post(this.BASE + '/checklist-preview', {
@@ -105,39 +158,36 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        // Validaciones textuales del legacy (GuardarMantenimiento).
+        // Validación visual del formulario antes de enviar.
         validar() {
-            if (!this.nuevo.tipoMantenimiento) {
-                this.notificar('Debes seleccionar el tipo de mantenimiento');
-                return false;
+            this.errores = {
+                estadoActual: !this.nuevo.estadoActual,
+                fechaInicio: !this.nuevo.fechaInicio,
+                tipoMantenimiento: !this.nuevo.tipoMantenimiento,
+                frecuencia: this.nuevo.tipoMantenimiento === '1' && this.usaFrecuencia && !this.nuevo.frecuencia,
+                fallaDescripcion: this.nuevo.tipoMantenimiento === '2' && (this.nuevo.fallaDescripcion || '').trim() === '',
+                costoMantenimiento: false
+            };
+
+            const costo = this.parseCosto(this.nuevo.costoMantenimiento);
+            if (costo !== null && (!Number.isFinite(costo) || costo < 0)) {
+                this.errores.costoMantenimiento = true;
             }
 
-            if (!this.nuevo.estadoActual) {
-                this.notificar('Debes seleccionar el estado actual de la maquinaria');
-                return false;
+            const hayError = Object.values(this.errores).some(Boolean);
+            if (hayError) {
+                if (window.Notify && typeof window.Notify.error === 'function') {
+                    window.Notify.error('Completa los campos obligatorios.');
+                } else {
+                    this.notificar('Completa los campos obligatorios.');
+                }
             }
-
-            if (this.nuevo.tipoMantenimiento === '2' && (this.nuevo.fallaDescripcion || '').trim() === '') {
-                this.notificar('Debes describir la falla');
-                return false;
-            }
-
-            if (this.nuevo.tipoMantenimiento === '1' && this.usaFrecuencia && !this.nuevo.frecuencia) {
-                this.notificar('Debes seleccionar la frecuencia');
-                return false;
-            }
-
-            if (!this.nuevo.fechaInicio) {
-                this.notificar('Debes seleccionar la fecha de inicio');
-                return false;
-            }
-
-            return true;
+            return !hayError;
         },
 
         notificar(msg) {
             if (typeof this.showAlert === 'function') {
-                this.showAlert('warning', 'Atención', msg);
+                this.showAlert('error', 'Error', msg);
             }
         },
 
@@ -159,7 +209,7 @@ document.addEventListener('alpine:init', () => {
                     frecuencia: (this.nuevo.tipoMantenimiento === '1' && this.usaFrecuencia) ? this.nuevo.frecuencia : '',
                     fechaInicio: this.nuevo.fechaInicio,
                     estadoActual: this.nuevo.estadoActual,
-                    costoMantenimiento: this.nuevo.costoMantenimiento,
+                    costoMantenimiento: String(this.nuevo.costoMantenimiento ?? '').replace(/,/g, ''),
                     fallaDescripcion: this.nuevo.fallaDescripcion,
                     observaciones: this.nuevo.observaciones
                 });

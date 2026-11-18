@@ -189,6 +189,48 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        parseCosto(valor) {
+            const numero = Number(String(valor ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(numero) ? numero : NaN;
+        },
+
+        formatearCosto(valor) {
+            const texto = String(valor ?? '').replace(/,/g, '').trim();
+            if (texto === '') return '';
+            if (!/^\d*(?:\.\d{0,2})?$/.test(texto)) return '';
+            const partes = texto.split('.');
+            const entero = (partes[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return partes.length > 1 ? `${entero}.${partes[1]}` : entero;
+        },
+
+        capturarCosto(evento) {
+            const input = evento && evento.target;
+            if (!input) return;
+
+            const caret = input.selectionStart ?? input.value.length;
+            const digitosAntes = input.value.slice(0, caret).replace(/[^0-9.]/g, '').length;
+            let limpio = input.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const punto = limpio.indexOf('.');
+            if (punto !== -1) {
+                limpio = limpio.slice(0, punto + 1) + limpio.slice(punto + 1).replace(/\./g, '').slice(0, 2);
+            }
+
+            const partes = limpio.split('.');
+            const entero = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formateado = partes.length > 1 ? `${entero}.${partes[1]}` : entero;
+            input.value = formateado;
+            this.form.costo_compra = limpio;
+            this.errores.costo_compra = false;
+
+            let nuevaPosicion = 0;
+            let contados = 0;
+            while (nuevaPosicion < formateado.length && contados < digitosAntes) {
+                if (/[0-9.]/.test(formateado[nuevaPosicion])) contados++;
+                nuevaPosicion++;
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
         validar() {
             this.errores = {
                 maquinaria: false,
@@ -221,7 +263,8 @@ document.addEventListener('alpine:init', () => {
                 hayError = true;
             }
 
-            if (this.form.costo_compra === '' || isNaN(parseFloat(this.form.costo_compra)) || parseFloat(this.form.costo_compra) < 0) {
+            const costo = this.parseCosto(this.form.costo_compra);
+            if (String(this.form.costo_compra).trim() === '' || !Number.isFinite(costo) || costo < 0) {
                 this.errores.costo_compra = true;
                 hayError = true;
             }
@@ -239,7 +282,7 @@ document.addEventListener('alpine:init', () => {
             fd.append('Fecha_compra', this.form.fecha_compra);
             fd.append('Fecha_instalacion', this.form.fecha_instalacion);
             fd.append('Proveedor', this.form.proveedor || '');
-            fd.append('Costo_compra', this.form.costo_compra);
+            fd.append('Costo_compra', String(this.form.costo_compra ?? '').replace(/,/g, ''));
             fd.append('Garantia', this.form.garantia || '');
             return fd;
         },

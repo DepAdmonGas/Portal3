@@ -44,19 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
      * archivo y ese archivo existe físicamente en el servidor.
      */
     function estadoDescarga(row) {
+        const archivoDisponible = Boolean(row.archivo) && Boolean(row.archivo_existe);
+
         if (!puedeDescargar) {
-            return { habilitado: false, motivo: 'No tienes permiso de descarga.' };
+            return { habilitado: false, motivo: 'No tienes permiso de descarga.', icono: 'ti-download' };
         }
 
-        if (!row.archivo) {
-            return { habilitado: false, motivo: 'Este registro no tiene archivo.' };
+        if (!archivoDisponible) {
+            return { habilitado: false, motivo: 'Documento no disponible.', icono: 'ti-file-off' };
         }
 
-        if (!row.archivo_existe) {
-            return { habilitado: false, motivo: 'El archivo no está disponible en el servidor.' };
-        }
-
-        return { habilitado: true, motivo: 'Descargar PDF' };
+        return { habilitado: true, motivo: 'Descargar PDF', icono: 'ti-download' };
     }
 
     function renderAcciones(row) {
@@ -73,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
               + ' data-file="' + (descarga.habilitado ? encodeURIComponent(row.archivo) : '') + '"'
               + ' title="' + descarga.motivo + '"'
               + (descarga.habilitado ? '' : ' aria-disabled="true" tabindex="-1"') + '>'
-              + '<i class="ti ti-download me-1"></i> Descargar archivo</a>';
+              + '<i class="ti ' + descarga.icono + ' me-1"></i> Descargar archivo</a>';
 
         html += '<a class="dropdown-item pointer btn-cd-eliminar' + clase(puedeEliminar) + '"'
               + ' data-id="' + row.id + '" data-nombre="' + row.periodo + ' ' + row.year + '">'

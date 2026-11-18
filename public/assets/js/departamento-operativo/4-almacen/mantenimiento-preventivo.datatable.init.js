@@ -41,19 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function estadoDescarga(row) {
+        if (!row.orden_servicio || !row.orden_servicio_existe) {
+            return { habilitado: false, disponible: false, motivo: 'Documento no disponible.' };
+        }
+
         if (!puedeDescargar) {
-            return { habilitado: false, motivo: 'No tienes permiso de descarga.' };
+            return { habilitado: false, disponible: true, motivo: 'No tienes permiso de descarga.' };
         }
 
-        if (!row.orden_servicio) {
-            return { habilitado: false, motivo: 'Este registro no tiene orden de servicio.' };
-        }
-
-        if (!row.orden_servicio_existe) {
-            return { habilitado: false, motivo: 'El archivo no está disponible en el servidor.' };
-        }
-
-        return { habilitado: true, motivo: 'Descargar orden de servicio' };
+        return { habilitado: true, disponible: true, motivo: 'Descargar orden de servicio' };
     }
 
     function renderOrden(row) {
@@ -65,11 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  + '<i class="ti ti-download fs-6 text-primary"></i></a>';
         }
 
-        if (row.orden_servicio) {
-            return '<i class="ti ti-file-off fs-6 text-muted" title="' + descarga.motivo + '"></i>';
+        if (descarga.disponible) {
+            return '<i class="ti ti-download fs-6 text-muted" title="' + descarga.motivo + '"></i>';
         }
 
-            return '<i class="ti ti-file-off fs-6 text-muted" title="' + descarga.motivo + '"></i>';
+        return '<i class="ti ti-file-off fs-6 text-muted" title="' + descarga.motivo + '"></i>';
     }
 
     function renderAcciones(row) {
@@ -228,8 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 total += (data[idx].costo || 0);
             });
             const moneda = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const api = this.api();
+            const columnasVisibles = api.columns(':visible').indexes().toArray();
+            const indiceCosto = columnasVisibles.indexOf(9);
+            const columnasRestantes = columnasVisibles.length - indiceCosto - 1;
+            const celdasRestantes = columnasRestantes > 0
+                ? '<th colspan="' + columnasRestantes + '"></th>'
+                : '';
             $(this.api().table().footer()).html(
-                '<tr><th class="text-end text-white" colspan="9">Costo total:</th><th class="text-end text-white"> $' + moneda + '</th><th colspan="3"></th></tr>'
+                '<tr><th class="text-end text-white" colspan="' + indiceCosto + '">Costo total:</th>'
+                + '<th class="text-end text-white">$' + moneda + '</th>'
+                + celdasRestantes + '</tr>'
             );
         },
         drawCallback: function () {

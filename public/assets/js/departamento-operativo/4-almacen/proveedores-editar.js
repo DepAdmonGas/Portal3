@@ -90,7 +90,7 @@ document.addEventListener('alpine:init', () => {
                 }
             } catch (err) {
                 console.error(err);
-                this.notify('error', 'Error en el servidor al intentar actualizar el proveedor.');
+                this.notify('error', err.response?.data?.message || 'Error en el servidor al intentar actualizar el proveedor.');
                 this.guardando = false;
             }
         }
