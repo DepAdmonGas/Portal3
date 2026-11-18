@@ -2,107 +2,131 @@
     'use strict';
 
     function initializeScheduleTemplateForm(form) {
+        const entry = form.querySelector('[data-schedule-entry]');
+        const breakStart = form.querySelector('[data-schedule-break-start]');
+        const breakEnd = form.querySelector('[data-schedule-break-end]');
+        const exit = form.querySelector('[data-schedule-exit]');
         const container = form.querySelector('[data-schedule-segment-container]');
-        const template = form.parentElement.querySelector('template[data-schedule-segment-template]');
-        const addButton = form.querySelector('[data-schedule-add-segment]');
-        if (!container || !template || !addButton) return;
-        let nextIndex = container.querySelectorAll('[data-schedule-segment-row]').length;
+        const typeInput = form.querySelector('[data-schedule-template-type]');
+        const sourceTypeInput = form.querySelector('[data-schedule-source-type]');
+        if (!entry || !breakStart || !breakEnd || !exit || !container || !typeInput) return;
+        if (form.dataset.scheduleTemplateInitialized === 'true') return;
+        form.dataset.scheduleTemplateInitialized = 'true';
 
-        function appendSegment(segment = {}) {
-            const index = nextIndex++;
-            const fragment = template.content.cloneNode(true);
-            fragment.querySelectorAll('[id], [for], [name]').forEach((element) => {
-                ['id', 'for', 'name'].forEach((attribute) => {
-                    if (element.hasAttribute(attribute)) {
-                        element.setAttribute(attribute, element.getAttribute(attribute).replaceAll('__INDEX__', String(index)));
-                    }
+        function clearGeneratedSegments() {
+            container.replaceChildren();
+        }
+
+        function minuteOfDay(value) {
+            if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value || '')) return null;
+            return Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+        }
+
+        function reportInvalid(input, message) {
+            input.setCustomValidity(message);
+            input.reportValidity();
+        }
+
+        [entry, breakStart, breakEnd, exit].forEach((input) => {
+            input.addEventListener('input', () => input.setCustomValidity(''));
+            input.addEventListener('change', () => input.setCustomValidity(''));
+        });
+
+        form.addEventListener('submit', function (event) {
+            clearGeneratedSegments();
+            [entry, breakStart, breakEnd, exit].forEach((input) => input.setCustomValidity(''));
+            const hasBreakStart = breakStart.value !== '';
+            const hasBreakEnd = breakEnd.value !== '';
+            if (hasBreakStart !== hasBreakEnd) {
+                const incomplete = hasBreakStart ? breakEnd : breakStart;
+                reportInvalid(incomplete, 'Indica las dos horas del descanso o deja ambas vacías.');
+                event.preventDefault();
+                return;
+            }
+
+            const checkpoints = [{ time: entry.value, input: entry }];
+            if (hasBreakStart) {
+                checkpoints.push({ time: breakStart.value, input: breakStart });
+                checkpoints.push({ time: breakEnd.value, input: breakEnd });
+            }
+            checkpoints.push({ time: exit.value, input: exit });
+            const minutes = checkpoints.map((point) => minuteOfDay(point.time));
+            if (minutes.some((minute) => minute === null)) {
+                const invalid = checkpoints.find((point, index) => minutes[index] === null);
+                reportInvalid(invalid.input, 'Indica una hora válida.');
+                event.preventDefault();
+                return;
+            }
+
+            const offsets = [0];
+            for (let index = 1; index < minutes.length; index += 1) {
+                const offset = offsets[index - 1] + (minutes[index] <= minutes[index - 1] ? 1 : 0);
+                if (offset > 1) {
+                    reportInvalid(checkpoints[index].input, 'El turno no puede exceder el día siguiente.');
+                    event.preventDefault();
+                    return;
+                }
+                offsets.push(offset);
+            }
+
+            const kinds = hasBreakStart ? ['WORK', 'BREAK', 'WORK'] : ['WORK'];
+            const startIndexes = hasBreakStart ? [0, 1, 2] : [0];
+            const endIndexes = hasBreakStart ? [1, 2, 3] : [1];
+            const segments = kinds.map((kind, index) => ({
+                tipo_segmento: kind,
+                hora_inicio_local: checkpoints[startIndexes[index]].time,
+                hora_fin_local: checkpoints[endIndexes[index]].time,
+                dia_offset_inicio: offsets[startIndexes[index]],
+                dia_offset_fin: offsets[endIndexes[index]]
+            }));
+            segments.forEach((segment, index) => {
+                Object.entries(segment).forEach(([key, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `segments[${index}][${key}]`;
+                    input.value = String(value);
+                    container.appendChild(input);
                 });
             });
-            const row = fragment.querySelector('[data-schedule-segment-row]');
-            if (row && Object.keys(segment).length > 0) {
-                const type = row.querySelector('select[name*="[tipo_segmento]"]');
-                const start = row.querySelector('input[name*="[hora_inicio_local]"]');
-                const end = row.querySelector('input[name*="[hora_fin_local]"]');
-                const startOffset = row.querySelector('select[name*="[dia_offset_inicio]"]');
-                const endOffset = row.querySelector('select[name*="[dia_offset_fin]"]');
-                if (type && ['WORK', 'BREAK'].includes(segment.tipo_segmento)) type.value = segment.tipo_segmento;
-                if (start && /^\d{2}:\d{2}$/.test(segment.hora_inicio_local || '')) start.value = segment.hora_inicio_local;
-                if (end && /^\d{2}:\d{2}$/.test(segment.hora_fin_local || '')) end.value = segment.hora_fin_local;
-                if (startOffset && ['0', '1'].includes(String(segment.dia_offset_inicio ?? 0))) startOffset.value = String(segment.dia_offset_inicio ?? 0);
-                if (endOffset && ['0', '1'].includes(String(segment.dia_offset_fin ?? 0))) endOffset.value = String(segment.dia_offset_fin ?? 0);
-            }
-            container.appendChild(fragment);
-        }
 
-        function setSegments(segments) {
-            while (container.firstChild) container.removeChild(container.firstChild);
-            nextIndex = 0;
-            const usableSegments = Array.isArray(segments) ? segments.slice(0, 255) : [];
-            if (usableSegments.length === 0) appendSegment();
-            else usableSegments.forEach((segment) => appendSegment(segment && typeof segment === 'object' ? segment : {}));
-            synchronizeControls();
-        }
-
-        function synchronizeControls() {
-            const rows = container.querySelectorAll('[data-schedule-segment-row]');
-            rows.forEach((row) => {
-                const removeButton = row.querySelector('[data-schedule-remove-segment]');
-                if (removeButton) removeButton.disabled = rows.length <= 1;
-            });
-            addButton.disabled = rows.length >= 255;
-        }
-
-        addButton.addEventListener('click', function () {
-            const rows = container.querySelectorAll('[data-schedule-segment-row]');
-            if (rows.length >= 255) return;
-            appendSegment();
-            synchronizeControls();
+            const overnight = offsets.some((offset) => offset === 1);
+            const sourceType = sourceTypeInput ? sourceTypeInput.value : '';
+            typeInput.value = overnight ? 'NOCTURNO' : (['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'].includes(sourceType) ? sourceType : 'REGULAR');
         });
 
-        container.addEventListener('click', function (event) {
-            const button = event.target instanceof Element
-                ? event.target.closest('[data-schedule-remove-segment]')
-                : null;
-            if (!button || container.querySelectorAll('[data-schedule-segment-row]').length <= 1) return;
-            const row = button.closest('[data-schedule-segment-row]');
-            if (row) row.remove();
-            synchronizeControls();
-        });
-
-        synchronizeControls();
-
-        const modal = form.closest('#station-template-create-modal');
-        if (modal) {
-            modal.addEventListener('show.bs.modal', function (event) {
+        const createModal = form.closest('#station-template-create-modal');
+        if (createModal) {
+            createModal.addEventListener('show.bs.modal', function (event) {
                 const trigger = event.relatedTarget;
-                const prefill = trigger instanceof HTMLElement && trigger.hasAttribute('data-schedule-template-prefill');
+                const isPrefill = trigger instanceof HTMLElement && trigger.hasAttribute('data-schedule-template-prefill');
                 const name = form.querySelector('[name="template_name"]');
-                const type = form.querySelector('[name="template_type"]');
-                const title = modal.querySelector('#station-template-create-title');
-                const confirmation = form.querySelector('[name="confirm_template"]')?.nextElementSibling;
+                const title = createModal.querySelector('#station-template-create-title');
+                const confirmation = form.querySelector('[data-schedule-confirmation]');
                 const submit = form.querySelector('[data-schedule-template-submit]');
-
                 form.reset();
-                setSegments([]);
-                if (prefill) {
-                    let segments = [];
+                clearGeneratedSegments();
+                if (sourceTypeInput) sourceTypeInput.value = '';
+                if (isPrefill) {
+                    let schedule = null;
                     try {
-                        const parsed = JSON.parse(trigger.dataset.templateSegments || '[]');
-                        if (Array.isArray(parsed)) segments = parsed;
+                        schedule = JSON.parse(trigger.dataset.templateSchedule || 'null');
                     } catch (_) {
-                        segments = [];
+                        schedule = null;
                     }
+                    if (!schedule || typeof schedule !== 'object' || !schedule.entrada || !schedule.salida) return;
                     if (name) name.value = trigger.dataset.templateName || '';
-                    if (type && ['REGULAR', 'NOCTURNO', 'MIXTO', 'ROTATIVO'].includes(trigger.dataset.templateType || '')) {
-                        type.value = trigger.dataset.templateType;
-                    }
-                    setSegments(segments);
+                    entry.value = schedule.entrada;
+                    breakStart.value = schedule.descanso_inicio || '';
+                    breakEnd.value = schedule.descanso_fin || '';
+                    exit.value = schedule.salida;
+                    const sourceType = trigger.dataset.templateType || '';
+                    if (sourceTypeInput) sourceTypeInput.value = sourceType;
                     if (title) title.textContent = 'Personalizar turno para esta estación';
                     if (confirmation) confirmation.textContent = 'Se creará una plantilla nueva y exclusiva para la estación seleccionada. La plantilla global y otras estaciones no se modificarán.';
                     if (submit) submit.textContent = 'Crear personalización';
                 } else {
                     if (title) title.textContent = 'Nueva plantilla para esta estación';
-                    if (confirmation) confirmation.textContent = 'Confirmo crear esta plantilla exclusivamente para la estación seleccionada.';
+                    if (confirmation) confirmation.textContent = 'Se creará una plantilla nueva y exclusiva para la estación seleccionada. Las plantillas globales y otras estaciones no se modificarán.';
                     if (submit) submit.textContent = 'Guardar plantilla';
                 }
             });

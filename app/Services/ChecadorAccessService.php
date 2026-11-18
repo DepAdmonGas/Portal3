@@ -271,6 +271,62 @@ final class ChecadorAccessService
         }
     }
 
+    /**
+     * Read M04's template catalog under Checador's explicit locality scope.
+     * This is separate from weekly assignment read permission. Autolavado (9)
+     * uses the established Palo Solo (2) template catalog, but both the
+     * department grant and access to that source locality must be effective.
+     *
+     * @return array{allowed:bool,reason:string,catalog_workplace_id?:int,workplaces:array}
+     */
+    public static function authorizeShiftTemplateCatalogRead(?int $requestedLocalityId): array
+    {
+        if ($requestedLocalityId === null || $requestedLocalityId < 1) {
+            return ['allowed' => false, 'reason' => 'invalid_workplace', 'workplaces' => []];
+        }
+
+        $requestedScope = self::authorize($requestedLocalityId);
+        if (!($requestedScope['allowed'] ?? false)) {
+            return $requestedScope;
+        }
+
+        $stationIds = array_map('intval', array_column($requestedScope['station_workplaces'] ?? [], 'id'));
+        $departmentIds = array_map('intval', array_column($requestedScope['department_workplaces'] ?? [], 'id'));
+        if ($requestedLocalityId === self::AUTOLAVADO_LOCALITY_ID) {
+            if (!in_array(self::AUTOLAVADO_LOCALITY_ID, $departmentIds, true)) {
+                return ['allowed' => false, 'reason' => 'requested_department_out_of_scope', 'workplaces' => []];
+            }
+
+            // Legacy schedule catalogs explicitly map Autolavado 9 to Palo
+            // Solo 2. Require the actor's independent Checador station scope
+            // for source 2 as well; never infer it from the department grant.
+            $sourceScope = self::authorize(self::PALO_SOLO_LOCALITY_ID);
+            if (!($sourceScope['allowed'] ?? false)
+                || !in_array(self::PALO_SOLO_LOCALITY_ID,
+                    array_map('intval', array_column($sourceScope['station_workplaces'] ?? [], 'id')), true)) {
+                return ['allowed' => false, 'reason' => 'shared_catalog_source_out_of_scope', 'workplaces' => []];
+            }
+
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'catalog_workplace_id' => self::PALO_SOLO_LOCALITY_ID,
+                'workplaces' => $requestedScope['workplaces'],
+            ];
+        }
+
+        if (!in_array($requestedLocalityId, $stationIds, true)) {
+            return ['allowed' => false, 'reason' => 'requested_station_out_of_scope', 'workplaces' => []];
+        }
+
+        return [
+            'allowed' => true,
+            'reason' => 'authorized',
+            'catalog_workplace_id' => $requestedLocalityId,
+            'workplaces' => $requestedScope['workplaces'],
+        ];
+    }
+
     /** M04 station template administration is an explicit Encargado grant and remains station-scoped. */
     public static function authorizeStationTemplateAdministration(?int $requestedLocalityId = null): array
     {

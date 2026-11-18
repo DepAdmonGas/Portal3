@@ -7,13 +7,28 @@ namespace App\Services;
 use App\Models\Operativo\RhLocalidadesPerfil;
 use App\Models\Operativo\RhPuestos;
 use App\Models\Usuario;
+use App\Core\Logger;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Throwable;
 
 /** Narrow M11 writers for the existing, approved Checador configuration stores. */
 final class ChecadorConfigurationWriteService
 {
-    /** @return array{ok:bool,item?:array{id:int,name:string},error?:string} */
+    /** @var callable(Usuario,?int):bool */
+    private $authorizePositionEdit;
+
+    public function __construct(?callable $authorizePositionEdit = null)
+    {
+        $this->authorizePositionEdit = $authorizePositionEdit ?? static function (Usuario $actor, ?int $workplaceId): bool {
+            $authenticated = \App\Core\Auth::user();
+            return $authenticated !== null
+                && \App\Core\Auth::check()
+                && (int) $authenticated->id === (int) $actor->id
+                && (ChecadorAccessService::authorizePositionCatalog($workplaceId, 'editar')['allowed'] ?? false);
+        };
+    }
+
+    /** @return array{ok:bool,item?:array{id:int,name:string},error?:string,diagnostic_id?:string} */
     public function savePosition(Usuario $actor, ?int $workplaceId, ?int $positionId, string $name): array
     {
         $name = trim($name);
@@ -23,41 +38,51 @@ final class ChecadorConfigurationWriteService
         if (!ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()) {
             return ['ok' => false, 'error' => 'm11_write_disabled'];
         }
-        if (!(ChecadorAccessService::authorizePositionCatalog($workplaceId, 'editar')['allowed'] ?? false)) {
+        if (!(($this->authorizePositionEdit)($actor, $workplaceId))) {
             return ['ok' => false, 'error' => 'permission_denied'];
         }
 
+        $phase = 'transaction_begin';
+        $diagnosticId = bin2hex(random_bytes(8));
         try {
-            $item = Capsule::connection()->transaction(function () use ($actor, $workplaceId, $positionId, $name): array {
+            $item = Capsule::connection()->transaction(function () use ($actor, $workplaceId, $positionId, $name, &$phase): array {
+                $phase = 'duplicate_check';
                 if (RhPuestos::query()->where('status', 1)->whereRaw('LOWER(puesto) = LOWER(?)', [$name])
                     ->when($positionId !== null, static fn($query) => $query->where('id', '<>', $positionId))->exists()) {
                     throw new \DomainException('duplicate_position');
                 }
 
                 if ($positionId === null) {
+                    $phase = 'position_insert';
                     $position = RhPuestos::query()->create(['puesto' => $name, 'status' => 1]);
                     $action = 'CREATE';
                 } else {
+                    $phase = 'position_lock';
                     $position = RhPuestos::query()->where('id', $positionId)->where('status', 1)->lockForUpdate()->first();
                     if ($position === null) throw new \DomainException('position_not_found');
+                    $phase = 'position_update';
                     $position->puesto = $name;
                     $position->save();
                     $action = 'UPDATE';
                 }
 
+                $phase = 'audit_insert';
                 $this->audit((int) $actor->id, ChecadorV2PermissionService::POSITION_CATALOG_EDIT,
-                    null, 'position', (int) $position->id, $action);
+                    null, 'POSITION', (int) $position->id, $action);
+                $phase = 'position_readback';
                 $readback = RhPuestos::query()->where('id', (int) $position->id)->where('status', 1)->first(['id', 'puesto']);
                 if ($readback === null || (string) $readback->puesto !== $name) {
                     throw new \RuntimeException('position_readback_mismatch');
                 }
+                $phase = 'transaction_commit';
                 return ['id' => (int) $readback->id, 'name' => (string) $readback->puesto];
             });
             return ['ok' => true, 'item' => $item];
         } catch (\DomainException $exception) {
             return ['ok' => false, 'error' => $exception->getMessage()];
-        } catch (Throwable) {
-            return ['ok' => false, 'error' => 'position_write_failed'];
+        } catch (Throwable $exception) {
+            self::logPositionWriteFailure($exception, $phase, $diagnosticId, $workplaceId, $positionId);
+            return ['ok' => false, 'error' => 'position_write_failed', 'diagnostic_id' => $diagnosticId];
         }
     }
 
@@ -123,5 +148,33 @@ final class ChecadorConfigurationWriteService
             'action' => $action,
             'created_at_utc' => gmdate('Y-m-d H:i:s'),
         ]);
+    }
+
+    private static function logPositionWriteFailure(Throwable $exception, string $phase, string $diagnosticId, ?int $workplaceId, ?int $positionId): void
+    {
+        $databaseException = $exception;
+        while ($databaseException->getPrevious() !== null) {
+            $databaseException = $databaseException->getPrevious();
+        }
+        $errorInfo = $databaseException instanceof \PDOException && is_array($databaseException->errorInfo ?? null)
+            ? $databaseException->errorInfo
+            : [];
+        $sqlState = isset($errorInfo[0]) ? (string) $errorInfo[0] : (string) $exception->getCode();
+        $driverCode = isset($errorInfo[1]) && is_numeric($errorInfo[1]) ? (int) $errorInfo[1] : null;
+
+        try {
+            Logger::error('Checador M11 position write failed', [
+                'diagnostic_id' => $diagnosticId,
+                'operation' => 'save_position',
+                'phase' => $phase,
+                'exception_class' => $databaseException::class,
+                'sql_state' => preg_match('/\A[A-Z0-9]{5}\z/i', $sqlState) === 1 ? $sqlState : null,
+                'driver_code' => $driverCode,
+                'workplace_id' => $workplaceId,
+                'position_id' => $positionId,
+            ]);
+        } catch (Throwable) {
+            error_log('Checador M11 position diagnostic could not be written; reference ' . $diagnosticId);
+        }
     }
 }

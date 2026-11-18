@@ -102,15 +102,23 @@
 
             <?php if ($catalogStatus === 'not_requested'): ?>
                 <p class="mb-0 text-muted" role="status">Selecciona una localidad autorizada para consultar los horarios.</p>
+            <?php elseif ($catalogStatus === 'database_error'): ?>
+                <p class="mb-0 text-warning-emphasis" role="alert"><?= htmlspecialchars((string) ($templateCatalogMessage ?? 'Ocurrió un error SQL al leer el catálogo de horarios. Revisa el registro técnico.'), ENT_QUOTES, 'UTF-8') ?></p>
+            <?php elseif ($catalogStatus === 'render_error'): ?>
+                <p class="mb-0 text-warning-emphasis" role="alert"><?= htmlspecialchars((string) ($templateCatalogMessage ?? 'Ocurrió un error al procesar la lectura del catálogo de horarios.'), ENT_QUOTES, 'UTF-8') ?></p>
             <?php elseif ($catalogStatus === 'unavailable'): ?>
-                <p class="mb-0 text-warning-emphasis" role="status">No fue posible consultar los horarios. Intenta actualizar la página.</p>
+                <p class="mb-0 text-warning-emphasis" role="status"><?= htmlspecialchars((string) ($templateCatalogMessage ?? 'El catálogo operativo no está disponible en esta consulta.'), ENT_QUOTES, 'UTF-8') ?></p>
+            <?php elseif ($catalogStatus === 'permission_denied'): ?>
+                <p class="mb-0 text-warning-emphasis" role="status">No tienes autorización para consultar los horarios de esta localidad.</p>
             <?php elseif (($catalogStatus === 'partial') && ($scheduleTemplates ?? []) === []): ?>
                 <p class="mb-0 text-warning-emphasis" role="status">La consulta no pudo confirmar los horarios disponibles.</p>
-            <?php elseif (($scheduleTemplates ?? []) === [] && (empty($canManageStationTemplates) || $catalogStatus !== 'received')): ?>
+            <?php elseif (($scheduleTemplates ?? []) === [] && $catalogStatus === 'received'): ?>
                 <p class="mb-0 text-muted" role="status">No hay horarios para mostrar en esta consulta.</p>
             <?php else: ?>
                 <?php if ($catalogStatus === 'partial'): ?>
                     <p class="small text-warning-emphasis" role="status">La información de horarios puede estar incompleta.</p>
+                <?php elseif ($catalogStatus === 'database_error'): ?>
+                    <p class="small text-warning-emphasis" role="alert"><?= htmlspecialchars((string) ($templateCatalogMessage ?? 'Ocurrió un error SQL al leer parte del catálogo de horarios.'), ENT_QUOTES, 'UTF-8') ?></p>
                 <?php endif; ?>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped table-bordered align-middle mb-0 w-100" id="m04-template-table">

@@ -1063,12 +1063,15 @@ final class ChecadorDailyReadService
         if ($page < 1 || $page > 10000 || $perPage < 1 || $perPage > 200) return self::failure('bad_request', 400);
         $queryParams = ['page' => $page, 'per_page' => $perPage];
         if ($workplaceId !== null && $workplaceId > 0) $queryParams['station_id'] = $workplaceId;
-        $response = $this->request($user, 'GET', 'api/v2/shift-templates', $queryParams);
+        $operation = 'm04_shift_templates_list';
+        $response = $this->request($user, 'GET', 'api/v2/shift-templates', $queryParams, $operation);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
         $items = is_array($data) ? ($data['items'] ?? null) : null;
         if (!is_array($data) || (int) ($data['page'] ?? 0) !== $page || (int) ($data['per_page'] ?? 0) !== $perPage
-            || !is_array($items) || count($items) > $perPage) return self::failure('schedule_templates_unavailable', 502);
+            || !is_array($items) || count($items) > $perPage) {
+            return $this->shiftTemplateContractFailure($operation, $response, 'catalog_envelope_invalid');
+        }
         $normalized = [];
         foreach ($items as $item) {
             $id = is_array($item) ? self::positiveInt($item['id'] ?? null) : null;
@@ -1081,7 +1084,7 @@ final class ChecadorDailyReadService
             $lineage = is_array($item['derived_from_global'] ?? null) ? $item['derived_from_global'] : null;
             $customization = is_array($item['station_customization'] ?? null) ? $item['station_customization'] : null;
             if ($id === null || $version === null || $key === '' || strlen($key) > 100 || $name === '' || !in_array($active, [0, 1], true)) {
-                return self::failure('schedule_templates_unavailable', 502);
+                return $this->shiftTemplateContractFailure($operation, $response, 'catalog_item_invalid');
             }
             $normalized[] = ['id' => $id, 'clave' => $key, 'version' => $version, 'nombre' => $name,
                 'tipo_turno' => (string) ($item['tipo_turno'] ?? ''), 'scope' => $scope, 'id_estacion' => $stationId,
@@ -1097,12 +1100,13 @@ final class ChecadorDailyReadService
     {
         if ($templateKey === '' || strlen($templateKey) > 100 || str_contains($templateKey, '/') || $version < 1) return self::failure('bad_request', 400);
         $queryParams = $workplaceId !== null && $workplaceId > 0 ? ['station_id' => $workplaceId] : [];
-        $response = $this->request($user, 'GET', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions/' . $version, $queryParams);
+        $operation = 'm04_shift_template_version';
+        $response = $this->request($user, 'GET', 'api/v2/shift-templates/' . rawurlencode($templateKey) . '/versions/' . $version, $queryParams, $operation);
         if (!$response['ok']) return $response;
         $data = $response['payload']['data'] ?? null;
         $segments = is_array($data) ? ($data['segmentos'] ?? null) : null;
         if (!is_array($data) || (int) ($data['version'] ?? 0) !== $version || (string) ($data['clave'] ?? '') !== $templateKey || !is_array($segments)) {
-            return self::failure('schedule_templates_unavailable', 502);
+            return $this->shiftTemplateContractFailure($operation, $response, 'template_version_envelope_invalid');
         }
         $normalizedSegments = [];
         foreach ($segments as $segment) {
@@ -1111,7 +1115,9 @@ final class ChecadorDailyReadService
                 || preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/', (string) ($segment['hora_inicio_local'] ?? '')) !== 1
                 || preg_match('/\\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\\z/', (string) ($segment['hora_fin_local'] ?? '')) !== 1
                 || !in_array((int) ($segment['dia_offset_inicio'] ?? -1), [0, 1], true)
-                || !in_array((int) ($segment['dia_offset_fin'] ?? -1), [0, 1], true)) return self::failure('schedule_templates_unavailable', 502);
+                || !in_array((int) ($segment['dia_offset_fin'] ?? -1), [0, 1], true)) {
+                return $this->shiftTemplateContractFailure($operation, $response, 'template_segment_invalid');
+            }
             $normalizedSegments[] = ['ordinal' => (int) $segment['ordinal'], 'tipo_segmento' => (string) $segment['tipo_segmento'],
                 'hora_inicio_local' => (string) $segment['hora_inicio_local'], 'hora_fin_local' => (string) $segment['hora_fin_local'],
                 'dia_offset_inicio' => (int) $segment['dia_offset_inicio'], 'dia_offset_fin' => (int) $segment['dia_offset_fin']];
@@ -2298,6 +2304,21 @@ final class ChecadorDailyReadService
             'created_by_user_id' => $incidence['created_by_user_id'] ?? null,
             'approved_by_user_id' => $incidence['approved_by_user_id'] ?? null,
         ];
+    }
+
+    /** Record a sanitized M04 contract mismatch without exposing response bodies. */
+    private function shiftTemplateContractFailure(string $operation, array $response, string $contractFailure): array
+    {
+        $this->logMvpApiDiagnostic($operation, array_merge(
+            is_array($response['diagnostic'] ?? null) ? $response['diagnostic'] : [],
+            [
+                'local_error_kind' => 'schedule_templates_unavailable',
+                'response_contract_valid' => false,
+                'contract_failure' => $contractFailure,
+            ]
+        ));
+
+        return self::failure('schedule_templates_unavailable', 502);
     }
 
     private function request(
