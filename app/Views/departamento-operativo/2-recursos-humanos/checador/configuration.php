@@ -14,6 +14,8 @@ $attendancePolicyState = [
     'data' => $policyData,
 ];
 $attendancePolicy = $policyData;
+$policyHttpStatus = isset($policy['http_status']) ? (int) $policy['http_status'] : null;
+$policyApiCode = preg_replace('/[^A-Z0-9_]/', '', strtoupper((string) ($policy['api_code'] ?? '')));
 $activeAttendancePolicy = $policyRecord;
 $latestAttendancePolicy = [];
 $attendancePolicyFormDefaults = [
@@ -21,8 +23,6 @@ $attendancePolicyFormDefaults = [
     'incidence_deadline_days' => isset($policyRecord['incidence_deadline_days']) ? (string) $policyRecord['incidence_deadline_days'] : '',
 ];
 $attendancePolicyFeedback = is_array($configurationFeedback ?? null) ? $configurationFeedback : null;
-$attendancePolicyActorNames = [];
-$attendancePolicyHistory = [];
 $policyHistoryComplete = false;
 $canReadAttendancePolicy = !empty($permissions['policy_read']);
 $canEditAttendancePolicy = !empty($permissions['policy_edit']);
@@ -201,10 +201,7 @@ $readerProfileItemsJson = htmlspecialchars(
         @attendance-policy-error.window="error = $event.detail.message; consultUrl = $event.detail.consultUrl || ''; success = ''"
         data-current-policy="<?= $policyJson(($attendancePolicyState['status'] ?? '') === 'VERSIONED' ? $activeAttendancePolicy : []) ?>"
         data-next-policy="<?= $policyJson($nextAttendancePolicy) ?>"
-        data-current-date="<?= $esc($attendancePolicy['current_local_date'] ?? '') ?>"
-        data-history-complete="<?= !empty($attendancePolicy['policy_history_complete']) ? 'true' : 'false' ?>"
-        data-history="<?= $policyJson(array_values($attendancePolicyHistory)) ?>"
-        data-actor-names="<?= $policyJson($attendancePolicyActorNames ?? []) ?>">
+        data-current-date="<?= $esc($attendancePolicy['current_local_date'] ?? '') ?>">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-3">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-clock-hour-4 fs-5"></i></span>
             <div>
@@ -224,9 +221,6 @@ $readerProfileItemsJson = htmlspecialchars(
             <?php elseif (empty($canReadAttendancePolicy)): ?>
                 <p class="small text-muted mb-0">No tienes permiso para consultar la configuración de esta localidad.</p>
             <?php else: ?>
-                <?php if (($attendancePolicyState['status'] ?? '') === 'unavailable'): ?>
-                    <div class="alert alert-warning py-2" role="status">No fue posible consultar la configuración. Intenta de nuevo más tarde.</div>
-                <?php endif; ?>
                 <?php if ($scheduledPolicyScopeMismatch): ?>
                     <div class="alert alert-warning py-2" role="status">No se muestra la próxima configuración porque la respuesta no confirma la localidad seleccionada.</div>
                 <?php endif; ?>
@@ -286,8 +280,12 @@ $readerProfileItemsJson = htmlspecialchars(
                         <div class="col-12">
                             <?php if (($attendancePolicyState['status'] ?? '') === 'LEGACY_UNVERSIONED'): ?>
                                 <p class="alert alert-info py-2 mb-0" role="status">No hay una política V2 confirmada vigente para esta localidad. Los valores anteriores no se presentan como configuración V2 persistida.</p>
-                            <?php elseif (($attendancePolicyState['status'] ?? '') === 'unavailable'): ?>
-                                <p class="alert alert-warning py-2 mb-0" role="status">No fue posible confirmar la configuración para esta localidad.</p>
+                            <?php elseif (!in_array(($attendancePolicyState['status'] ?? ''), ['VERSIONED', 'LEGACY_UNVERSIONED'], true)): ?>
+                                <p class="alert alert-warning py-2 mb-0" role="status">
+                                    No fue posible confirmar la configuración para esta localidad.
+                                    <?php if ($policyHttpStatus !== null): ?>HTTP <?= $policyHttpStatus ?>.<?php endif; ?>
+                                    <?php if ($policyApiCode !== ''): ?>Código <?= $esc($policyApiCode) ?>.<?php endif; ?>
+                                </p>
                             <?php else: ?>
                                 <p class="alert alert-info py-2 mb-0" role="status">Aún no hay una configuración registrada para esta localidad.</p>
                             <?php endif; ?>
@@ -301,7 +299,6 @@ $readerProfileItemsJson = htmlspecialchars(
                     <?php elseif (!empty($canEditAttendancePolicy)): ?>
                         <span class="small text-muted align-self-center">La edición no está disponible en este entorno.</span>
                     <?php endif; ?>
-                    <button type="button" class="btn btn-outline-primary" @click="openHistoryModal()"><i class="ti ti-history me-1" aria-hidden="true"></i>Ver historial</button>
                 </div>
             <?php endif; ?>
 
@@ -357,45 +354,6 @@ $readerProfileItemsJson = htmlspecialchars(
                 </div>
             <?php endif; ?>
 
-            <?php if (!empty($canReadAttendancePolicy)): ?>
-                <div class="modal fade" id="attendance-policy-history-modal" tabindex="-1" aria-labelledby="attendance-policy-history-title" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary">
-                                <h4 class="modal-title text-white" id="attendance-policy-history-title"><i class="ti ti-history me-1" aria-hidden="true"></i>Historial de cambios</h4>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                            </div>
-                            <div class="modal-body">
-                                <?php if (array_key_exists('policy_history_complete', $attendancePolicy) && empty($attendancePolicy['policy_history_complete'])): ?>
-                                    <div class="alert alert-warning py-2" role="status">No fue posible confirmar todos los cambios anteriores. Actualiza más tarde para consultar el historial completo.</div>
-                                <?php endif; ?>
-                                <?php if (!array_key_exists('policy_history_complete', $attendancePolicy)): ?>
-                                    <div class="alert alert-secondary py-2" role="status">La lectura disponible confirma la política para la fecha consultada, pero no incluye el historial de versiones. No se interpreta como ausencia de cambios.</div>
-                                <?php elseif ($attendancePolicyHistory !== []): ?>
-                                <div class="table-responsive">
-                                    <table id="attendance-policy-history-table" class="table table-sm table-striped table-bordered align-middle mb-0 w-100">
-                                        <caption class="visually-hidden">Historial de configuraciones de asistencia</caption>
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Versión</th>
-                                                <th scope="col">Vigencia</th>
-                                                <th scope="col">Tolerancia</th>
-                                                <th scope="col">Plazo</th>
-                                                <th scope="col">Usuario</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                                <?php elseif (!empty($attendancePolicy['policy_history_complete'])): ?>
-                                    <p class="mb-0">No hay versiones de configuración en el historial consultado.</p>
-                                <?php endif; ?>
-                            </div>
-                            <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="ti ti-check me-1" aria-hidden="true"></i>Cerrar</button></div>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
         </div>
     </section>
     <?php endif; ?>

@@ -2,12 +2,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('attendancePolicyForm', () => ({
         current: null,
         next: null,
-        history: [],
-        historyTable: null,
-        historyComplete: true,
-        actorNames: {},
         editModal: null,
-        historyModal: null,
         editorDefaults: null,
         success: '',
         error: '',
@@ -22,14 +17,7 @@ document.addEventListener('alpine:init', () => {
             const currentDate = element.dataset.currentDate || '';
             this.current = current && current.id ? current : null;
             this.next = next && next.id && next.effective_from_local_date > currentDate ? next : null;
-            this.historyComplete = element.dataset.historyComplete === 'true';
-            this.actorNames = parse(element.dataset.actorNames, {});
-            this.history = parse(element.dataset.history, []).filter((item) => item && item.id);
-            this.history = this.withActorNames(this.history);
-            this.history.sort((a, b) => String(b.effective_from_local_date).localeCompare(String(a.effective_from_local_date)));
-
             const editModalElement = element.querySelector('#attendance-policy-edit-modal');
-            const historyModalElement = element.querySelector('#attendance-policy-history-modal');
             const editButton = element.querySelector('#attendance-policy-edit-button');
             if (editModalElement && window.bootstrap?.Modal) {
                 this.editModal = bootstrap.Modal.getOrCreateInstance(editModalElement);
@@ -41,17 +29,6 @@ document.addEventListener('alpine:init', () => {
                 this.consultUrl = event.detail?.consultUrl || '';
                 this.success = '';
             });
-            if (historyModalElement && window.bootstrap?.Modal) {
-                this.historyModal = bootstrap.Modal.getOrCreateInstance(historyModalElement);
-                historyModalElement.addEventListener('shown.bs.modal', () => this.initializeHistoryTable());
-            }
-        },
-
-        withActorNames(rows) {
-            return rows.map((row) => ({
-                ...row,
-                actor_name: row.actor_name || this.actorNames[String(row.actor_portal_user_id)] || 'No disponible',
-            }));
         },
 
         openEditModal() {
@@ -72,64 +49,6 @@ document.addEventListener('alpine:init', () => {
             this.editModal.show();
         },
 
-        openHistoryModal() {
-            this.historyModal?.show();
-        },
-
-        initializeHistoryTable() {
-            const tableElement = this.$el.querySelector('#attendance-policy-history-table');
-            if (!tableElement || !window.jQuery?.fn?.DataTable) return;
-            if (this.historyTable) {
-                this.historyTable.columns.adjust();
-                return;
-            }
-
-            this.historyTable = window.jQuery(tableElement).DataTable({
-                data: this.history,
-                processing: false,
-                serverSide: false,
-                autoWidth: false,
-                stateSave: false,
-                pageLength: 10,
-                order: [[1, 'desc']],
-                language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
-                columns: [
-                    {
-                        data: 'policy_version',
-                        render: (value, type) => type === 'display' || type === 'filter'
-                            ? (value ? `#${this.escapeHtml(value)}` : '—')
-                            : Number(value || 0),
-                    },
-                    { data: 'effective_from_local_date', render: (value, type) => this.renderText(value, type) },
-                    {
-                        data: 'retardo_tolerance_minutes',
-                        render: (value, type) => type === 'display' || type === 'filter' ? `${this.escapeHtml(value ?? '—')} min` : Number(value ?? -1),
-                    },
-                    {
-                        data: 'incidence_deadline_days',
-                        render: (value, type) => type === 'display' || type === 'filter' ? `${this.escapeHtml(value ?? '—')} días` : Number(value ?? -1),
-                    },
-                    { data: 'actor_name', render: (value, type) => this.renderText(value, type) },
-                ],
-            });
-        },
-
-        renderText(value, type) {
-            const text = String(value ?? '—');
-            return type === 'display' || type === 'filter' ? this.escapeHtml(text) : text;
-        },
-
-        escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, (character) => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-            }[character]));
-        },
-
-        syncHistoryTable() {
-            if (!this.historyTable) return;
-            this.historyTable.clear().rows.add(this.history).draw(false);
-        },
-
         applyReadback(detail) {
             if (!detail || !detail.policy) return;
             const policy = detail.policy;
@@ -142,16 +61,6 @@ document.addEventListener('alpine:init', () => {
             }
             this.next = latest.effective_from_local_date > currentDate ? latest : null;
 
-            const byId = new Map(this.history.map((item) => [Number(item.id), item]));
-            [policy, latest].forEach((item) => {
-                if (!item || !item.id) return;
-                const actorName = this.actorNames[String(item.actor_portal_user_id)] || 'Tú';
-                byId.set(Number(item.id), { ...item, actor_name: actorName });
-            });
-            this.history = Array.from(byId.values()).sort((a, b) =>
-                String(b.effective_from_local_date).localeCompare(String(a.effective_from_local_date))
-            );
-            this.syncHistoryTable();
             this.updateEditorDefaults(latest);
             this.error = '';
             this.success = detail.message || 'La configuración se guardó y quedó confirmada.';

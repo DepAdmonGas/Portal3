@@ -19,7 +19,7 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
     $condition ? $passes++ : $fails++;
 };
 
-$keys = ['APP_ENV', 'CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_API_REAL_POSTS_ENABLED'];
+$keys = ['APP_ENV', 'CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED', 'CHECADOR_M11_CONFIGURATION_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_API_REAL_POSTS_ENABLED'];
 $original = [];
 foreach ($keys as $key) $original[$key] = [array_key_exists($key, $_ENV), $_ENV[$key] ?? null, getenv($key)];
 $restore = static function () use ($keys, $original): void {
@@ -131,6 +131,20 @@ try {
     ], 'not-m11-policy-write');
     $assert(($unrelatedPost['error']['kind'] ?? '') === 'api_post_disabled' && $blockedHistory === [],
         'the policy-specific opt-in does not enable unrelated API V2 POST operations');
+
+    $_ENV['APP_ENV'] = 'prod';
+    $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'true';
+    $_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'true';
+    $_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'false';
+    $assert(ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()
+        && ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()
+        && !ChecadorDailyReadService::realApiPostOperationsEnabled(),
+        'production M11 gates require their dedicated flags while the global real-POST gate stays closed');
+    $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'false';
+    $_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'false';
+    $assert(!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()
+        && !ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled(),
+        'production M11 write gates fail closed when either dedicated opt-in is absent');
 } finally {
     $restore();
 }

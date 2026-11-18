@@ -172,17 +172,17 @@ final class ChecadorDailyReadService
         $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
         $flag = strtolower(trim((string) ($_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED']
             ?? getenv('CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED') ?: '')));
-        return in_array($environment, ['dev', 'development', 'local'], true)
+        return in_array($environment, ['dev', 'development', 'local', 'prod'], true)
             && in_array($flag, ['1', 'true', 'yes', 'on'], true);
     }
 
-    /** Local M11 catalog/profile writes remain separately gated. */
+    /** M11 catalog/profile writes use their own explicit environment opt-in. */
     public static function m11ConfigurationPostOperationsEnabled(): bool
     {
         $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
         $flag = strtolower(trim((string) ($_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED']
             ?? getenv('CHECADOR_M11_CONFIGURATION_POSTS_ENABLED') ?: '')));
-        return in_array($environment, ['dev', 'development', 'local'], true)
+        return in_array($environment, ['dev', 'development', 'local', 'prod'], true)
             && in_array($flag, ['1', 'true', 'yes', 'on'], true);
     }
 

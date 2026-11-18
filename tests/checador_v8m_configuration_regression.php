@@ -168,13 +168,19 @@ $assert(!str_contains($html, 'Estos registros conservan su propio centro selecci
 $assert(!str_contains($html, 'El catálogo de turnos') && !str_contains($html, 'acciones autorizadas')
     && !str_contains($html, 'station-template-create-modal') && !str_contains($html, 'data-bs-target="#station-template-version-'), 'M11 excludes the schedule administration card and its duplicated controls');
 $assert(str_contains($html, 'id="m11-position-table"'), 'original searchable position table is rendered from the authorized catalog');
-$assert(!str_contains($html, 'id="attendance-policy-history-table"')
-    && str_contains($html, 'no incluye el historial de versiones')
-    && str_contains($html, 'id="attendance-policy-history-modal"'), 'history modal reports that the current authorized policy read has no version-history contract instead of showing an empty table');
+$assert(!str_contains($html, 'Ver historial')
+    && !str_contains($html, 'attendance-policy-history-table')
+    && !str_contains($html, 'attendance-policy-history-modal')
+    && str_contains($html, 'id="m11-change-history"'), 'unsupported policy-version history action is absent while the independent M11 audit history remains');
 $assert(str_contains($html, 'data-checador-configuration-datatable') && str_contains($html, 'id="m11-devices-table"')
     && str_contains($html, 'class="table-responsive"'), 'server-read device list uses the existing institutional DataTable and responsive wrapper');
 $assert(str_contains($html, 'No hay una política V2 confirmada vigente')
     && !str_contains($html, '0 minutos</dd>') && !str_contains($html, '0 días</dd>'), 'missing V2 policy is not displayed as a persisted default');
+$failedPolicy = $fixture;
+$failedPolicy['policy'] = ['status' => 'api_authorization', 'http_status' => 403, 'api_code' => 'WORKPLACE_FORBIDDEN', 'data' => null];
+$failedPolicyHtml = $render($failedPolicy);
+$assert(str_contains($failedPolicyHtml, 'HTTP 403') && str_contains($failedPolicyHtml, 'WORKPLACE_FORBIDDEN')
+    && !str_contains($failedPolicyHtml, 'Aún no hay una configuración registrada'), 'API authorization failures show safe diagnostic status instead of an empty-policy state');
 $scheduledFixture = $fixture;
 $scheduledFixture['policy']['data']['status'] = 'VERSIONED';
 $scheduledFixture['policy']['data']['policy'] = [
@@ -387,7 +393,7 @@ $scheduleHeaderStart = strpos($templateAdminHtml, 'id="m04-template-catalog-head
 $scheduleTableStart = strpos($templateAdminHtml, 'caption class="visually-hidden">Horarios disponibles');
 $readOnlyAdminHtml = $renderTemplateAdmin($adminCatalog, false);
 $assert(str_contains($writeHtml, 'id="attendance-policy-edit-button"')
-    && str_contains($writeHtml, '@click="openHistoryModal()"')
+    && !str_contains($writeHtml, 'openHistoryModal()')
     && str_contains($writeHtml, 'href="/departamento-operativo/recursos-humanos/checador/horarios-turnos"'), 'original policy edit/history actions and schedule shortcut retain their independent targets');
 $assert(substr_count($templateAdminHtml, 'id="m04-btn-new-template"') === 1
     && $scheduleHeaderStart !== false && $scheduleTableStart !== false

@@ -90,7 +90,12 @@ final class ChecadorConfigurationReadService
                 $policy = (new ChecadorDailyReadService())->readCurrentAttendancePolicy($user, $workplaceId);
                 $result['policy'] = ($policy['ok'] ?? false)
                     ? ['status' => 'ready', 'data' => $policy['data']]
-                    : ['status' => (string) ($policy['error']['kind'] ?? 'unavailable'), 'data' => null];
+                    : [
+                        'status' => (string) ($policy['error']['kind'] ?? 'unavailable'),
+                        'http_status' => isset($policy['error']['status']) ? (int) $policy['error']['status'] : null,
+                        'api_code' => isset($policy['error']['api_code']) ? (string) $policy['error']['api_code'] : null,
+                        'data' => null,
+                    ];
             } catch (Throwable) {
                 $result['policy'] = ['status' => 'unavailable', 'data' => null];
             }
