@@ -110,8 +110,14 @@
                 </div>
             </div>
             <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                <template x-if="firmaA">
+                <template x-if="firmaA && firmaA.es_imagen">
                     <img :src="firmaA.firma_img_url" class="img-fluid w-75" :alt="firmaA.usuario_nombre || 'Firma'">
+                </template>
+                <template x-if="firmaA && !firmaA.es_imagen">
+                    <div class="text-center">
+                        <i class="ti ti-signature-off text-muted mb-3" style="font-size:70px;"></i>
+                        <div class="text-muted">La firma está registrada, pero su imagen no está disponible.</div>
+                    </div>
                 </template>
                 <template x-if="!firmaA">
                     <div class="text-center">
@@ -149,27 +155,25 @@
         <div class="card-body h-100p-3 flex-fill d-flex flex-column">
             
             <!-- Caso 1: YA FIRMÓ -->
-            <template x-if="firmaB">
+            <template x-if="firmaB && firmaB.es_imagen">
                 <div class="signature-pad-wrapper p-3 flex-fill d-flex align-items-center justify-content-center text-center" >
                     <img :src="firmaB.firma_img_url" class="img-fluid" style="max-height: 250px; object-fit: contain;" :alt="firmaB.usuario_nombre || 'Firma'">
+                </div>
+            </template>
+            <template x-if="firmaB && !firmaB.es_imagen">
+                <div class="signature-pad-wrapper p-3 flex-fill d-flex flex-column align-items-center justify-content-center text-center" style="min-height:250px;">
+                    <i class="ti ti-signature-off text-muted mb-3" style="font-size:70px;"></i>
+                    <div class="text-muted">La firma está registrada, pero su imagen no está disponible.</div>
                 </div>
             </template>
 
             <!-- Caso 2: PAD PARA FIRMAR -->
             <template x-if="!firmaB && estado === 0 && puedeFirmarCubre">
                 <div class="d-flex flex-column flex-fill">
-                    <div class="signature-pad-wrapper flex-fill" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+                    <div class="signature-pad-wrapper flex-fill" :class="{ 'border-danger': firmaBInvalida }" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair; min-height: 250px; height: 250px; overflow: hidden;">
                         <div class="signature-pad--body w-100 h-100">
-        <canvas 
-                    id="firma-canvas-b"
-                    style="
-                        width: 100%; 
-                        height: 100%; 
-                        min-height: 0; 
-                        display: block; 
-                        touch-action: none;
-                    ">
-                </canvas>                        </div>
+                            <canvas id="firma-canvas-b" style="width: 100%; height: 100%; display: block; touch-action: none; background: #fff;"></canvas>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -229,7 +233,7 @@
                 <template x-if="firmaC">
                     <div class="text-center">
                         <i class="ti ti-signature text-primary mb-3" style="font-size:100px;"></i>
-                        <div class="text-dark" style="font-size:.9em;" x-text="firmaC.firma_texto || ''"></div>
+                        <div class="text-dark" style="font-size:.9em;" x-html="DOMPurify.sanitize(firmaC.firma_texto || '')"></div>
                     </div>
                 </template>
                 <template x-if="!firmaC && estado === 1 && puedeFirmarVoBo">
@@ -241,17 +245,21 @@
                         <div class="row w-100 mt-2">
                             <div class="col-md-6 mb-3">
                                 <button type="button" class="btn btn-success w-100" @click="crearToken('telegram')" :disabled="botonesDeshabilitados">
-                                    <i class="ti ti-brand-telegram me-1"></i> Generar token vía Telegram
+                                    <template x-if="solicitandoToken"><span><span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Enviando token...</span></template>
+                                    <template x-if="!solicitandoToken && segundosRestantes > 0"><span><i class="ti ti-clock me-1"></i>Espera <span x-text="segundosRestantes"></span> s</span></template>
+                                    <template x-if="!botonesDeshabilitados"><span><i class="ti ti-brand-telegram me-1"></i>Generar token vía Telegram</span></template>
                                 </button>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <button type="button" class="btn btn-info text-white w-100" @click="crearToken('email')" :disabled="botonesDeshabilitados">
-                                    <i class="ti ti-mail me-1"></i> Generar token vía Email
+                                    <template x-if="solicitandoToken"><span><span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Enviando token...</span></template>
+                                    <template x-if="!solicitandoToken && segundosRestantes > 0"><span><i class="ti ti-clock me-1"></i>Espera <span x-text="segundosRestantes"></span> s</span></template>
+                                    <template x-if="!botonesDeshabilitados"><span><i class="ti ti-mail me-1"></i>Generar token vía Email</span></template>
                                 </button>
                             </div>
                             <div class="col-12">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Token de seguridad" x-model="token">
+                                    <input type="text" class="form-control" placeholder="Token de seguridad" inputmode="numeric" maxlength="6" :class="{ 'is-invalid': tokenInvalido }" x-model="token" @input="tokenInvalido = false">
                                     <button class="btn btn-outline-success" type="button" @click="firmarVoBo()" :disabled="firmando || !token.trim()">
                                         Firmar visto bueno
                                     </button>
@@ -263,7 +271,7 @@
                 <template x-if="!firmaC && !(estado === 1 && puedeFirmarVoBo)">
                     <div class="text-center">
                         <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-                        <h6 class="text-muted mb-0">¡Falta la firma del Visto Bueno!</h6>
+                        <h6 class="text-muted mb-0" x-text="estado === 0 ? 'Pendiente de firma de quien cubre' : '¡Falta la firma del Visto Bueno!' "></h6>
                     </div>
                 </template>
             </div>

@@ -324,7 +324,7 @@ $q->whereRaw('1 = 0');
 
 $q->whereIn('formato', array_keys(self::FORMATOS))
 ->whereYear('fecha', '=', (int)date('Y'))
-->orderBy('id', 'asc');
+->orderBy('id', 'desc');
 
 $data = [];
 
@@ -336,7 +336,20 @@ $fechaHora = formatearFecha($fecha) . ', ' . $fecha->format('g:i a');
 }
 
 $status = (int)$f->status;
-$numFirmas = RhFormatosFirma::where('id_formato', $f->id)->count();
+$tiposFirmas = RhFormatosFirma::where('id_formato', $f->id)->pluck('tipo_firma')->unique()->values()->all();
+$numFirmas = count($tiposFirmas);
+$firmasCompletas = $status === 4 || count(array_diff(['A', 'B', 'C', 'D'], $tiposFirmas)) === 0;
+$idFirmantePendiente = $firmasCompletas ? 0 : match ($status) {
+    0 => (int)$f->id_usuario,
+    1 => (int)self::FIRMANTES['B'],
+    2 => (int)self::FIRMANTES['C'],
+    3 => (int)self::FIRMANTES['D'],
+    default => 0,
+};
+$esTurnoUsuario = !$firmasCompletas
+    && $permisos['puedeFirmar']
+    && $idFirmantePendiente > 0
+    && $idFirmantePendiente === (int)$permisos['id_usuario'];
 
 $data[] = [
 'id'               => $f->id,
@@ -351,11 +364,15 @@ $data[] = [
 'status_label'     => self::STATUS_LABELS[$status] ?? '',
 'num_comentarios'  => RhFormatosComentario::where('id_formato', $f->id)->count(),
 'num_firmas'       => $numFirmas,
+'firmas_completas' => $firmasCompletas,
+'es_turno_usuario' => $esTurnoUsuario,
 'puede_detalle'    => RhFormatosFirma::where('id_formato', $f->id)->where('tipo_firma', 'A')->exists(),
 'puede_firmar'     => $permisos['puedeFirmar'] && in_array($status, [0, 1, 2, 3], true),
 'puede_editar'     => $permisos['puedeEditar'] && $status === 0,
 'puede_eliminar'   => $permisos['puedeEliminar'] && $status < 3,
-'puede_pdf'        => $status >= 3,
+'puede_pdf'        => $permisos['puedeDescargar']
+    && $status >= 3
+    && count(array_diff(['A', 'B', 'C'], $tiposFirmas)) === 0,
 ];
 }
 
@@ -421,6 +438,9 @@ $tipoLabel = match ($tipo) {
 'D' => 'NOMBRE Y FIRMA DE VERIFICACIÓN',
 default => 'FIRMA ' . $tipo,
 };
+$firmaImagen = in_array($tipo, ['A', 'D'], true)
+    ? self::obtenerFirmaImagen((string)$firma->firma)
+    : null;
 
 $data[] = [
 'id'            => (int)$firma->id,
@@ -430,17 +450,79 @@ $data[] = [
 'tipo_firma'    => $tipo,
 'tipo_label'    => $tipoLabel,
 'firma'         => $firma->firma,
-'firma_img_url' => in_array($tipo, ['A', 'D'], true)
-? '/uploads/firmas/formatos/' . $firma->firma
-: '',
+        'firma_img_disponible' => $firmaImagen !== null,
+        'firma_img_url' => $firmaImagen !== null
+            ? '/uploads/firmas/formatos/' . rawurlencode(basename((string)$firma->firma))
+            : '',
 'firma_texto'   => in_array($tipo, ['B', 'C'], true)
 ? '<b>Fecha: ' . formatearFecha($fechaF) . ', ' . $horaF . '</b> <br> El formato se firmó por un medio electrónico.'
 : '',
 'fecha'         => $fechaF ? formatearFecha($fechaF) . ', ' . $horaF : '',
+'fecha_raw'     => $fechaStr,
 ];
 }
 
 return $data;
+}
+
+private static function obtenerFirmaImagen(string $archivo): ?string
+{
+    $archivo = basename(trim($archivo));
+    if ($archivo === '' || $archivo === '.') return null;
+    $ruta = dirname(__DIR__, 2) . '/public/uploads/firmas/formatos/' . $archivo;
+    return is_file($ruta) ? $ruta : null;
+}
+
+private static function tipoDescargaArchivoAlta(string $campo, string $ruta): string
+{
+    $tipos = [
+        'curriculum' => 'formatos-alta-curriculum', 'ine' => 'formatos-alta-ine',
+        'acta_nacimiento' => 'formatos-alta-acta-nacimiento', 'nss' => 'formatos-alta-nss',
+        'c_domicilio' => 'formatos-alta-domicilio', 'c_estudios' => 'formatos-alta-estudios',
+        'c_recomendacion' => 'formatos-alta-recomendacion', 'curp' => 'formatos-alta-curp',
+        'rfc' => 'formatos-alta-rfc', 'c_antecedentes' => 'formatos-alta-antecedentes',
+        'a_infonavit' => 'formatos-alta-infonavit',
+    ];
+    $tipo = $tipos[$campo] ?? 'formatos-alta';
+    $normalizada = str_replace('\\', '/', $ruta);
+    if (str_contains($normalizada, '/documentos-personal/')) return $tipo;
+
+    $archivo = basename($normalizada);
+    $baseActual = dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/' . $archivo;
+    $carpetasLegadas = [
+        'curriculum' => 'curriculum', 'ine' => 'ine', 'acta_nacimiento' => 'acta_nacimiento',
+        'nss' => 'nss', 'c_domicilio' => 'comprobante_domicilio', 'c_estudios' => 'comprobante_estudios',
+        'c_recomendacion' => 'cartas_recomendacion', 'curp' => 'curp', 'rfc' => 'rfc',
+        'c_antecedentes' => 'carta_antecedentes', 'a_infonavit' => 'acta_infonavit',
+    ];
+    $carpeta = $carpetasLegadas[$campo] ?? '';
+    $baseLegada = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/' . $carpeta . '/' . $archivo;
+    return !is_file($baseActual) && is_file($baseLegada) ? $tipo : 'formatos-alta';
+}
+
+private static function archivoAltaDisponible(string $campo, string $ruta): bool
+{
+    $normalizada = str_replace('\\', '/', trim($ruta));
+    if ($normalizada === '') return false;
+    if (is_file($normalizada)) return true;
+
+    $public = dirname(__DIR__, 2) . '/public';
+    if (preg_match('~(?:^|/)uploads/([^?#]+)$~', $normalizada, $coincidencia)) {
+        $rutaPublica = $public . '/uploads/' . ltrim($coincidencia[1], '/');
+        if (is_file($rutaPublica)) return true;
+    }
+
+    $archivo = basename($normalizada);
+    if ($archivo === '' || $archivo === '.') return false;
+    $carpetasLegadas = [
+        'curriculum' => 'curriculum', 'ine' => 'ine', 'acta_nacimiento' => 'acta_nacimiento',
+        'nss' => 'nss', 'c_domicilio' => 'comprobante_domicilio', 'c_estudios' => 'comprobante_estudios',
+        'c_recomendacion' => 'cartas_recomendacion', 'curp' => 'curp', 'rfc' => 'rfc',
+        'c_antecedentes' => 'carta_antecedentes', 'a_infonavit' => 'acta_infonavit',
+    ];
+    $actual = $public . '/uploads/archivos/formatos/alta/' . $archivo;
+    $legado = $public . '/uploads/archivos/documentos-personal/' . ($carpetasLegadas[$campo] ?? '') . '/' . $archivo;
+    return is_file($actual) || is_file($legado);
 }
 
 public static function getComentarios(int $id): array
@@ -1008,7 +1090,7 @@ public static function guardarBorradorVacaciones(int $id, array $data): array
         $fechas[$campo] = $valor !== '' ? $valor : null;
     }
 
-    $diasCapturados = trim((string)($data['num_dias'] ?? ''));
+    $diasCapturados = self::normalizarNumeroEntrada($data['num_dias'] ?? '');
     if ($diasCapturados !== '' && (!ctype_digit($diasCapturados) || (int)$diasCapturados < 0)) {
         return ['success' => false, 'message' => 'El número de días no es válido.'];
     }
@@ -1050,9 +1132,19 @@ private static function filaDesdeModelo(int $formato, $row): array
 switch ($formato) {
 case 1:
 $existe = [];
+$documentos = [];
+$etiquetasArchivos = self::getArchivosAlta();
 foreach (self::CAMPOS_ARCHIVO_ALTA as $campo) {
 if (!empty($row->{$campo})) {
 $existe[$campo] = $row->{$campo};
+$documentos[] = [
+    'campo' => $campo,
+    'label' => $etiquetasArchivos[$campo] ?? $campo,
+    'archivo' => basename((string)$row->{$campo}),
+    'ruta' => (string)$row->{$campo},
+    'tipo' => self::tipoDescargaArchivoAlta($campo, (string)$row->{$campo}),
+    'disponible' => self::archivoAltaDisponible($campo, (string)$row->{$campo}),
+];
 }
 }
 return [
@@ -1063,6 +1155,7 @@ return [
 'puesto'        => (int)$row->puesto,
 'sd'            => (float)$row->sd,
 '_existe'       => $existe,
+'documentos'    => $documentos,
 ];
 
 case 2:
@@ -1110,6 +1203,17 @@ return ['id' => (int)$row->id];
 * Valida los campos obligatorios de una fila (empleado) para formatos 1 a 5,
 * incluyendo la documentación obligatoria del alta de personal.
 */
+private static function normalizarNumeroEntrada($valor, bool $decimal = false): string
+{
+    $valor = str_replace(',', '', trim((string)($valor ?? '')));
+    $valor = preg_replace($decimal ? '/[^0-9.]/' : '/[^0-9]/', '', $valor) ?? '';
+    if ($decimal && substr_count($valor, '.') > 1) {
+        $partes = explode('.', $valor);
+        $valor = array_shift($partes) . '.' . implode('', $partes);
+    }
+    return $valor;
+}
+
 private static function validarFila(int $formato, array $row, array $files = []): string
 {
 switch ($formato) {
@@ -1300,6 +1404,11 @@ return (int)$row->id;
 */
 public static function agregarFila(int $formato, int $id, array $data, array $files = []): array
 {
+if ($formato === 1) $data['sd'] = self::normalizarNumeroEntrada($data['sd'] ?? '', true);
+if ($formato === 5) {
+    $data['salario_actual'] = self::normalizarNumeroEntrada($data['salario_actual'] ?? '', true);
+    $data['salario_ajustado'] = self::normalizarNumeroEntrada($data['salario_ajustado'] ?? '', true);
+}
 $parent = RhFormatos::find($id);
 if (!$parent) {
 return ['success' => false, 'message' => 'Formato no encontrado'];
@@ -1465,6 +1574,7 @@ default => 0,
 
 public static function editarFormato(int $formato, int $id, array $data, array $files = []): array
 {
+if ($formato === 6) $data['num_dias'] = self::normalizarNumeroEntrada($data['num_dias'] ?? '');
 $formatoRow = RhFormatos::find($id);
 if (!$formatoRow) {
 return ['success' => false, 'message' => 'Formato no encontrado'];
@@ -1879,7 +1989,11 @@ foreach ($rows as $row) {
 $prefijo = $multiple ? '[' . trim((string)$row->nombre) . '] ' : '';
 foreach (self::CAMPOS_ARCHIVO_ALTA as $campo) {
 if (!empty($row->{$campo})) {
-$archivos[] = ['label' => $prefijo . ($etiquetas[$campo] ?? $campo), 'ruta' => $row->{$campo}];
+                $archivos[] = [
+                    'label' => $prefijo . ($etiquetas[$campo] ?? $campo),
+                    'ruta' => $row->{$campo},
+                    'tipo' => self::tipoDescargaArchivoAlta($campo, (string)$row->{$campo}),
+                ];
 }
 }
 }
@@ -1917,11 +2031,12 @@ $puesto = RhPuestos::find((int)$r->puesto);
 $archivosEmpleado = [];
 foreach (self::CAMPOS_ARCHIVO_ALTA as $campo) {
 if (!empty($r->{$campo})) {
-$archivosEmpleado[] = [
+                    $archivosEmpleado[] = [
 'campo' => $campo,
 'label' => $etiquetasArchivos[$campo] ?? $campo,
 'archivo' => basename($r->{$campo}),
 'ruta' => $r->{$campo},
+                        'tipo' => self::tipoDescargaArchivoAlta($campo, (string)$r->{$campo}),
 ];
 }
 }

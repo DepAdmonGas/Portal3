@@ -271,7 +271,11 @@ $firmaCRec = current(array_filter($detalle['firmas'], fn($f) => $f['tipo_firma']
 </div>
 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
 <?php if ($firmaARec['tipo_firma'] === 'A' && !empty($firmaARec['firma_img_disponible']) && $firmaARec['firma_img_url']): ?>
-<img src="<?= $firmaARec['firma_img_url'] ?>" class="img-fluid" style="max-height:90px;object-fit:contain;">
+<img src="<?= htmlspecialchars($firmaARec['firma_img_url'], ENT_QUOTES, 'UTF-8') ?>" class="img-fluid cheque-firma-registrada-img" data-firma-fallback="cheque-firma-a-fallback" style="max-height:90px;object-fit:contain;">
+<div id="cheque-firma-a-fallback" class="d-none flex-column align-items-center text-center">
+<i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i>
+<small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+</div>
 <?php elseif ($firmaARec['tipo_firma'] === 'A'): ?>
 <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
 <small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>

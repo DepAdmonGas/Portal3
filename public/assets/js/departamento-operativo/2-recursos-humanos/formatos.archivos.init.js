@@ -16,10 +16,11 @@ body.innerHTML = '<div class="text-center text-muted py-4"><i class="ti ti-files
 let html = '<div class="table-responsive"><table class="table table-striped table-bordered mb-0 align-middle text-nowrap">';
 html += '<thead><tr><th class="text-start">Nombre del documento</th><th class="text-center">Archivo</th><th class="text-center">Acción</th></tr></thead><tbody>';
 archivos.forEach(function(item) {
+const tipo = /^[a-z0-9-]+$/.test(item.tipo || '') ? item.tipo : 'formatos-alta';
 html += '<tr>';
 html += '<td class="text-start">' + item.label + '</td>';
 html += '<td class="text-center small text-muted">' + item.archivo + '</td>';
-html += '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" onclick="window.open(\'/download?tipo=formatos-alta&file=' + encodeURIComponent(item.archivo) + '\',\'_blank\')"><i class="ti ti-download me-1"></i> Descargar</button></td>';
+html += '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" onclick="window.open(\'/download?tipo=' + tipo + '&file=' + encodeURIComponent(item.archivo) + '\',\'_blank\')"><i class="ti ti-download me-1"></i> Descargar</button></td>';
 html += '</tr>';
 });
 html += '</tbody></table></div>';
@@ -57,10 +58,11 @@ body.innerHTML = '<div class="text-center text-muted py-4"><i class="ti ti-files
 var html = '<div class="table-responsive"><table class="table table-striped table-bordered mb-0 align-middle text-nowrap">';
 html += '<thead><tr><th class="text-start">Nombre del documento</th><th class="text-center">Archivo</th><th class="text-center">Acción</th></tr></thead><tbody>';
 archivos.forEach(function(item) {
+var tipo = /^[a-z0-9-]+$/.test(item.tipo || '') ? item.tipo : 'formatos-alta';
 html += '<tr>';
 html += '<td class="text-start">' + item.label + '</td>';
 html += '<td class="text-center small text-muted">' + item.archivo + '</td>';
-html += '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" onclick="window.open(\'/download?tipo=formatos-alta&file=' + encodeURIComponent(item.archivo) + '\',\'_blank\')"><i class="ti ti-download me-1"></i> Descargar</button></td>';
+html += '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" onclick="window.open(\'/download?tipo=' + tipo + '&file=' + encodeURIComponent(item.archivo) + '\',\'_blank\')"><i class="ti ti-download me-1"></i> Descargar</button></td>';
 html += '</tr>';
 });
 html += '</tbody></table></div>';

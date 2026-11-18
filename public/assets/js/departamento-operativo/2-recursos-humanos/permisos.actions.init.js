@@ -4,6 +4,13 @@ function escHtmlPermisos(str) {
     });
 }
 
+function formatoCantidadPermisos(valor) {
+    var numero = Number(String(valor == null ? '' : valor).replace(/,/g, ''));
+    return Number.isFinite(numero)
+        ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(numero)
+        : '';
+}
+
 function renderDetallePermiso(data, container) {
     var html = '';
 
@@ -25,7 +32,7 @@ function renderDetallePermiso(data, container) {
 
     html += '  <div class="col-md-4 mb-3"><label class="form-label mb-1">Del:</label><div>' + escHtmlPermisos(data.fecha_inicio_label) + '</div></div>';
     html += '  <div class="col-md-4 mb-3"><label class="form-label mb-1">Al:</label><div>' + escHtmlPermisos(data.fecha_termino_label) + '</div></div>';
-    html += '  <div class="col-md-4 mb-3"><label class="form-label mb-1">Días:</label><div>' + escHtmlPermisos(data.dias_tomados) + '</div></div>';
+    html += '  <div class="col-md-4 mb-3"><label class="form-label mb-1">Días:</label><div>' + escHtmlPermisos(formatoCantidadPermisos(data.dias_tomados)) + '</div></div>';
     
     html += '  <div class="col-12 mb-3"><label class="form-label mb-1">Motivo:</label><div>' + escHtmlPermisos(data.motivo) + '</div></div>';
     if (data.observaciones) {
@@ -53,9 +60,12 @@ function renderDetallePermiso(data, container) {
             h += '<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-user-check fs-5"></i></div>';
             h += '<div class="ms-3 overflow-hidden"><h6 class="mb-0 text-white">' + escHtmlPermisos(f.tipo_label) + '</h6></div>';
             h += '</div></div>';
-            h += '<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">';
+            h += '<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4" style="min-height:220px;">';
             if (f.es_imagen) {
                 h += '<img src="' + escHtmlPermisos(f.firma_img_url) + '" class="img-fluid" style="max-height:90px;object-fit:contain;">';
+            } else if (f.tipo_imagen) {
+                h += '<i class="ti ti-signature-off text-muted mb-3" style="font-size:70px;"></i>';
+                h += '<div class="text-muted">La firma está registrada, pero su imagen no está disponible.</div>';
             } else {
                 h += '<i class="ti ti-signature text-primary mb-3" style="font-size:70px;"></i>';
                 h += '<div class="text-dark" style="font-size:.9em;">' + (f.firma_texto || '') + '</div>';
@@ -71,8 +81,8 @@ function renderDetallePermiso(data, container) {
             h += '<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;"><i class="ti ti-clock-hour-4 fs-5"></i></div>';
             h += '<div class="ms-3"><h6 class="mb-0 text-white">' + escHtmlPermisos(titulo) + '</h6></div>';
             h += '</div></div>';
-            h += '<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">';
-            h += '<i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>';
+            h += '<div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4" style="min-height:220px;">';
+            h += '<i class="ti ti-signature-off text-muted mb-3" style="font-size:70px;"></i>';
             h += '<h6 class="text-muted mb-0">Sin firma registrada</h6>';
             h += '</div>';
             h += '<div class="card-footer bg-light text-center"><small class="text-muted">Pendiente de firma</small></div>';
@@ -122,16 +132,20 @@ this.puedeVoBo      = c.dataset.puedeVobo === 'true';
                 this.actualizarContextoUI();
                 this.refrescarPendientes();
             });
+            const stationSelector = document.getElementById('module-station-selector-permisos');
+            if (stationSelector) {
+                stationSelector.addEventListener('change', () => this.actualizarContextoUI());
+            }
         },
 
         actualizarContextoUI() {
-            if (this.esMultiestacion) {
-                const sel = document.getElementById('module-station-selector-permisos');
-                this.contextoEspecifico = !!(sel && sel.value);
-            } else {
-                const c = document.getElementById('container');
-                this.contextoEspecifico = !!(c && parseInt(c.dataset.idEstacion) > 0);
+            const sel = document.getElementById('module-station-selector-permisos');
+            if (sel) {
+                this.contextoEspecifico = /^(estacion|depto)_\d+$/.test(String(sel.value || ''));
+                return;
             }
+            const c = document.getElementById('container');
+            this.contextoEspecifico = !!(c && parseInt(c.dataset.idEstacion, 10) > 0);
         },
 
         irNuevo() { window.location.href = '/departamento-operativo/recursos-humanos/permisos-nuevo'; },
@@ -241,6 +255,15 @@ async verDetalle(id) {
         cargandoCubre: false,
         guardando: false,
         firmaPad: null,
+        errores: {
+            colaborador: false,
+            estacionCubre: false,
+            cubre: false,
+            fechaInicio: false,
+            fechaTermino: false,
+            motivo: false,
+            firma: false
+        },
 
         init() {
             const c = this.$el;
@@ -266,6 +289,8 @@ async verDetalle(id) {
             }
 
             const self = this;
+            this.$el.addEventListener('input', function (event) { self.limpiarErrorCampo(event.target); });
+            this.$el.addEventListener('change', function (event) { self.limpiarErrorCampo(event.target); });
             this.$nextTick(function () {
                 self.initSelect2();
                 self.initFirma();
@@ -349,9 +374,11 @@ async verDetalle(id) {
                 });
                 $sel.on('select2:select', function () {
                     self.cubre = $sel.val() || '';
+                    self.limpiarErrorCampo($sel[0]);
                 });
                 $sel.on('select2:clear', function () {
                     self.cubre = '';
+                    self.limpiarErrorCampo($sel[0]);
                 });
             }
             const $col = $('#select-colaborador');
@@ -363,9 +390,11 @@ async verDetalle(id) {
                 });
                 $col.on('select2:select', function () {
                     self.colaborador = $col.val() || '';
+                    self.limpiarErrorCampo($col[0]);
                 });
                 $col.on('select2:clear', function () {
                     self.colaborador = '';
+                    self.limpiarErrorCampo($col[0]);
                 });
                 $col.val(self.colaborador || '').trigger('change');
             }
@@ -425,7 +454,7 @@ async verDetalle(id) {
             const fin = new Date(this.fechaTermino + 'T00:00:00');
             if (isNaN(ini.getTime()) || isNaN(fin.getTime())) return '';
             if (fin < ini) return 'Fechas no válidas';
-            return Math.round((fin - ini) / 86400000) + 1;
+            return formatoCantidadPermisos(Math.round((fin - ini) / 86400000) + 1);
         },
 
         get firmaExistente() {
@@ -437,6 +466,8 @@ async verDetalle(id) {
         initFirma() {
             const self = this;
             if (typeof SignaturePad === 'undefined') return;
+            const canvas = document.getElementById('firma-canvas-form');
+            if (canvas) canvas.addEventListener('pointerup', function () { self.limpiarErrorFirma(); });
             setTimeout(function () {
                 self._resizeFirma();
                 window.addEventListener('resize', function () { self._resizeFirma(); });
@@ -462,6 +493,132 @@ async verDetalle(id) {
 
         limpiarFirma() {
             if (this.firmaPad) this.firmaPad.clear();
+            this.errores.firma = false;
+            const wrapper = document.getElementById('signature-pad');
+            if (wrapper) {
+                wrapper.classList.remove('border-danger');
+                wrapper.style.borderColor = '';
+            }
+        },
+
+        limpiarErrorFirma() {
+            const wrapper = document.getElementById('signature-pad');
+            if (wrapper && this.firmaPad && !this.firmaPad.isEmpty()) {
+                this.errores.firma = false;
+                wrapper.classList.remove('border-danger');
+                wrapper.style.borderColor = '';
+            }
+        },
+
+        limpiarErrorCampo(campo) {
+            if (!campo || !campo.matches || !campo.matches('[data-permisos-obligatorio]')) return;
+            const claves = {
+                'select-colaborador': 'colaborador',
+                'estacion-cubre-permiso': 'estacionCubre',
+                'select-cubre': 'cubre',
+                'fecha-inicio-permiso': 'fechaInicio',
+                'fecha-termino-permiso': 'fechaTermino',
+                'motivo-permiso': 'motivo'
+            };
+            if (claves[campo.id]) this.errores[claves[campo.id]] = false;
+            campo.classList.remove('is-invalid');
+            campo.closest('.mb-3')?.classList.remove('is-invalid-field');
+            const select2 = campo.parentElement && campo.parentElement.querySelector('.select2-container');
+            if (select2) {
+                const selection = select2.querySelector('.select2-selection');
+                if (selection) {
+                    selection.classList.remove('is-invalid');
+                    selection.style.borderColor = '';
+                    selection.style.boxShadow = '';
+                }
+            }
+            if (campo.id === 'fecha-inicio-permiso' || campo.id === 'fecha-termino-permiso') {
+                document.getElementById('fecha-inicio-permiso')?.classList.remove('is-invalid');
+                document.getElementById('fecha-termino-permiso')?.classList.remove('is-invalid');
+                this.errores.fechaInicio = false;
+                this.errores.fechaTermino = false;
+            }
+        },
+
+        marcarCampoInvalido(selector) {
+            const campo = this.$el.querySelector(selector);
+            if (!campo) return;
+            campo.classList.add('is-invalid');
+            campo.closest('.mb-3')?.classList.add('is-invalid-field');
+            const select2 = campo.parentElement && campo.parentElement.querySelector('.select2-container');
+            if (select2) {
+                const selection = select2.querySelector('.select2-selection');
+                if (selection) {
+                    selection.classList.add('is-invalid');
+                    selection.style.borderColor = 'var(--bs-form-invalid-border-color, #fa896b)';
+                    selection.style.boxShadow = '0 0 0 .25rem rgba(250, 137, 107, .15)';
+                }
+            }
+        },
+
+        validarCamposObligatorios() {
+            this.errores = {
+                colaborador: false,
+                estacionCubre: false,
+                cubre: false,
+                fechaInicio: false,
+                fechaTermino: false,
+                motivo: false,
+                firma: false
+            };
+            this.$el.querySelectorAll('[data-permisos-obligatorio].is-invalid').forEach((campo) => {
+                campo.classList.remove('is-invalid');
+                campo.closest('.mb-3')?.classList.remove('is-invalid-field');
+                const select2 = campo.parentElement && campo.parentElement.querySelector('.select2-container');
+                const selection = select2 && select2.querySelector('.select2-selection');
+                if (selection) {
+                    selection.classList.remove('is-invalid');
+                    selection.style.borderColor = '';
+                    selection.style.boxShadow = '';
+                }
+            });
+            const valorColaborador = document.getElementById('select-colaborador')?.value || '';
+            const valorCubre = document.getElementById('select-cubre')?.value || '';
+            const campos = [
+                ['#select-colaborador', Number(valorColaborador) > 0, 'colaborador'],
+                ['#estacion-cubre-permiso', parseInt(this.estacionCubre, 10) > 0, 'estacionCubre'],
+                ['#select-cubre', Number(valorCubre) > 0, 'cubre'],
+                ['#fecha-inicio-permiso', !!this.fechaInicio, 'fechaInicio'],
+                ['#fecha-termino-permiso', !!this.fechaTermino, 'fechaTermino'],
+                ['#motivo-permiso', !!String(this.motivo || '').trim(), 'motivo']
+            ];
+            let valido = true;
+            campos.forEach(([selector, tieneValor, clave]) => {
+                if (!tieneValor) {
+                    this.errores[clave] = true;
+                    this.marcarCampoInvalido(selector);
+                    valido = false;
+                }
+            });
+
+            if (this.fechaInicio && this.fechaTermino && new Date(this.fechaTermino + 'T00:00:00') < new Date(this.fechaInicio + 'T00:00:00')) {
+                this.errores.fechaInicio = true;
+                this.errores.fechaTermino = true;
+                this.marcarCampoInvalido('#fecha-inicio-permiso');
+                this.marcarCampoInvalido('#fecha-termino-permiso');
+                valido = false;
+            }
+
+            if (this.esNuevo && (!this.firmaPad || this.firmaPad.isEmpty())) {
+                this.errores.firma = true;
+                const wrapper = document.getElementById('signature-pad');
+                if (wrapper) {
+                    wrapper.classList.add('border-danger');
+                    wrapper.style.borderColor = 'var(--bs-form-invalid-border-color, #fa896b)';
+                }
+                valido = false;
+            }
+
+            if (!this.idEstacion || !valido) {
+                Notify.error('Completa los campos obligatorios.');
+                return false;
+            }
+            return true;
         },
 
         cancelar() {
@@ -470,37 +627,17 @@ async verDetalle(id) {
 
         async guardar() {
             const self = this;
-
-            if (!this.idEstacion) { Notify.error('Selecciona la estación / departamento en el selector superior.'); return; }
             const $col = $('#select-colaborador');
-            if ($col.length && $col.data('select2') && $col.val()) {
-                this.colaborador = $col.val();
-            }
-            if (!this.colaborador) { Notify.error('Selecciona un colaborador.'); return; }
-            if (!this.estacionCubre) { Notify.error('Selecciona la estación de quien cubre el turno.'); return; }
+            if ($col.length) this.colaborador = $col.val() || '';
             const $selCubre = $('#select-cubre');
-            if ($selCubre.length && $selCubre.data('select2') && $selCubre.val()) {
-                this.cubre = $selCubre.val();
-            }
-            if (!this.cubre) { Notify.error('Selecciona a quien cubre el turno.'); return; }
-            if (!this.fechaInicio) { Notify.error('Selecciona la fecha de inicio.'); return; }
-            if (!this.fechaTermino) { Notify.error('Selecciona la fecha de término.'); return; }
-            if (new Date(this.fechaTermino + 'T00:00:00') < new Date(this.fechaInicio + 'T00:00:00')) {
-                Notify.error('La fecha de término debe ser igual o posterior al inicio.');
-                return;
-            }
-            if (!this.motivo.trim()) { Notify.error('El motivo es obligatorio.'); return; }
+            if ($selCubre.length) this.cubre = $selCubre.val() || '';
+            if (!this.validarCamposObligatorios()) return;
 
             let firma = '';
             if (this.firmaPad && !this.firmaPad.isEmpty()) {
                 const cv = document.getElementById('firma-canvas-form');
                 firma = cv.toDataURL();
             }
-            if (this.esNuevo && !firma) {
-                Notify.error('La firma del solicitante es obligatoria.');
-                return;
-            }
-
             if (this.guardando) return;
             this.guardando = true;
 
@@ -549,11 +686,18 @@ async verDetalle(id) {
         detalle: null,
         token: '',
         botonesDeshabilitados: false,
+        segundosRestantes: 0,
+        solicitandoToken: false,
+        temporizadorToken: null,
         firmando: false,
         firmandoCubre: false,
         firmaPadB: null,
+        firmaBInvalida: false,
+        tokenInvalido: false,
         puedeFirmarCubre: false,
         puedeFirmarVoBo: false,
+        firmaBResizeObserver: null,
+        firmaBCanvasSize: null,
 
         init() {
             const c = this.$el;
@@ -561,33 +705,98 @@ async verDetalle(id) {
             this.estado = parseInt(c.dataset.estado) || 0;
             this.idUsuario = parseInt(c.dataset.idUsuario) || 0;
             this.puedeFirmarCubre = c.dataset.puedeFirmarCubre === 'true';
-            this.puedeFirmarVoBo = c.dataset.puedeFirmarVoBo === 'true';
+            // El atributo data-puede-firmar-vobo no se convierte en
+            // dataset.puedeFirmarVoBo (la capitalización de "VoBo" no coincide).
+            // Leerlo por nombre evita que Alpine oculte el flujo del usuario 19.
+            this.puedeFirmarVoBo = c.getAttribute('data-puede-firmar-vobo') === 'true';
             if (c.dataset.detalle) {
                 try { this.detalle = JSON.parse(c.dataset.detalle); } catch (e) { this.detalle = null; }
             }
 
             const self = this;
-            if (typeof SignaturePad !== 'undefined') {
-                setTimeout(function () {
+            if (typeof SignaturePad !== 'undefined' && this.estado === 0 && this.puedeFirmarCubre) {
+                const iniciarCanvas = function () {
                     const cv = document.getElementById('firma-canvas-b');
-                    if (!cv || cv.offsetWidth <= 0 || cv.offsetHeight <= 0) return;
-                    const r = Math.max(window.devicePixelRatio || 1, 1);
-                    cv.width = cv.offsetWidth * r;
-                    cv.height = cv.offsetHeight * r;
-                    cv.getContext('2d').scale(r, r);
+                    if (!cv) return;
+
+                    const rect = cv.getBoundingClientRect();
+                    if (rect.width <= 0 || rect.height <= 0) {
+                        window.requestAnimationFrame(iniciarCanvas);
+                        return;
+                    }
+
+                    const width = rect.width;
+                    const height = rect.height;
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    const previous = self.firmaBCanvasSize;
+                    if (previous && Math.abs(previous.width - width) < 0.5 && Math.abs(previous.height - height) < 0.5 && previous.ratio === ratio) return;
+
+                    const data = self.firmaPadB && !self.firmaPadB.isEmpty()
+                        ? self.firmaPadB.toData()
+                        : null;
+
+                    if (self.firmaPadB) self.firmaPadB.off();
+                    cv.width = Math.round(width * ratio);
+                    cv.height = Math.round(height * ratio);
+                    cv.getContext('2d').setTransform(cv.width / width, 0, 0, cv.height / height, 0, 0);
+
                     self.firmaPadB = new SignaturePad(cv, { backgroundColor: 'rgb(255, 255, 255)' });
-                }, 300);
+                    if (data && data.length) self.firmaPadB.fromData(data);
+                    self.firmaBCanvasSize = { width: width, height: height, ratio: ratio };
+                };
+
+                const observarCanvas = function () {
+                    const cv = document.getElementById('firma-canvas-b');
+                    if (!cv) {
+                        window.requestAnimationFrame(observarCanvas);
+                        return;
+                    }
+
+                    iniciarCanvas();
+                    cv.addEventListener('pointerup', function () {
+                        if (self.firmaPadB && !self.firmaPadB.isEmpty()) self.firmaBInvalida = false;
+                    });
+
+                    if (typeof ResizeObserver !== 'undefined') {
+                        self.firmaBResizeObserver = new ResizeObserver(iniciarCanvas);
+                        self.firmaBResizeObserver.observe(cv);
+                    } else {
+                        window.addEventListener('resize', iniciarCanvas);
+                    }
+                };
+
+                window.requestAnimationFrame(observarCanvas);
             }
 
             const disableTime = localStorage.getItem('permisos_disableTime');
             if (disableTime) {
                 const elapsed = new Date().getTime() - parseInt(disableTime);
                 if (elapsed < 30000) {
-                    this.botonesDeshabilitados = true;
-                    setTimeout(function () { self.botonesDeshabilitados = false; }, 30000 - elapsed);
+                    this.iniciarTemporizadorToken(30000 - elapsed);
                 } else {
                     localStorage.removeItem('permisos_disableTime');
                 }
+            }
+        },
+
+        iniciarTemporizadorToken(duracion) {
+            window.clearInterval(this.temporizadorToken);
+            const venceEn = Date.now() + Math.max(0, duracion);
+            const actualizar = () => {
+                this.segundosRestantes = Math.ceil(Math.max(0, venceEn - Date.now()) / 1000);
+                this.botonesDeshabilitados = this.segundosRestantes > 0 || this.solicitandoToken;
+
+                if (this.segundosRestantes <= 0) {
+                    window.clearInterval(this.temporizadorToken);
+                    this.temporizadorToken = null;
+                    this.botonesDeshabilitados = this.solicitandoToken;
+                    localStorage.removeItem('permisos_disableTime');
+                }
+            };
+
+            actualizar();
+            if (this.segundosRestantes > 0) {
+                this.temporizadorToken = window.setInterval(actualizar, 250);
             }
         },
 
@@ -618,14 +827,17 @@ async verDetalle(id) {
 
         limpiarFirmaB() {
             if (this.firmaPadB) this.firmaPadB.clear();
+            this.firmaBInvalida = false;
         },
 
         async firmarQuienCubre() {
             const self = this;
             if (!this.firmaPadB || this.firmaPadB.isEmpty()) {
-                Notify.error('Dibuja tu firma en el canvas.');
+                this.firmaBInvalida = true;
+                Notify.error('Completa los campos obligatorios.');
                 return;
             }
+            this.firmaBInvalida = false;
             if (this.firmandoCubre) return;
             this.firmandoCubre = true;
 
@@ -645,14 +857,14 @@ async verDetalle(id) {
                 }
             } catch (e) {
                 this.firmandoCubre = false;
-                Notify.error('Error al registrar la firma.');
+                Notify.error((e.response && e.response.data && e.response.data.message) || 'Error al registrar la firma.');
             }
         },
 
         async crearToken(via) {
-            const self = this;
             if (this.botonesDeshabilitados) return;
             this.botonesDeshabilitados = true;
+            this.solicitandoToken = true;
 
             try {
                 const resp = await axios.post('/departamento-operativo/recursos-humanos/permisos/crear-token', {
@@ -662,26 +874,28 @@ async verDetalle(id) {
                 const json = resp.data;
                 if (json.success) {
                     Notify.success(json.message || 'Token generado.');
-                    Notify.warning('Deberás esperar 30 seg para generar un nuevo token.');
-                    const t = new Date().getTime();
-                    localStorage.setItem('permisos_disableTime', t);
-                    setTimeout(function () { self.botonesDeshabilitados = false; }, 30000);
+                    localStorage.setItem('permisos_disableTime', String(Date.now()));
+                    this.iniciarTemporizadorToken(30000);
                 } else {
-                    this.botonesDeshabilitados = false;
                     Notify.error(json.message || 'Error al crear el token.');
                 }
             } catch (e) {
-                this.botonesDeshabilitados = false;
                 Notify.error('Error al crear el token.');
+            } finally {
+                this.solicitandoToken = false;
+                this.botonesDeshabilitados = this.segundosRestantes > 0;
             }
         },
 
         async firmarVoBo() {
             const self = this;
-            if (!this.token.trim()) {
-                Notify.error('Ingresa el token de seguridad.');
+            this.token = String(this.token || '').replace(/\D/g, '').slice(0, 6);
+            if (this.token.length !== 6) {
+                this.tokenInvalido = true;
+                Notify.error('Completa los campos obligatorios.');
                 return;
             }
+            this.tokenInvalido = false;
             if (this.firmando) return;
             this.firmando = true;
 
@@ -701,7 +915,13 @@ async verDetalle(id) {
                 }
             } catch (e) {
                 this.firmando = false;
-                Notify.error('Error al firmar el visto bueno.');
+                const status = e.response && e.response.status;
+                const mensajeServidor = e.response && e.response.data && e.response.data.message;
+                Notify.error(mensajeServidor || (status === 419
+                    ? 'La sesión de seguridad expiró. Actualiza la página e intenta de nuevo.'
+                    : status === 401
+                        ? 'Tu sesión expiró. Inicia sesión nuevamente.'
+                        : 'No fue posible registrar el visto bueno. Intenta generar un token nuevo.'));
             }
         }
     }));

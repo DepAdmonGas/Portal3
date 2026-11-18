@@ -1,3 +1,14 @@
+document.addEventListener('error', function (event) {
+const img = event.target;
+if (!(img instanceof HTMLImageElement) || !img.matches('.firma-registrada-img')) return;
+img.classList.add('d-none');
+const fallback = document.getElementById(img.dataset.firmaFallback || '');
+if (fallback) {
+fallback.classList.remove('d-none');
+fallback.classList.add('d-flex');
+}
+}, true);
+
 document.addEventListener('alpine:init', () => {
 
 Alpine.data('formatosComponent', () => ({
@@ -82,8 +93,52 @@ abrirFirmar(id, idLocalidad, formato) {
 window.location.href = '/departamento-operativo/recursos-humanos/formatos/firmar/' + id;
 },
 
-descargarPdf(id, formato) {
-window.open('/departamento-operativo/recursos-humanos/formatos/pdf/' + id, '_blank');
+async descargarPdf(id, formato) {
+if (window.loader) window.loader.show();
+
+try {
+const response = await fetch('/departamento-operativo/recursos-humanos/formatos/pdf/' + id, {
+method: 'GET',
+credentials: 'same-origin',
+headers: { 'X-Requested-With': 'XMLHttpRequest' }
+});
+const blob = await response.blob();
+if (!response.ok) {
+let message = (await blob.text()).trim();
+try {
+const payload = JSON.parse(message);
+message = payload.message || message;
+} catch (_) {}
+throw new Error(message || 'No se pudo descargar el PDF.');
+}
+if (!(blob.type || response.headers.get('Content-Type') || '').toLowerCase().includes('pdf')) {
+throw new Error('El servidor no generó el PDF solicitado.');
+}
+
+const disposition = response.headers.get('Content-Disposition') || '';
+const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+let filename = 'Formato-' + id + '.pdf';
+if (encodedName) {
+try { filename = decodeURIComponent(encodedName); } catch (_) { filename = encodedName; }
+} else if (plainName) {
+filename = plainName;
+}
+
+const objectUrl = URL.createObjectURL(blob);
+const link = document.createElement('a');
+link.href = objectUrl;
+link.download = filename;
+link.hidden = true;
+document.body.appendChild(link);
+link.click();
+link.remove();
+window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+} catch (error) {
+window.Notify?.error(error.message || 'No se pudo descargar el PDF.');
+} finally {
+if (window.loader) window.loader.hide();
+}
 },
 
 async eliminarFormulario(id, idLocalidad, formato, nombreEmpleado) {
@@ -212,24 +267,6 @@ let html = '';
 html += '<div class="text-end mb-3"><span class="badge ' + (d.status === 0 ? 'bg-danger' : (d.status >= 3 ? 'bg-success' : 'bg-warning text-white')) + '">' + esc(d.status_label) + '</span></div>';
 
 
-const fA = firmas.find(function (f) { return f.tipo_firma === 'A'; });
-const fB = firmas.find(function (f) { return f.tipo_firma === 'B'; });
-const fC = firmas.find(function (f) { return f.tipo_firma === 'C'; });
-const fD = firmas.find(function (f) { return f.tipo_firma === 'D'; });
-
-if (!fA) {
-html += '<div class="alert alert-warning border-0 text-center py-3"><i class="ti ti-signature fs-6 me-1"></i></i>Hace falta la firma de quien elabora</div>';
-}
-if (!fB) {
-html += '<div class="alert alert-warning border-0 text-center py-3"><i class="ti ti-signature fs-6 me-1"></i></i>Hace falta la firma del Visto Bueno (VO.BO)</div>';
-}
-if (fB && !fC) {
-html += '<div class="alert alert-warning border-0 text-center py-3"><i class="ti ti-signature fs-6 me-1"></i></i>Hace falta la firma del Visto Autorización</div>';
-}
-if (fC && !fD) {
-html += '<div class="alert alert-warning border-0 text-center py-3"><i class="ti ti-signature fs-6 me-1"></i></i>Hace falta la firma de Verificación</div>';
-}
-
 html += '<div class="row">'
 + '<div class="col-12 mb-4 text-end">'
 + '<div><div class="form-label mb-1">Formato:</div><div class="text-primary">' + esc(d.codigo_formato || '') + '</div></div>'
@@ -272,10 +309,11 @@ html += '  <tbody>';
 
 d.archivos.forEach(function (arch) {
 var archivo = arch.ruta.split('/').pop();
+var tipo = /^[a-z0-9-]+$/.test(arch.tipo || '') ? arch.tipo : 'formatos-alta';
 html += '    <tr>';
 html += '      <td class="text-start">' + esc(arch.label) + '</td>';
 html += '      <td class="text-center">';
-html += '        <i class="ti ti-file-text text-primary pointer fs-6" style="cursor: pointer;" onclick="formatosComponentInstance.download(\'formatos-alta\',\'' + archivo + '\')"></i>';
+html += '        <i class="ti ti-file-text text-primary pointer fs-6" style="cursor: pointer;" onclick="formatosComponentInstance.download(\'' + tipo + '\',\'' + archivo + '\')"></i>';
 html += '      </td>';
 html += '    </tr>';
 });
@@ -310,8 +348,17 @@ html += '      </div>';
 html += '    </div>';
 
 html += '    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">';
-if ((t === 'A' || t === 'D') && f.firma_img_url) {
-html += '      <div><img src="' + f.firma_img_url + '" onerror="this.style.display=\'none\'" class="img-fluid" style="max-height:90px;object-fit:contain;"></div>';
+if (t === 'A' || t === 'D') {
+if (f.firma_img_disponible && f.firma_img_url) {
+const fallbackId = 'firma-detalle-fallback-' + t;
+html += '      <div class="d-flex flex-column align-items-center">';
+html += '        <img src="' + f.firma_img_url + '" class="img-fluid firma-registrada-img" data-firma-fallback="' + fallbackId + '" style="max-height:90px;object-fit:contain;">';
+html += '        <div id="' + fallbackId + '" class="d-none flex-column align-items-center"><i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i><small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small></div>';
+html += '      </div>';
+} else {
+html += '      <i class="ti ti-signature-off text-secondary mb-3" style="font-size:100px;"></i>';
+html += '      <small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>';
+}
 }
 
 // Se quita esc() para que f.firma_texto interprete el HTML (<b>, <br>, etc.) sin renderizar etiquetas visibles
@@ -340,8 +387,14 @@ html += '      </div>';
 html += '    </div>';
 
 html += '    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">';
-html += '      <i class="ti ti-signature-off text-muted mb-3" style="font-size:80px; line-height: 1;"></i>';
-html += '      <h6 class="text-muted mb-0">Sin firma registrada</h6>';
+html += '      <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px; line-height: 1;"></i>';
+const faltaFirma = {
+    A: '¡Falta la firma de quien elaboró!',
+    B: '¡Falta la firma de Vo.Bo.!',
+    C: '¡Falta la firma de Autorización!',
+    D: '¡Falta la firma de Verificación!'
+};
+html += '      <h6 class="text-muted mb-0">' + esc(faltaFirma[t] || 'Sin firma registrada') + '</h6>';
 html += '    </div>';
 
 html += '    <div class="card-footer bg-light text-center py-2">';

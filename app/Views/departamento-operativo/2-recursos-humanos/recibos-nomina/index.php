@@ -37,6 +37,15 @@ Selecciona una estación o departamento del menú superior.
 
 <div x-show="idEstacionActual" style="display: none;">
 
+<style>
+#modalEditarNomina .form-control.is-invalid,
+#modalAcusePeriodo .form-control.is-invalid,
+#modalAgregarPersonal .select2-selection.is-invalid {
+    border-color: var(--bs-form-invalid-border-color, #fa896b) !important;
+    box-shadow: 0 0 0 .15rem rgba(250, 137, 107, .15) !important;
+}
+</style>
+
 <div class="row align-items-center mb-3">
 
 <!---------- COLUMNA DEL SELECT (Ocupa 100% en móvil y 50% en escritorio) ---------->
@@ -167,12 +176,12 @@ Selecciona una estación o departamento del menú superior.
 </button>
 <ul class="dropdown-menu dropdown-menu-end">
 <li>
-<a class="dropdown-item" :class="resumenInfo && resumenInfo.doc_nomina_acuse ? 'pointer' : 'disabled'" :href="resumenInfo && resumenInfo.doc_nomina_acuse ? '/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse) : null" :aria-disabled="!(resumenInfo && resumenInfo.doc_nomina_acuse)">
+<a class="dropdown-item" :class="resumenInfo && resumenInfo.doc_nomina_acuse_disponible ? 'pointer' : 'disabled'" :href="resumenInfo && resumenInfo.doc_nomina_acuse_disponible ? '/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse) : null" :aria-disabled="!(resumenInfo && resumenInfo.doc_nomina_acuse_disponible)">
 <i class="ti ti-file-text me-1"></i> Descargar Recibos de Nómina del Personal
 </a>
 </li>
 <li>
-<a class="dropdown-item" :class="resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.doc ? 'pointer' : 'disabled'" :href="resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.doc ? '/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.aguinaldo.doc) : null" :aria-disabled="!(resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.doc)">
+<a class="dropdown-item" :class="resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.disponible ? 'pointer' : 'disabled'" :href="resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.disponible ? '/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.aguinaldo.doc) : null" :aria-disabled="!(resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.disponible)">
 <i class="ti ti-gift me-1"></i> Descargar Recibos de Aguinaldo del Personal
 </a>
 </li>
@@ -180,15 +189,15 @@ Selecciona una estación o departamento del menú superior.
 </div>
 
 <!-- Períodos que no son el último: botón directo de recibos de nómina -->
-<template x-if="resumenInfo && !resumenInfo.es_ultimo_periodo && resumenInfo.doc_nomina_acuse && puedeDescargar">
+<template x-if="resumenInfo && !resumenInfo.es_ultimo_periodo && resumenInfo.doc_nomina_acuse_disponible && puedeDescargar">
 <a :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse)" class="btn btn-success" download>
 <i class="ti ti-download me-1"></i> Descargar Recibos de Nómina
 </a>
 </template>
-<template x-if="resumenInfo && resumenInfo.doc_nomina_acuse && !puedeDescargar">
+<template x-if="resumenInfo && resumenInfo.doc_nomina_acuse_disponible && !puedeDescargar">
 <span class="badge rounded-pill bg-warning py-2 px-3">Recibos de Nómina disponibles</span>
 </template>
-<template x-if="resumenInfo && !resumenInfo.doc_nomina_acuse && !resumenInfo.es_ultimo_periodo">
+<template x-if="resumenInfo && !resumenInfo.doc_nomina_acuse_disponible && !resumenInfo.es_ultimo_periodo">
 <span class="badge rounded-pill bg-danger py-2 px-3">Recibos de Nómina No Disponibles</span>
 </template>
 </div>
@@ -252,7 +261,7 @@ Selecciona una estación o departamento del menú superior.
 <div x-show="!esMexdesa">
 <div class="mb-3">
 <label class="form-label mb-1">* Importe Total:</label>
-<input type="number" step="0.01" class="form-control" x-model="formEdicion.importe">
+<input type="text" inputmode="decimal" class="form-control" x-model="formEdicion.importe" @input="formatoImporte($event)" @blur="marcarCampoInvalido($event.target, String(formEdicion.importe).trim() === '' || !Number.isFinite(Number(String(formEdicion.importe).replace(/,/g, ''))))">
 </div>
 
 <div class="mb-3">
@@ -592,7 +601,7 @@ Acuse de nómina <small class="text-white" x-text="resumenInfo ? '(del ' + resum
 <!-- Sección para subir documento -->
 <div x-show="puedeEditar || puedeCrear">
 <label class="form-label">* Documento:</label>
-<input type="file" class="form-control mb-3" x-ref="archivoAcusePeriodo" accept=".pdf,.jpg,.jpeg,.png">
+<input type="file" class="form-control mb-3" x-ref="archivoAcusePeriodo" accept=".pdf,.jpg,.jpeg,.png" @change="marcarCampoInvalido($event.target, false)">
 </div>
 
 
@@ -625,9 +634,10 @@ No se encontro información
 
 <!-- Botón Descargar -->
 <td class="text-center align-middle" width="36">
-<a :href="'/download?tipo=recibos-nomina-acuse&file=' + encodeURIComponent(a.archivo)" target="_blank" title="Descargar">
+<a x-show="a.disponible" :href="'/download?tipo=recibos-nomina-acuse&file=' + encodeURIComponent(a.archivo)" target="_blank" title="Descargar">
 <i class="ti ti-download text-primary fs-6"></i>
 </a>
+<i x-show="!a.disponible" class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>
 </td>
 
 <!-- Botón Eliminar -->
@@ -674,7 +684,7 @@ No se encontro información
 
 <div x-show="esMexdesa && resumenInfo && !resumenInfo.finalizado_mexdesa">
 <label class="form-label">* Recibos de Nómina (PDF):</label>
-<input type="file" class="form-control mb-3" x-ref="archivoAcuseMexdesa" accept=".pdf">
+<input type="file" class="form-control mb-3" x-ref="archivoAcuseMexdesa" accept=".pdf" @change="marcarCampoInvalido($event.target, false)">
 </div>
 
 <!-- Estado: Recibos subidos correctamente -->
@@ -686,21 +696,21 @@ No se encontro información
 
     <!-- Textos -->
     <div class="d-flex align-items-center gap-3">
-        <i class="ti ti-file-check fs-7 text-success flex-shrink-0"></i>
+        <i :class="resumenInfo.doc_nomina_acuse_disponible ? 'ti ti-file-check fs-7 text-success' : 'ti ti-file-off fs-6 text-muted'" class="flex-shrink-0"></i>
 
         <div>
             <span class="fw-semibold d-block text-success">
-                Recibos de nómina subidos
+                <span x-text="resumenInfo.doc_nomina_acuse_disponible ? 'Recibos de nómina subidos' : 'Archivo no disponible'"></span>
             </span>
             <span class="small text-muted">
-                El archivo de acuse está listo para su descarga.
+                <span x-text="resumenInfo.doc_nomina_acuse_disponible ? 'El archivo de acuse está listo para su descarga.' : 'El registro está guardado, pero el archivo no se encuentra en la carpeta esperada.'"></span>
             </span>
         </div>
     </div>
 
     <!-- Botón -->
     <div class="d-grid d-md-block">
-        <a :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse)"
+        <a x-show="resumenInfo.doc_nomina_acuse_disponible" :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.doc_nomina_acuse)"
            target="_blank"
            class="btn btn-success text-nowrap shadow-sm">
             <i class="ti ti-download me-1"></i>
@@ -744,7 +754,7 @@ No se encontro información
 </button>
                     </div>
                      <div class="col-12 col-md-auto d-grid ms-0 ms-md-2">
-                      <button type="button" class="btn btn-primary" @click="finalizarMexdesa()" x-show="esMexdesa && resumenInfo && resumenInfo.doc_nomina_acuse && !resumenInfo.finalizado_mexdesa">
+                      <button type="button" class="btn btn-primary" @click="finalizarMexdesa()" x-show="esMexdesa && resumenInfo && resumenInfo.doc_nomina_acuse_disponible && !resumenInfo.finalizado_mexdesa">
 <i class="ti ti-circle-check me-1"></i> Finalizar
 </button>
                     </div>
@@ -767,20 +777,20 @@ No se encontro información
 
 <div x-show="esMexdesa && !(resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.status === 1)">
 <label class="form-label">* Subir PDF de recibos de aguinaldo:</label>
-<input type="file" class="form-control mb-3" x-ref="archivoAguinaldo" accept=".pdf,.jpg,.jpeg,.png">
+<input type="file" class="form-control mb-3" x-ref="archivoAguinaldo" accept=".pdf,.jpg,.jpeg,.png" @change="marcarCampoInvalido($event.target, false)">
 </div>
 
 <!-- Estado: Recibos subidos correctamente -->
 <template x-if="resumenInfo && resumenInfo.aguinaldo && resumenInfo.aguinaldo.doc">
 <div class="alert alert-success border-0 bg-success bg-opacity-10 d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 rounded-3 gap-3 shadow-sm mb-3">
 <div class="d-flex align-items-center gap-3">
-<i class="ti ti-file-check fs-7 text-success flex-shrink-0"></i>
+<i :class="resumenInfo.aguinaldo.disponible ? 'ti ti-file-check fs-7 text-success' : 'ti ti-file-off fs-6 text-muted'" class="flex-shrink-0"></i>
 <div>
-<span class="fw-semibold d-block text-success">Recibos de aguinaldo subidos</span>
-<span class="small text-muted">El archivo está listo para su descarga.</span>
+<span class="fw-semibold d-block" :class="resumenInfo.aguinaldo.disponible ? 'text-success' : 'text-muted'" x-text="resumenInfo.aguinaldo.disponible ? 'Recibos de aguinaldo subidos' : 'Archivo no disponible'"></span>
+<span class="small text-muted" x-text="resumenInfo.aguinaldo.disponible ? 'El archivo está listo para su descarga.' : 'El registro está guardado, pero el archivo no se encuentra en la carpeta esperada.'"></span>
 </div>
 </div>
-<a :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.aguinaldo.doc)" target="_blank" class="btn btn-success text-nowrap align-self-start align-self-md-center shadow-sm">
+<a x-show="resumenInfo.aguinaldo.disponible" :href="'/download?tipo=recibos-mexdesa&file=' + encodeURIComponent(resumenInfo.aguinaldo.doc)" target="_blank" class="btn btn-success text-nowrap align-self-start align-self-md-center shadow-sm">
 <i class="ti ti-download me-1"></i>Descargar PDF
 </a>
 </div>

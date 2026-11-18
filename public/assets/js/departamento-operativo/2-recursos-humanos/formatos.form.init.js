@@ -28,6 +28,39 @@ guardandoFila: false,
 guardando: false,
 autosaveTimer: null,
 autosavePromise: null,
+autosaveGuardado: false,
+campoAutosaveActivo: '',
+autosaveGuardadoTimer: null,
+campoFormato7Modificado: '',
+campoFormato7Guardado: '',
+formato7GuardadoTimer: null,
+
+actualizarNumeroFila(campo, input, admiteDecimal = false) {
+const normal = this.normalizarNumero(input.value, admiteDecimal);
+this.fila[campo] = normal;
+input.value = this.formatearNumeroEntrada(normal, admiteDecimal);
+},
+
+actualizarNumeroCampo(input, admiteDecimal = false) {
+const normal = this.normalizarNumero(input.value, admiteDecimal);
+input.value = this.formatearNumeroEntrada(normal, admiteDecimal);
+},
+
+normalizarNumero(valor, admiteDecimal = false) {
+let texto = String(valor ?? '').replace(/,/g, '').replace(/[^\d.]/g, '');
+if (!admiteDecimal) return texto.replace(/\./g, '');
+const punto = texto.indexOf('.');
+if (punto >= 0) texto = texto.slice(0, punto + 1) + texto.slice(punto + 1).replace(/\./g, '');
+return texto;
+},
+
+formatearNumeroEntrada(valor, admiteDecimal = false) {
+const texto = String(valor ?? '');
+if (!texto) return '';
+const [entero, ...fracciones] = texto.split('.');
+const agrupado = entero.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return admiteDecimal && texto.includes('.') ? agrupado + '.' + fracciones.join('') : agrupado;
+},
 
 init() {
 const c = this.$el;
@@ -70,25 +103,28 @@ this.initSelect2();
 const camposVacaciones = ['id_personal', 'num_dias', 'fecha_inicio', 'fecha_termino', 'fecha_regreso', 'observaciones'];
 this.$el.addEventListener('input', (event) => {
 if (this.formato === 6 && this.esEdicion && camposVacaciones.includes(event.target.name)) {
-this.programarAutosaveVacaciones();
+this.programarAutosaveVacaciones(500, event.target.name);
 }
 });
 this.$el.addEventListener('change', (event) => {
 if (this.formato === 6 && this.esEdicion && camposVacaciones.includes(event.target.name)) {
-this.programarAutosaveVacaciones(0);
+this.programarAutosaveVacaciones(0, event.target.name);
 }
 });
 if (window.jQuery) {
 window.jQuery(this.$el).on('change.formatosVacacionesAutosave select2:select.formatosVacacionesAutosave', '#card-formato select[name="id_personal"]', () => {
-if (this.formato === 6 && this.esEdicion) this.programarAutosaveVacaciones(0);
+if (this.formato === 6 && this.esEdicion) this.programarAutosaveVacaciones(0, 'id_personal');
+if (this.formato === 7) this.campoFormato7Modificado = 'id_personal';
 });
 }
 
 this.$nextTick(() => this.initSignaturePad());
 },
 
-programarAutosaveVacaciones(delay = 500) {
+programarAutosaveVacaciones(delay = 500, campo = '') {
 if (this.autosaveTimer) window.clearTimeout(this.autosaveTimer);
+if (campo) this.campoAutosaveActivo = campo;
+this.autosaveGuardado = false;
 this.autosaveTimer = window.setTimeout(() => {
 this.autosaveTimer = null;
 this.guardarBorradorVacaciones();
@@ -103,6 +139,7 @@ this.autosaveTimer = null;
 }
 
 const anterior = this.autosavePromise;
+const campoEnviado = this.campoAutosaveActivo;
 const solicitud = (anterior || Promise.resolve()).catch(() => false).then(async () => {
 const leerCampo = (nombre) => {
 const campo = this.$el.querySelector('#card-formato [name="' + nombre + '"]');
@@ -111,7 +148,7 @@ return campo ? campo.value : '';
 const datos = new FormData();
 datos.append('id', this.detalleId);
 datos.append('id_personal', leerCampo('id_personal'));
-datos.append('num_dias', leerCampo('num_dias'));
+datos.append('num_dias', this.normalizarNumero(leerCampo('num_dias')));
 datos.append('fecha_inicio', leerCampo('fecha_inicio'));
 datos.append('fecha_termino', leerCampo('fecha_termino'));
 datos.append('fecha_regreso', leerCampo('fecha_regreso'));
@@ -137,6 +174,14 @@ return false;
 this.autosavePromise = solicitud;
 const resultado = await solicitud;
 if (this.autosavePromise === solicitud) this.autosavePromise = null;
+if (resultado && campoEnviado && campoEnviado === this.campoAutosaveActivo && !this.autosaveTimer) {
+this.autosaveGuardado = true;
+if (this.autosaveGuardadoTimer) window.clearTimeout(this.autosaveGuardadoTimer);
+this.autosaveGuardadoTimer = window.setTimeout(() => {
+this.autosaveGuardado = false;
+this.autosaveGuardadoTimer = null;
+}, 2200);
+}
 return resultado;
 },
 
@@ -321,7 +366,7 @@ if (this.guardandoFila) return;
 
 const error = this.filaValida();
 if (error) {
-if (window.Notify) Notify.error(error);
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 
@@ -417,19 +462,28 @@ return n;
 verArchivosEmpleado(fila) {
 const meta = {};
 (this.archivosAlta || []).forEach(function (a) { meta[a.campo] = a.label; });
-const list = [];
-if (fila._existe) {
+const list = Array.isArray(fila.documentos) ? fila.documentos.map(function (documento) {
+return {
+campo: documento.campo,
+label: documento.label || meta[documento.campo] || documento.campo,
+archivo: documento.archivo || String(documento.ruta || '').split('/').pop(),
+ruta: documento.ruta || '',
+tipo: documento.tipo || 'formatos-alta',
+disponible: documento.disponible === true
+};
+}) : [];
+if (!list.length && fila._existe) {
 Object.keys(fila._existe).forEach((campo) => {
 const ruta = fila._existe[campo];
 if (!ruta) return;
-list.push({ campo: campo, label: meta[campo] || campo, archivo: ruta.split('/').pop(), ruta: ruta });
+list.push({ campo: campo, label: meta[campo] || campo, archivo: ruta.split('/').pop(), ruta: ruta, tipo: 'formatos-alta', disponible: true });
 });
 }
 if (fila.archivos) {
 Object.keys(fila.archivos).forEach((campo) => {
 const file = fila.archivos[campo];
 if (!file) return;
-list.push({ campo: campo, label: meta[campo] || campo, archivo: file.name || campo, ruta: '' });
+list.push({ campo: campo, label: meta[campo] || campo, archivo: file.name || campo, ruta: '', disponible: false });
 });
 }
 this.archivosEmpleado = list;
@@ -443,7 +497,8 @@ if (!item.ruta) {
 if (window.Notify) Notify.error('El archivo estará disponible al guardar el empleado');
 return;
 }
-this.download('formatos-alta', item.archivo);
+if (item.disponible === false) return;
+this.download(item.tipo || 'formatos-alta', item.archivo);
 },
 
 validarFormatoSimple() {
@@ -464,7 +519,8 @@ const faltantes = [];
 
 if (this.formato === 6) {
 if (!valor('id_personal')) { faltantes.push('• Empleado'); marcar('id_personal'); }
-if (Number(valor('num_dias')) <= 0) { faltantes.push('• Número de días a disfrutar'); marcar('num_dias'); }
+const numeroDias = Number(this.normalizarNumero(valor('num_dias')));
+if (!Number.isFinite(numeroDias) || numeroDias <= 0) { faltantes.push('• Número de días a disfrutar'); marcar('num_dias'); }
 if (!valor('fecha_inicio')) { faltantes.push('• Fecha inicial (Del)'); marcar('fecha_inicio'); }
 if (!valor('fecha_termino')) { faltantes.push('• Fecha final (Al)'); marcar('fecha_termino'); }
 if (!valor('fecha_regreso')) { faltantes.push('• Fecha de regreso'); marcar('fecha_regreso'); }
@@ -488,7 +544,7 @@ return;
 if (this.formato >= 6) {
 const error = this.validarFormatoSimple();
 if (error) {
-if (window.Notify) Notify.error(error);
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 }
@@ -518,7 +574,7 @@ return el ? el.value : '';
 };
 fd.append('id_personal', campo('id_personal'));
 if (this.formato === 6) {
-fd.append('num_dias', campo('num_dias'));
+fd.append('num_dias', this.normalizarNumero(campo('num_dias')));
 fd.append('fecha_inicio', campo('fecha_inicio'));
 fd.append('fecha_termino', campo('fecha_termino'));
 fd.append('fecha_regreso', campo('fecha_regreso'));
@@ -539,6 +595,14 @@ const resp = await fetch(url, { method: 'POST', body: fd });
 const json = await resp.json();
 
 if (json.success) {
+if (this.formato === 7 && this.campoFormato7Modificado) {
+this.campoFormato7Guardado = this.campoFormato7Modificado;
+if (this.formato7GuardadoTimer) window.clearTimeout(this.formato7GuardadoTimer);
+this.formato7GuardadoTimer = window.setTimeout(() => {
+this.campoFormato7Guardado = '';
+this.formato7GuardadoTimer = null;
+}, 2200);
+}
 this.showAlert('success', 'Correcto', json.message || 'Formato guardado correctamente');
 if (window.Notify) Notify.success(json.message || 'Formato guardado');
 setTimeout(() => {
