@@ -1,3 +1,13 @@
+const mostrarLoaderFormatoMerma = () => {
+    const loader = document.querySelector('.loader-admongas');
+    if (loader) loader.style.display = 'flex';
+};
+
+const ocultarLoaderFormatoMerma = () => {
+    const loader = document.querySelector('.loader-admongas');
+    if (loader) loader.style.display = 'none';
+};
+
 document.addEventListener('alpine:init', () => {
 
     Alpine.data('mermaComponent', () => ({
@@ -144,9 +154,48 @@ document.addEventListener('alpine:init', () => {
         _esInvalido(def) {
             const v = this.form[def.key];
             if (def.numerico) {
-                return !(parseFloat(v) > 0);
+                return !(this.parseNumero(v) > 0);
             }
             return v == null || String(v).trim() === '';
+        },
+
+        parseNumero(value) {
+            const number = Number(String(value ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(number) ? number : 0;
+        },
+
+        formatInputNumber(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+        },
+
+        formatNumericInput(event, field) {
+            const input = event.target;
+            const raw = input.value;
+            const cursor = input.selectionStart ?? raw.length;
+            const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+            const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+            this.form[field] = normalized;
+            input.value = formatted;
+
+            let nextCursor = 0;
+            let numericChars = 0;
+            while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+                if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+                nextCursor++;
+            }
+            input.setSelectionRange(nextCursor, nextCursor);
         },
 
         marcarInvalidos() {
@@ -161,7 +210,7 @@ document.addEventListener('alpine:init', () => {
 
             defs.forEach((def) => {
                 const invalido = this._esInvalido(def);
-                this.$root.querySelectorAll('[x-model="form.' + def.key + '"]').forEach((el) => {
+                this.$root.querySelectorAll('[x-model="form.' + def.key + '"], [data-merma-field="' + def.key + '"]').forEach((el) => {
                     const target = (el.type === 'radio') ? (el.closest('.form-check') || el) : el;
                     target.classList.toggle('is-invalid', invalido);
                 });
@@ -197,7 +246,7 @@ document.addEventListener('alpine:init', () => {
                     const cv = document.getElementById(k === 'firma_encargado' ? 'canvasFirmaEncargado' : 'canvasFirmaOperador');
                     if (cv) { cv.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
                 } else {
-                    const el = self.$root.querySelector('[x-model="form.' + k + '"]');
+                    const el = self.$root.querySelector('[x-model="form.' + k + '"], [data-merma-field="' + k + '"]');
                     if (el) { el.focus(); return; }
                 }
             }
@@ -240,7 +289,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         calcularMerma() {
-            this.form.merma = parseFloat((this.form.litros - this.form.cuenta_litros).toFixed(2));
+            this.form.merma = parseFloat((this.parseNumero(this.form.litros) - this.parseNumero(this.form.cuenta_litros)).toFixed(2));
         },
 
         limpiarFirma(tipo) {
@@ -291,22 +340,12 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardarNuevo() {
-            this.focusPrimerInvalido(this.marcarInvalidos());
-
-            if (!this.form.fecha_llegada) { this.notify('error', 'La fecha de llegada es obligatoria.'); return; }
-            if (!this.form.hora_llegada) { this.notify('error', 'La hora de llegada es obligatoria.'); return; }
-            if (!this.form.producto.trim()) { this.notify('error', 'El producto es obligatorio.'); return; }
-            if (!this.form.litros || parseFloat(this.form.litros) <= 0) { this.notify('error', 'Los litros son obligatorios.'); return; }
-            if (!this.form.precio_litro || parseFloat(this.form.precio_litro) <= 0) { this.notify('error', 'El precio por litro es obligatorio.'); return; }
-            if (!this.form.cuenta_litros || parseFloat(this.form.cuenta_litros) <= 0) { this.notify('error', 'La cuenta de litros es obligatoria.'); return; }
-            if (!this.form.unidad.trim()) { this.notify('error', 'La unidad es obligatoria.'); return; }
-            if (!this.form.operador.trim()) { this.notify('error', 'El nombre del operador es obligatorio.'); return; }
-            if (!this.form.transportista.trim()) { this.notify('error', 'La compañía del transportista es obligatoria.'); return; }
-            if (!this.$refs.file_inventario_inicial?.files?.[0]) { this.notify('error', 'El reporte de inventario inicial es obligatorio.'); return; }
-            if (!this.$refs.file_nice?.files?.[0]) { this.notify('error', 'La medida NICE es obligatoria.'); return; }
-            if (!this.$refs.file_inventario_final?.files?.[0]) { this.notify('error', 'El reporte de inventario final es obligatorio.'); return; }
-            if (!this.$refs.file_metro_contador?.files?.[0]) { this.notify('error', 'El metro contador temperatura normal es obligatorio.'); return; }
-            if (!this.$refs.file_metro_contador20?.files?.[0]) { this.notify('error', 'El metro contador a 20 grados es obligatorio.'); return; }
+            const invalidos = this.marcarInvalidos();
+            if (invalidos.length) {
+                this.focusPrimerInvalido(invalidos);
+                this.notify('error', 'Completa los campos obligatorios.');
+                return;
+            }
 
             if (this.firmaEncargado && !this.firmaEncargado.isEmpty()) {
                 this.form.firma_encargado = this.firmaEncargado.toDataURL('image/png');
@@ -315,13 +354,10 @@ document.addEventListener('alpine:init', () => {
                 this.form.firma_operador = this.firmaOperador.toDataURL('image/png');
             }
 
-            if (!this.form.firma_encargado) { this.notify('error', 'La firma del encargado es obligatoria.'); return; }
-            if (!this.form.firma_operador) { this.notify('error', 'La firma del operador es obligatoria.'); return; }
-
             const files = this._getFiles();
             const fd = this._buildFormData(files);
 
-            window.loader.show();
+            mostrarLoaderFormatoMerma();
             this.guardando = true;
 
             const res = await this.createAction({
@@ -329,7 +365,7 @@ document.addEventListener('alpine:init', () => {
                 data: fd,
                 notify: false,
                 onSuccess: (r) => {
-                    window.loader.hide();
+                    ocultarLoaderFormatoMerma();
                     this.guardando = false;
                     Swal.fire({
                         icon: 'success',
@@ -342,12 +378,12 @@ document.addEventListener('alpine:init', () => {
                     });
                 },
                 onError: () => {
-                    window.loader.hide();
+                    ocultarLoaderFormatoMerma();
                     this.guardando = false;
                 }
             });
 
-            window.loader.hide();
+            ocultarLoaderFormatoMerma();
             this.guardando = false;
         }
     }));
@@ -418,9 +454,48 @@ document.addEventListener('alpine:init', () => {
         _esInvalido(def) {
             const v = this.form[def.key];
             if (def.numerico) {
-                return !(parseFloat(v) > 0);
+                return !(this.parseNumero(v) > 0);
             }
             return v == null || String(v).trim() === '';
+        },
+
+        parseNumero(value) {
+            const number = Number(String(value ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(number) ? number : 0;
+        },
+
+        formatInputNumber(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+        },
+
+        formatNumericInput(event, field) {
+            const input = event.target;
+            const raw = input.value;
+            const cursor = input.selectionStart ?? raw.length;
+            const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+            const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const parts = normalized.split('.');
+            const integer = parts.shift() || '';
+            const decimals = parts.join('');
+            const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formatted = normalized.includes('.') ? grouped + '.' + decimals : grouped;
+
+            this.form[field] = normalized;
+            input.value = formatted;
+
+            let nextCursor = 0;
+            let numericChars = 0;
+            while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+                if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+                nextCursor++;
+            }
+            input.setSelectionRange(nextCursor, nextCursor);
         },
 
         marcarInvalidos() {
@@ -434,11 +509,19 @@ document.addEventListener('alpine:init', () => {
 
             defs.forEach((def) => {
                 const invalido = this._esInvalido(def);
-                this.$root.querySelectorAll('[x-model="form.' + def.key + '"]').forEach((el) => {
+                this.$root.querySelectorAll('[x-model="form.' + def.key + '"], [data-merma-field="' + def.key + '"]').forEach((el) => {
                     const target = (el.type === 'radio') ? (el.closest('.form-check') || el) : el;
                     target.classList.toggle('is-invalid', invalido);
                 });
                 if (invalido) mal.push(def.key);
+            });
+
+            ['no_factura', 'inventario_inicial', 'nice', 'inventario_final', 'metro_contador', 'metro_contador20'].forEach((field) => {
+                const input = this.$refs['file_' + field];
+                const current = this.adjuntos[field] && this.adjuntos[field].url;
+                const invalid = !(input && input.files && input.files[0]) && !current;
+                if (input) input.classList.toggle('is-invalid', invalid);
+                if (invalid) mal.push('file_' + field);
             });
 
             return mal;
@@ -448,13 +531,15 @@ document.addEventListener('alpine:init', () => {
             const self = this;
             for (let i = 0; i < lista.length; i++) {
                 const k = lista[i];
-                const el = self.$root.querySelector('[x-model="form.' + k + '"]');
+                const el = k.indexOf('file_') === 0
+                    ? self.$refs[k]
+                    : self.$root.querySelector('[x-model="form.' + k + '"], [data-merma-field="' + k + '"]');
                 if (el) { el.focus(); return; }
             }
         },
 
         calcularMerma() {
-            this.form.merma = parseFloat((this.form.litros - this.form.cuenta_litros).toFixed(2));
+            this.form.merma = parseFloat((this.parseNumero(this.form.litros) - this.parseNumero(this.form.cuenta_litros)).toFixed(2));
         },
 
         _buildFormData() {
@@ -486,15 +571,16 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardarEditar() {
-            this.focusPrimerInvalido(this.marcarInvalidos());
-
-            if (!this.form.fecha_llegada) { this.notify('error', 'La fecha de llegada es obligatoria.'); return; }
-            if (!this.form.hora_llegada) { this.notify('error', 'La hora de llegada es obligatoria.'); return; }
-            if (!this.form.producto.trim()) { this.notify('error', 'El producto es obligatorio.'); return; }
+            const invalidos = this.marcarInvalidos();
+            if (invalidos.length) {
+                this.focusPrimerInvalido(invalidos);
+                this.notify('error', 'Completa los campos obligatorios.');
+                return;
+            }
 
             const fd = this._buildFormData();
 
-            window.loader.show();
+            mostrarLoaderFormatoMerma();
             this.guardando = true;
 
             const res = await this.createAction({
@@ -502,7 +588,7 @@ document.addEventListener('alpine:init', () => {
                 data: fd,
                 notify: false,
                 onSuccess: (r) => {
-                    window.loader.hide();
+                    ocultarLoaderFormatoMerma();
                     this.guardando = false;
                     Swal.fire({
                         icon: 'success',
@@ -515,12 +601,12 @@ document.addEventListener('alpine:init', () => {
                     });
                 },
                 onError: () => {
-                    window.loader.hide();
+                    ocultarLoaderFormatoMerma();
                     this.guardando = false;
                 }
             });
 
-            window.loader.hide();
+            ocultarLoaderFormatoMerma();
             this.guardando = false;
         }
     }));

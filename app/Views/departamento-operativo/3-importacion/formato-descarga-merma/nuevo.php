@@ -47,7 +47,7 @@ Finalizar
 <div class=""><?= htmlspecialchars($nombreResponsable) ?></div>
 </div>
 <div class="col-12 col-md-6">
-<label class="form-label">Fecha y hora de la descarga de full: <span class="text-danger">*</span></label>
+<label class="form-label">* Fecha y hora de la descarga de full:</label>
 <div class="row g-2">
 <div class="col-12 col-md-6">
 <input type="date" class="form-control" x-model="form.fecha_llegada" required>
@@ -61,9 +61,9 @@ Finalizar
 
 <div class="row g-3 mb-4">
 <div class="col-12 col-md-6">
-<label class="form-label">Producto recibido: <span class="text-danger">*</span></label>
+<label class="form-label">* Producto recibido:</label>
 <select class="form-select" x-model="form.producto" required>
-<option value=""></option>
+<option value="">Selecciona una opción...</option>
 <option value="87 oct">87 oct</option>
 <option value="91 oct">91 oct</option>
 <option value="Diesel">Diesel</option>
@@ -71,23 +71,23 @@ Finalizar
 </div>
 
 <div class="col-12 col-md-6">
-<label class="form-label">Número de factura o remisión: <span class="text-danger">*</span></label>
+<label class="form-label">* Número de factura o remisión:</label>
 <input type="text" class="form-control" x-model="form.no_factura_remision" placeholder="Nº de factura o remisión">
 </div>
 </div>
 
 <div class="row g-3 mb-4">
 <div class="col-12 col-md-3">
-<label class="form-label">Litros: <span class="text-danger">*</span></label>
-<input type="number" step="any" min="0" class="form-control" x-model.number="form.litros" @input="calcularMerma()">
+<label class="form-label">* Litros:</label>
+<input type="text" inputmode="decimal" class="form-control" data-merma-field="litros" :value="formatInputNumber(form.litros)" @input="formatNumericInput($event, 'litros'); calcularMerma()">
 </div>
 <div class="col-12 col-md-3">
-<label class="form-label">Precio por litro: <span class="text-danger">*</span></label>
-<input type="number" step="any" min="0" class="form-control" x-model.number="form.precio_litro">
+<label class="form-label">* Precio por litro:</label>
+<input type="text" inputmode="decimal" class="form-control" data-merma-field="precio_litro" :value="formatInputNumber(form.precio_litro)" @input="formatNumericInput($event, 'precio_litro')">
 </div>
 <div class="col-12 col-md-3">
-<label class="form-label">Cuenta litros: <span class="text-danger">*</span></label>
-<input type="number" step="any" min="0" class="form-control" x-model.number="form.cuenta_litros" @input="calcularMerma()">
+<label class="form-label">* Cuenta litros:</label>
+<input type="text" inputmode="decimal" class="form-control" data-merma-field="cuenta_litros" :value="formatInputNumber(form.cuenta_litros)" @input="formatNumericInput($event, 'cuenta_litros'); calcularMerma()">
 </div>
 <div class="col-12 col-md-3">
 <label class="form-label">Merma (Lts):</label>
@@ -97,15 +97,15 @@ Finalizar
 
 <div class="row g-3 mb-3">
 <div class="col-12 col-md-3">
-<label class="form-label">Unidad: <span class="text-danger">*</span></label>
+<label class="form-label">* Unidad:</label>
 <input type="text" class="form-control" x-model="form.unidad" placeholder="Ej. Camión, Auto-tanque, etc.">
 </div>
 <div class="col-12 col-md-6">
-<label class="form-label">Nombre del operador de la unidad: <span class="text-danger">*</span></label>
+<label class="form-label">* Nombre del operador de la unidad:</label>
 <input type="text" class="form-control" x-model="form.operador" placeholder="Nombre del operador">
 </div>
 <div class="col-12 col-md-3">
-<label class="form-label">Compañia a la que pertenece el transportista: <span class="text-danger">*</span></label>
+<label class="form-label">* Compañia a la que pertenece el transportista:</label>
 <input type="text" class="form-control" x-model="form.transportista" placeholder="Compañía">
 </div>
 </div>
@@ -113,12 +113,12 @@ Finalizar
 <div class="row g-3">
 
 <div class="col-12 col-12">
-<label class="form-label">Factura o Nota de Remisión: <span class="text-danger">*</span></label>
+<label class="form-label">* Factura o Nota de Remisión:</label>
 <input type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" x-ref="file_no_factura">
 </div>
 
 <div class="col-12 col-md-6 text-center">
-<label class="form-label mt-2">Sellos Alterados: <span class="text-danger">*</span></label>
+<label class="form-label mt-2">* Sellos Alterados:</label>
 <div class="d-flex justify-content-center gap-4"> 
 <div class="form-check">
 <input class="form-check-input" type="radio" value="Si" id="sellosSi" x-model="form.sellos">
@@ -132,7 +132,7 @@ Finalizar
 </div>
 
 <div class="col-12 col-md-6 text-center">
-<label class="form-label mt-2">Se detuvo la venta durante la descarga: <span class="text-danger">*</span></label>
+<label class="form-label mt-2">* Se detuvo la venta durante la descarga:</label>
 <div class="d-flex justify-content-center gap-4">
 <div class="form-check">
 <input class="form-check-input" type="radio" value="Si" id="detuvoSi" x-model="form.detuvo_venta">
@@ -163,25 +163,25 @@ Finalizar
 
 <div class="row g-3 mb-4">
 <div class="col-12 col-md-4">
-<label class="form-label">Reporte de inventario inicial (con fecha y hora): <span class="text-danger">*</span></label>
+<label class="form-label">* Reporte de inventario inicial (con fecha y hora):</label>
 <input type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" x-ref="file_inventario_inicial">
 </div>
 <div class="col-12 col-md-4">
-<label class="form-label">Medida Nice: <span class="text-danger">*</span></label>
+<label class="form-label">* Medida Nice:</label>
 <input type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" x-ref="file_nice">
 </div>
 <div class="col-12 col-md-4">
-<label class="form-label">Reporte de inventario final (con fecha y hora): <span class="text-danger">*</span></label>
+<label class="form-label">* Reporte de inventario final (con fecha y hora):</label>
 <input type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" x-ref="file_inventario_final">
 </div>
 </div>
 <div class="row g-3 mb-4">
 <div class="col-12 col-md-4">
-<label class="form-label">Metro contador (Temperatura Normal): <span class="text-danger">*</span></label>
+<label class="form-label">* Metro contador (Temperatura Normal):</label>
 <input type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" x-ref="file_metro_contador">
 </div>
 <div class="col-12 col-md-4">
-<label class="form-label">Metro contador (a 20 °C): <span class="text-danger">*</span></label>
+<label class="form-label">* Metro contador (a 20 °C):</label>
 <input type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" x-ref="file_metro_contador20">
 </div>
 </div>

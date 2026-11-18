@@ -55,12 +55,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         get firmaB() {
+            if (this.estatus !== 2) return null;
             const firmas = (this.detalle && this.detalle.firmas) || [];
-            return firmas.find(f => f.tipo === 'B') || null;
+            return firmas.find(f => f.tipo === 'B' && f.registro_valido) || null;
         },
 
         formatoLitros(valor) {
-            return Number(valor || 0).toFixed(2);
+            return Number(valor || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
 
         crearTokenTelegram() {

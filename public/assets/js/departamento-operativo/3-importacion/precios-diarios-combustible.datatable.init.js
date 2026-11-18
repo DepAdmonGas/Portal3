@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function aplicarVisibilidad() {
         try {
             table.column(3).visible(permisos.puedeDetalle === true);
-            table.column(4).visible(permisos.puedeCrear === true || permisos.puedeEditar === true);
+            table.column(4).visible(permisos.multiestacion === true && (permisos.puedeCrear === true || permisos.puedeEditar === true));
         } catch (e) {}
     }
 });

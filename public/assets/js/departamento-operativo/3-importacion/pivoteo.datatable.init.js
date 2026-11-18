@@ -60,6 +60,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderEstatus(row) {
+        if (row.estatus === 2 && !row.firmaVoBoValida) {
+            return '<span class="badge bg-warning text-white">Vo.Bo. incompleto</span>';
+        }
         var mapa = {
             0: '<span class="badge bg-danger">Pendiente</span>',
             1: '<span class="badge bg-warning text-white">En proceso</span>',
@@ -75,13 +78,17 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderFirma(row) {
         var est = row.estatus;
 
-        if (est === 2) {
-            return '<i class="ti ti-signature text-success fs-8" title="Firmado"></i>';
+        if ((est === 1 || est === 2) && row.puedeFirmar) {
+            return '<a href="/departamento-operativo/importacion/pivoteo-firma/' + row.id + '" class="firma-link" title="Firmar Vo.Bo. con token">' +
+                '<i class="ti ti-writing text-primary fs-8"></i></a>';
         }
 
-        if (est === 1 && row.puedeFirmar) {
-            return '<a href="/departamento-operativo/importacion/pivoteo-firma/' + row.id + '" class="firma-link" title="Firmar pivoteo">' +
-                '<i class="ti ti-writing text-primary fs-8"></i></a>';
+        if (est === 2 && !row.firmaVoBoValida) {
+            return '<i class="ti ti-writing text-warning fs-8" title="Vo.Bo. incompleto"></i>';
+        }
+
+        if (est === 2) {
+            return '<i class="ti ti-signature text-success fs-8" title="Firmado"></i>';
         }
 
         var deshabilitado = est === 1 ? ' opacity-25' : '';

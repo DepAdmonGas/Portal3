@@ -177,9 +177,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         tipoFirmaTexto(tipo) {
-            if (tipo === 'A') return 'NOMBRE Y FIRMA DEL ENCARGADO';
-            if (tipo === 'C') return 'NOMBRE Y FIRMA DE AUTORIZACIÓN';
-            return 'Depto Operativo';
+            if (tipo === 'A') return 'FIRMA DE QUIEN ELABORA';
+            return 'FIRMA DE VO.BO.';
         }
     }));
 });

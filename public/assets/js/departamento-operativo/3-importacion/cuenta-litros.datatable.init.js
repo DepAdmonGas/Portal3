@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var eliminar = row.puedeEliminar
             ? '<a class="dropdown-item pointer" data-action="cuenta-litros-eliminar" data-id="' + row.id + '" data-name="#' + row.id + '"><i class="ti ti-trash fs-6"></i> Eliminar</a>'
-            : '';
+            : '<span class="dropdown-item disabled" aria-disabled="true"><i class="ti ti-trash fs-6"></i> Eliminar</span>';
 
         return '<div class="dropdown dropstart">' +
             '<a class="pointer" data-bs-toggle="dropdown">' +

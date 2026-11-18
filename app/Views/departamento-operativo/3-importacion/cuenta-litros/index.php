@@ -44,7 +44,8 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">* Fecha: <span class="text-danger"></span></label>
-                            <input type="date" class="form-control" x-model="nuevoForm.fecha">
+                            <input type="date" class="form-control" x-model="nuevoForm.fecha"
+                                   :class="{ 'is-invalid': errorFecha }" @input="errorFecha = false">
                         </div>
                     </div>
                 </div>

@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var html = '<div class="dropdown">';
         html += '<a class="pointer" data-bs-toggle="dropdown" data-bs-popper-config=\'{"strategy":"fixed"}\' aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots-vertical fs-6"></i></a>';
         html += '<div class="dropdown-menu dropdown-menu-end">';
-        html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma-detalle/' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
+        html += '<a class="dropdown-item pointer" data-action-loader="navigation" href="/departamento-operativo/importacion/formato-descarga-merma-detalle/' + row.id + '"><i class="ti ti-eye me-1"></i> Detalle</a>';
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma/pdf/' + row.id + '" target="_blank"><i class="ti ti-file-type-pdf me-1"></i> Descargar PDF</a>';
         html += '<a class="dropdown-item pointer" href="/departamento-operativo/importacion/formato-descarga-merma/excel/' + row.id + '"><i class="ti ti-file-spreadsheet me-1"></i> Descargar Excel</a>';
         html += '<a class="dropdown-item pointer' + cls(puedeEditar) + '" href="' + (puedeEditar ? '/departamento-operativo/importacion/formato-descarga-merma-editar/' + row.id : 'javascript:void(0)') + '"><i class="ti ti-edit me-1"></i> Editar</a>';
@@ -181,10 +181,59 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-function descargarExcel() {
+let descargaExcelMermaEnCurso = false;
+
+async function descargarExcel() {
     var c = document.getElementById('container');
-    if (!c) return;
+    if (!c || descargaExcelMermaEnCurso) return;
     var year = c.dataset.idYear;
     var mes = c.dataset.idMes;
-    window.location.href = '/departamento-operativo/importacion/formato-descarga-merma/excel-general?year=' + year + '&mes=' + mes;
+    var url = '/departamento-operativo/importacion/formato-descarga-merma/excel-general?year=' + encodeURIComponent(year) + '&mes=' + encodeURIComponent(mes);
+    descargaExcelMermaEnCurso = true;
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const blob = await response.blob();
+        if (!response.ok) {
+            let message = 'No se pudo descargar el archivo Excel.';
+            try {
+                const payload = (await blob.text()).trim();
+                if (payload) message = payload;
+            } catch (_) {}
+            throw new Error(message);
+        }
+
+        const contentType = (response.headers.get('Content-Type') || blob.type || '').toLowerCase();
+        if (!contentType.includes('spreadsheetml.sheet') || !blob.size) {
+            throw new Error('El servidor no generó el archivo Excel solicitado.');
+        }
+
+        const disposition = response.headers.get('Content-Disposition') || '';
+        const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+        const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+        let filename = 'descarga-merma-' + year + '-' + String(mes).padStart(2, '0') + '.xlsx';
+        if (encodedName) {
+            try { filename = decodeURIComponent(encodedName); } catch (_) { filename = encodedName; }
+        } else if (plainName) {
+            filename = plainName;
+        }
+
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = filename;
+        link.hidden = true;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error) {
+        if (window.Notify) Notify.error(error.message || 'No se pudo descargar el archivo Excel.');
+    } finally {
+        descargaExcelMermaEnCurso = false;
+    }
 }

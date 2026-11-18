@@ -6,7 +6,7 @@
         <div class="alert alert-warning border-0 d-flex flex-column justify-content-center align-items-center text-center py-4 px-4 mb-4">
             <h4 class="fw-semibold mb-2">¡Pivoteo pendiente de finalizar!</h4>
             <p class="mb-0">
-                Para poder firmar el pivoteo primero debe ser <strong>finalizado</strong>.
+                Primero se requiere la firma de quien elaboró mediante SignaturePad. Después, el pivoteo pasa a <strong>En proceso</strong> para solicitar el Vo.Bo. con token.
             </p>
         </div>
     </template>
@@ -135,8 +135,47 @@
     </template>
 
     <!---------- FIRMA ---------->
+    <?php
+    $firmasPorTipo = [];
+    foreach (($detalle['firmas'] ?? []) as $firmaRegistro) {
+        $tipoRegistro = (string)($firmaRegistro['tipo'] ?? '');
+        if (in_array($tipoRegistro, ['A', 'B'], true) && !isset($firmasPorTipo[$tipoRegistro])) {
+            $firmasPorTipo[$tipoRegistro] = $firmaRegistro;
+        }
+    }
+    $firmaA = $firmasPorTipo['A'] ?? null;
+    $textoFirmaA = 'Sin firma registrada.';
+    if ($firmaA && empty($firmaA['firma_img_disponible'])) {
+        $textoFirmaA = 'La firma está registrada, pero su imagen no está disponible.';
+    }
+    ?>
     <div class="row">
-<div class="col-md-4 mb-3">
+<div class="col-xl-6 col-md-6 mb-3">
+    <div class="card border h-100">
+        <div class="card-header bg-primary text-white py-3 border-0">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                    <i class="ti <?= $firmaA ? 'ti-user-check' : 'ti-clock-hour-4' ?> fs-6"></i>
+                </div>
+                <div class="ms-3"><h6 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h6></div>
+            </div>
+        </div>
+        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+            <?php if ($firmaA && !empty($firmaA['firma_img_disponible']) && !empty($firmaA['firma_img_url'])): ?>
+                <img src="<?= htmlspecialchars($firmaA['firma_img_url'], ENT_QUOTES, 'UTF-8') ?>" class="img-fluid" style="max-height:100px;object-fit:contain;" alt="Firma del encargado">
+                <?php if (!empty($firmaA['fecha'])): ?><small class="text-muted mt-2"><?= htmlspecialchars($firmaA['fecha'], ENT_QUOTES, 'UTF-8') ?></small><?php endif; ?>
+            <?php else: ?>
+                <i class="ti ti-signature-off text-muted mb-3" style="font-size:80px;"></i>
+                <small class="text-muted"><?= htmlspecialchars($textoFirmaA, ENT_QUOTES, 'UTF-8') ?></small>
+            <?php endif; ?>
+        </div>
+        <div class="card-footer bg-light text-center">
+            <h6 class="mb-0 fw-semibold text-truncate"><?= htmlspecialchars((string)($firmaA['nombre'] ?? 'Pendiente de firma'), ENT_QUOTES, 'UTF-8') ?></h6>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-6 col-md-6 mb-3">
     <div class="card border h-100">
         <!-- Encabezado de la tarjeta -->
         <div class="card-header bg-primary text-white py-3 border-0">
@@ -145,7 +184,7 @@
                     <i class="ti fs-6" :class="firmaB ? 'ti-user-check' : (puedeFirmarAhora ? 'ti-circle-check' : 'ti-clock-hour-4')"></i>
                 </div>
                 <div class="ms-3">
-                    <h6 class="mb-0 text-white text-uppercase">FIRMA DEL VOBO</h6>
+                    <h6 class="mb-0 text-white text-uppercase">FIRMA DE VO.BO.</h6>
                 </div>
             </div>
         </div>
@@ -198,7 +237,7 @@
             <template x-if="!firmaB && !puedeFirmarAhora">
                 <div>
                     <i class="ti ti-signature-off text-muted mb-3" style="font-size:100px;"></i>
-                    <h6 class="text-muted mb-0">¡Falta la firma del Depto. Operativo!</h6>
+                    <h6 class="text-muted mb-0" x-text="estatus === 0 ? 'Primero se requiere la firma de quien elaboró mediante SignaturePad.' : (estatus === 2 ? 'El registro del Vo.Bo. no contiene datos completos; solicita a un usuario autorizado que lo regularice con token.' : 'En espera de la firma de Vo.Bo.')"></h6>
                 </div>
             </template>
         </div>
