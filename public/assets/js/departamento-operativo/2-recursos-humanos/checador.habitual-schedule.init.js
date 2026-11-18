@@ -119,7 +119,12 @@ document.addEventListener('alpine:init', () => {
 
             this.loading = true;
             try {
-                const response = await axios.post(form.action, new FormData(form), {
+                const payload = new FormData(form);
+                const seed = String(payload.get('idempotency_seed') || '');
+                const workerId = String(payload.get('worker_id') || '');
+                const targetDate = String(payload.get('target_date') || '');
+                payload.set('idempotency_key', `${seed}:${workerId}:${targetDate}`);
+                const response = await axios.post(form.action, payload, {
                     headers: { Accept: 'application/json' },
                 });
                 if (response.data?.ok !== true || ![200, 201].includes(response.status)) {
@@ -135,7 +140,7 @@ document.addEventListener('alpine:init', () => {
                     401: 'La sesión expiró. Inicia sesión nuevamente.',
                     403: 'No tienes permiso para cambiar la programación de este centro.',
                     422: 'Revisa el trabajador, la fecha, el turno y la confirmación.',
-                    502: 'No se pudo confirmar el readback de la API; no se declara guardado.',
+                    502: 'No se pudo confirmar la lectura posterior de MariaDB; no se declara guardado.',
                 }[responseStatus] || 'No fue posible guardar el cambio. La programación actual no se declara modificada.');
             } finally {
                 this.loading = false;
@@ -359,6 +364,8 @@ document.addEventListener('alpine:init', () => {
                     payload.set('target_date', day.targetDate);
                     payload.set('template_id', day.templateId);
                     payload.set('tipo_asignacion', 'HABITUAL');
+                    const seed = String(payload.get('idempotency_seed') || '');
+                    payload.set('idempotency_key', `${seed}:${this.workerId}:${day.targetDate}`);
 
                     try {
                         const response = await axios.post(form.action, payload, {

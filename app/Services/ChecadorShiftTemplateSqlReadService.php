@@ -41,11 +41,17 @@ final class ChecadorShiftTemplateSqlReadService
 
         try {
             $connection = Capsule::connection();
-            $scopeFilter = static function ($query) use ($catalogWorkplaceId): void {
-                $query->where('scope', 'GLOBAL')
-                    ->orWhere(static function ($stationQuery) use ($catalogWorkplaceId): void {
-                        $stationQuery->where('scope', 'STATION')->where('id_estacion', $catalogWorkplaceId);
-                    });
+            $scopeFilter = static function ($query) use ($catalogWorkplaceId, $workplaceId): void {
+                if ($workplaceId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID) {
+                    $query->where('scope', 'STATION')->where('id_estacion', $catalogWorkplaceId);
+                    return;
+                }
+                $query->where(static function ($visible) use ($catalogWorkplaceId): void {
+                    $visible->where('scope', 'GLOBAL')
+                        ->orWhere(static function ($stationQuery) use ($catalogWorkplaceId): void {
+                            $stationQuery->where('scope', 'STATION')->where('id_estacion', $catalogWorkplaceId);
+                        });
+                });
             };
             $latest = $connection->table('op_rh_v2_turnos_plantillas')
                 ->select('clave', 'scope', 'id_estacion')
@@ -159,6 +165,9 @@ final class ChecadorShiftTemplateSqlReadService
         if ($catalogWorkplaceId === null) {
             return self::failure('permission_denied', 403);
         }
+        if ($workplaceId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID && $scope === 'GLOBAL') {
+            return self::failure('schedule_template_not_found', 404);
+        }
         if ($scope === 'STATION' && $stationId !== $catalogWorkplaceId) {
             return self::failure('bad_request', 400);
         }
@@ -249,7 +258,11 @@ final class ChecadorShiftTemplateSqlReadService
             return null;
         }
         $catalogWorkplaceId = filter_var($authorization['catalog_workplace_id'] ?? $requestedWorkplaceId, FILTER_VALIDATE_INT);
-        return $catalogWorkplaceId !== false && $catalogWorkplaceId > 0 ? $catalogWorkplaceId : null;
+        // A permission decision may not silently substitute another locality's
+        // catalog (notably Autolavado 9 -> Palo Solo 2).
+        return $catalogWorkplaceId !== false && $catalogWorkplaceId === $requestedWorkplaceId
+            ? $requestedWorkplaceId
+            : null;
     }
 
     /** @return array{ok:false,error:array{kind:string,status:int}} */

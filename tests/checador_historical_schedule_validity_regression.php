@@ -165,8 +165,12 @@ $workerRosterMethod = $workerRosterStart === false ? '' : substr($controller, $w
 $rosterSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAttendanceRosterService.php') ?: '';
 $assert(str_contains($workerRosterMethod, 'scheduleHistoryWorkerForDate(')
     && str_contains($rosterSource, 'resolveAssignments($workerId, $effectiveAt)')
-    && str_contains($workerRosterMethod, 'resolveWorkplaceLocalDay('), 'V8C15B a selected worker is checked against canonical membership for the requested local date');
-$assert(str_contains($historyMethod, 'elseif ($demoMode)') && strpos($historyMethod, 'new ChecadorDailyReadService()') > strpos($historyMethod, 'elseif ($demoMode)'), 'V8C16 demo mode does not invoke live schedule API reads');
+    && str_contains($workerRosterMethod, 'ChecadorWeeklyScheduleSqlReadService')
+    && !str_contains($workerRosterMethod, 'resolveWorkplaceLocalDay('), 'V8C15B a selected worker is checked against canonical membership and SQL timezone for the requested local date');
+$assert(str_contains($historyMethod, 'elseif ($demoMode)')
+    && !str_contains($historyMethod, 'new ChecadorDailyReadService()')
+    && !str_contains($historyMethod, 'getEffectiveSchedule(')
+    && !str_contains($historyMethod, 'getShiftAssignments('), 'V8C16 demo and live assignment history use no API schedule reads');
 $assignmentMethodStart = strpos($service, 'public function getShiftAssignments(');
 $assignmentMethodEnd = $assignmentMethodStart === false ? false : (strpos($service, "\n    /**", $assignmentMethodStart + 1) ?: strlen($service));
 $assignmentMethod = $assignmentMethodStart === false ? '' : substr($service, $assignmentMethodStart, $assignmentMethodEnd - $assignmentMethodStart);
@@ -221,7 +225,8 @@ $assert(str_contains($templateScript, 'buildSegmentsFrom(')
 $assert(!str_contains($view, 'Historial de programación'), 'V8C20G removed redundant schedule-history heading');
 $assert(str_contains($controller, "'historyItems' => \$historyItems")
     && !str_contains($view, 'Historial de asignaciones')
-    && strpos($historyMethod, '$historyResult = $reader->getShiftAssignments') < strpos($historyMethod, '$dateResult = $reader->getShiftAssignments'), 'V8C21 assignment history lookup remains independent of effective-schedule resolution without changing the original schedule presentation');
+    && str_contains($historyMethod, 'readAssignmentHistory(')
+    && !str_contains($historyMethod, 'getEffectiveSchedule('), 'V8C21 persisted assignment history is read directly without effective-schedule HTTP resolution or a presentation redesign');
 
 $renderData = [
     'selectedWorkplaceId' => 8,
