@@ -268,6 +268,9 @@ $jsSource = file_get_contents(__DIR__ . '/../public/assets/js/departamento-opera
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php') ?: '';
 $assert(str_contains($controllerM04, 'ChecadorShiftTemplateSqlWriteService')
     && str_contains($controllerM04, 'ChecadorShiftTemplateSqlReadService')
+    && str_contains($controllerM04, 'CsrfToken::validate($formCsrf)')
+    && str_contains($controllerM04, 'CsrfToken::validate($csrf)')
+    && str_contains($controllerM04, 'authorizeStationTemplateAdministration($workplaceId)')
     && str_contains($controllerM04, 'requestM04TemplateWorkplaceId($input)')
     && str_contains($controllerM04, '$rawWorkplace !== $workplaceId')
     && str_contains($controllerM04, "\$writtenTemplate['id_estacion'] ?? 0) !== \$workplaceId")
@@ -282,6 +285,10 @@ $assert(str_contains($controllerM04, 'ChecadorShiftTemplateSqlWriteService')
     && str_contains($jsSource, 'window.location.reload();')
     && !str_contains($jsSource, 'confirmado en Autolavado'),
     'M04 validates the selected locality end-to-end and reloads its persisted catalog after a confirmed write');
+$assert(str_contains($writeServiceSource, 'Auth::user()')
+    && str_contains($writeServiceSource, 'authorizeStationTemplateAdministration($workplaceId)')
+    && str_contains($writeServiceSource, 'if (!($this->authorizeWrite)($actor, $workplaceId))'),
+    'M04 writer rechecks authenticated identity and effective station permission server-side');
 $assert(str_contains($writeServiceSource, "SHOW TABLE STATUS LIKE ' . \$connection->getPdo()->quote(\$table)")
     && !str_contains($writeServiceSource, 'SHOW TABLE STATUS LIKE ?'),
     'MariaDB table-status preflight quotes only fixed table names instead of binding an unsupported SHOW placeholder');
@@ -292,12 +299,17 @@ foreach ($gateNames as $gateName) {
     unset($_ENV[$gateName]);
     putenv($gateName);
 }
-$defaultClosed = !ChecadorShiftTemplateSqlWriteService::writeGateOpen();
+$operationGateOpen = ChecadorShiftTemplateSqlWriteService::writeGateOpen();
 foreach ($savedGateValues as $gateName => [$hadEnv, $envValue, $processValue]) {
     if ($hadEnv) $_ENV[$gateName] = $envValue;
     if ($processValue !== false) putenv($gateName . '=' . $processValue);
 }
-$assert($defaultClosed, 'M04 SQL writer stays closed by default without deployment cutover attestations');
+$assert($operationGateOpen, 'M04 SQL writer has no environment activation flags outside demo mode');
+$assert(!str_contains($writeServiceSource, 'CHECADOR_M04_SQL_WRITER_ENABLED')
+    && !str_contains($writeServiceSource, 'CHECADOR_M04_API_WRITER_CLOSED')
+    && !str_contains($writeServiceSource, 'CHECADOR_M04_SQL_GRANTS_VERIFIED')
+    && !str_contains($writeServiceSource, 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'),
+    'M04 SQL writer contains no legacy environment flag dependencies');
 
 echo "\n{$passes} PASS, {$fails} FAIL\n";
 exit($fails === 0 ? 0 : 1);

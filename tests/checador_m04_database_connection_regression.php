@@ -51,5 +51,45 @@ $assert(($default['host'] ?? null) === 'portal-global-db.invalid'
 $assert($missingDedicatedConnection, 'no second M04 SQL connection is registered');
 $assert(ChecadorShiftTemplateSqlWriteService::CONNECTION_NAME === 'default',
     'M04 writer selects the default Portal3 connection');
-$assert(!ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
-    'reusing the default connection does not enable M04 writes');
+$assert(ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
+    'M04 does not require environment flags to pass its non-demo operation gate');
+
+foreach ([
+    'CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED',
+    'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
+] as $flag) {
+    $_ENV[$flag] = '0';
+    putenv($flag . '=0');
+}
+$assert(ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
+    'M04 operation gate ignores all four legacy deployment flags');
+foreach ([
+    'CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED',
+    'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
+] as $flag) {
+    unset($_ENV[$flag]);
+    putenv($flag);
+}
+
+$grantCheck = new ReflectionMethod(ChecadorShiftTemplateSqlWriteService::class, 'hasRequiredM04Grants');
+$grantCheck->setAccessible(true);
+$leastPrivilegeRows = [
+    (object) ['grant_scope' => 'SCHEMA', 'table_schema' => 'checador', 'table_name' => null, 'privilege_type' => 'SELECT'],
+    ...array_map(static fn(string $table): object => (object) [
+        'grant_scope' => 'TABLE', 'table_schema' => 'checador', 'table_name' => $table, 'privilege_type' => 'INSERT',
+    ], [
+        'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
+        'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log',
+    ]),
+];
+$assert($grantCheck->invoke(null, $leastPrivilegeRows, 'checador'),
+    'local grant preflight accepts the required SELECT and INSERT privileges');
+$broadGrants = [...$leastPrivilegeRows,
+    (object) ['grant_scope' => 'SCHEMA', 'table_schema' => 'checador', 'table_name' => null, 'privilege_type' => 'ALL PRIVILEGES'],
+];
+$assert($grantCheck->invoke(null, $broadGrants, 'checador'),
+    'local grant preflight does not reject sufficient privileges solely because additional grants exist');
+$missingInsert = array_values(array_filter($leastPrivilegeRows,
+    static fn(object $row): bool => !($row->grant_scope === 'TABLE' && $row->privilege_type === 'INSERT')));
+$assert(!$grantCheck->invoke(null, $missingInsert, 'checador'),
+    'local grant preflight still rejects a principal missing required INSERT privileges');

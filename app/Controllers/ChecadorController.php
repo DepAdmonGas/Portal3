@@ -1876,7 +1876,7 @@ final class ChecadorController extends BaseController
             self::redirect($redirect);
         }
         if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
-            self::scheduleTemplateFeedback('error', 'La escritura SQL de turnos está deshabilitada hasta completar el corte autorizado.', $workplaceId);
+            self::scheduleTemplateFeedback('error', 'La conexión, el esquema o los permisos SQL no cumplen los requisitos para administrar horarios.', $workplaceId);
             self::redirect($redirect);
         }
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
@@ -1947,7 +1947,7 @@ final class ChecadorController extends BaseController
         }
         if (ChecadorDailyReadService::demoModeEnabled()) $fail('demo_mode', 'La demostración es de consulta.', 403);
         if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
-            $fail('gate_disabled', 'La escritura SQL de turnos está deshabilitada hasta completar el corte autorizado.', 503);
+            $fail('sql_preflight_not_ready', 'La conexión, el esquema o los permisos SQL no cumplen los requisitos para administrar horarios.', 503);
         }
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
             $fail('forbidden', 'No tienes permiso para administrar turnos en esta estación.', 403);
@@ -2065,7 +2065,7 @@ final class ChecadorController extends BaseController
                     default => (int) ($result['status'] ?? 503),
                 };
                 $message = match ($kind) {
-                    'm04_sql_writer_cutover_not_ready' => 'La escritura SQL está cerrada hasta verificar el corte y los permisos de base de datos.',
+                    'demo_mode_read_only' => 'El modo demostración es de consulta y no permite guardar plantillas operativas.',
                     'm04_sql_schema_not_ready' => 'El esquema MariaDB no cumple el preflight requerido para guardar turnos.',
                     'duplicate_template_name' => 'Ya existe un turno con este nombre. Actualiza el catálogo.',
                     'version_conflict' => 'El turno cambió desde que abriste el formulario. Actualiza el catálogo antes de editarlo.',

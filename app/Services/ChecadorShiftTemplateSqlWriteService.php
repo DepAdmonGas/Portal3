@@ -11,7 +11,7 @@ use DomainException;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Throwable;
 
-/** M04 SQL-only append-only writer. Disabled unless both cutover attestations are set. */
+/** M04 SQL-only append-only writer. Access and readiness are checked in Portal3 at request time. */
 final class ChecadorShiftTemplateSqlWriteService
 {
     public const CONNECTION_NAME = 'default';
@@ -40,21 +40,16 @@ final class ChecadorShiftTemplateSqlWriteService
                 ->getShiftTemplateVersion($actor, $key, $version, $workplaceId, $id, 'STATION', $workplaceId);
     }
 
-    /** Both independent deployment attestations default closed. */
+    /** API availability and deployment flags are not authorization inputs for the SQL writer. */
     public static function writeGateOpen(): bool
     {
-        return self::deploymentFlag('CHECADOR_M04_SQL_WRITER_ENABLED')
-            && self::deploymentFlag('CHECADOR_M04_API_WRITER_CLOSED')
-            && self::deploymentFlag('CHECADOR_M04_SQL_GRANTS_VERIFIED')
-            && self::deploymentFlag('CHECADOR_M04_SQL_PREFLIGHT_VERIFIED')
-            && !ChecadorDailyReadService::demoModeEnabled();
+        return !ChecadorDailyReadService::demoModeEnabled();
     }
 
-    /** UI and handlers use the gate plus the live schema preflight; grants remain an explicit operator attestation. */
+    /** UI and handlers require a live schema and effective-grant preflight. */
     public static function isOperationallyReady(): bool
     {
-        if (!self::writeGateOpen()) return false;
-        return (new self())->mariadbSchemaReady();
+        return self::writeGateOpen() && (new self())->mariadbSchemaReady();
     }
 
     /** @return array{ok:bool,template?:array<string,mixed>,error?:string,status?:int,replayed?:bool} */
@@ -81,7 +76,7 @@ final class ChecadorShiftTemplateSqlWriteService
         }
         if ($operation === 'create' && ($input['confirm_action'] ?? '') !== '1') return self::failure('confirmation_required', 422);
         if (!($this->authorizeWrite)($actor, $workplaceId)) return self::failure('permission_denied', 403);
-        if (!($this->gate)()) return self::failure('m04_sql_writer_cutover_not_ready', 503);
+        if (!($this->gate)()) return self::failure('demo_mode_read_only', 403);
         if (!($this->schemaPreflight)()) return self::failure('m04_sql_schema_not_ready', 503);
 
         $fingerprint = hash('sha256', json_encode([
@@ -307,6 +302,24 @@ final class ChecadorShiftTemplateSqlWriteService
         try {
             $connection = Capsule::connection(self::CONNECTION_NAME);
             if ($connection->getDriverName() !== 'mysql') return false;
+            $identity = $connection->selectOne(
+                "SELECT DATABASE() AS database_name, CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', 1)), '@', QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', -1))) AS grantee"
+            );
+            $databaseName = trim((string) ($identity->database_name ?? ''));
+            $grantee = trim((string) ($identity->grantee ?? ''));
+            $activeRole = strtoupper(trim((string) ($connection->selectOne('SELECT CURRENT_ROLE() AS role_name')->role_name ?? 'NONE')));
+            if ($databaseName === '' || $grantee === ''
+                || ($activeRole !== '' && $activeRole !== 'NONE')
+                || !self::hasRequiredM04Grants($connection->select(
+                    "SELECT 'GLOBAL' AS grant_scope, NULL AS table_schema, NULL AS table_name, PRIVILEGE_TYPE AS privilege_type FROM information_schema.USER_PRIVILEGES WHERE GRANTEE = ?
+                    UNION ALL
+                    SELECT 'SCHEMA', TABLE_SCHEMA, NULL, PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?
+                    UNION ALL
+                    SELECT 'TABLE', TABLE_SCHEMA, TABLE_NAME, PRIVILEGE_TYPE FROM information_schema.TABLE_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ? AND TABLE_NAME IN (?, ?, ?, ?, ?)",
+                    [$grantee, $grantee, $databaseName, $grantee, $databaseName,
+                        'op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
+                        'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log']
+                ), $databaseName)) return false;
             $tables = ['op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
                 'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log'];
             foreach ($tables as $table) {
@@ -361,23 +374,49 @@ final class ChecadorShiftTemplateSqlWriteService
                     if (!$unique || array_values($found) !== $columns) return false;
                 }
             }
-            if (!self::deploymentFlag('CHECADOR_M04_SQL_GRANTS_VERIFIED')
-                || !self::deploymentFlag('CHECADOR_M04_SQL_PREFLIGHT_VERIFIED')) return false;
             return true;
         } catch (Throwable) {
             return false;
         }
     }
 
+    /** Validate required effective operations; extra grants are reported as risk, not mistaken for missing access. */
+    private static function hasRequiredM04Grants(array $grantRows, string $databaseName): bool
+    {
+        $has = static function (string $table, string $requiredPrivilege) use ($grantRows, $databaseName): bool {
+            foreach ($grantRows as $row) {
+                $scope = strtoupper((string) ($row->grant_scope ?? ''));
+                $schema = (string) ($row->table_schema ?? '');
+                $tableName = (string) ($row->table_name ?? '');
+                $privilege = strtoupper(trim((string) ($row->privilege_type ?? '')));
+                $applies = $scope === 'GLOBAL'
+                    || ($scope === 'SCHEMA' && $schema === $databaseName)
+                    || ($scope === 'TABLE' && $schema === $databaseName && $tableName === $table);
+                if ($applies && ($privilege === $requiredPrivilege || in_array($privilege, ['ALL', 'ALL PRIVILEGES'], true))) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        $required = [
+            'op_rh_localidades' => ['SELECT'],
+            'op_rh_v2_turnos_plantillas' => ['SELECT', 'INSERT'],
+            'op_rh_v2_turnos_segmentos' => ['SELECT', 'INSERT'],
+            'op_rh_v2_shift_template_station_lineage' => ['SELECT', 'INSERT'],
+            'op_rh_v2_turnos_audit_log' => ['SELECT', 'INSERT'],
+        ];
+        foreach ($required as $table => $privileges) {
+            foreach ($privileges as $privilege) {
+                if (!$has($table, $privilege)) return false;
+            }
+        }
+        return true;
+    }
+
     private function utcNow($connection): mixed
     {
         return $connection->getDriverName() === 'mysql' ? Capsule::raw('UTC_TIMESTAMP()') : gmdate('Y-m-d H:i:s');
-    }
-
-    private static function deploymentFlag(string $name): bool
-    {
-        $value = strtolower(trim((string) ($_ENV[$name] ?? getenv($name) ?: '')));
-        return in_array($value, ['1', 'true', 'yes', 'on'], true);
     }
 
     private static function failure(string $error, int $status): array
