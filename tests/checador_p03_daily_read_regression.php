@@ -183,7 +183,8 @@ $unavailable = $service->resolveWorkplaceLocalDay($user, 1, '2026-10-12');
 $assert(($unavailable['error']['kind'] ?? '') === 'api_unavailable', 'P316 API timeout/500 becomes an unavailable state');
 
 // P317-P324: observed-only UI and no browser/API credential boundary.
-$assert(str_contains($sourceTableScript, 'No hay colaboradores atribuibles para esta consulta.'), 'P317 daily attendance keeps its distinct observed-empty state');
+$assert(str_contains($sourceDailyView, 'No hay colaboradores atribuibles dentro de la información disponible para esta consulta.')
+    && str_contains($sourceDailyView, 'El padrón no está disponible y no se muestran personas sin una membresía autorizada verificable.'), 'P317 daily attendance keeps distinct observed-empty and unavailable states');
 $assert(!str_contains($sourceView, 'SIN MARCACIÓN'), 'P318 successful empty results do not render SIN MARCACIÓN or FALTA');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $sourceView), 'P319 raw dashboard does not render payroll amounts or document data');
 // Raw report integrity and pagination are covered by the M02-focused report regression.

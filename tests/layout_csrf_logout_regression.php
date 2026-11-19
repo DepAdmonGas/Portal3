@@ -61,7 +61,8 @@ function layout_has_csrf_bootstrap(string $layout): bool
     return str_contains($contents, '<meta name="csrf-token" content="<?= \\App\\Core\\CsrfToken::token() ?>">')
         && (str_contains($contents, "axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken")
             && str_contains($contents, "config.headers['X-CSRF-TOKEN'] = getCsrfToken()")
-            || str_contains($contents, "js/core/http-security.js"));
+            || str_contains($contents, "js/core/http-security.js")
+            || str_contains($contents, "js/core/csrf-http.js"));
 }
 
 function layout_has_no_get_logout_anchor(string $layout): bool
