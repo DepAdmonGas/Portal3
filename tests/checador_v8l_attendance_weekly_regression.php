@@ -235,10 +235,10 @@ $roster = file_get_contents($root . '/app/Services/ChecadorAttendanceRosterServi
 $access = file_get_contents($root . '/app/Services/ChecadorAccessService.php') ?: '';
 $routeAuth = file_get_contents($root . '/app/Core/Route.php') ?: '';
 $weeklyRenderStart = strpos($controller, 'private function renderScheduleWeek(');
-$weeklyRenderEnd = strpos($controller, '/** Read the selected week date by date;', (int) $weeklyRenderStart);
+$weeklyRenderEnd = strpos($controller, '/** Read the seven effective weekday occurrences', (int) $weeklyRenderStart);
 $weeklyRender = substr($controller, (int) $weeklyRenderStart, (int) $weeklyRenderEnd - (int) $weeklyRenderStart);
 $habitualReadbackStart = strpos($controller, 'public function habitualAssignmentReadback(): void');
-$habitualReadbackEnd = strpos($controller, '/** Create one assignment through the single gated Portal3 SQL writer.', (int) $habitualReadbackStart);
+$habitualReadbackEnd = strpos($controller, '/** Execute only the gated Portal3 SQL writer;', (int) $habitualReadbackStart);
 $habitualReadback = substr($controller, (int) $habitualReadbackStart, (int) $habitualReadbackEnd - (int) $habitualReadbackStart);
 $assert(str_contains($weeklyRender, 'ChecadorWeeklyScheduleSqlReadService')
     && str_contains($habitualReadback, 'ChecadorWeeklyScheduleSqlReadService')
@@ -247,6 +247,19 @@ $assert(str_contains($weeklyRender, 'ChecadorWeeklyScheduleSqlReadService')
     && !str_contains($weeklyRender, 'getShiftTemplates(')
     && !str_contains($habitualReadback, 'resolveWorkplaceLocalDay(')
     && !str_contains($habitualReadback, 'getShiftAssignments('), 'M03 weekly view and readback use Portal3 SQL timezone/schedule reads without HTTP fallbacks');
+$assert(str_contains($habitualReadback, 'effective_start_date')
+    && str_contains($habitualReadback, 'firstWeekdayOnOrAfter')
+    && str_contains($habitualReadback, 'EFFECTIVE_SEVEN_OCCURRENCES')
+    && str_contains($habitualReadback, 'versioned_verified_dates'),
+    'habitual readback verifies the seven effective dates independently across SQL-backed weeks');
+$weeklyWriter = file_get_contents($root . '/app/Services/ChecadorWeeklyScheduleSqlWriteService.php') ?: '';
+$weeklyJs = file_get_contents($root . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.habitual-schedule.init.js') ?: '';
+$assert(str_contains($weeklyWriter, 'createHabitualPattern')
+    && str_contains($weeklyWriter, '$connection->transaction(function ()')
+    && str_contains($weeklyWriter, "'habitual_batch' => \$batch")
+    && str_contains($weeklyJs, 'axios.post(form.action, payload')
+    && !str_contains($weeklyJs, 'for (const day of pending)'),
+    'habitual selections use one SQL transaction and one HTTP request with persisted batch idempotency');
 $assert(str_contains($weeklyRender, "in_array(\$coverage, ['ready', 'demo_fixture'], true) ? 'ready' : 'partial'")
     && str_contains($weeklyRender, "'matrixCoverage' => \$errorMessage !== '' ? 'unavailable'"),
     'complete SQL-backed roster reads are marked ready; partial roster and read failure remain distinct');

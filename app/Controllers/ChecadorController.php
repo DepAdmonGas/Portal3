@@ -2610,23 +2610,27 @@ final class ChecadorController extends BaseController
         );
     }
 
-    /** Read the selected week date by date; never labels this as complete assignment history. */
+    /** Read the seven effective weekday occurrences from canonical SQL memberships. */
     public function habitualAssignmentReadback(): void
     {
         $query = Request::query();
         $workerId = self::positiveInteger($query['worker_id'] ?? null);
         $workplaceId = $this->requestWorkplaceId($query);
         $weekStart = is_string($query['week_start'] ?? null) ? trim($query['week_start']) : '';
-        $dates = \App\Services\ChecadorWeeklyScheduleService::dates($weekStart);
+        $effectiveStart = is_string($query['effective_start_date'] ?? null) ? trim($query['effective_start_date']) : '';
+        $weekDates = \App\Services\ChecadorWeeklyScheduleService::dates($weekStart);
         $user = Auth::user();
         $deny = static function (string $code, string $message, int $status): never {
             JsonResponse::send(['ok' => false, 'code' => $code, 'message' => $message], $status, ['Cache-Control' => 'private, no-store']);
         };
 
         if ($user === null) $deny('unauthenticated', 'La sesión ya no es válida.', 401);
-        if ($workerId === null || $workplaceId === null || $dates === []
-            || \App\Services\ChecadorWeeklyScheduleService::monday($weekStart) !== $weekStart) {
-            $deny('invalid_request', 'Revisa el trabajador, la estación y la semana seleccionada.', 422);
+        if ($workerId === null || $workplaceId === null || $weekDates === []
+            || \App\Services\ChecadorWeeklyScheduleService::monday($weekStart) !== $weekStart
+            || !preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $effectiveStart)
+            || $effectiveStart < $weekStart
+            || $effectiveStart > (new \DateTimeImmutable($weekStart, new \DateTimeZone('UTC')))->modify('+13 days')->format('Y-m-d')) {
+            $deny('invalid_request', 'Revisa el trabajador, la estación, la semana y el inicio de vigencia.', 422);
         }
         if (ChecadorDailyReadService::demoModeEnabled()
             || !(ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false)) {
@@ -2635,35 +2639,72 @@ final class ChecadorController extends BaseController
 
         try {
             $reader = new \App\Services\ChecadorWeeklyScheduleSqlReadService();
-            $timezone = $reader->timezoneForDate($workplaceId, $weekStart) ?? '';
+            $timezone = $reader->timezoneForDate($workplaceId, $effectiveStart) ?? '';
             if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($timezone)
                 || !\App\Services\ChecadorWeeklyScheduleService::isCurrentOrFutureWeek($weekStart, $timezone)) {
                 $deny('workplace_unavailable', 'No se pudo confirmar la estación, la zona horaria o la semana.', 502);
             }
-            $roster = (new \App\Services\ChecadorAttendanceRosterService())
-                ->workersForScheduleWeek($workplaceId, $weekStart, $timezone, false);
-            $worker = null;
-            foreach ($roster['workers'] ?? [] as $candidate) {
-                if ((int) ($candidate['worker_id'] ?? 0) === $workerId) { $worker = $candidate; break; }
+            $attendanceRoster = new \App\Services\ChecadorAttendanceRosterService();
+            $targetDates = [];
+            foreach ([
+                'LUNES' => 'Lunes', 'MARTES' => 'Martes', 'MIERCOLES' => 'Miércoles', 'JUEVES' => 'Jueves',
+                'VIERNES' => 'Viernes', 'SABADO' => 'Sábado', 'DOMINGO' => 'Domingo',
+            ] as $weekday => $label) {
+                $date = \App\Services\ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter($weekday, $effectiveStart);
+                if ($date === null) $deny('invalid_request', 'No se pudieron calcular las siete fechas efectivas.', 422);
+                $targetDates[] = ['weekday' => $weekday, 'label' => $label, 'date' => $date];
             }
-            if (!is_array($worker)) $deny('membership_unverified', 'La adscripción del trabajador no está confirmada para esta semana.', 403);
-            $read = $reader->readWeek($user, $workplaceId, $weekStart, [$worker]);
-            if (($read['ok'] ?? false) !== true) {
-                $deny('assignment_week_read_unavailable', 'No fue posible consultar la programación persistida; no se habilitó el formulario.', 502);
+
+            $weeks = [];
+            foreach ($targetDates as $target) {
+                $targetMonday = \App\Services\ChecadorWeeklyScheduleService::monday($target['date']);
+                if (!isset($weeks[$targetMonday])) {
+                    $weekTimezone = $reader->timezoneForDate($workplaceId, $target['date']) ?? '';
+                    if (!\App\Services\ChecadorOperationalPeriod::isIanaTimezone($weekTimezone)) {
+                        $deny('workplace_unavailable', 'No se confirmó la zona horaria para cada fecha efectiva.', 502);
+                    }
+                    $roster = $attendanceRoster->workersForScheduleWeek($workplaceId, $targetMonday, $weekTimezone, false);
+                    $worker = null;
+                    foreach ($roster['workers'] ?? [] as $candidate) {
+                        if ((int) ($candidate['worker_id'] ?? 0) === $workerId) { $worker = $candidate; break; }
+                    }
+                    $weeks[$targetMonday] = ['worker' => $worker, 'read' => null];
+                    if (is_array($worker)) {
+                        $read = $reader->readWeek($user, $workplaceId, $targetMonday, [$worker]);
+                        if (($read['ok'] ?? false) !== true) {
+                            $deny('assignment_week_read_unavailable', 'No fue posible consultar las asignaciones persistidas; no se habilitó el formulario.', 502);
+                        }
+                        $weeks[$targetMonday]['read'] = $read;
+                    }
+                }
             }
-            $verifiedDates = is_array($worker['versioned_verified_dates'] ?? null)
-                ? array_values(array_filter($worker['versioned_verified_dates'], 'is_string')) : [];
+
+            $verifiedDateSet = [];
             $existingDays = [];
             $existingDaysByDate = [];
             $replacementSources = [];
-            foreach ($dates as $day) {
-                $readRows = $read['data']['assignments_by_worker'][$workerId] ?? [];
+            foreach ($targetDates as $day) {
+                $targetMonday = \App\Services\ChecadorWeeklyScheduleService::monday($day['date']);
+                $worker = $weeks[$targetMonday]['worker'] ?? null;
+                if (!is_array($worker)) continue;
+                $workerVerified = is_array($worker['versioned_verified_dates'] ?? null)
+                    ? array_fill_keys(array_filter($worker['versioned_verified_dates'], 'is_string'), true) : [];
+                if (!isset($workerVerified[$day['date']])) continue;
+                $verifiedDateSet[$day['date']] = true;
+                $readRows = $weeks[$targetMonday]['read']['data']['assignments_by_worker'][$workerId] ?? [];
+                $dayMatches = [];
                 foreach ($readRows as $assignment) {
                     if (($assignment['tipo_asignacion'] ?? '') !== 'HABITUAL'
                         || ($assignment['dia_semana'] ?? '') !== $day['weekday']
                         || (int) ($assignment['es_activo'] ?? 0) !== 1
                         || (string) ($assignment['valido_desde'] ?? '') > $day['date']
                         || (($assignment['valido_hasta'] ?? null) !== null && $day['date'] >= (string) $assignment['valido_hasta'])) continue;
+                    $dayMatches[] = $assignment;
+                }
+                if (count($dayMatches) > 1) {
+                    $deny('assignment_conflict', 'Hay más de una asignación habitual vigente en una fecha efectiva; revisa el historial antes de continuar.', 409);
+                }
+                foreach ($dayMatches as $assignment) {
                     $templateId = $assignment['id_plantilla'] ?? null;
                     $existingDays[(string) $day['weekday']] = $templateId === null ? 'REST' : (string) $templateId;
                     $existingDaysByDate[(string) $day['date']] = $templateId === null ? 'REST' : (string) $templateId;
@@ -2677,15 +2718,18 @@ final class ChecadorController extends BaseController
                     ];
                 }
             }
+            $verifiedDates = array_keys($verifiedDateSet);
 
             JsonResponse::send(['ok' => true, 'data' => [
                 'complete' => true,
-                'read_scope' => 'SELECTED_WEEK_DATE_FILTERS',
+                'read_scope' => 'EFFECTIVE_SEVEN_OCCURRENCES',
                 'history_complete' => false,
+                'effective_start_date' => $effectiveStart,
+                'target_dates' => $targetDates,
                 'existing_days' => $existingDays,
                 'existing_days_by_date' => $existingDaysByDate,
                 'verified_dates' => $verifiedDates,
-                'habitual_complete' => count($existingDays) === count($dates),
+                'habitual_complete' => count($verifiedDateSet) === 7 && count($existingDaysByDate) === 7,
                 'replacement_sources' => $replacementSources,
             ]], 200, ['Cache-Control' => 'private, no-store']);
         } catch (\Throwable) {
@@ -2711,7 +2755,9 @@ final class ChecadorController extends BaseController
         } elseif (!ChecadorDailyReadService::demoModeEnabled()) {
             $writer = new \App\Services\ChecadorWeeklyScheduleSqlWriteService();
             $result = match ($operation) {
-                'create' => $writer->create($user, $input),
+                'create' => (($input['tipo_asignacion'] ?? '') === 'HABITUAL' && is_array($input['schedule'] ?? null))
+                    ? $writer->createHabitualPattern($user, $input)
+                    : $writer->create($user, $input),
                 'close' => $writer->close($user, $input),
                 'replace' => $writer->replace($user, $input),
                 default => ['ok' => false, 'error' => 'invalid_operation', 'status' => 422],
@@ -2732,6 +2778,7 @@ final class ChecadorController extends BaseController
             'stale_assignment' => 'La asignación cambió desde que abriste el formulario. Actualiza la semana e inténtalo de nuevo.',
             'invalid_close_date' => 'La fecha de cierre no coincide con la vigencia de la asignación.',
             'invalid_validity' => 'La vigencia solicitada no es válida.',
+            'invalid_effective_date' => 'La fecha de inicio debe ser futura y las siete ocurrencias deben quedar dentro del rango consultado.',
             'idempotency_conflict' => 'La clave de solicitud ya se usó con otros datos; vuelve a cargar el formulario.',
             'concurrent_write_busy' => 'Hay otro cambio de programación en curso. Actualiza la página antes de reintentar.',
             'readback_failed', 'readback_mismatch', 'audit_readback_failed' => 'La operación no se confirmó mediante lectura posterior; no se declara guardada.',
@@ -2747,6 +2794,7 @@ final class ChecadorController extends BaseController
             JsonResponse::send([
                 'ok' => (bool) ($result['ok'] ?? false), 'code' => $error, 'message' => $message,
                 'workplace_id' => $workplaceId, 'assignment' => $result['assignment'] ?? null,
+                'assignments' => $result['assignments'] ?? null,
                 'replayed' => (bool) ($result['replayed'] ?? false),
             ], $status, ['Cache-Control' => 'private, no-store']);
         }
