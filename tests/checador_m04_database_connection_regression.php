@@ -18,7 +18,6 @@ $assert = static function (bool $condition, string $message): void {
 
 foreach ([
     'APP_ENV', 'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD',
-    'DB_M04_HOST', 'DB_M04_PORT', 'DB_M04_DATABASE', 'DB_M04_USERNAME', 'DB_M04_PASSWORD',
     'CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED',
     'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
 ] as $key) {
@@ -33,27 +32,24 @@ $_ENV['DB_PORT'] = '3310';
 $_ENV['DB_DATABASE'] = 'portal_global';
 $_ENV['DB_USERNAME'] = 'portal_global_user';
 $_ENV['DB_PASSWORD'] = 'global-test-secret';
-putenv('DB_M04_HOST=mariadb-m04.internal');
-putenv('DB_M04_PORT=3307');
-putenv('DB_M04_DATABASE=checador_v2');
-putenv('DB_M04_USERNAME=portal3_m04_reader');
-putenv('DB_M04_PASSWORD= m04-test-secret ');
 
 Database::initialize();
-$global = Capsule::connection('default')->getConfig();
-$m04 = Capsule::connection('checador_m04')->getConfig();
+$default = Capsule::connection('default')->getConfig();
+$missingDedicatedConnection = false;
+try {
+    Capsule::connection('checador_m04')->getConfig();
+} catch (InvalidArgumentException) {
+    $missingDedicatedConnection = true;
+}
 
-$assert(($global['host'] ?? null) === 'portal-global-db.invalid'
-    && ($global['database'] ?? null) === 'portal_global'
-    && ($global['username'] ?? null) === 'portal_global_user'
-    && ($global['password'] ?? null) === 'global-test-secret',
-    'global Portal3 SQL connection remains unchanged');
-$assert(($m04['driver'] ?? null) === 'mysql'
-    && ($m04['host'] ?? null) === 'mariadb-m04.internal'
-    && ($m04['port'] ?? null) === 3307
-    && ($m04['database'] ?? null) === 'checador_v2'
-    && ($m04['username'] ?? null) === 'portal3_m04_reader'
-    && ($m04['password'] ?? null) === ' m04-test-secret ',
-    'production APP_ENV registers the dedicated M04 connection from private DB_M04_* variables');
+$assert(($default['host'] ?? null) === 'portal-global-db.invalid'
+    && ($default['port'] ?? null) === '3310'
+    && ($default['database'] ?? null) === 'portal_global'
+    && ($default['username'] ?? null) === 'portal_global_user'
+    && ($default['password'] ?? null) === 'global-test-secret',
+    'M04 uses the existing default SQL connection without changing its configuration');
+$assert($missingDedicatedConnection, 'no second M04 SQL connection is registered');
+$assert(ChecadorShiftTemplateSqlWriteService::CONNECTION_NAME === 'default',
+    'M04 writer selects the default Portal3 connection');
 $assert(!ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
-    'registering the M04 read connection does not enable the M04 SQL writer');
+    'reusing the default connection does not enable M04 writes');

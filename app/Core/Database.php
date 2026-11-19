@@ -23,37 +23,6 @@ class Database
         ];
         $capsule->addConnection($default, 'default');
 
-        $readPrivateEnv = static function (string $key): string {
-            $value = $_ENV[$key] ?? null;
-            if (!is_string($value) || trim($value) === '') {
-                $value = getenv($key);
-            }
-            return is_string($value) ? trim($value) : '';
-        };
-        $m04Host = $readPrivateEnv('DB_M04_HOST');
-        $m04Database = $readPrivateEnv('DB_M04_DATABASE');
-        $m04Username = $readPrivateEnv('DB_M04_USERNAME');
-        $m04PasswordValue = $_ENV['DB_M04_PASSWORD'] ?? null;
-        if (!is_string($m04PasswordValue) || $m04PasswordValue === '') {
-            $m04PasswordValue = getenv('DB_M04_PASSWORD');
-        }
-        $m04Password = is_string($m04PasswordValue) ? $m04PasswordValue : '';
-        $m04Port = $readPrivateEnv('DB_M04_PORT');
-        $validPort = $m04Port === '' || (ctype_digit($m04Port) && (int) $m04Port >= 1 && (int) $m04Port <= 65535);
-        if ($m04Host !== '' && $m04Database !== '' && $m04Username !== ''
-            && $m04Password !== '' && $validPort) {
-            $capsule->addConnection([
-                'driver'    => 'mysql',
-                'host'      => $m04Host,
-                'port'      => $m04Port === '' ? 3306 : (int) $m04Port,
-                'database'  => $m04Database,
-                'username'  => $m04Username,
-                'password'  => $m04Password,
-                'charset'   => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                'prefix'    => '',
-            ], 'checador_m04');
-        }
 
         // Hacer disponible Eloquent globalmente
         $capsule->setAsGlobal();

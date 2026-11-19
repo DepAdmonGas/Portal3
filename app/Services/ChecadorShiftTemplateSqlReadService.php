@@ -20,9 +20,7 @@ final class ChecadorShiftTemplateSqlReadService
     /** @param callable(Usuario,int):array|bool|null $authorizeRead Test seam; production always uses the active Checador ACL. */
     public function __construct(?callable $authorizeRead = null, string $connectionName = 'default')
     {
-        $this->connectionName = in_array($connectionName, ['default', 'checador_m04'], true)
-            ? $connectionName
-            : 'default';
+        $this->connectionName = 'default';
         $this->authorizeRead = $authorizeRead ?? static function (Usuario $user, int $workplaceId): array {
             $authenticated = Auth::user();
             if ($authenticated === null || (int) ($authenticated->id ?? 0) !== (int) ($user->id ?? 0)) {

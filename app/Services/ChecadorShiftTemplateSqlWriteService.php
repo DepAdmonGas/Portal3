@@ -14,7 +14,7 @@ use Throwable;
 /** M04 SQL-only append-only writer. Disabled unless both cutover attestations are set. */
 final class ChecadorShiftTemplateSqlWriteService
 {
-    public const CONNECTION_NAME = 'checador_m04';
+    public const CONNECTION_NAME = 'default';
 
     /** @var callable(Usuario,int):bool */
     private $authorizeWrite;

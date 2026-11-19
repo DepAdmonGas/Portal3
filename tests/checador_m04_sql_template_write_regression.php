@@ -17,9 +17,9 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
 };
 
 $capsule = new Capsule();
-$capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''], 'checador_m04');
+$capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''], 'default');
 $capsule->setAsGlobal();
-$capsule->getDatabaseManager()->setDefaultConnection('checador_m04');
+$capsule->getDatabaseManager()->setDefaultConnection('default');
 $capsule->bootEloquent();
 $schema = Capsule::schema();
 $schema->create('op_rh_localidades', static fn(Blueprint $table) => $table->increments('id'));
