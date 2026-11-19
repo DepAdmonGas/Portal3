@@ -362,11 +362,11 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
             ? ($showSelector && count($stations) + count($depts) > 1)
             : ($showSelector && ($multiestacion || $hasChoices));
 
-        $html = '<div class="d-flex align-items-center justify-content-between flex-wrap w-100" id="module-station-wrapper-' . $moduleKey . '">';
+        $html = '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100 module-station-top-controls" id="module-station-wrapper-' . $moduleKey . '">';
 
         $badgeHidden = $hasSelection ? '' : ' style="display:none"';
         $badgeText = $nombreBadge !== '' ? $nombreBadge : ($hasSelection ? ($currentName ?: "\u{2014}") : '');
-        $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
+        $html .= '<span id="module-station-badge-' . $moduleKey . '" class="badge rounded-pill text-bg-info flex-shrink-0"' . $badgeHidden . '>' . htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') . '</span>';
 
 if ($showSelector) {
 $placeholder = $placeholderOverride ?? ($cfg['placeholder'] ?? 'Selecciona una estación...');
@@ -378,8 +378,8 @@ $placeholder = $cfg['allow_all'] ? 'Todas las estaciones y departamentos' : 'Sel
 }
 $allowAll = $cfg['allow_all'] ?? false;
 
-$html .= '<div class="ms-auto">';
-$html .= '<select id="module-station-selector-' . $moduleKey . '" class="form-select form-select-sm" style="min-width:260px;" data-module-key="' . htmlspecialchars($moduleKey, ENT_QUOTES, 'UTF-8') . '" data-load-empty="true">';
+$html .= '<div class="ms-auto module-station-select-wrap">';
+$html .= '<select id="module-station-selector-' . $moduleKey . '" class="form-select form-select-sm w-100" data-module-key="' . htmlspecialchars($moduleKey, ENT_QUOTES, 'UTF-8') . '" data-load-empty="true">';
 
 if ($allowAll) {
 $totalPendientes = $pendientes['total'] ?? 0;

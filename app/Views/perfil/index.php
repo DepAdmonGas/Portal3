@@ -1071,7 +1071,7 @@ Firma asociada al usuario
 <canvas x-ref="canvasFirma" aria-label="Área para dibujar la firma" style="width:100%;height:250px;display:block;touch-action:none"></canvas>
 </div>
 </div>
-<button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-0 mt-2" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i>Limpiar firma</button>
+<button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-0 mt-2" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i>Repetir firma</button>
 </div>
 
 <div x-show="modoFirma === 'archivo'" x-cloak>

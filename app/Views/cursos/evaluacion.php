@@ -99,7 +99,7 @@
             <header class="resultado-cabecera text-white">
                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
                     <div class="resultado-icono">
-                        <i class="ti ti-school-off" aria-hidden="true"></i>
+                        <i :class="resultado.aprobado ? 'ti ti-school' : 'ti ti-school-off'" aria-hidden="true"></i>
                     </div>
                     <div class="flex-grow-1">
                         <div class="small text-white-50 text-uppercase fw-semibold mb-2">
@@ -154,9 +154,20 @@
                 <div class="text-muted">
                     Evaluación finalizada
                 </div>
-                <a href="/sasisopa/cursos" class="btn btn-primary btn-lg px-5">
-                   <i class="ti ti-arrow-left"></i> Volver a cursos
-                </a>
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <a href="/sasisopa/cursos" class="btn btn-primary btn-lg px-5">
+                       <i class="ti ti-arrow-left"></i> Volver a cursos
+                    </a>
+                    <template x-if="resultado.aprobado">
+                        <a :href="'/cursos/descargar/' + idCalendario"
+                            class="btn btn-success btn-lg px-5"
+                            target="_blank"
+                            rel="noopener">
+                            <i class="ti ti-download me-1" aria-hidden="true"></i>
+                            Descargar reconocimiento
+                        </a>
+                    </template>
+                </div>
             </footer>
         </section>
     </template>

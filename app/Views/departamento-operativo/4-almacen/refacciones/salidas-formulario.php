@@ -74,7 +74,7 @@
 <input type="hidden" name="firma_elabora" data-signature-value>
 </div>
 <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius:6px;border-bottom-right-radius:6px" data-signature-clear>
-<i class="ti ti-eraser me-1"></i> Limpiar firma
+<i class="ti ti-eraser me-1"></i> Repetir firma
 </button>
 </div>
 </div>

@@ -1,4 +1,7 @@
 <!-- Incidencias -->
+<style>
+    #incidencias [x-cloak] { display: none !important; }
+</style>
 <div id="incidencias"
      class="mt-3 mb-4"
      x-data="{ ...actions(), ...incidenciasComponent() }"
@@ -18,12 +21,12 @@
     <div class="row g-3">
 
         <div class="col-12">
-            <?php /* Disponible para todo usuario con acceso al módulo. Si el
-                    selector no fija una estación, el formulario la pide. */ ?>
+            <?php /* El alta sólo está disponible con una estación concreta. */ ?>
             <button type="button"
                     class="btn bg-primary-subtle text-primary float-end"
                     id="inc-btn-agregar"
-                    x-show="puedeAgregar"
+                    x-show="puedeAgregar && entidadId > 0"
+                    x-cloak
                     @click="abrirModalAgregar()">
                 <i class="ti ti-plus"></i> Nuevo
             </button>

@@ -60,13 +60,19 @@
                         <div class="col-12 mb-3">
                             <label class="form-label">* Documento adjunto:</label>
 
-                            <template x-if="modo === 'editar' && form.archivo_actual">
+                            <template x-if="modo === 'editar' && form.archivo_actual && form.archivo_disponible">
                                 <div class="mb-2">
                                     <a class="pointer text-primary small"
                                        :href="form.archivo_url" target="_blank">
-                                        <i class="ti ti-paperclip me-1"></i>
+                                        <i class="ti ti-paperclip fs-6 me-1"></i>
                                         <span x-text="form.archivo_actual"></span>
                                     </a>
+                                </div>
+                            </template>
+
+                            <template x-if="modo === 'editar' && form.archivo_actual && !form.archivo_disponible">
+                                <div class="mb-2 text-muted small">
+                                    <i class="ti ti-file-off fs-6 me-1"></i> Documento no disponible
                                 </div>
                             </template>
 
@@ -141,7 +147,9 @@
                             </template>
 
                             <template x-if="detalle && !detalle.existe_archivo">
-                                <div>No se encontro información</div>
+                                <div class="text-muted">
+                                    <i class="ti ti-file-off fs-6 me-1"></i> Documento no disponible
+                                </div>
                             </template>
                         </div>
 

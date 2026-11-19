@@ -11,6 +11,7 @@ use App\Services\SolicitudChequeService;
 use App\Services\AclaracionVoucherService;
 use App\Services\FormatosService;
 use App\Services\BitacoraRrhhService;
+use App\Services\ControlDocumentosPersonalService;
 use App\Services\PedidoPinturasService;
 use App\Services\PedidoPapeleriaService;
 use App\Services\PedidoArticulosLimpiezaService;
@@ -102,6 +103,7 @@ $data = [
 'pendientesAclaracionVoucher' => $slug === 'corporativo' ? AclaracionVoucherService::getPendientesMesActual() : 0,
 'pendientesFirmaFormatos' => $slug === 'recursos-humanos' ? FormatosService::getPendientesFirmaCard() : 0,
 'pendientesBitacoraRrhh' => $slug === 'recursos-humanos' ? BitacoraRrhhService::getPendientesCardMesActual() : 0,
+'pendientesBajasPersonal' => $slug === 'recursos-humanos' ? ControlDocumentosPersonalService::getBajaPendienteCountActual() : 0,
 'pendientesFirmaPedidoPinturas' => $slug === 'comercializadora' ? PedidoPinturasService::getPendientesFirmaVoBoCard() : 0,
 'pendientesFirmaPedidoPapeleria' => $slug === 'comercializadora' ? PedidoPapeleriaService::getPendientesFirmaVoBoCard() : 0,
 'pendientesFirmaPedidoArticulosLimpieza' => $slug === 'comercializadora' ? PedidoArticulosLimpiezaService::getPendientesFirmaVoBoCard() : 0,

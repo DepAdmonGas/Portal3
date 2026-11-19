@@ -421,7 +421,7 @@ No se encontró información para mostrar
         type="button" 
         class="btn bg-danger-subtle text-danger w-100 rounded-0 flex-shrink-0" 
         @click="limpiarFirma()">
-        <i class="ti ti-eraser me-1"></i> Limpiar firma
+        <i class="ti ti-eraser me-1"></i> Repetir firma
     </button>
 
 </div>

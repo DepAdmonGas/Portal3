@@ -56544,3 +56544,30 @@ html[data-bs-theme="light"] select option:checked {
     line-height: inherit;
   }
 }
+
+/* Selector de estación y badge: evita que se compriman en encabezados angostos. */
+.module-station-top-controls {
+  row-gap: 0.75rem !important;
+}
+
+.module-station-select-wrap {
+  flex: 0 1 260px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 575.98px) {
+  .module-station-top-controls .badge {
+    flex: 1 1 100%;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+
+  .module-station-select-wrap {
+    flex: 1 1 100%;
+    width: 100%;
+    margin-left: 0 !important;
+  }
+}

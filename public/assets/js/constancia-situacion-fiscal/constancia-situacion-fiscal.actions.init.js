@@ -4,6 +4,7 @@ document.addEventListener('alpine:init', () => {
 
         guardando: false,
         entidadId: 0,
+        errores: { fecha: false, archivo: false },
 
         puedeConsultar: true,
         puedeAgregar: false,
@@ -84,6 +85,7 @@ document.addEventListener('alpine:init', () => {
 
             this.$refs.inputFecha.value = '';
             this.$refs.inputArchivo.value = '';
+            this.errores = { fecha: false, archivo: false };
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConstancia')).show();
         },
@@ -99,13 +101,11 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            if (!fecha) {
-                this.notify('error', '* La fecha de actualización es obligatoria.');
-                return;
-            }
+            this.errores.fecha = !fecha;
+            this.errores.archivo = !archivo;
 
-            if (!archivo) {
-                this.notify('error', '* El archivo de la constancia es obligatorio.');
+            if (this.errores.fecha || this.errores.archivo) {
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

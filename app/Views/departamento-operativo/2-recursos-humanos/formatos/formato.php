@@ -2,7 +2,13 @@
 $formato = (int)$datos['formato'];
 ?>
 
-<div class="mt-4 mb-5" x-data="{ ...actions(), ...formatosFormComponent() }"
+<style>
+    .formato-vacaciones .form-control.is-invalid {
+        border: 1px solid var(--bs-form-invalid-border-color) !important;
+    }
+</style>
+
+<div class="mt-4 mb-5" x-data="{ ...actions(), ...formatosFormComponent() }" :class="{ 'formato-vacaciones': formato === 6 }"
 data-formato="<?= $formato ?>"
 data-es-edicion="<?= $esEdicion ? 'true' : 'false' ?>"
 data-id-localidad="<?= (int)($datos['id_localidad'] ?? 0) ?>"
@@ -334,7 +340,7 @@ title="Quitar empleado"></i>
         class="btn bg-danger-subtle text-danger w-100 rounded-top-0 flex-shrink-0" 
         style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" 
         @click="limpiarFirma()">
-        <i class="ti ti-eraser me-1"></i> Limpiar firma
+        <i class="ti ti-eraser me-1"></i> Repetir firma
     </button>
 
 </div>

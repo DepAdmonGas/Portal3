@@ -41,7 +41,7 @@
                     <div data-signature-wrapper class="position-relative flex-grow-1" style="min-height:180px;border:2px dashed #adb5bd;border-radius:6px;background:#fff;touch-action:none"><canvas data-signature-canvas aria-label="Firma de quien elabora" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas></div>
                     <input type="hidden" name="id" value="<?= (int) $salida['id_movimiento'] ?>"><input type="hidden" name="firma_elabora" data-signature-value>
                 </div>
-                <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" data-signature-clear><i class="ti ti-eraser me-1"></i>Limpiar firma</button>
+                <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" data-signature-clear><i class="ti ti-eraser me-1"></i>Repetir firma</button>
             </form>
             <?php else: ?>
             <div class="card h-100">
@@ -72,7 +72,7 @@
                         <div data-signature-wrapper class="position-relative flex-grow-1" style="min-height:180px;border:2px dashed #adb5bd;border-radius:6px;background:#fff;touch-action:none"><canvas data-signature-canvas aria-label="Firma de recepción" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas></div>
                         <input type="hidden" name="id" value="<?= (int) $salida['id_movimiento'] ?>"><input type="hidden" name="firma_recibe" data-signature-value>
                     </div>
-                    <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" data-signature-clear><i class="ti ti-eraser me-1"></i>Limpiar firma</button>
+                    <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" data-signature-clear><i class="ti ti-eraser me-1"></i>Repetir firma</button>
                 </form>
             <?php else: ?>
                 <div class="card h-100">

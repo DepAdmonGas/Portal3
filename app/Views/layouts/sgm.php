@@ -175,10 +175,10 @@
                             </li>
                         </ul>
 
-                        <div class="d-block d-lg-none py-4">
-                            <a href="../main/index.html" class="text-nowrap logo-img">
-                                <img src="<?= asset('images/logos/Logo.png') ?>" class="dark-logo" alt="Logo-Dark" />
-                                <img src="<?= asset('images/logos/Logo-dark.png') ?>" class="light-logo" alt="Logo-light" />
+                        <div class="d-block d-lg-none py-2 text-center">
+                            <a href="/home" class="d-flex justify-content-center align-items-center logo-navbar">
+                                <img src="<?= asset('images/logos/Logo.png') ?>" class="dark-logo img-fluid" alt="Logo Admongas" />
+                                <img src="<?= asset('images/logos/Logo-dark.png') ?>" class="light-logo img-fluid" alt="Logo Admongas Dark" />
                             </a>
                         </div>
                         <a class="navbar-toggler nav-icon-hover-bg rounded-circle p-0 mx-0 border-0 pointer" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

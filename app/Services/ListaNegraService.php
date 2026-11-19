@@ -19,6 +19,8 @@ class ListaNegraService
 
     private const UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/lista-negra/';
 
+    private const LEGACY_UPLOAD_DIR = __DIR__ . '/../../../departamento-operativo/archivos/documentos-personal/solicitud-baja/';
+
     public static function getPermisos(): array
     {
         $usuario = Auth::user();
@@ -225,6 +227,11 @@ class ListaNegraService
                 'id'          => (int)$r->id,
                 'descripcion' => $r->descripcion ?? '-',
                 'archivo'     => $r->archivo,
+                'disponible'  => is_file(self::UPLOAD_DIR . basename((string)$r->archivo))
+                    || is_file(self::LEGACY_UPLOAD_DIR . basename((string)$r->archivo)),
+                'tipo_descarga' => is_file(self::UPLOAD_DIR . basename((string)$r->archivo))
+                    ? 'lista-negra'
+                    : 'lista-negra-legado',
             ];
         }
 
@@ -233,14 +240,18 @@ class ListaNegraService
 
     public static function addArchivo(int $idListaNegra, string $descripcion, array $file): bool
     {
-        if (empty($file['tmp_name']) || ($file['error'] ?? 1) !== UPLOAD_ERR_OK) {
+        $descripcion = trim($descripcion);
+        if ($idListaNegra <= 0 || $descripcion === '' || !RhPersonalListaNegra::find($idListaNegra)) {
+            return false;
+        }
+        if (empty($file['tmp_name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             return false;
         }
 
         $aleatorio1 = rand(1, 1000000);
         $aleatorio2 = rand(1000, 9999);
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $nombreLimpio = preg_replace('/[^A-Za-z0-9._-]/', '-', $descripcion) ?: 'documento';
+        $nombreLimpio = trim(preg_replace('/[^A-Za-z0-9._-]/', '-', $descripcion), '-_.') ?: 'documento';
         $archivo = $aleatorio1 . '-' . $nombreLimpio . '-' . $aleatorio2 . '.' . $ext;
 
         if (!is_dir(self::UPLOAD_DIR)) {
@@ -265,7 +276,7 @@ class ListaNegraService
         $archivo = RhListaNegraArchivo::find($idArchivo);
         if (!$archivo) return false;
 
-        $ruta = self::UPLOAD_DIR . $archivo->archivo;
+        $ruta = self::UPLOAD_DIR . basename((string)$archivo->archivo);
         if (is_file($ruta)) {
             @unlink($ruta);
         }

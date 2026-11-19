@@ -53,7 +53,7 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">* Descripción:</label>
-                            <textarea class="form-control" rows="4" x-model="crearForm.descripcion" placeholder="Describe la incidencia o solicitud..."></textarea>
+                            <textarea id="bitacora-descripcion-crear" class="form-control" rows="4" x-model="crearForm.descripcion" placeholder="Describe la incidencia o solicitud..." data-bitacora-required></textarea>
                         </div>
                     </div>
                 </div>
@@ -239,14 +239,14 @@
                         </div>
 
                         <div class="col-12 mb-3">
-                                    <label class="form-label">* Nombre del documento:</label>
-                            <input type="text" class="form-control" x-model="docForm.nombre">
+<label class="form-label">* Nombre del documento:</label>
+                            <input type="text" class="form-control" x-model="docForm.nombre" data-bitacora-document-name data-bitacora-required>
                         </div>
 
 <div class="col-12 mb-3">
 <label class="form-label">* Documento:</label>
     <div class="input-group">
-        <input type="file" class="form-control" id="docInput">
+        <input type="file" class="form-control" id="docInput" data-bitacora-document-file data-bitacora-required>
         <button type="button" class="btn btn-success" @click="subirDocumento()" :disabled="subiendoDoc">
             <template x-if="!subiendoDoc"><i class="ti ti-check fs-5 me-1"></i></template>
             <template x-if="subiendoDoc"><span class="spinner-border spinner-border-sm me-1"></span></template>
@@ -277,7 +277,8 @@
                                     <td class="text-center align-middle" x-text="doc.nombre"></td>
                                     <td class="text-center align-middle" x-text="doc.subido_por"></td>
                                     <td class="text-center align-middle" x-show="puedeDescargar">
-                                        <a href="" @click.prevent="downloadDocumento(doc.archivo)"><i class="ti ti-download text-primary fs-5"></i></a>
+                                        <template x-if="doc.disponible"><a href="" @click.prevent="downloadDocumento(doc.archivo)"><i class="ti ti-download text-primary fs-6"></i></a></template>
+                                        <template x-if="!doc.disponible"><i class="ti ti-file-off text-muted fs-6" title="Documento no disponible" aria-label="Documento no disponible"></i></template>
                                     </td>
                                     <td class="text-center align-middle" x-show="puedeEliminarDoc">
                                         <a href="" @click.prevent="eliminarDocumento(doc.id)"><i class="ti ti-trash text-danger fs-5"></i></a>

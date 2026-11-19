@@ -8,6 +8,10 @@
     const year = Number(root.dataset.year) || new Date().getFullYear();
     const selector = document.getElementById('module-station-selector-vacaciones');
     const pendingBadge = document.getElementById('vacaciones-pendientes-count');
+    const toolsAnchor = document.getElementById('vacaciones-tools-anchor');
+    const toolsTemplate = document.getElementById('vacaciones-tools-template');
+    if (toolsAnchor && toolsTemplate) toolsAnchor.appendChild(toolsTemplate.content.cloneNode(true));
+    const toolsWrapper = document.getElementById('vacaciones-tools-wrapper');
     const newButton = document.getElementById('vacaciones-nuevo');
     const detailModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-vacaciones-detalle'));
     const historyModalElement = document.getElementById('modal-vacaciones-historial');
@@ -17,17 +21,21 @@
     const historyBody = document.getElementById('vacaciones-historial-body');
     const historyLoading = document.getElementById('vacaciones-historial-loading');
     const historyTitle = document.getElementById('vacaciones-historial-title');
-    const commentCanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('vacaciones-comentarios'));
+    const commentCanvasElement = document.getElementById('vacaciones-comentarios');
+    const commentCanvas = bootstrap.Offcanvas.getOrCreateInstance(commentCanvasElement);
     const commentList = document.getElementById('vacaciones-comentarios-list');
+    const commentEmpty = document.getElementById('vacaciones-comentarios-empty');
+    const commentItems = document.getElementById('vacaciones-comentarios-items');
     const commentDetail = document.getElementById('vacaciones-comentarios-detalle');
     const commentInput = document.getElementById('vacaciones-comentario-input');
     const commentForm = document.getElementById('vacaciones-comentario-form');
-    const sendingIndicator = document.getElementById('vacaciones-enviando');
+    const commentSendButton = document.getElementById('vacaciones-comentario-send');
     let activeComment = null;
     let activeHistory = null;
     let returnToHistory = false;
     let detailFromHistory = false;
     let sending = false;
+    let currentComments = [];
 
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
@@ -41,11 +49,12 @@
     };
 
     const syncNewButton = () => {
-        if (!newButton) return;
+        if (!newButton || !toolsWrapper) return;
         const locality = getContextId();
         const visible = root.dataset.puedeCrear === 'true' && locality > 0;
-        newButton.classList.toggle('d-none', !visible);
-        newButton.disabled = !visible;
+        toolsWrapper.classList.toggle('d-none', !visible);
+        newButton.classList.toggle('disabled', !visible);
+        newButton.setAttribute('aria-disabled', visible ? 'false' : 'true');
         newButton.title = locality > 0 ? 'Crear solicitud para este contexto' : 'Selecciona una estación o departamento para crear una solicitud';
     };
 
@@ -90,7 +99,7 @@
             { title: 'Nombre completo', data: 'nombre_completo', className: 'align-middle text-nowrap', render: (value) => escapeHtml(value || '') },
             { title: 'Puesto', data: 'nombre_puesto', className: 'align-middle text-center text-nowrap', render: (value) => escapeHtml(value || 'S/I') },
             { title: 'Mes', data: 'mes_ingreso', className: 'align-middle text-center text-nowrap', render: (value) => value ? new Intl.DateTimeFormat('es-MX', { month: 'long' }).format(new Date(2020, Number(value) - 1, 1)) + ' ' + year : 'S/I' },
-            { title: 'Prima vacacional', data: 'prima_vacacional', className: 'align-middle text-center', orderable: false, render: (value) => value ? '<a class="pointer text-primary" href="/download?tipo=recibos-nomina-firma&file=' + encodeURIComponent(value) + '" title="Descargar recibo firmado"><i class="ti ti-file-type-pdf fs-5"></i></a>' : '<i class="ti ti-file-off text-muted fs-5" title="Sin documento firmado"></i>' },
+            { title: 'Prima vacacional', data: 'prima_vacacional', className: 'align-middle text-center', orderable: false, render: (value, _type, row) => row.prima_vacacional_disponible && value ? '<a class="pointer text-primary" href="/download?tipo=recibos-nomina-firma&file=' + encodeURIComponent(value) + '" title="Descargar recibo firmado"><i class="ti ti-file-type-pdf fs-6"></i></a>' : '<i class="ti ti-file-off text-muted fs-6" title="Documento no disponible"></i>' },
             { title: 'Días', data: 'num_dias', className: 'align-middle text-center', render: (value) => Number(value || 0).toLocaleString('es-MX') },
             { title: 'Fecha inicio', data: 'fecha_inicio', className: 'align-middle text-center text-nowrap', render: (value) => escapeHtml(value || 'S/I') },
             { title: 'Fecha regreso', data: 'fecha_regreso', className: 'align-middle text-center text-nowrap', render: (value) => escapeHtml(value || 'S/I') },
@@ -205,48 +214,88 @@
         }
     };
 
-    const detailCard = (label, value, col, icon) => '<div class="' + col + '"><div class="vacaciones-chat-detail border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100"><span class="d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0" style="width:34px;height:34px"><i class="ti ' + icon + ' fs-5"></i></span><div class="flex-grow-1 overflow-hidden"><div class="form-label small mb-0">' + escapeHtml(label) + ':</div><div class="text-break">' + escapeHtml(value || 'S/I') + '</div></div></div></div>';
+    const detailCard = (label, value, col, icon, tone = 'primary') => '<div class="' + col + '"><div class="actividad-ticket-field border rounded-2 px-2 py-2 d-flex align-items-center gap-2 h-100"><span class="d-inline-flex align-items-center justify-content-center rounded bg-' + tone + '-subtle text-' + tone + ' flex-shrink-0" style="width:34px;height:34px"><i class="ti ' + icon + ' fs-5"></i></span><div class="flex-grow-1 overflow-hidden"><div class="form-label small mb-0">' + escapeHtml(label) + ':</div><div class="text-break">' + escapeHtml(value || 'S/I') + '</div></div></div></div>';
 
     const monthLabel = (month) => Number(month) > 0
         ? new Intl.DateTimeFormat('es-MX', { month: 'long' }).format(new Date(2020, Number(month) - 1, 1)) + ' ' + year
         : 'S/I';
 
-    const renderComments = (messages) => {
-        if (!messages.length) {
-            commentList.innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted"><small>No hay comentarios todavía.</small></div>';
+    const renderCommentDetail = (detail) => {
+        if (!detail) {
+            commentDetail.innerHTML = '';
             return;
         }
+        commentDetail.innerHTML = '<div class="row g-2">' +
+            detailCard('ID', detail.id_personal, 'col-5', 'ti-hash') +
+            detailCard('Nombre completo', detail.nombre_completo, 'col-7', 'ti-user', 'info') +
+            detailCard('Puesto', detail.nombre_puesto, 'col-6', 'ti-briefcase') +
+            detailCard('Estación / Departamento', detail.nombre_localidad, 'col-6', 'ti-map-pin', 'info') +
+            detailCard('Mes', monthLabel(detail.mes_ingreso), 'col-6', 'ti-calendar-event') +
+            detailCard('Días solicitados', Number(detail.num_dias || 0).toLocaleString('es-MX'), 'col-6', 'ti-calendar-event', 'success') +
+            '</div>';
+    };
+
+    const loadComments = async (idPersonal) => {
+        const params = new URLSearchParams({ id_personal: String(idPersonal), year: String(year) });
+        const response = await fetch('/departamento-operativo/recursos-humanos/vacaciones/comentarios?' + params.toString(), { credentials: 'same-origin' });
+        const data = await response.json();
+        if (!response.ok || data.success !== true) throw new Error(data.message || 'No se pudieron cargar los comentarios.');
+        renderCommentDetail(data.detalle);
+        renderComments(data.comentarios || []);
+    };
+
+    const renderComments = (messages) => {
+        currentComments = Array.isArray(messages) ? messages : [];
+        if (commentEmpty) commentEmpty.classList.toggle('d-none', currentComments.length > 0 || sending);
+        if (!commentItems) return;
+        if (commentList) commentList.classList.toggle('d-none', sending && currentComments.length === 0);
         const ownId = Number(root.dataset.idUsuario);
-        commentList.innerHTML = messages.map((message) => {
+        commentItems.innerHTML = (window.ordenarComentariosChat
+            ? window.ordenarComentariosChat(currentComments)
+            : currentComments).map((message) => {
             const own = Number(message.id_usuario) === ownId;
-            const avatar = '<img class="rounded-circle object-fit-cover flex-shrink-0 me-2" style="width:42px;height:42px" src="' + escapeHtml(window.fotoComentario(message)) + '" alt="Foto de perfil" loading="lazy" data-profile-avatar>';
-            return '<div class="d-flex ' + (own ? 'justify-content-end' : 'justify-content-start') + ' mb-2">' + (own ? '' : avatar) + '<div class="' + (own ? 'bg-primary text-white' : 'bg-body-tertiary text-body') + ' rounded-3 px-3 py-2" style="max-width:88%"><div class="small fw-semibold mb-1">' + escapeHtml(message.nombre_usuario) + '</div><div class="text-break" style="white-space:pre-wrap">' + escapeHtml(message.comentario) + '</div><div class="text-end small opacity-75 mt-1">' + escapeHtml(message.fecha_hora) + '</div></div></div>';
+            const fecha = '<div class="fs-3 text-muted mb-1' + (own ? ' text-end' : '') + '">' + escapeHtml(message.fecha_hora) + '</div>';
+            const bubble = '<div class="p-3 ' + (own ? 'bg-primary' : 'text-bg-success') + ' text-white rounded-3 mt-2" style="max-width:420px;white-space:pre-wrap;overflow-wrap:anywhere">' + escapeHtml(message.comentario) + '</div>';
+            if (own) return '<div class="d-flex mb-3 justify-content-end"><div class="d-flex flex-column align-items-end">' + fecha + bubble + '</div></div>';
+            const avatar = '<img class="rounded-circle object-fit-cover flex-shrink-0" style="width:45px;height:45px" src="' + escapeHtml(window.fotoComentario(message)) + '" alt="Foto de perfil" loading="lazy" data-profile-avatar>';
+            return '<div class="d-flex mb-3 justify-content-start"><div class="d-flex gap-3 align-items-start"><div class="flex-shrink-0">' + avatar + '</div><div><h6 class="fw-semibold mb-1">' + escapeHtml(message.nombre_usuario || 'Usuario') + '</h6>' + fecha + '<div class="p-3 text-bg-success rounded-3 text-white mt-2" style="max-width:420px;white-space:pre-wrap;overflow-wrap:anywhere">' + escapeHtml(message.comentario) + '</div></div></div></div>';
         }).join('');
-        commentList.scrollTop = commentList.scrollHeight;
+        if (commentList) commentList.scrollTop = commentList.scrollHeight;
+    };
+
+    const syncCommentSendButton = () => {
+        if (!commentSendButton || !commentInput) return;
+        const hasText = !!commentInput.value.trim();
+        commentSendButton.disabled = sending || !hasText;
+        commentSendButton.innerHTML = sending ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : '<i class="ti ti-send fs-5"></i>';
+        commentSendButton.setAttribute('aria-label', sending ? 'Enviando comentario' : 'Enviar comentario');
+    };
+
+    const setSendingState = (value) => {
+        sending = value;
+        const alpineData = window.Alpine && typeof window.Alpine.$data === 'function' ? window.Alpine.$data(commentCanvasElement) : null;
+        if (alpineData) alpineData.guardandoComentario = value;
+        syncCommentSendButton();
+        renderComments(currentComments);
     };
 
     const openComments = async (idPersonal) => {
         activeComment = { idPersonal, year };
-        commentList.innerHTML = '<div class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando comentarios...</div>';
+        commentItems.innerHTML = '';
+        commentEmpty.classList.add('d-none');
+        commentList.classList.remove('d-none');
+        commentList.insertAdjacentHTML('afterbegin', '<div class="text-center py-4" id="vacaciones-comentarios-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando comentarios...</div>');
         commentDetail.innerHTML = '';
+        commentInput.value = '';
+        syncCommentSendButton();
         document.getElementById('vacaciones-comentarios-subtitle').textContent = 'Comentarios de vacaciones · ' + year;
         commentCanvas.show();
         try {
-            const response = await axios.get('/departamento-operativo/recursos-humanos/vacaciones/comentarios', { params: { id_personal: idPersonal, year } });
-            const detail = response.data.detalle;
-            if (detail) {
-                commentDetail.innerHTML = '<div class="row g-2">' +
-                    detailCard('ID', detail.id_personal, 'col-4', 'ti-hash') +
-                    detailCard('Nombre completo', detail.nombre_completo, 'col-8', 'ti-user') +
-                    detailCard('Puesto', detail.nombre_puesto, 'col-6', 'ti-briefcase') +
-                    detailCard('Estación / Departamento', detail.nombre_localidad, 'col-6', 'ti-map-pin') +
-                    detailCard('Mes', monthLabel(detail.mes_ingreso), 'col-6', 'ti-calendar-event') +
-                    detailCard('Días solicitados', Number(detail.num_dias || 0).toLocaleString('es-MX'), 'col-6', 'ti-calendar-event') +
-                    '</div>';
-            }
-            renderComments(response.data.comentarios || []);
+            await loadComments(idPersonal);
         } catch (error) {
-            commentList.innerHTML = '<div class="alert alert-danger">' + escapeHtml(error.response?.data?.message || 'No se pudieron cargar los comentarios.') + '</div>';
+            commentItems.innerHTML = '<div class="alert alert-danger mb-0">' + escapeHtml(error.message || 'No se pudieron cargar los comentarios.') + '</div>';
+        } finally {
+            document.getElementById('vacaciones-comentarios-loading')?.remove();
         }
     };
 
@@ -303,9 +352,10 @@
         detailFromHistory = false;
     });
 
-    newButton?.addEventListener('click', () => {
+    newButton?.addEventListener('click', (event) => {
+        event.preventDefault();
         const idLocalidad = getContextId();
-        if (idLocalidad > 0 && root.dataset.puedeCrear === 'true') {
+        if (idLocalidad > 0 && root.dataset.puedeCrear === 'true' && !newButton.classList.contains('disabled')) {
             window.location.href = '/departamento-operativo/recursos-humanos/vacaciones/nuevo/' + idLocalidad;
         }
     });
@@ -315,38 +365,43 @@
     commentForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (sending || !activeComment || !commentInput.value.trim()) return;
-        sending = true;
-        sendingIndicator.classList.remove('d-none');
+        const idPersonal = activeComment.idPersonal;
+        setSendingState(true);
         try {
-            const response = await axios.post('/departamento-operativo/recursos-humanos/vacaciones/comentarios/guardar', {
-                id_personal: activeComment.idPersonal,
-                year: activeComment.year,
-                comentario: commentInput.value.trim()
+            const formData = new FormData();
+            formData.append('id_personal', String(idPersonal));
+            formData.append('year', String(activeComment.year));
+            formData.append('comentario', commentInput.value.trim());
+            const response = await fetch('/departamento-operativo/recursos-humanos/vacaciones/comentarios/guardar', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
             });
-            if (!response.data.success) throw new Error(response.data.message || 'No se pudo guardar el comentario.');
+            const data = await response.json();
+            if (!response.ok || data.success !== true) throw new Error(data.message || 'No se pudo guardar el comentario.');
             commentInput.value = '';
-            await openComments(activeComment.idPersonal);
+            await loadComments(idPersonal);
             table.ajax.reload(null, false);
         } catch (error) {
-            if (window.Notify) Notify.error(error.response?.data?.message || error.message || 'No se pudo guardar el comentario.');
+            if (window.Notify) Notify.error(error.message || 'No se pudo guardar el comentario.');
         } finally {
-            sending = false;
-            sendingIndicator.classList.add('d-none');
+            setSendingState(false);
         }
     });
+
+    commentInput?.addEventListener('input', syncCommentSendButton);
 
     commentInput?.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
-            commentForm.requestSubmit();
+            if (commentForm && !commentSendButton.disabled) commentForm.requestSubmit();
         }
     });
 
     document.getElementById('vacaciones-comentarios')?.addEventListener('hidden.bs.offcanvas', () => {
         activeComment = null;
         commentInput.value = '';
-        sendingIndicator.classList.add('d-none');
-        sending = false;
+        syncCommentSendButton();
     });
 
     if (window.ModuleStationSelector && selector) {

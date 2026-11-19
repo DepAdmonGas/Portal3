@@ -62,8 +62,7 @@ class SensitiveDownloadAuthorizationService
             $detalle = ControlDocumentosPersonalService::getBajaDetalle((int)$archivo->id_baja);
             if (!$detalle || !self::isAuthorizedForPersonal((int)$detalle['id_estacion'])) return null;
 
-            $base = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/';
-            return ['path' => $base . basename($file), 'base' => $base];
+            return ControlDocumentosPersonalService::resolveBajaUpload($file);
         }
         if (!Auth::check() || !isset(self::PERSONAL_DOCUMENTS[$tipo])) return null;
 
@@ -76,7 +75,9 @@ class SensitiveDownloadAuthorizationService
         $filename = basename($file);
         if (!is_file($base . $filename)) {
             $privateBase = self::privateUploadRoot() . $relativeFolder;
-            if (is_file($privateBase . $filename)) $base = $privateBase;
+            if (is_file($privateBase . $filename)) {
+                $base = $privateBase;
+            }
         }
         return ['path' => $base . $filename, 'base' => $base];
     }
