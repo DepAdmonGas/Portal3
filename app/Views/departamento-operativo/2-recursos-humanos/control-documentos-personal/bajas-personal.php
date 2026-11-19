@@ -4,7 +4,7 @@
      data-pendientes="<?= (int)($pendientesActuales ?? 0) ?>">
     <div id="bajas-tools-header" class="d-flex align-items-center justify-content-between mb-2 gap-2 mb-3">
         <div class="d-flex align-items-center gap-1">
-            <span class="badge rounded-pill bg-danger-subtle mt-3 mb-2 text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold" id="bajas-pendientes-badge">
+            <span class="badge rounded-pill bg-danger mt-3 mb-2 text-white d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold" id="bajas-pendientes-badge">
                 <i class="ti ti-alert-circle fs-4"></i>
                 <span>Pendientes: <span id="bajas-pendientes-count"><?= (int)($pendientesActuales ?? 0) ?></span></span>
             </span>

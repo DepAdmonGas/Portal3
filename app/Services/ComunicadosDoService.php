@@ -721,12 +721,11 @@ class ComunicadosDoService
             $idUsuario = self::idUsuarioActual();
             $nombreUsuario = (string)(Session::get('usuario')['nombre'] ?? Auth::user()->nombre ?? 'Usuario');
 
-            $mensaje = sprintf(
-                "<b>Comunicados</b>\n\n%s %s el comunicado #%d.\nTítulo: <b>%s</b>",
-                htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8'),
+            $mensaje = self::construirMensajeNotificacion(
                 $accion,
                 (int)$registro->id_comunicado,
-                htmlspecialchars((string)$registro->titulo, ENT_QUOTES, 'UTF-8')
+                (string)$registro->titulo,
+                $nombreUsuario
             );
 
             $telegram = new TelegramService();
@@ -738,6 +737,29 @@ class ComunicadosDoService
             // Una notificación fallida no debe romper la operación ya guardada.
             error_log('[Comunicados] Error notificando por Telegram: ' . $e->getMessage());
         }
+    }
+
+    /** Construye un mensaje estructurado; los comunicados tienen alcance global. */
+    private static function construirMensajeNotificacion(
+        string $accion,
+        int $id,
+        string $titulo,
+        string $responsable
+    ): string {
+        [$emoji, $resumen] = match ($accion) {
+            'agregó' => ['📣', 'Se ha publicado un comunicado en el apartado de <b>Comunicados</b>'],
+            'editó' => ['✏️', 'Se ha actualizado un comunicado en el apartado de <b>Comunicados</b>'],
+            'eliminó' => ['🗑️', 'Se ha eliminado un comunicado del apartado de <b>Comunicados</b>'],
+            'confirmó' => ['👁️', 'Se ha confirmado la lectura de un comunicado'],
+            default => ['📣', 'Se ha realizado una acción en el apartado de <b>Comunicados</b>'],
+        };
+        $escape = static fn (string $valor): string => htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+
+        return $emoji . ' ' . $resumen . ':' . PHP_EOL . PHP_EOL
+            . '🆔 <b>Folio:</b> #' . $id . PHP_EOL
+            . '📌 <b>Título:</b> ' . $escape($titulo !== '' ? $titulo : 'Sin título') . PHP_EOL . PHP_EOL
+            . '👤 <b>Responsable:</b> ' . $escape($responsable !== '' ? $responsable : 'Usuario') . PHP_EOL
+            . '📣 <b>Alcance:</b> Personal con acceso al módulo';
     }
 
     /* ------------------------------------------------------------------ */

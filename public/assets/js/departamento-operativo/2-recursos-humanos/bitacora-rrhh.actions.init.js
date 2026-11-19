@@ -11,6 +11,52 @@ document.addEventListener('click', (event) => {
     fila.classList.add('selected', 'pointer');
 });
 
+document.addEventListener('input', (event) => {
+    if (event.target.matches('[data-bitacora-required]')) {
+        const valido = !!String(event.target.value || '').trim();
+        event.target.classList.toggle('is-invalid', !valido);
+        event.target.setAttribute('aria-invalid', valido ? 'false' : 'true');
+    }
+});
+
+document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-bitacora-required]')) {
+        const valido = !!String(event.target.value || '').trim();
+        event.target.classList.toggle('is-invalid', !valido);
+        event.target.setAttribute('aria-invalid', valido ? 'false' : 'true');
+    }
+    if (event.target.id === 'module-station-selector-bitacora-rrhh' && event.target.value) {
+        event.target.classList.remove('is-invalid');
+        event.target.setAttribute('aria-invalid', 'false');
+    }
+});
+
+const validarCamposBitacora = (root, selectors) => {
+    let valido = true;
+    let primerCampoInvalido = null;
+
+    selectors.forEach((selector) => {
+        const campo = root?.querySelector(selector) || document.querySelector(selector);
+        const tieneValor = !!campo && (campo.type === 'file'
+            ? !!campo.files?.length
+            : !!String(campo.value || '').trim());
+        if (campo) {
+            campo.classList.toggle('is-invalid', !tieneValor);
+            campo.setAttribute('aria-invalid', tieneValor ? 'false' : 'true');
+        }
+        if (!tieneValor) {
+            valido = false;
+            primerCampoInvalido ||= campo;
+        }
+    });
+
+    if (!valido) {
+        window.Notify?.error('Completa los campos obligatorios.');
+        primerCampoInvalido?.focus();
+    }
+    return valido;
+};
+
 document.addEventListener('alpine:init', () => {
 
     Alpine.data('bitacoraRrhhComponent', () => ({
@@ -29,6 +75,7 @@ document.addEventListener('alpine:init', () => {
 
         crearForm: { idEstacion: 0, contextoNombre: '', descripcion: '' },
         guardando: false,
+        detalle: null,
 
         comentarios: [],
         nuevoComentario: '',
@@ -61,6 +108,17 @@ document.addEventListener('alpine:init', () => {
 
             this.actualizarContextoUI();
 
+            this.$el.querySelectorAll('.modal').forEach((modal) => {
+                modal.addEventListener('hide.bs.modal', () => {
+                    if (modal.contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
+                });
+                if (modal.id === 'modalDetalle') {
+                    modal.addEventListener('hidden.bs.modal', () => this.resetModal());
+                }
+            });
+
             document.addEventListener('ver-comentarios-bitacora', (e) => { this.abrirComentarios(e.detail.id); });
             document.addEventListener('ver-detalle-bitacora', (e) => { this.abrirDetalle(e.detail.id); });
             document.addEventListener('ver-visualizaciones-bitacora', (e) => { this.abrirVisualizaciones(e.detail.id); });
@@ -77,10 +135,8 @@ document.addEventListener('alpine:init', () => {
             if (!c) return 0;
             if (this.esMultiestacion) {
                 const sel = document.getElementById('module-station-selector-bitacora-rrhh');
-                if (sel && sel.value) {
-                    return parseInt(sel.value.replace(/^(estacion_|depto_)/, '')) || 0;
-                }
-                return 0;
+                const match = sel?.value.match(/^(?:estacion|depto)_(\d+)$/);
+                return match ? parseInt(match[1], 10) : 0;
             }
             return parseInt(c.dataset.idEstacion) || 0;
         },
@@ -118,7 +174,10 @@ document.addEventListener('alpine:init', () => {
         // ---------- CREAR ----------
         async abrirCrear() {
             if (!this.contextoEspecifico) {
-                this.notify('error', 'Selecciona una estación o departamento para crear un registro.');
+                const selector = document.getElementById('module-station-selector-bitacora-rrhh');
+                selector?.classList.add('is-invalid');
+                selector?.setAttribute('aria-invalid', 'true');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 
@@ -127,17 +186,23 @@ document.addEventListener('alpine:init', () => {
                 contextoNombre: this.getContextoNombre() || '—',
                 descripcion: ''
             };
+            const descripcion = this.$el.querySelector('#bitacora-descripcion-crear');
+            descripcion?.classList.remove('is-invalid');
+            descripcion?.setAttribute('aria-invalid', 'false');
 
             new bootstrap.Modal(document.getElementById('modalCrear')).show();
         },
 
         async guardarCrear() {
-            if (!this.crearForm.idEstacion) {
-                this.notify('error', 'Selecciona una estación o departamento.');
+            const selector = document.getElementById('module-station-selector-bitacora-rrhh');
+            const idEstacion = this.getContextoId();
+            if (!idEstacion) {
+                selector?.classList.add('is-invalid');
+                selector?.setAttribute('aria-invalid', 'true');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
-            if (!this.crearForm.descripcion.trim()) {
-                this.notify('error', 'La descripción es obligatoria.');
+            if (!validarCamposBitacora(document.getElementById('modalCrear'), ['#bitacora-descripcion-crear'])) {
                 return;
             }
 
@@ -147,10 +212,10 @@ document.addEventListener('alpine:init', () => {
                 const res = await this.createAction({
                     url: '/departamento-operativo/recursos-humanos/bitacora-rrhh/crear',
                     data: {
-                        id_estacion: this.crearForm.idEstacion,
-                        id_year: this.idYear,
-                        id_mes: this.idMes,
-                        descripcion: this.crearForm.descripcion
+                        id_estacion: idEstacion,
+                        idYear: this.idYear,
+                        idMes: this.idMes,
+                        DescripcionRRHH: this.crearForm.descripcion
                     },
                     table: '#tabla-bitacora-rrhh',
                     notify: true
@@ -292,6 +357,10 @@ document.addEventListener('alpine:init', () => {
             this.detalle = null;
             this.documentos = [];
             this.docForm = { nombre: '' };
+            this.$el.querySelectorAll('[data-bitacora-document-name], [data-bitacora-document-file]').forEach((campo) => {
+                campo.classList.remove('is-invalid');
+                campo.setAttribute('aria-invalid', 'false');
+            });
 
             try {
                 const res = await axios.get('/departamento-operativo/recursos-humanos/bitacora-rrhh/documentos', { params: { id } });
@@ -306,6 +375,19 @@ document.addEventListener('alpine:init', () => {
             new bootstrap.Modal(document.getElementById('modalDetalle')).show();
         },
 
+        resetModal() {
+            const modal = document.getElementById('modalDetalle');
+            if (modal?.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+            modal?.querySelectorAll('[data-bitacora-document-name], [data-bitacora-document-file]').forEach((campo) => {
+                campo.classList.remove('is-invalid');
+                campo.setAttribute('aria-invalid', 'false');
+                if (campo.type === 'file') campo.value = '';
+            });
+            this.docForm = { nombre: '' };
+        },
+
         downloadDocumento(archivo) {
             if (!this.puedeDescargar) {
                 this.notify('error', 'No tienes permiso para descargar documentos.');
@@ -316,16 +398,9 @@ document.addEventListener('alpine:init', () => {
 
         async subirDocumento() {
             if (!this.docIdActual) return;
-            if (!this.docForm.nombre.trim()) {
-                this.notify('error', 'El nombre es obligatorio.');
-                return;
-            }
-
             const fileInput = document.getElementById('docInput');
-            if (!fileInput || !fileInput.files[0]) {
-                this.notify('error', 'Debe seleccionar un archivo.');
-                return;
-            }
+            if (!validarCamposBitacora(document.getElementById('modalDetalle'), ['[data-bitacora-document-name]', '[data-bitacora-document-file]'])) return;
+            if (!fileInput || !fileInput.files[0]) return;
 
             this.subiendoDoc = true;
             const formData = new FormData();
@@ -511,16 +586,9 @@ document.addEventListener('alpine:init', () => {
 
         async subirDocumento() {
             if (!this.id) return;
-            if (!this.docForm.nombre.trim()) {
-                this.notify('error', 'El nombre es obligatorio.');
-                return;
-            }
-
             const fileInput = this.$refs.docInput;
-            if (!fileInput || !fileInput.files[0]) {
-                this.notify('error', 'Debe seleccionar un archivo.');
-                return;
-            }
+            if (!validarCamposBitacora(this.$el, ['[data-bitacora-document-name]', '[data-bitacora-document-file]'])) return;
+            if (!fileInput || !fileInput.files[0]) return;
 
             this.subiendoDoc = true;
             const formData = new FormData();

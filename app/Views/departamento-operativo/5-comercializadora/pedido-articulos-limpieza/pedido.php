@@ -140,7 +140,7 @@ x-data="{ ...actions(), ...pedidoLimpiezaPedidoComponent() }">
 <canvas id="signature-pad-pedido" style="width:100%;height:230px;display:block;touch-action:none;user-select:none;"></canvas>
 </div>
 </div>
-<button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius:6px;border-bottom-right-radius:6px;" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i> Limpiar firma</button>
+<button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius:6px;border-bottom-right-radius:6px;" @click="limpiarFirma()"><i class="ti ti-eraser me-1"></i> Repetir firma</button>
 </div>
 </div>
 

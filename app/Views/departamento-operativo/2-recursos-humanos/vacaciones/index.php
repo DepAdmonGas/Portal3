@@ -1,5 +1,5 @@
 <style>
-    #vacaciones-comentarios .vacaciones-chat-detail {
+    #vacaciones-comentarios .actividad-ticket-field {
         min-height: 62px;
         background: var(--bs-body-bg);
         font-size: .82rem;
@@ -8,13 +8,16 @@
         overflow-y: auto;
         min-height: 0;
     }
+    #vacaciones-comentarios-empty {
+        min-height: 380px;
+    }
     #vacaciones-comentarios-body {
         min-height: 0;
     }
 </style>
 
 <div id="vacaciones-container"
-     class="mt-4 mb-5"
+     class="mt-3 mb-3"
      data-year="<?= (int)$year ?>"
      data-puede-crear="<?= $puedeCrear ? 'true' : 'false' ?>"
      data-puede-editar="<?= $puedeEditar ? 'true' : 'false' ?>"
@@ -24,28 +27,34 @@
      data-id-usuario="<?= (int)$idUsuario ?>"
      data-contexto-seleccionado="<?= (int)$contextoSeleccionado ?>"
      data-mostrar-estacion="<?= $mostrarEstacion ? 'true' : 'false' ?>"
-     x-data="{ ...actions() }">
+     x-data="{ ...actions(), guardandoComentario: false }">
 
-    <div class="d-flex flex-column gap-3 mb-4">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-2 px-3 py-2">
-                    <i class="ti ti-alert-circle fs-5"></i>
-                    <span>Pendientes de firma: <span id="vacaciones-pendientes-count"><?= (int)$pendientesActuales ?></span></span>
-                </span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary d-none" id="vacaciones-nuevo" <?= !$puedeCrear ? 'disabled' : '' ?>><i class="ti ti-plus me-1"></i>Nuevo</button>
-            </div>
+    <div id="vacaciones-tools-header" class="d-flex align-items-center justify-content-between mb-2 gap-2 mb-3">
+        <div class="d-flex align-items-center gap-1">
+            <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis d-inline-flex align-items-center gap-1 px-3 py-2 fs-2 fw-semibold">
+                <i class="ti ti-alert-circle fs-4"></i>
+                <span>Pendientes: <span id="vacaciones-pendientes-count"><?= (int)$pendientesActuales ?></span></span>
+            </span>
         </div>
+        <div id="vacaciones-tools-anchor" class="d-flex"></div>
     </div>
 
-
-                <div class="table-responsive overflow-x-auto overflow-y-hidden pb-4">
-                <table id="table-vacaciones" class="table table-striped table-bordered mb-0 align-middle w-100">
-                    <tbody></tbody>
-                </table>
+    <template id="vacaciones-tools-template">
+        <div id="vacaciones-tools-wrapper" class="d-flex justify-content-end d-none">
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="ti ti-dots-vertical fs-4"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item pointer" id="vacaciones-nuevo" href="#"><i class="ti ti-plus me-1"></i>Nueva solicitud</a></li>
+                </ul>
             </div>
+        </div>
+    </template>
+
+    <div class="table-responsive pb-5 overflow-x-auto overflow-y-hidden">
+        <table id="table-vacaciones" class="table table-striped table-bordered mb-0 text-nowrap align-middle w-100"></table>
+    </div>
 
 </div>
 
@@ -100,14 +109,14 @@
 </div>
 
 
-<div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="vacaciones-comentarios" style="width:480px;max-width:100vw;height:100dvh;overflow:hidden">
+<div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="vacaciones-comentarios" x-data="{ guardandoComentario: false }" aria-labelledby="vacaciones-comentarios-title" style="width:480px;max-width:100vw;max-height:100dvh;overflow:hidden">
     <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-primary flex-shrink-0">
         <div class="hstack gap-3">
             <div class="rounded-circle bg-white d-flex align-items-center justify-content-center" style="width:48px;height:48px">
                 <i class="ti ti-message-circle text-primary fs-7"></i>
             </div>
             <div>
-                <h5 class="mb-1 text-white">COMENTARIOS</h5>
+                <h5 class="mb-1 text-white" id="vacaciones-comentarios-title">COMENTARIOS</h5>
                 <p class="mb-0 text-white opacity-75" id="vacaciones-comentarios-subtitle">Vacaciones</p>
             </div>
         </div>
@@ -116,20 +125,16 @@
     <div class="px-3 pt-3 pb-3 border-bottom flex-shrink-0" id="vacaciones-comentarios-detalle"></div>
     <div class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height:0">
         <div class="chat-box w-100 flex-grow-1 d-flex flex-column" style="min-height:0">
-            <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height:0;overscroll-behavior:contain" id="vacaciones-comentarios-list"></div>
-        </div>
-    </div>
-    <div id="vacaciones-enviando" class="chat-comment-sending-state d-none px-3 pb-3 flex-shrink-0" role="status" aria-live="polite">
-        <div class="d-flex justify-content-end">
-            <div class="border border-primary-subtle rounded-4 bg-primary-subtle p-3 shadow-sm" style="max-width:420px;width:100%">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="flex-shrink-0 rounded-circle bg-white d-flex align-items-center justify-content-center text-primary" style="width:52px;height:52px"><i class="ti ti-send fs-4"></i></div>
-                    <div><div class="fw-semibold text-primary">Enviando mensaje...</div><div class="small text-muted">Estamos entregando tu comentario</div></div>
+            <div class="chat-box-inner p-3 flex-grow-1 overflow-auto" style="min-height:0;overscroll-behavior:contain" id="vacaciones-comentarios-list" x-ref="chatContainer">
+                <div class="d-flex flex-column align-items-center justify-content-center text-center" id="vacaciones-comentarios-empty" style="min-height:380px">
+                    <i class="ti ti-message-off text-muted mb-2" style="font-size:55px"></i>
+                    <p class="text-muted mb-0 fs-5">Sin comentarios</p>
                 </div>
-                <div class="progress rounded-pill mt-3" style="height:4px" aria-label="Enviando comentario"><div class="progress-bar progress-bar-striped progress-bar-animated bg-primary w-100"></div></div>
+                <div class="chat-list active-chat p-2" id="vacaciones-comentarios-items"></div>
             </div>
         </div>
     </div>
+    <?php \App\Core\View::renderPartial('partials/_chat-comment-sending', ['estadoEnvio' => 'guardandoComentario']); ?>
     <div class="px-3 py-3 border-top bg-white flex-shrink-0">
         <form id="vacaciones-comentario-form">
             <div class="d-flex align-items-center gap-2">

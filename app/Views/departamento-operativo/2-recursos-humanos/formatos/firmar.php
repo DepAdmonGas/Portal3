@@ -496,12 +496,12 @@ Firmar formato
 <!-- Footer con botones al 50% cada uno y sin separación en medio -->
 <div class="card-footer bg-white border-top p-0 flex-shrink-0 d-flex align-items-center">
     
-    <!-- Botón de limpiar firma (Mitad izquierda) -->
+    <!-- Botón de Repetir firma (Mitad izquierda) -->
     <button 
         type="button" 
         class="btn bg-danger-subtle text-danger w-50 rounded-0" 
         @click="limpiarFirma()">
-        <i class="ti ti-eraser me-1"></i> Limpiar firma
+        <i class="ti ti-eraser me-1"></i> Repetir firma
     </button>
 
     <!-- Botón de acción principal para firmar (Mitad derecha) -->

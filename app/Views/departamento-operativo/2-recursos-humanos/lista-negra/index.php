@@ -60,7 +60,7 @@
                     <label class="form-label mb-1">* Nombre completo:</label>
 
                             <div class="select2-modal-field is-select2-pending" x-ref="personalWrapper">
-                                <select class="form-select mb-3" x-ref="personalSelect">
+                                <select class="form-select mb-3" x-ref="personalSelect" data-lista-negra-required>
                                     <option value="">Selecciona una opcion...</option>
                                     <?php foreach ($personal as $p): ?>
                                         <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></option>
@@ -70,13 +70,13 @@
                         </div>
                         <div class="col-12">
                          <label class="form-label mb-1">* Motivo:</label>
-                            <textarea class="form-control mb-1" rows="2" x-model="agregarForm.motivo"></textarea>
+                            <textarea class="form-control mb-1" rows="2" x-model="agregarForm.motivo" data-lista-negra-required></textarea>
                         </div>
                         <div class="col-12">
                         <label class="form-label mb-1">* Descripción:</label>
 
 
-                            <textarea class="form-control" rows="3" x-model="agregarForm.detalle"></textarea>
+                            <textarea class="form-control" rows="3" x-model="agregarForm.detalle" data-lista-negra-required></textarea>
                         </div>
                     </div>
                 </div>
@@ -120,11 +120,11 @@
                         <div class="col-12">
 
                         <label class="form-label mb-1">* Fecha de inicio:</label>
-                            <input type="date" class="form-control mb-1" x-model="buscarForm.fechaInicio">
+                            <input type="date" class="form-control mb-1" x-model="buscarForm.fechaInicio" data-lista-negra-required>
                         </div>
                         <div class="col-12">
                                                     <label class="form-label mb-1">* Fecha de fin:</label>
-                            <input type="date" class="form-control" x-model="buscarForm.fechaFin">
+                            <input type="date" class="form-control" x-model="buscarForm.fechaFin" data-lista-negra-required>
                         </div>
                     </div>
                 </div>
@@ -372,11 +372,11 @@
                     <div class="row g-3 mb-3">
                         <div class="col-12 col-md-5">
                             <label class="form-label text-secondary fw-bold">* Descripción:</label>
-                            <input type="text" class="form-control" x-model="archivoForm.descripcion">
+                            <input type="text" class="form-control" x-model="archivoForm.descripcion" data-lista-negra-required>
                         </div>
                         <div class="col-12 col-md-5">
                             <label class="form-label text-secondary fw-bold">* Archivo:</label>
-                            <input type="file" class="form-control" id="archivoInput">
+                            <input type="file" class="form-control" id="archivoInput" data-lista-negra-required>
                         </div>
                         <div class="col-12 col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-success w-100"
@@ -405,9 +405,14 @@
                                 <tr>
                                     <td class="text-center fw-normal" x-text="arch.descripcion"></td>
                                     <td class="text-center">
-                                        <a href="" @click.prevent="downloadArchivo(arch.archivo)">
-                                            <i class="ti ti-download text-primary fs-5"></i>
-                                        </a>
+                                        <template x-if="arch.disponible">
+                                            <a href="" @click.prevent="downloadArchivo(arch.archivo, arch.tipo_descarga)">
+                                                <i class="ti ti-download text-primary fs-6"></i>
+                                            </a>
+                                        </template>
+                                        <template x-if="!arch.disponible">
+                                            <i class="ti ti-file-off text-muted fs-6" title="Documento no disponible" aria-label="Documento no disponible"></i>
+                                        </template>
                                     </td>
                                     <td class="text-center" x-show="puedeEliminar">
                                         <a href="" @click.prevent="eliminarArchivo(arch.id)">

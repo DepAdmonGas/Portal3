@@ -609,13 +609,12 @@ class ConstanciaSituacionFiscalService
             $usuario = Auth::user();
             $nombreUsuario = (string)(Session::get('usuario')['nombre'] ?? $usuario->nombre ?? 'Usuario');
 
-            $mensaje = sprintf(
-                "<b>Constancia de Situación Fiscal</b>\n\n%s %s la constancia #%d de <b>%s</b>.\nFecha de actualización: <b>%s</b>.",
-                $nombreUsuario,
+            $mensaje = self::construirMensajeNotificacion(
                 $accion,
                 $idConstancia,
                 $nombreEntidad,
-                formatearFecha($fecha)
+                formatearFecha($fecha),
+                $nombreUsuario
             );
 
             $telegram = new TelegramService();
@@ -637,5 +636,27 @@ class ConstanciaSituacionFiscalService
             // Una notificación fallida no debe romper la operación ya guardada.
             error_log('[CSF] Error notificando por Telegram: ' . $e->getMessage());
         }
+    }
+
+    /** Construye el aviso con el contexto de la entidad y fecha afectadas. */
+    private static function construirMensajeNotificacion(
+        string $accion,
+        int $id,
+        string $entidad,
+        string $fecha,
+        string $responsable
+    ): string {
+        [$emoji, $resumen] = match ($accion) {
+            'agregó' => ['📄', 'Se ha agregado una constancia en el apartado de <b>Constancia de Situación Fiscal</b>'],
+            'eliminó' => ['🗑️', 'Se ha eliminado una constancia del apartado de <b>Constancia de Situación Fiscal</b>'],
+            default => ['📄', 'Se ha actualizado una constancia en el apartado de <b>Constancia de Situación Fiscal</b>'],
+        };
+        $escape = static fn (string $valor): string => htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+
+        return $emoji . ' ' . $resumen . ':' . PHP_EOL . PHP_EOL
+            . '🆔 <b>Folio:</b> #' . $id . PHP_EOL
+            . '📅 <b>Fecha de actualización:</b> ' . $escape($fecha !== '' ? $fecha : 'Sin fecha') . PHP_EOL
+            . '🏢 <b>Estación / Departamento:</b> ' . $escape($entidad !== '' ? $entidad : 'Sin entidad') . PHP_EOL . PHP_EOL
+            . '👤 <b>Responsable:</b> ' . $escape($responsable !== '' ? $responsable : 'Usuario');
     }
 }

@@ -61,6 +61,7 @@ class DownloadController
             'solicitud-vales'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-vales/',
             'solicitud-vales-legado'               => dirname(__DIR__, 2) . '/public/uploads/archivos/vales/',
             'lista-negra'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-negra/',
+            'lista-negra-legado'                  => dirname(__DIR__, 3) . '/departamento-operativo/archivos/documentos-personal/solicitud-baja/',
             'bitacora-rrhh'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-rrhh/',
             'factura-monedero'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/facturas-monederos/',
             'organigrama'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama/',

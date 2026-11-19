@@ -1,3 +1,52 @@
+const actualizarCampoListaNegra = (campo, valido) => {
+    if (!campo) return;
+    campo.classList.toggle('is-invalid', !valido);
+    campo.setAttribute('aria-invalid', valido ? 'false' : 'true');
+    const wrapper = campo.closest('.select2-modal-field');
+    if (wrapper) {
+        wrapper.classList.toggle('is-invalid', !valido);
+        wrapper.querySelector('.select2-selection')?.classList.toggle('is-invalid', !valido);
+    }
+};
+
+const tieneValorListaNegra = (campo) => campo?.type === 'file'
+    ? !!campo.files?.length
+    : !!String(campo?.value || '').trim();
+
+const validarCamposListaNegra = (root, selectors) => {
+    let valido = true;
+    let primerCampoInvalido = null;
+
+    selectors.forEach((selector) => {
+        const campo = root?.querySelector(selector) || document.querySelector(selector);
+        const campoValido = tieneValorListaNegra(campo);
+        actualizarCampoListaNegra(campo, campoValido);
+        if (!campoValido) {
+            valido = false;
+            primerCampoInvalido ||= campo;
+        }
+    });
+
+    if (!valido) {
+        window.Notify?.error('Completa los campos obligatorios.');
+        const visibleSelect = primerCampoInvalido?.closest('.select2-modal-field')?.querySelector('.select2-selection');
+        (visibleSelect || primerCampoInvalido)?.focus();
+    }
+    return valido;
+};
+
+document.addEventListener('input', (event) => {
+    if (event.target.matches('[data-lista-negra-required]')) {
+        actualizarCampoListaNegra(event.target, tieneValorListaNegra(event.target));
+    }
+});
+
+document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-lista-negra-required]')) {
+        actualizarCampoListaNegra(event.target, tieneValorListaNegra(event.target));
+    }
+});
+
 document.addEventListener('alpine:init', () => {
 
     Alpine.data('listaNegraComponent', () => ({
@@ -41,6 +90,9 @@ document.addEventListener('alpine:init', () => {
                     options: { placeholder: 'Selecciona un colaborador...' },
                     namespace: 'lnAgregarPersonal'
                 });
+                window.jQuery(this.$refs.personalSelect).on('change.lnRequired', (event) => {
+                    actualizarCampoListaNegra(event.currentTarget, tieneValorListaNegra(event.currentTarget));
+                });
             }
 
             document.addEventListener('ver-comentarios-lista', (e) => { this.abrirComentarios(e.detail.id); });
@@ -65,6 +117,7 @@ document.addEventListener('alpine:init', () => {
         // ---------- AGREGAR ----------
         async abrirAgregar() {
             this.agregarForm = { idPersonal: '', motivo: '', detalle: '' };
+            document.getElementById('modalAgregar')?.querySelectorAll('[data-lista-negra-required]').forEach((campo) => actualizarCampoListaNegra(campo, true));
 
             try {
                 const resp = await fetch('/departamento-operativo/recursos-humanos/lista-negra/get-personal');
@@ -79,6 +132,8 @@ document.addEventListener('alpine:init', () => {
                         opt.textContent = p.nombre;
                         sel.appendChild(opt);
                     });
+                    sel.value = '';
+                    window.jQuery(sel).trigger('change.select2');
                 }
             } catch (e) {
                 console.error('Error cargando personal:', e);
@@ -88,18 +143,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         async guardarAgregar() {
-            if (!this.agregarForm.idPersonal) {
-                this.notify('error', 'Selecciona un colaborador.');
-                return;
-            }
-            if (!this.agregarForm.motivo.trim()) {
-                this.notify('error', 'El motivo es obligatorio.');
-                return;
-            }
-            if (!this.agregarForm.detalle.trim()) {
-                this.notify('error', 'La descripción es obligatoria.');
-                return;
-            }
+            if (!validarCamposListaNegra(document.getElementById('modalAgregar'), [
+                '[x-ref="personalSelect"]',
+                '[data-lista-negra-required][x-model="agregarForm.motivo"]',
+                '[data-lista-negra-required][x-model="agregarForm.detalle"]'
+            ])) return;
 
             this.guardando = true;
 
@@ -128,6 +176,7 @@ document.addEventListener('alpine:init', () => {
             const c = document.getElementById('container');
             this.buscarForm.fechaInicio = c ? (c.dataset.fechaInicio || '') : '';
             this.buscarForm.fechaFin = c ? (c.dataset.fechaFin || '') : '';
+            document.getElementById('modalBuscar')?.querySelectorAll('[data-lista-negra-required]').forEach((campo) => actualizarCampoListaNegra(campo, true));
             new bootstrap.Modal(document.getElementById('modalBuscar')).show();
         },
 
@@ -135,10 +184,10 @@ document.addEventListener('alpine:init', () => {
             var fi = this.buscarForm.fechaInicio;
             var ff = this.buscarForm.fechaFin;
 
-            if (!fi || !ff) {
-                this.notify('error', 'Las fechas de inicio y fin son obligatorias.');
-                return;
-            }
+            if (!validarCamposListaNegra(document.getElementById('modalBuscar'), [
+                '[x-model="buscarForm.fechaInicio"]',
+                '[x-model="buscarForm.fechaFin"]'
+            ])) return;
 
             const c = document.getElementById('container');
             if (c) {
@@ -239,6 +288,10 @@ document.addEventListener('alpine:init', () => {
             this.pruebasIdActual = id;
             this.archivos = [];
             this.archivoForm = { descripcion: '' };
+            document.getElementById('modalPruebas')?.querySelectorAll('[data-lista-negra-required]').forEach((campo) => {
+                actualizarCampoListaNegra(campo, true);
+                if (campo.type === 'file') campo.value = '';
+            });
 
             try {
                 const res = await axios.get('/departamento-operativo/recursos-humanos/lista-negra/get-archivos', { params: { id } });
@@ -252,22 +305,18 @@ document.addEventListener('alpine:init', () => {
             new bootstrap.Modal(document.getElementById('modalPruebas')).show();
         },
 
-        downloadArchivo(archivo) {
-            this.download('lista-negra', archivo);
+        downloadArchivo(archivo, tipo = 'lista-negra') {
+            this.download(tipo, archivo);
         },
 
         async subirArchivo() {
             if (!this.pruebasIdActual) return;
-            if (!this.archivoForm.descripcion.trim()) {
-                this.notify('error', 'La descripción es obligatoria.');
-                return;
-            }
-
             const fileInput = document.getElementById('archivoInput');
-            if (!fileInput || !fileInput.files[0]) {
-                this.notify('error', 'Debe seleccionar un archivo.');
-                return;
-            }
+            if (!validarCamposListaNegra(document.getElementById('modalPruebas'), [
+                '[data-lista-negra-required][x-model="archivoForm.descripcion"]',
+                '#archivoInput'
+            ])) return;
+            if (!fileInput?.files?.length) return;
 
             this.subiendoArchivo = true;
             const formData = new FormData();

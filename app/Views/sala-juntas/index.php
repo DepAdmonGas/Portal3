@@ -64,7 +64,7 @@
 </div>
 
 
-        <div class="text-capitalize " id="calendar"></div>
+        <div class="text-capitalize mt-4" id="calendar"></div>
 
     </div>
 

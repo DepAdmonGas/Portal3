@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Breadcrumb;
 use App\Core\JsonResponse;
+use App\Core\Request;
 use App\Core\Session;
 use App\Core\View;
 use App\Services\BitacoraRrhhService;
@@ -34,13 +35,14 @@ class BitacoraRrhhController extends BaseController
             return;
         }
 
-        $contextoNombre = ModuleStationService::getContext(BitacoraRrhhService::MODULE_KEY)['nombre'] ?? '';
+        $contexto = ModuleStationService::getContext(BitacoraRrhhService::MODULE_KEY);
+        $contextoNombre = $contexto['nombre'] ?? '';
 
         View::render('departamento-operativo/2-recursos-humanos/bitacora-rrhh/index', [
             'title'            => $title,
             'idYear'           => $idYear,
             'idMes'            => $idMes,
-            'idEstacion'       => $permisos['id_estacion'],
+            'idEstacion'       => (int)($contexto['id_estacion'] ?? $contexto['id_depto'] ?? 0),
             'moduleStationKey' => BitacoraRrhhService::MODULE_KEY,
             'pendientesData'   => BitacoraRrhhService::getPendingCountsFlat($idYear, $idMes),
             'yearMesTemplate'  => '/departamento-operativo/recursos-humanos/bitacora-rrhh/{year}/{mes}',
@@ -151,30 +153,31 @@ class BitacoraRrhhController extends BaseController
             JsonResponse::forbidden('No tienes permiso para crear registros');
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        $post = is_array($input) ? $input : $_POST;
-
         $ctx = ModuleStationService::getContext(BitacoraRrhhService::MODULE_KEY);
-        $idEstacion = (int)($post['id_estacion'] ?? ($ctx['id_estacion'] ?? $ctx['id_depto'] ?? 0));
+        $post = Request::all();
+        // La sesión manda cuando hay un contexto seleccionado. Si no está
+        // guardado, aceptar el ID canónico enviado por la vista y validarlo
+        // contra el alcance permitido por BitacoraRrhhService::crear().
+        $idEstacionContexto = (int)($ctx['id_estacion'] ?? 0);
+        $idDeptoContexto = (int)($ctx['id_depto'] ?? 0);
+        // ModuleStationService puede devolver la clave del contexto con valor 0.
+        // En ese caso debe prevalecer la opción concreta enviada por el selector.
+        $idEstacion = $idEstacionContexto > 0
+            ? $idEstacionContexto
+            : ($idDeptoContexto > 0
+                ? $idDeptoContexto
+                : (int)($post['id_estacion'] ?? $post['idEstacion'] ?? 0));
+        $idYear = (int)($post['id_year'] ?? $post['idYear'] ?? date('Y'));
+        $idMes = (int)($post['id_mes'] ?? $post['idMes'] ?? date('n'));
+        $descripcion = trim((string)($post['descripcion'] ?? $post['DescripcionRRHH'] ?? ''));
 
-        if ($idEstacion <= 0) {
-            $idEstacion = (int)($ctx['id_estacion'] ?? $ctx['id_depto'] ?? 0);
-        }
-
-        $idYear = (int)($post['id_year'] ?? date('Y'));
-        $idMes = (int)($post['id_mes'] ?? date('n'));
-        $descripcion = trim((string)($post['descripcion'] ?? ''));
-
-        if ($idEstacion <= 0) {
-            JsonResponse::error('Selecciona una estación o departamento');
-        }
-        if ($descripcion === '') {
-            JsonResponse::error('La descripción es obligatoria');
+        if ($idEstacion <= 0 || $descripcion === '') {
+            JsonResponse::error('Completa los campos obligatorios.');
         }
 
         $id = BitacoraRrhhService::crear($idEstacion, $idYear, $idMes, $descripcion);
         if (!$id) {
-            JsonResponse::error('No tienes acceso a la estación seleccionada');
+            JsonResponse::forbidden('No tienes acceso al contexto seleccionado');
         }
 
         JsonResponse::custom([
