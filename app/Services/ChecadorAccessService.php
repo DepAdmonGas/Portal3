@@ -377,6 +377,19 @@ final class ChecadorAccessService
         }
 
         $requestedScope = self::authorize($requestedLocalityId);
+        if (!($requestedScope['allowed'] ?? false)
+            && $requestedLocalityId === self::AUTOLAVADO_LOCALITY_ID) {
+            $m04AdminScope = self::authorizeStationTemplateAdministration(self::AUTOLAVADO_LOCALITY_ID);
+            if ($m04AdminScope['allowed'] ?? false) {
+                return [
+                    'allowed' => true,
+                    'reason' => 'authorized_palo_solo_autolavado_m04_exception',
+                    'catalog_workplace_id' => self::AUTOLAVADO_LOCALITY_ID,
+                    'workplaces' => $m04AdminScope['workplaces'],
+                    'include_global_templates' => true,
+                ];
+            }
+        }
         if (!($requestedScope['allowed'] ?? false)) {
             return $requestedScope;
         }
@@ -402,6 +415,7 @@ final class ChecadorAccessService
                 'reason' => 'authorized',
                 'catalog_workplace_id' => self::AUTOLAVADO_LOCALITY_ID,
                 'workplaces' => $requestedScope['workplaces'],
+                'include_global_templates' => (bool) (self::authorizeStationTemplateAdministration(self::AUTOLAVADO_LOCALITY_ID)['allowed'] ?? false),
             ];
         }
 
@@ -414,13 +428,18 @@ final class ChecadorAccessService
             'reason' => 'authorized',
             'catalog_workplace_id' => $requestedLocalityId,
             'workplaces' => $requestedScope['workplaces'],
+            // GLOBAL sources remain readable, but the SQL reader returns them
+            // through a separate catalog scope rather than mixing them with
+            // station-local templates.
+            'include_global_templates' => true,
         ];
     }
 
-    /** M04 station template administration is an explicit Encargado grant and remains station-scoped. */
+    /** M04 template administration is station-scoped, with the owner-approved Palo Solo → Autolavado exception only. */
     public static function authorizeStationTemplateAdministration(?int $requestedLocalityId = null): array
     {
-        $scope = self::authorize($requestedLocalityId);
+        $autolavadoViaPaloSolo = $requestedLocalityId === self::AUTOLAVADO_LOCALITY_ID;
+        $scope = self::authorize($autolavadoViaPaloSolo ? self::PALO_SOLO_LOCALITY_ID : $requestedLocalityId);
         if (!($scope['allowed'] ?? false)) return $scope;
         try {
             $authenticated = Auth::user();
@@ -433,6 +452,28 @@ final class ChecadorAccessService
             }
             $stations = is_array($scope['station_workplaces'] ?? null) ? $scope['station_workplaces'] : [];
             $ids = array_map('intval', array_column($stations, 'id'));
+            if ($autolavadoViaPaloSolo) {
+                if (!self::isDepartmentLocality(self::AUTOLAVADO_LOCALITY_ID)
+                    || count($ids) !== 1 || $ids[0] !== self::PALO_SOLO_LOCALITY_ID) {
+                    return ['allowed' => false, 'reason' => 'autolavado_palo_solo_scope_required', 'workplaces' => []];
+                }
+                $department = RhLocalidad::query()->whereKey(self::AUTOLAVADO_LOCALITY_ID)
+                    ->first(['id', 'localidad as nombre']);
+                if ($department === null) {
+                    return ['allowed' => false, 'reason' => 'autolavado_department_unavailable', 'workplaces' => []];
+                }
+                $target = ['id' => (int) $department->id, 'nombre' => (string) $department->nombre];
+                return [
+                    'allowed' => true,
+                    'reason' => 'authorized_palo_solo_autolavado_m04_exception',
+                    'position_id' => self::ENCARGADO_PUESTO_ID,
+                    'workplaces' => [$target],
+                    'station_workplaces' => $stations,
+                    'department_workplaces' => [$target],
+                    'source_station_id' => self::PALO_SOLO_LOCALITY_ID,
+                    'descargar' => false,
+                ];
+            }
             if ($requestedLocalityId !== null && !in_array($requestedLocalityId, $ids, true)) {
                 return ['allowed' => false, 'reason' => 'requested_station_out_of_scope', 'workplaces' => []];
             }

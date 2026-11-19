@@ -99,6 +99,10 @@
             editVersion: 0,
             editFieldErrors: { name: '', startTime: '', endTime: '', break: '' },
             editError: '',
+            createIdempotencyKey: '',
+            createRequestSignature: '',
+            editIdempotencyKey: '',
+            editRequestSignature: '',
 
             init() {
                 this.rootElement = this.$el;
@@ -156,6 +160,8 @@
 
             resetForm() {
                 if (this.loading) return;
+                this.createIdempotencyKey = '';
+                this.createRequestSignature = '';
                 this.customizationSource = null;
                 this.name = '';
                 this.startTime = '';
@@ -170,6 +176,28 @@
                 return String(value ?? '').replace(/[&<>"']/g, (character) => ({
                     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
                 }[character]));
+            },
+
+            idempotencyKeyFor(kind, payload) {
+                const signature = JSON.stringify(payload);
+                const keyName = kind === 'edit' ? 'editIdempotencyKey' : 'createIdempotencyKey';
+                const signatureName = kind === 'edit' ? 'editRequestSignature' : 'createRequestSignature';
+                if (!this[keyName] || this[signatureName] !== signature) {
+                    const random = window.crypto?.randomUUID?.() || (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+                    this[keyName] = 'm04-' + random.replace(/[^A-Za-z0-9]/g, '');
+                    this[signatureName] = signature;
+                }
+                return this[keyName];
+            },
+
+            clearIdempotencyKey(kind) {
+                if (kind === 'edit') {
+                    this.editIdempotencyKey = '';
+                    this.editRequestSignature = '';
+                    return;
+                }
+                this.createIdempotencyKey = '';
+                this.createRequestSignature = '';
             },
 
             cleanTemplateName(value) {
@@ -321,6 +349,7 @@
 
             resetEditForm() {
                 if (this.editLoading) return;
+                this.clearIdempotencyKey('edit');
                 this.editTemplate = null;
                 this.editRowNode = null;
                 this.editName = '';
@@ -478,16 +507,21 @@
                 try {
                     const csrfToken = this.rootElement.dataset.csrfToken
                         || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-                    const response = await window.axios.post(this.rootElement.dataset.editUrl, {
+                    const payload = {
                         operation: 'version',
                         template_key: this.editTemplate.key,
                         expected_version: Number(this.editTemplate.version),
                         template_name: name,
                         workplace_id: workplaceId,
                         segments,
-                    }, { headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                    };
+                    payload.idempotency_key = this.idempotencyKeyFor('edit', payload);
+                    const response = await window.axios.post(this.rootElement.dataset.editUrl, payload, {
+                        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    });
                     const body = response.data || {};
                     if (body.ok !== true || !body.template) throw { response: { status: response.status, data: body } };
+                    this.clearIdempotencyKey('edit');
                     if (!this.updateTemplateRow(body.template, this.editRowNode)) {
                         this.refreshWarning = 'La versión quedó guardada y confirmada, pero no se pudo refrescar la fila. Se actualizará el catálogo seleccionado; no vuelvas a guardar.';
                         this.editModal?.hide();
@@ -553,6 +587,7 @@
                     ? { operation: 'customize', template_name: name, workplace_id: workplaceId, source_template_key: this.customizationSource.key,
                         source_template_version: this.customizationSource.version, segments }
                     : { operation: 'create', template_name: name, workplace_id: workplaceId, confirm_action: '1', segments };
+                payload.idempotency_key = this.idempotencyKeyFor('create', payload);
 
                 try {
                     const csrfToken = this.rootElement.dataset.csrfToken
@@ -571,6 +606,7 @@
                     if (body.ok !== true) {
                         throw { response: { status: response.status, data: body } };
                     }
+                    this.clearIdempotencyKey('create');
 
                     const confirmed = body.template || {};
                     if (!confirmed.clave || Number(confirmed.id) < 1 || Number(confirmed.version) < 1
@@ -603,8 +639,10 @@
                     }
                     const confirmedTemplate = { ...confirmed, segmentos: confirmedSegments };
                     if (!this.updateTemplateRow(confirmedTemplate) && !this.addTemplateRow(confirmedTemplate)) {
-                        this.refreshWarning = 'El turno quedó guardado y confirmado en Autolavado, pero la tabla no se actualizó. No lo guardes de nuevo; actualiza el catálogo para leer el registro existente.';
+                        const workplaceName = String(this.rootElement?.dataset.workplaceName || 'la localidad seleccionada');
+                        this.refreshWarning = `El turno quedó guardado y confirmado en ${workplaceName}. Se recargará el catálogo; no lo guardes de nuevo.`;
                         this.modal?.hide();
+                        window.location.reload();
                         return;
                     }
                     if (this.customizationSource && this.table) {
@@ -618,8 +656,8 @@
                         }
                     }
                     this.success = this.customizationSource
-                        ? `La personalización local de «${confirmed.nombre || name}» fue confirmada mediante lectura SQL posterior.`
-                        : `El turno «${confirmed.nombre || name}» fue registrado y confirmado mediante lectura SQL posterior.`;
+                        ? `La personalización local de «${confirmed.nombre || name}» fue confirmada en ${String(this.rootElement?.dataset.workplaceName || 'la localidad seleccionada')}.`
+                        : `El turno «${confirmed.nombre || name}» fue registrado y confirmado en ${String(this.rootElement?.dataset.workplaceName || 'la localidad seleccionada')}.`;
                     this.modal?.hide();
                 } catch (failure) {
                     const status = Number(failure?.response?.status || 0);
