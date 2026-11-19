@@ -313,10 +313,10 @@ final class ChecadorShiftTemplateSqlWriteService
                 || !self::hasRequiredM04Grants($connection->select(
                     "SELECT 'GLOBAL' AS grant_scope, NULL AS table_schema, NULL AS table_name, PRIVILEGE_TYPE AS privilege_type FROM information_schema.USER_PRIVILEGES WHERE GRANTEE = ?
                     UNION ALL
-                    SELECT 'SCHEMA', TABLE_SCHEMA, NULL, PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?
+                    SELECT 'SCHEMA', TABLE_SCHEMA, NULL, PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ?
                     UNION ALL
-                    SELECT 'TABLE', TABLE_SCHEMA, TABLE_NAME, PRIVILEGE_TYPE FROM information_schema.TABLE_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ? AND TABLE_NAME IN (?, ?, ?, ?, ?)",
-                    [$grantee, $grantee, $databaseName, $grantee, $databaseName,
+                    SELECT 'TABLE', TABLE_SCHEMA, TABLE_NAME, PRIVILEGE_TYPE FROM information_schema.TABLE_PRIVILEGES WHERE GRANTEE = ? AND TABLE_NAME IN (?, ?, ?, ?, ?)",
+                    [$grantee, $grantee, $grantee,
                         'op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
                         'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log']
                 ), $databaseName)) return false;

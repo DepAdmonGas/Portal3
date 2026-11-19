@@ -109,3 +109,8 @@ $wrongSchemaGrants = array_map(static function (object $row): object {
 }, $broadGrants);
 $assert(!$grantCheck->invoke(null, $wrongSchemaGrants, $pleskDatabase),
     'grant preflight rejects a different schema instead of treating underscores as wildcards');
+$writerSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlWriteService.php') ?: '';
+$assert(!str_contains($writerSource, 'TABLE_SCHEMA = ?')
+    && str_contains($writerSource, 'SCHEMA_PRIVILEGES WHERE GRANTEE = ?')
+    && str_contains($writerSource, 'TABLE_PRIVILEGES WHERE GRANTEE = ? AND TABLE_NAME IN'),
+    'grant preflight fetches schema rows before exact PHP normalization, avoiding escaped-name SQL false rejection');
