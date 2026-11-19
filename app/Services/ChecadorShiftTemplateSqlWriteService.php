@@ -383,15 +383,29 @@ final class ChecadorShiftTemplateSqlWriteService
     /** Validate required effective operations; extra grants are reported as risk, not mistaken for missing access. */
     private static function hasRequiredM04Grants(array $grantRows, string $databaseName): bool
     {
-        $has = static function (string $table, string $requiredPrivilege) use ($grantRows, $databaseName): bool {
+        $schemaMatches = static function (string $candidate) use ($databaseName): bool {
+            $normalized = '';
+            $length = strlen($candidate);
+            for ($index = 0; $index < $length; $index++) {
+                $character = $candidate[$index];
+                if ($character === '\\' && isset($candidate[$index + 1])
+                    && in_array($candidate[$index + 1], ['\\', '_', '%'], true)) {
+                    $normalized .= $candidate[++$index];
+                    continue;
+                }
+                $normalized .= $character;
+            }
+            return hash_equals($databaseName, $normalized);
+        };
+        $has = static function (string $table, string $requiredPrivilege) use ($grantRows, $schemaMatches): bool {
             foreach ($grantRows as $row) {
                 $scope = strtoupper((string) ($row->grant_scope ?? ''));
                 $schema = (string) ($row->table_schema ?? '');
                 $tableName = (string) ($row->table_name ?? '');
                 $privilege = strtoupper(trim((string) ($row->privilege_type ?? '')));
                 $applies = $scope === 'GLOBAL'
-                    || ($scope === 'SCHEMA' && $schema === $databaseName)
-                    || ($scope === 'TABLE' && $schema === $databaseName && $tableName === $table);
+                    || ($scope === 'SCHEMA' && $schemaMatches($schema))
+                    || ($scope === 'TABLE' && $schemaMatches($schema) && $tableName === $table);
                 if ($applies && ($privilege === $requiredPrivilege || in_array($privilege, ['ALL', 'ALL PRIVILEGES'], true))) {
                     return true;
                 }

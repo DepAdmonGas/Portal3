@@ -93,3 +93,19 @@ $missingInsert = array_values(array_filter($leastPrivilegeRows,
     static fn(object $row): bool => !($row->grant_scope === 'TABLE' && $row->privilege_type === 'INSERT')));
 $assert(!$grantCheck->invoke(null, $missingInsert, 'checador'),
     'local grant preflight still rejects a principal missing required INSERT privileges');
+$pleskDatabase = 'bd_admongas_v2_preprod';
+$escapedSchema = 'bd\\_admongas\\_v2\\_preprod';
+$escapedSchemaGrants = array_map(static function (object $row) use ($escapedSchema): object {
+    $copy = clone $row;
+    if ($copy->grant_scope !== 'GLOBAL') $copy->table_schema = $escapedSchema;
+    return $copy;
+}, $broadGrants);
+$assert($grantCheck->invoke(null, $escapedSchemaGrants, $pleskDatabase),
+    'grant preflight recognizes MariaDB escaped underscores using exact schema-name normalization');
+$wrongSchemaGrants = array_map(static function (object $row): object {
+    $copy = clone $row;
+    if ($copy->grant_scope !== 'GLOBAL') $copy->table_schema = 'bdXadmongasXv2Xpreprod';
+    return $copy;
+}, $broadGrants);
+$assert(!$grantCheck->invoke(null, $wrongSchemaGrants, $pleskDatabase),
+    'grant preflight rejects a different schema instead of treating underscores as wildcards');
