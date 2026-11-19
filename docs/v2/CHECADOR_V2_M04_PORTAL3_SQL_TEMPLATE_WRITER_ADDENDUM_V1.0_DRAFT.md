@@ -1,13 +1,13 @@
-# CHECADOR V2 — M04 Portal3 SQL Template Writer Addendum V1.0 (DRAFT)
+# CHECADOR V2 — M04 Portal3 SQL Read/Write Addendum V1.0 (DRAFT)
 
 **Status:** DRAFT — NOT APPROVED; implementation and deployment are not authorized by this document.  
 **Applies to:** Portal3 and Checador V2 API, as one byte-identical cross-project contract.  
-**Scope:** M04 shift-template create, version, and global-to-station customization writes only.  
-**Does not change:** Architecture Freeze V1.0, the frozen shift-scheduling physical model, J1/J2, Lector, M03 assignment writes, M04 reads, or any data/schema.
+**Scope:** all Portal3 M04 administrative template reads and writes: catalog, exact-version/segment reads, create, immutable version, and authorized global-to-station customization.
+**Does not change:** Architecture Freeze V1.0, the frozen shift-scheduling physical model, J1/J2, Lector, M03 assignment writes, API V2 behavior for other consumers, or any data/schema.
 
 ## 1. Governing decision and boundaries
 
-This proposal assigns the sole M04 template-write path to an authorized Portal3 SQL service using Portal3's approved MariaDB connection and the existing V2 tables. API V2 remains the authority for all shift-template GETs and exact-version GETs, and remains the writer for M03 shift assignments and all other API-owned operations. No browser connects to MariaDB or API V2 directly.
+This proposal assigns the Portal3 M04 administrative read and write path to Portal3 SQL services using the existing MariaDB connection and V2 tables. Portal3 M04 must not call API V2 over HTTP for catalog/detail reads, readback, create, version, or customization. The existing SQL read service remains the read boundary; the SQL write service appends immutable template versions, segments, lineage, and audit. API V2 may retain its existing template GET endpoints for non-Portal3 consumers, remains the writer for M03 shift assignments and other API-owned operations, and continues reader ingestion/processing responsibilities. No browser connects directly to MariaDB or API V2.
 
 This is a narrow exception to the existing “API V2 is the only writer” rule. It is not authority to change the Architecture Freeze or the physical model. The addendum becomes effective only after the cross-project owner approves this exact document/hash and the deployment-specific database/schema/grant preflight passes. Until then, the current API writer remains authoritative and Portal3 must not write these rows.
 
@@ -19,10 +19,10 @@ This addendum changes only the following provisions, and only for M04 template m
 
 | Existing source | Exact clause | Treatment under this draft |
 |---|---|---|
-| `CHECADOR_V2_SHIFT_SCHEDULING_SERVICE_API_CONTRACT_V1.0.md` | §4.1 endpoints 1 `POST /api/v2/shift-templates` and 2 `POST /api/v2/shift-templates/{clave}/versions`; §6.1 template versioning/mutation model | Superseded only as to the writer location and M04 mutation transport. Their payload validation, immutable version, segment, and error semantics remain, except where this addendum is stricter. §4.1 endpoints 3–4 GET remain unchanged. §4.2 M03 assignment endpoints remain unchanged. |
+| `CHECADOR_V2_SHIFT_SCHEDULING_SERVICE_API_CONTRACT_V1.0.md` | §4.1 endpoints 1–4 (`POST /api/v2/shift-templates`, `POST /api/v2/shift-templates/{clave}/versions`, catalog `GET`, and exact-version `GET`); §6.1 template versioning/mutation model | Superseded only for Portal3 M04 transport/ownership: Portal3 M04 does not invoke any of those HTTP endpoints. API endpoint definitions may remain available to other clients; they are not a Portal3 fallback. Payload validation, immutable version, segment, and error semantics remain, except where this addendum is stricter. §4.2 M03 assignment endpoints remain unchanged. |
 | `CHECADOR_V2_M03_M04_LOCAL_TEMPLATES_AND_HABITUAL_TEMPORARY_SCHEDULE_ADDENDUM_V1.0.md` | §2 template scope/versioning; §5 actor/provenance where applicable; §6 permission `checador.turnos.estacion.administrar`; §7 API compatibility scope | Supplemented only for M04 template create/version/customization persistence. M03 assignment writes and their API/JWT/audit contract remain unchanged. The approved station permission does not authorize a department write. |
 | `CHECADOR_V2_M04_GLOBAL_TEMPLATE_STATION_CUSTOMIZATION_ADDENDUM_V1.0.md` | §3 uniqueness/duplicate behavior; §4 API behavior and transaction; §5 Portal3 interaction; §6 recovery | Superseded only where it says API V2 creates the customized template or Portal3 calls the API for that mutation. Source authorization, immutable lineage, uniqueness, unchanged global source, read-only provenance, UI feedback, and recovery requirements remain and are implemented through the Portal3 SQL writer plus authorized readback. |
-| `CHECADOR_V2_PREPRODUCTION_TARGET_DEFINITION_V1.0.md` | §5.4 “Cero Escrituras Directas de Portal3 en V2” | Narrow M04-only exception, if and only if this addendum is approved for the target environment. The rule remains in force for every other `op_rh_v2_*` mutation, including M03. This draft does not grant preproduction credentials to production or relax database isolation. |
+| `CHECADOR_V2_PREPRODUCTION_TARGET_DEFINITION_V1.0.md` | §5.4 “Cero Escrituras Directas de Portal3 en V2” | Narrow M04-only exception for template mutations, if and only if this addendum is approved for the target environment. The rule remains in force for every other `op_rh_v2_*` mutation, including M03. This draft does not grant preproduction credentials to production or relax database isolation. |
 
 No other clause is implicitly amended. The frozen documents remain byte-for-byte unchanged. If any provision outside the rows above conflicts, stop and obtain an explicit cross-project architecture decision before implementation.
 
@@ -83,9 +83,9 @@ Cutover is an ordered, exclusive handoff; no dual-write period is permitted:
 
 1. Approve this exact cross-project document and record its SHA-256 in both repositories.
 2. Complete the schema, InnoDB, index/lineage, audit JSON, account-grant, locality-lock, and backup/rollback policy review. No DDL or data change is authorized by this addendum alone.
-3. Deploy an M04-specific Portal3 SQL writer behind a default-off gate. With the gate off, writes fail closed. Verify M04 GETs still use API V2 and M03 assignment POSTs still use API V2.
-4. Close/disable API V2 M04 template mutation operations (create, version, customization) first. Their stable response must indicate the mutation path is retired and guarantee no write. Keep template list and exact-version GETs available. Keep M03 assignment mutation endpoints available.
-5. Verify API M04 writes are rejected without mutation, then enable the Portal3 SQL writer. Confirm only one writer is active. If this order cannot be guaranteed operationally, do not cut over.
+3. Deploy the Portal3 SQL reader and writer code with all write gates closed. Confirm all M04 catalog, detail, source, and post-write readback paths use SQL and contain no HTTP fallback. M03 assignment routes remain unchanged.
+4. Close/disable API V2 M04 template mutation operations (create, version, customization) first. Their stable response must guarantee rejection without mutation. API GET endpoints may remain for other consumers; Portal3 must not invoke them. Keep M03 assignment mutation endpoints available.
+5. Verify API M04 writes are rejected without mutation, inspect the target runtime schema, grants, locality-lock behavior, and audit lookup capacity/latency. Record operator attestations for the API cutoff, target preflight, and least-privilege grants. Only then open the four independent Portal3 gates `CHECADOR_M04_SQL_WRITER_ENABLED`, `CHECADOR_M04_API_WRITER_CLOSED`, `CHECADOR_M04_SQL_GRANTS_VERIFIED`, and `CHECADOR_M04_SQL_PREFLIGHT_VERIFIED`. They default to closed. The code rechecks the required schema, InnoDB engines, generated scope key, unique indexes, lineage constraints, and JSON support before each write. Confirm only one writer is active. If the order cannot be proven, keep the SQL writer disabled.
 6. Run the isolated acceptance suite and readback checks. Monitor audit and error signals. A failed readback is an indeterminate result: return no success and require lookup with the original idempotency key before any retry.
 7. Rollback disables the Portal3 SQL gate first. It does not re-enable API writes until the SQL writer is confirmed disabled and operations are reconciled. No row deletion, version rewrite, or automatic reverse migration is permitted.
 
@@ -99,20 +99,20 @@ Before the contract is marked approved/implemented, tests must prove, using isol
 - missing/failed audit insert, missing `WORK`, invalid hours/offset, stale version, global shadow, source mismatch, and readback mismatch never report success;
 - Encargado 6 can write only its authorized station; Dirección is read-only; forged/foreign IDs and explicit deny fail closed;
 - Autolavado 9 cannot write via Palo Solo 2's permission/catalog mapping; its read behavior remains separately scoped;
-- M04 GETs remain API V2; M03 writes remain API V2; API M04 mutation endpoints are disabled before Portal3 SQL gate is enabled;
+- Portal3 M04 catalog/detail/readback paths use SQL with no HTTP fallback; M03 writes remain under their current API V2 contract; API M04 mutation endpoints are disabled before Portal3 SQL gate is enabled;
 - DataTables refresh from the persisted/readback representation, F5 shows identical values, and M11, M03 weekly programming, and existing global/local catalog reads have no regression.
 
 Fixtures and isolated writes must be labeled as such; they are not evidence of production grants, Plesk schema, or operational records. No operational turn data is to be created to satisfy acceptance.
 
 ## 9. Explicit approval gate
 
-The following approvals are required before implementation:
+The following approvals are required before the M04 SQL writer can be activated or cut over. Local implementation and isolated tests may be reviewed with all gates closed:
 
 1. **Cross-project architecture/contract owner:** approve the exact hash of this addendum for both Portal3 and API V2, including the M04-only direct Portal3 SQL writer exception and the exact four-clause supersession in §2. Architecture Freeze V1.0 remains unchanged.
 2. **API V2 owner:** approve disabling only M04 template create/version/customization mutations while retaining all relevant GET routes and M03 assignment writes.
 3. **Database/security owner:** approve the verified target-specific Portal3 runtime principal and minimum effective grants/locking access after the read-only DDL/grant preflight. No grant can be approved from repository DDL alone.
 4. **Autolavado authority:** no approval is sought for department 9 writes in this draft because they are denied. Any such capability requires a separate explicit authorization and independent scope contract.
 
-**Approval statement:** “I approve, for both Portal3 and Checador V2 API, the exact `CHECADOR_V2_M04_PORTAL3_SQL_TEMPLATE_WRITER_ADDENDUM_V1.0_DRAFT.md` SHA-256 [hash], authorizing only the M04 Portal3 SQL template writer, the §2 clause changes, and the §7 exclusive cutover after the §6 schema/grant preflight. M04 reads and all M03 assignment writes remain on API V2. Autolavado department 9 receives no inherited write permission. The Architecture Freeze V1.0, physical data model, J1/J2, Lector, and all other API/Portal3 contracts remain unchanged. This approval does not authorize implementation, schema migration, operational writes, or deployment until the separate implementation and environment gates are satisfied.”
+**Approval statement:** “I approve, for both Portal3 and Checador V2 API, the exact `CHECADOR_V2_M04_PORTAL3_SQL_TEMPLATE_WRITER_ADDENDUM_V1.0_DRAFT.md` SHA-256 [hash], authorizing the M04 Portal3 SQL read/write path, the §2 clause changes, and the §7 exclusive writer cutover after the target schema/grant preflight. Portal3 M04 must not call API V2 for catalog/detail reads, readback, or template mutations. API template GET endpoints may remain available to other consumers; M03 assignment reads/writes remain under their current contracts. Autolavado department 9 receives no inherited write permission. The Architecture Freeze V1.0, physical data model, J1/J2, Lector, and all other API/Portal3 contracts remain unchanged. This approval does not authorize schema migration, operational writes, or deployment until the separate environment gates are satisfied.”
 
-**Evidence state at draft time:** Versioned DDL inspected in the API repository; audit table includes JSON details and station/actor time indexes but no idempotency unique key. The active MariaDB runtime DDL and Portal3/API account grants were not queried in this task because SQL execution was prohibited. No code, SQL, migration, database data, Architecture Freeze, or deployment was changed.
+**Evidence state:** Versioned DDL inspected in the repository; audit table includes JSON details and station/actor time indexes but no idempotency unique key. The active MariaDB runtime DDL and Portal3/API account grants remain unverified. The Portal3 implementation is being prepared behind default-off gates; no SQL was run and no operational data, API code, migration, Architecture Freeze, or deployment was changed.

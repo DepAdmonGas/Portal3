@@ -40,6 +40,23 @@ if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
     }
 
     $selectedId = $hasDepartment ? $idDepto : $idEstacion;
+    if ($hasDepartment && $idDepto === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
+        && (ChecadorAccessService::authorizeStationTemplateAdministration($idDepto)['allowed'] ?? false)) {
+        if (!ModuleStationService::setChecadorM04TemplateWorkplaceContext($idDepto)) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'message' => 'La selección de Autolavado no está autorizada para administrar horarios.']);
+            return;
+        }
+        if (ModuleStationService::getChecadorM04TemplateWorkplaceContext() !== $idDepto) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'message' => 'No se pudo validar la selección de Autolavado.']);
+            return;
+        }
+        session_write_close();
+        echo json_encode(['ok' => true]);
+        return;
+    }
+
     $access = ChecadorAccessService::authorize($selectedId);
     if (!($access['allowed'] ?? false)) {
         http_response_code(403);
