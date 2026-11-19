@@ -1,0 +1,229 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Models\Usuario;
+use App\Services\ChecadorShiftTemplateSqlWriteService;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Schema\Blueprint;
+
+$passes = 0;
+$fails = 0;
+$assert = static function (bool $condition, string $message) use (&$passes, &$fails): void {
+    echo ($condition ? 'PASS ' : 'FAIL ') . $message . "\n";
+    $condition ? $passes++ : $fails++;
+};
+
+$capsule = new Capsule();
+$capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
+$capsule->setAsGlobal();
+$capsule->bootEloquent();
+$schema = Capsule::schema();
+$schema->create('op_rh_localidades', static fn(Blueprint $table) => $table->increments('id'));
+$schema->create('op_rh_v2_turnos_plantillas', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->string('clave', 64);
+    $table->unsignedInteger('version');
+    $table->string('nombre', 128);
+    $table->string('tipo_turno', 32);
+    $table->string('scope', 16);
+    $table->integer('id_estacion')->nullable();
+    $table->integer('scope_id')->nullable();
+    $table->boolean('es_activo')->default(true);
+    $table->integer('creado_por_usuario_id')->nullable();
+    $table->dateTime('creado_at')->nullable();
+    $table->dateTime('actualizado_at')->nullable();
+    $table->unique(['scope_id', 'clave', 'version']);
+});
+$schema->create('op_rh_v2_turnos_segmentos', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->unsignedInteger('id_plantilla');
+    $table->unsignedInteger('ordinal');
+    $table->string('tipo_segmento', 32);
+    $table->time('hora_inicio_local');
+    $table->time('hora_fin_local');
+    $table->integer('dia_offset_inicio')->default(0);
+    $table->integer('dia_offset_fin')->default(0);
+    $table->unique(['id_plantilla', 'ordinal']);
+});
+$schema->create('op_rh_v2_shift_template_station_lineage', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->integer('id_estacion');
+    $table->string('source_global_clave', 100);
+    $table->unsignedInteger('source_global_version');
+    $table->unsignedInteger('source_global_template_id');
+    $table->string('local_clave', 100);
+    $table->unsignedInteger('local_template_id');
+    $table->integer('created_by_user_id');
+    $table->dateTime('created_at_utc');
+    $table->unique(['id_estacion', 'source_global_clave']);
+    $table->unique(['id_estacion', 'local_clave']);
+    $table->unique(['local_template_id']);
+});
+$schema->create('op_rh_v2_turnos_audit_log', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->string('entity_type', 32);
+    $table->unsignedInteger('entity_id');
+    $table->string('operacion', 32);
+    $table->integer('id_usuario_actor');
+    $table->integer('id_estacion');
+    $table->integer('id_personal')->nullable();
+    $table->string('tipo_asignacion', 32)->nullable();
+    $table->date('valido_desde')->nullable();
+    $table->date('valido_hasta')->nullable();
+    $table->unsignedInteger('id_plantilla')->nullable();
+    $table->unsignedInteger('version_plantilla')->nullable();
+    $table->text('detalle_json')->nullable();
+    $table->dateTime('recorded_at_utc');
+});
+Capsule::table('op_rh_localidades')->insert([['id' => 1], ['id' => 2]]);
+Capsule::table('op_rh_v2_turnos_plantillas')->insert([
+    'id' => 900, 'clave' => 'GLOBAL_SOURCE', 'version' => 1, 'nombre' => 'Global fuente', 'tipo_turno' => 'REGULAR',
+    'scope' => 'GLOBAL', 'id_estacion' => null, 'scope_id' => 0, 'es_activo' => 1,
+]);
+Capsule::table('op_rh_v2_turnos_segmentos')->insert([
+    'id_plantilla' => 900, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00',
+    'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0,
+]);
+$user = new Usuario();
+$user->id = 90;
+$readback = static function (Usuario $actor, string $key, int $version, int $workplaceId, int $id): array {
+    $template = Capsule::table('op_rh_v2_turnos_plantillas')->where('id', $id)->first();
+    if ($template === null) return ['ok' => false];
+    $segments = Capsule::table('op_rh_v2_turnos_segmentos')->where('id_plantilla', $id)->orderBy('ordinal')->get()
+        ->map(static fn($row): array => [
+            'ordinal' => (int) $row->ordinal, 'tipo_segmento' => (string) $row->tipo_segmento,
+            'hora_inicio_local' => (string) $row->hora_inicio_local, 'hora_fin_local' => (string) $row->hora_fin_local,
+            'dia_offset_inicio' => (int) $row->dia_offset_inicio, 'dia_offset_fin' => (int) $row->dia_offset_fin,
+        ])->all();
+    return ['ok' => true, 'data' => [
+        'id' => (int) $template->id, 'clave' => (string) $template->clave, 'version' => (int) $template->version,
+        'nombre' => (string) $template->nombre, 'tipo_turno' => (string) $template->tipo_turno,
+        'scope' => (string) $template->scope, 'id_estacion' => (int) $template->id_estacion,
+        'es_activo' => (int) $template->es_activo, 'segmentos' => $segments,
+    ]];
+};
+$writer = new ChecadorShiftTemplateSqlWriteService(
+    static fn(Usuario $actor, int $workplaceId): bool => $actor->id === 90 && $workplaceId === 1,
+    static fn(): bool => true,
+    static fn(): bool => true,
+    $readback
+);
+$base = [
+    'operation' => 'create', 'confirm_action' => '1', 'template_name' => 'Turno local mañana', 'template_type' => 'REGULAR',
+    'idempotency_key' => 'm04-create-normal-0001', 'segments' => [[
+        'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00', 'hora_fin_local' => '17:00',
+        'dia_offset_inicio' => 0, 'dia_offset_fin' => 0,
+    ]],
+];
+$created = $writer->write($user, 1, $base);
+$assert(($created['ok'] ?? false) && count($created['template']['segmentos'] ?? []) === 1,
+    'create writes a WORK segment and confirms its persisted SQL readback');
+$id = (int) ($created['template']['id'] ?? 0);
+$assert(Capsule::table('op_rh_v2_turnos_audit_log')->where('entity_id', $id)->where('operacion', 'CREATE')->exists(),
+    'template creation includes its mandatory audit row');
+$replay = $writer->write($user, 1, $base);
+$assert(($replay['ok'] ?? false) && ($replay['replayed'] ?? false) && (int) $replay['template']['id'] === $id,
+    'same idempotency key and payload returns the existing persisted template');
+$changedRetry = $base;
+$changedRetry['template_name'] = 'Nombre distinto';
+$assert(($writer->write($user, 1, $changedRetry)['error'] ?? '') === 'idempotency_conflict',
+    'same idempotency key with a changed payload is rejected');
+$duplicate = $base;
+$duplicate['idempotency_key'] = 'm04-create-duplicate-0001';
+$assert(($writer->write($user, 1, $duplicate)['error'] ?? '') === 'duplicate_template_name',
+    'duplicate active template names are rejected');
+
+$versionInput = $base;
+$versionInput['operation'] = 'version';
+$versionInput['template_key'] = $created['template']['clave'];
+$versionInput['expected_version'] = 1;
+$versionInput['template_name'] = 'Turno local actualizado';
+$versionInput['idempotency_key'] = 'm04-version-template-0001';
+$versioned = $writer->write($user, 1, $versionInput);
+$assert(($versioned['ok'] ?? false) && (int) $versioned['template']['version'] === 2
+    && Capsule::table('op_rh_v2_turnos_plantillas')->where('id', $id)->where('version', 1)->value('nombre') === 'Turno local mañana',
+    'edit appends an immutable version and preserves the original row');
+$stale = $versionInput;
+$stale['idempotency_key'] = 'm04-version-stale-00001';
+$assert(($writer->write($user, 1, $stale)['error'] ?? '') === 'version_conflict',
+    'stale expected versions conflict without another version');
+
+$overnight = $base;
+$overnight['template_name'] = 'Turno nocturno descanso';
+$overnight['template_type'] = 'NOCTURNO';
+$overnight['idempotency_key'] = 'm04-create-overnight-001';
+$overnight['segments'] = [
+    ['tipo_segmento' => 'WORK', 'hora_inicio_local' => '22:00', 'hora_fin_local' => '02:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 1],
+    ['tipo_segmento' => 'BREAK', 'hora_inicio_local' => '02:00', 'hora_fin_local' => '02:30', 'dia_offset_inicio' => 1, 'dia_offset_fin' => 1],
+    ['tipo_segmento' => 'WORK', 'hora_inicio_local' => '02:30', 'hora_fin_local' => '06:00', 'dia_offset_inicio' => 1, 'dia_offset_fin' => 1],
+];
+$night = $writer->write($user, 1, $overnight);
+$assert(($night['ok'] ?? false) && ($night['template']['segmentos'][0]['dia_offset_fin'] ?? null) === 1
+    && ($night['template']['segmentos'][1]['tipo_segmento'] ?? '') === 'BREAK',
+    'night shift and explicit break offsets are persisted and read back');
+
+$customize = [
+    'operation' => 'customize', 'template_name' => 'Global local personalizado', 'template_type' => 'REGULAR',
+    'source_template_key' => 'GLOBAL_SOURCE', 'source_template_version' => 1, 'idempotency_key' => 'm04-customize-source-0001',
+    'segments' => $base['segments'],
+];
+$customized = $writer->write($user, 1, $customize);
+$assert(($customized['ok'] ?? false) && Capsule::table('op_rh_v2_shift_template_station_lineage')
+    ->where('id_estacion', 1)->where('source_global_clave', 'GLOBAL_SOURCE')->where('local_template_id', $customized['template']['id'] ?? 0)->exists(),
+    'global customization creates a local template and immutable source lineage');
+$assert(($writer->write($user, 1, $customize)['replayed'] ?? false) === true,
+    'customization retry replays the same lineage-linked local template');
+$assert(($writer->write($user, 2, $base)['error'] ?? '') === 'permission_denied',
+    'foreign locality is rejected before any SQL mutation');
+$invalid = $base;
+$invalid['idempotency_key'] = 'm04-invalid-empty-segments';
+$invalid['segments'] = [];
+$assert(($writer->write($user, 1, $invalid)['error'] ?? '') === 'invalid_input',
+    'missing WORK segments are rejected without success');
+
+$before = Capsule::table('op_rh_v2_turnos_plantillas')->count();
+Capsule::connection()->statement("CREATE TRIGGER fail_m04_audit BEFORE INSERT ON op_rh_v2_turnos_audit_log BEGIN SELECT RAISE(ABORT, 'audit denied'); END");
+$auditFailure = $base;
+$auditFailure['template_name'] = 'Debe revertirse';
+$auditFailure['idempotency_key'] = 'm04-audit-rollback-0001';
+$rollback = $writer->write($user, 1, $auditFailure);
+$after = Capsule::table('op_rh_v2_turnos_plantillas')->count();
+$assert(!($rollback['ok'] ?? false) && $before === $after,
+    'audit insert failure rolls template and segment inserts back atomically');
+
+$controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+$controllerM04 = substr($controllerSource, strpos($controllerSource, 'public function saveConfigurationScheduleTemplate'),
+    strpos($controllerSource, 'private static function normalizeOriginalScheduleTemplateSegments') - strpos($controllerSource, 'public function saveConfigurationScheduleTemplate'));
+$readServiceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlReadService.php') ?: '';
+$writeServiceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlWriteService.php') ?: '';
+$jsSource = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js') ?: '';
+$assert(str_contains($controllerM04, 'ChecadorShiftTemplateSqlWriteService')
+    && str_contains($controllerM04, 'ChecadorShiftTemplateSqlReadService')
+    && !str_contains($controllerM04, 'createStationShiftTemplate(')
+    && !str_contains($controllerM04, 'customizeGlobalShiftTemplate(')
+    && !str_contains($controllerM04, 'createStationShiftTemplateVersion(')
+    && str_contains($readServiceSource, "Capsule::connection()")
+    && str_contains($jsSource, 'idempotencyKeyFor('),
+    'M04 controller uses only the SQL read/write boundaries and the browser retries with a stable idempotency key');
+$assert(str_contains($writeServiceSource, "SHOW TABLE STATUS LIKE ' . \$connection->getPdo()->quote(\$table)")
+    && !str_contains($writeServiceSource, 'SHOW TABLE STATUS LIKE ?'),
+    'MariaDB table-status preflight quotes only fixed table names instead of binding an unsupported SHOW placeholder');
+$gateNames = ['CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED', 'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'];
+$savedGateValues = [];
+foreach ($gateNames as $gateName) {
+    $savedGateValues[$gateName] = [array_key_exists($gateName, $_ENV), $_ENV[$gateName] ?? null, getenv($gateName)];
+    unset($_ENV[$gateName]);
+    putenv($gateName);
+}
+$defaultClosed = !ChecadorShiftTemplateSqlWriteService::writeGateOpen();
+foreach ($savedGateValues as $gateName => [$hadEnv, $envValue, $processValue]) {
+    if ($hadEnv) $_ENV[$gateName] = $envValue;
+    if ($processValue !== false) putenv($gateName . '=' . $processValue);
+}
+$assert($defaultClosed, 'M04 SQL writer stays closed by default without deployment cutover attestations');
+
+echo "\n{$passes} PASS, {$fails} FAIL\n";
+exit($fails === 0 ? 0 : 1);
