@@ -166,26 +166,6 @@ final class ChecadorDailyReadService
             && (self::realApiPostOperationsEnabled() || in_array($flag, ['1', 'true', 'yes', 'on'], true));
     }
 
-    /** M11 policy writes use an independent local opt-in and never inherit the global API POST gate. */
-    public static function attendancePolicyPostOperationsEnabled(): bool
-    {
-        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        $flag = strtolower(trim((string) ($_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED']
-            ?? getenv('CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED') ?: '')));
-        return in_array($environment, ['dev', 'development', 'local', 'prod'], true)
-            && in_array($flag, ['1', 'true', 'yes', 'on'], true);
-    }
-
-    /** M11 catalog/profile writes use their own explicit environment opt-in. */
-    public static function m11ConfigurationPostOperationsEnabled(): bool
-    {
-        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        $flag = strtolower(trim((string) ($_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED']
-            ?? getenv('CHECADOR_M11_CONFIGURATION_POSTS_ENABLED') ?: '')));
-        return in_array($environment, ['dev', 'development', 'local', 'prod'], true)
-            && in_array($flag, ['1', 'true', 'yes', 'on'], true);
-    }
-
     /** @return string|null A safe scenario name, or null when demo mode is disabled. */
     public static function configuredDemoScenario(): ?string
     {
@@ -832,46 +812,6 @@ final class ChecadorDailyReadService
             'partial_reasons' => array_slice($reasons, 0, 20),
             'items' => $safeItems,
         ]];
-    }
-
-    /** Create one prospective M11 policy through the single API writer and dedicated gate. */
-    public function createAttendancePolicy(Usuario $user, array $input, string $idempotencyKey): array
-    {
-        if ($this->demoScenario !== null) return self::failure('demo_write_blocked', 403);
-        $workplaceId = self::positiveInt($input['workplace_id'] ?? null);
-        $effectiveDate = is_string($input['effective_from_local_date'] ?? null) ? trim($input['effective_from_local_date']) : '';
-        $tolerance = self::strictInteger($input['retardo_tolerance_minutes'] ?? null);
-        $deadline = self::strictInteger($input['incidence_deadline_days'] ?? null);
-        $idempotencyKey = trim($idempotencyKey);
-        if ($workplaceId === null || !self::isCivilDate($effectiveDate)
-            || $tolerance === null || $tolerance < 0 || $tolerance > 120
-            || $deadline === null || $deadline < 0 || $deadline > 30
-            || preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', $idempotencyKey) !== 1) {
-            return self::failure('bad_request', 400);
-        }
-        if (!self::attendancePolicyPostOperationsEnabled()) return self::failure('api_post_disabled', 403);
-        $response = $this->requestJson($user, 'POST', 'api/v2/attendance-policies', [
-            'workplace_id' => $workplaceId,
-            'effective_from_local_date' => $effectiveDate,
-            'retardo_tolerance_minutes' => $tolerance,
-            'incidence_deadline_days' => $deadline,
-        ], $idempotencyKey);
-        if (!($response['ok'] ?? false)) return $response;
-        $data = $response['payload']['data'] ?? null;
-        if (!is_array($data)
-            || self::positiveInt($data['id'] ?? null) === null
-            || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
-            || !is_int($data['policy_version'] ?? null) || $data['policy_version'] < 1
-            || (string) ($data['effective_from_local_date'] ?? '') !== $effectiveDate
-            || (int) ($data['retardo_tolerance_minutes'] ?? -1) !== $tolerance
-            || (int) ($data['incidence_deadline_days'] ?? -1) !== $deadline
-            || !is_string($data['timezone_id'] ?? null)
-            || !ChecadorOperationalPeriod::isIanaTimezone($data['timezone_id'])
-            || !is_int($data['actor_portal_user_id'] ?? null)
-            || (string) ($data['source'] ?? '') !== 'PORTAL3_ADMIN') {
-            return self::failure('administrative_unavailable', 502);
-        }
-        return ['ok' => true, 'http_status' => (int) ($response['http_status'] ?? 200), 'data' => $data];
     }
 
     private static function validAttendancePolicyEnvelope(mixed $data, int $workplaceId, string $date): bool
@@ -2585,11 +2525,9 @@ final class ChecadorDailyReadService
                 $response = $this->demoResponse($method, $path, [], $body, $user, $idempotencyKey, $demoLocalityId);
             } else {
                 $scheduleWrite = preg_match('#\Aapi/v2/shift-(?:assignments(?:/[1-9][0-9]*/(?:close|replace))?|templates(?:/[A-Za-z0-9_-]{1,64}/versions)?)\z#D', ltrim($path, '/')) === 1;
-                $attendancePolicyWrite = ltrim($path, '/') === 'api/v2/attendance-policies';
                 if (strtoupper($method) === 'POST'
                     && !self::realApiPostOperationsEnabled()
-                    && !($scheduleWrite && self::scheduleApiPostOperationsEnabled())
-                    && !($attendancePolicyWrite && self::attendancePolicyPostOperationsEnabled())) {
+                    && !($scheduleWrite && self::scheduleApiPostOperationsEnabled())) {
                     return self::failure('api_post_disabled', 403);
                 }
 

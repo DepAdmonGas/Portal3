@@ -22,7 +22,7 @@ $original = [];
 foreach ($keys as $key) $original[$key] = [array_key_exists($key, $_ENV), $_ENV[$key] ?? null, getenv($key)];
 $logPath = sys_get_temp_dir() . '/portal3-m11-position-' . bin2hex(random_bytes(6)) . '.log';
 $_ENV['APP_ENV'] = 'dev';
-$_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'true';
+$_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'false';
 $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
 $_ENV['LOG_PATH'] = $logPath;
 
@@ -102,7 +102,8 @@ try {
         'default service authorization requires the same authenticated Dirección identity and effective catalog grant');
     $assert(str_contains($method, 'HTTP_X_CSRF_TOKEN') && str_contains($method, '$input[\'_csrf_token\']')
         && str_contains($method, 'positionIdProvided && $positionId === null')
-        && str_contains($method, "'invalid_position_name' => 422, 'm11_write_disabled' => 503, default => 500")
+        && str_contains($method, "'invalid_position_name' => 422, default => 500")
+        && !str_contains($method, 'm11_write_disabled')
         && str_contains($routes, "'/recursos-humanos/checador/configuracion/puestos'"),
         'authenticated endpoint validates CSRF and rejects malformed edit IDs instead of treating them as creates');
     $assert(str_contains($javascript, "detail: { id, name: String(row.name ?? '') }")

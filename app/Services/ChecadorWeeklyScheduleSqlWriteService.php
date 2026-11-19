@@ -47,7 +47,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
 
     public static function enabled(): bool
     {
-        return self::writerCutoverReady();
+        return self::operationalWritesAllowed();
     }
 
     /** @return array{ok:bool,assignment?:array,error?:string,status?:int,replayed?:bool} */
@@ -73,7 +73,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
         $templateId = $templateValue === 'REST' ? null : (int) $templateValue;
         if ($templateId !== null && $templateId < 1) return self::failure('invalid_template', 422);
         if (!($this->authorizeWrite)($user, $workplaceId)) return self::failure('permission_denied', 403);
-        if (!self::writerCutoverReady()) return self::failure('m03_writer_cutover_not_ready', 503);
+        if (!self::operationalWritesAllowed()) return self::failure('m03_demo_mode_read_only', 403);
 
         $weekday = ChecadorWeeklyScheduleService::weekdayFor($targetDate);
         if ($weekday === null || ($type === 'HABITUAL'
@@ -141,7 +141,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
         if ($schedule === []) return self::failure('invalid_request', 422);
         uasort($schedule, static fn(array $a, array $b): int => $a['date'] <=> $b['date']);
         if (!($this->authorizeWrite)($user, $workplaceId)) return self::failure('permission_denied', 403);
-        if (!self::writerCutoverReady()) return self::failure('m03_writer_cutover_not_ready', 503);
+        if (!self::operationalWritesAllowed()) return self::failure('m03_demo_mode_read_only', 403);
 
         $readService = new ChecadorWeeklyScheduleSqlReadService();
         $timezone = $readService->timezoneForDate($workplaceId, $effectiveStart);
@@ -288,7 +288,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
             return self::failure('invalid_request', 422);
         }
         if (!($this->authorizeWrite)($user, $workplaceId)) return self::failure('permission_denied', 403);
-        if (!self::writerCutoverReady()) return self::failure('m03_writer_cutover_not_ready', 503);
+        if (!self::operationalWritesAllowed()) return self::failure('m03_demo_mode_read_only', 403);
         return $this->mutate($user, $workplaceId, $workerId, '', 'CLOSE', $key, [
             'kind' => 'close', 'assignment_id' => $assignmentId, 'close_date' => $closeDate,
             'expected_from' => $expectedFrom, 'expected_to' => $expectedTo,
@@ -316,7 +316,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
         $templateId = $templateValue === 'REST' ? null : (int) $templateValue;
         if ($templateId !== null && $templateId < 1) return self::failure('invalid_template', 422);
         if (!($this->authorizeWrite)($user, $workplaceId)) return self::failure('permission_denied', 403);
-        if (!self::writerCutoverReady()) return self::failure('m03_writer_cutover_not_ready', 503);
+        if (!self::operationalWritesAllowed()) return self::failure('m03_demo_mode_read_only', 403);
         return $this->mutate($user, $workplaceId, $workerId, '', 'REPLACE', $key, [
             'kind' => 'replace', 'assignment_id' => $assignmentId, 'close_date' => $closeDate,
             'expected_from' => $expectedFrom, 'expected_to' => $expectedTo,
@@ -669,15 +669,9 @@ final class ChecadorWeeklyScheduleSqlWriteService
         if ($connection->getDriverName() === 'mysql') $connection->selectOne('SELECT RELEASE_LOCK(?) AS released', [$name]);
     }
 
-    private static function writerCutoverReady(): bool
+    private static function operationalWritesAllowed(): bool
     {
-        $enabled = static function (string $key): bool {
-            $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key) ?: '';
-            return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
-        };
-        return $enabled('CHECADOR_M03_SQL_WRITES_ENABLED')
-            && $enabled('CHECADOR_M03_API_WRITER_DISABLED')
-            && $enabled('CHECADOR_M03_SCHEMA_PREFLIGHT_OK');
+        return !ChecadorDailyReadService::demoModeEnabled();
     }
 
     private static function earliestDate(?string $a, ?string $b): ?string

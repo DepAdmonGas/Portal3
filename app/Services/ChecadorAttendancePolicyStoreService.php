@@ -103,9 +103,6 @@ final class ChecadorAttendancePolicyStoreService
             || preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/D', $idempotencyKey) !== 1) {
             return ['ok' => false, 'error' => 'invalid_policy_input'];
         }
-        if (!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()) {
-            return ['ok' => false, 'error' => 'write_gate_closed'];
-        }
         if (ChecadorDailyReadService::demoModeEnabled()) return ['ok' => false, 'error' => 'demo_mode'];
         if (!(($this->authorizeWrite)($actor, $workplaceId))) {
             return ['ok' => false, 'error' => 'permission_denied'];

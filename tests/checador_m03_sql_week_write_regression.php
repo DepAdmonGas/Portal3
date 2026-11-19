@@ -57,9 +57,11 @@ Capsule::table('op_rh_v2_turnos_segmentos')->insert([
     ['id_plantilla' => 10, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '22:00:00', 'hora_fin_local' => '06:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 1],
     ['id_plantilla' => 20, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00', 'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
 ]);
-putenv('CHECADOR_M03_SQL_WRITES_ENABLED=1');
-putenv('CHECADOR_M03_API_WRITER_DISABLED=1');
-putenv('CHECADOR_M03_SCHEMA_PREFLIGHT_OK=1');
+putenv('APP_ENV=dev');
+putenv('CHECADOR_ADVANCED_DEMO_ENABLED=0');
+putenv('CHECADOR_M03_SQL_WRITES_ENABLED=0');
+putenv('CHECADOR_M03_API_WRITER_DISABLED=0');
+putenv('CHECADOR_M03_SCHEMA_PREFLIGHT_OK=0');
 $membership = static fn(int $workerId, int $workplaceId, string $from, string $to): array =>
     ($workplaceId === 9 && in_array($workerId, [40, 41, 42, 43, 44, 45], true)
         && !($workerId === 44 && $from === '2026-11-25'))
@@ -195,11 +197,9 @@ $failed = $service->create($actor, $rollbackInput);
 $assert(!($failed['ok'] ?? false) && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $before,
     'audit failure rolls back assignment write without partial persistence');
 
-$gated = (new ChecadorWeeklyScheduleSqlWriteService(static fn(): bool => true, $membership, static fn(): bool => true));
-putenv('CHECADOR_M03_API_WRITER_DISABLED=0');
-$assert(($gated->create($actor, $rollbackInput)['error'] ?? '') === 'm03_writer_cutover_not_ready',
-    'SQL writer remains closed until API cutover and schema preflight gates are explicitly confirmed');
+$assert(ChecadorWeeklyScheduleSqlWriteService::enabled(),
+    'M03 SQL writer availability does not depend on manual environment flags outside demo mode');
 
-foreach (['CHECADOR_M03_SQL_WRITES_ENABLED', 'CHECADOR_M03_API_WRITER_DISABLED', 'CHECADOR_M03_SCHEMA_PREFLIGHT_OK'] as $env) putenv($env);
+foreach (['APP_ENV', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_M03_SQL_WRITES_ENABLED', 'CHECADOR_M03_API_WRITER_DISABLED', 'CHECADOR_M03_SCHEMA_PREFLIGHT_OK'] as $env) putenv($env);
 echo "RESULT: {$passes} PASS / {$fails} FAIL (isolated SQLite; not MariaDB concurrency evidence)\n";
 exit($fails === 0 ? 0 : 1);

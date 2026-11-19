@@ -35,9 +35,6 @@ final class ChecadorConfigurationWriteService
         if ($name === '' || mb_strlen($name) > 100 || preg_match('/[\x00-\x1F\x7F]/u', $name)) {
             return ['ok' => false, 'error' => 'invalid_position_name'];
         }
-        if (!ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()) {
-            return ['ok' => false, 'error' => 'm11_write_disabled'];
-        }
         if (!(($this->authorizePositionEdit)($actor, $workplaceId))) {
             return ['ok' => false, 'error' => 'permission_denied'];
         }
@@ -94,10 +91,10 @@ final class ChecadorConfigurationWriteService
             || preg_match('/[\x00-\x1F\x7F]/u', $username) || strlen($newPassword) > 512) {
             return ['ok' => false, 'error' => 'invalid_profile_input'];
         }
-        if (!ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()) {
-            return ['ok' => false, 'error' => 'm11_write_disabled'];
-        }
-        if (!(ChecadorAccessService::authorizeReaderProfiles($workplaceId, 'editar')['allowed'] ?? false)) {
+        $authenticated = \App\Core\Auth::user();
+        if ($authenticated === null || !\App\Core\Auth::check()
+            || (int) ($authenticated->id ?? 0) !== (int) ($actor->id ?? 0)
+            || !(ChecadorAccessService::authorizeReaderProfiles($workplaceId, 'editar')['allowed'] ?? false)) {
             return ['ok' => false, 'error' => 'permission_denied'];
         }
         $physicalStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);

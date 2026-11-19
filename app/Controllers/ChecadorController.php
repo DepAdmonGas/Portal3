@@ -1664,9 +1664,11 @@ final class ChecadorController extends BaseController
                 'configuration' => $configuration,
                 'demoMode' => $demoMode,
                 'configurationFeedback' => Session::pull('checador_configuration_feedback', null),
-                'attendancePolicyWritesEnabled' => ChecadorDailyReadService::attendancePolicyPostOperationsEnabled(),
-                'm11ConfigurationWritesEnabled' => ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled(),
-                'scheduleTemplateWritesEnabled' => ChecadorDailyReadService::scheduleApiPostOperationsEnabled(),
+                'attendancePolicyWritesEnabled' => !$demoMode && !empty($configuration['permissions']['policy_edit']),
+                'm11ConfigurationWritesEnabled' => !$demoMode && (
+                    !empty($configuration['permissions']['positions_edit'])
+                    || !empty($configuration['permissions']['reader_profile_edit'])
+                ),
                 'workerId' => $workerId,
                 'date' => $date,
                 'historyInputInvalid' => $historyInputInvalid,
@@ -1734,11 +1736,10 @@ final class ChecadorController extends BaseController
             $error = (string) ($saved['error'] ?? '');
             $status = match ($error) {
                 'permission_denied' => 403, 'duplicate_position', 'position_not_found' => 409,
-                'invalid_position_name' => 422, 'm11_write_disabled' => 503, default => 500,
+                'invalid_position_name' => 422, default => 500,
             };
             $message = match ($error) {
                 'permission_denied' => 'No tienes permiso para administrar el catálogo institucional de puestos.',
-                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno.',
                 'duplicate_position' => 'Ya existe un puesto activo con ese nombre.',
                 'position_not_found' => 'El puesto seleccionado ya no está disponible.',
                 'invalid_position_name' => 'El nombre del puesto no es válido.',
@@ -1753,7 +1754,6 @@ final class ChecadorController extends BaseController
         } else {
             $message = match ($saved['error'] ?? '') {
                 'permission_denied' => 'No tienes permiso para administrar el catálogo institucional de puestos.',
-                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno. No se guardó ningún cambio.',
                 'duplicate_position' => 'Ya existe un puesto activo con ese nombre.',
                 'position_not_found' => 'El puesto seleccionado ya no está disponible.',
                 'invalid_position_name' => 'El nombre del puesto no es válido.',
@@ -1812,11 +1812,10 @@ final class ChecadorController extends BaseController
             $error = (string) ($saved['error'] ?? '');
             $status = match ($error) {
                 'permission_denied' => 403, 'profile_not_found', 'duplicate_profile_username' => 409,
-                'invalid_profile_input' => 422, 'm11_write_disabled' => 503, default => 502,
+                'invalid_profile_input' => 422, default => 502,
             };
             $message = match ($error) {
                 'permission_denied' => 'No tienes permiso para editar perfiles de lector en este centro.',
-                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno.',
                 'profile_not_found' => 'El perfil ya no está disponible en el centro seleccionado.',
                 'duplicate_profile_username' => 'Ya existe ese usuario para el lector del centro seleccionado.',
                 'station_mapping_unresolved' => 'No se pudo confirmar el mapeo único de la estación física.',
@@ -1830,7 +1829,6 @@ final class ChecadorController extends BaseController
         } else {
             $message = match ($saved['error'] ?? '') {
                 'permission_denied' => 'No tienes permiso para editar perfiles de lector en este centro.',
-                'm11_write_disabled' => 'La escritura M11 está desactivada en este entorno. No se guardó ningún cambio.',
                 'profile_not_found' => 'El perfil ya no está disponible en el centro seleccionado.',
                 'duplicate_profile_username' => 'Ya existe ese usuario para el lector del centro seleccionado.',
                 'station_mapping_unresolved' => 'No se pudo confirmar el mapeo único de la estación física.',
@@ -2255,12 +2253,6 @@ final class ChecadorController extends BaseController
             self::configurationFeedback('error', 'El modo demostración no permite guardar políticas operativas.', $workplaceId);
             self::redirect($redirect);
         }
-        if (!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()) {
-            if ($wantsJson) $jsonFail(503, 'write_gate_closed', 'La escritura M11 no está disponible en este entorno.');
-            self::configurationFeedback('error', 'La escritura M11 permanece deshabilitada en esta configuración. No se guardó ningún cambio.', $workplaceId);
-            self::redirect($redirect);
-        }
-
         $user = Auth::user();
         if (!$user) {
             if ($wantsJson) $jsonFail(401, 'unauthenticated', 'La sesión ya no es válida. Inicia sesión nuevamente.');
@@ -2277,7 +2269,7 @@ final class ChecadorController extends BaseController
                 'idempotency_conflict', 'policy_date_conflict', 'policy_version_date_conflict' => 409,
                 'policy_must_be_prospective' => 422,
                 'invalid_policy_input' => 422,
-                'write_gate_closed', 'demo_mode' => 403,
+                'demo_mode' => 403,
                 default => 503,
             };
             $message = match ($error) {
@@ -2286,7 +2278,6 @@ final class ChecadorController extends BaseController
                 'policy_date_conflict', 'policy_version_date_conflict' => 'Ya existe una versión para esa fecha o la vigencia no sigue la secuencia persistida.',
                 'policy_must_be_prospective' => 'La fecha debe ser posterior al día local vigente.',
                 'invalid_policy_input' => 'Revisa la fecha, los valores y la clave de solicitud.',
-                'write_gate_closed' => 'La escritura M11 no está habilitada en este entorno.',
                 'demo_mode' => 'El modo demostración no permite guardar políticas operativas.',
                 'workplace_timezone_unresolved' => 'No se pudo confirmar la zona horaria persistida de esta localidad.',
                 default => 'No fue posible guardar y confirmar la política en la base de datos.',
@@ -2629,8 +2620,7 @@ final class ChecadorController extends BaseController
         $assignableWorkers = \App\Services\ChecadorWeeklyScheduleService::workersWithAnyVerifiedMembership(
             $workers, array_column($dates, 'date')
         );
-        // Writes stay closed until the legacy API writer is cut off under the
-        // reconciled M03 contract; there is deliberately no HTTP fallback.
+        // The active M03 write path is Portal3 SQL; demo mode remains read-only.
         $canEditSchedules = $workplaceId !== null && !$demoMode
             && \App\Services\ChecadorWeeklyScheduleSqlWriteService::enabled()
             && (ChecadorAccessService::authorizeScheduling($workplaceId, 'editar')['allowed'] ?? false);
@@ -2796,7 +2786,7 @@ final class ChecadorController extends BaseController
         $rawWorkplaceId = self::positiveInteger($input['workplace_id'] ?? null);
         $weekStart = is_string($input['week_start'] ?? null) ? trim($input['week_start']) : '';
         $user = Auth::user();
-        $result = ['ok' => false, 'error' => 'm03_writer_cutover_not_ready', 'status' => 503];
+        $result = ['ok' => false, 'error' => 'database_write_failed', 'status' => 500];
         if ($user === null) {
             $result = ['ok' => false, 'error' => 'unauthenticated', 'status' => 401];
         } elseif ($workplaceId === null || $rawWorkplaceId !== $workplaceId) {
@@ -2818,7 +2808,6 @@ final class ChecadorController extends BaseController
         }
         $status = (int) ($result['status'] ?? (($result['ok'] ?? false) ? 200 : 422));
         $labels = [
-            'm03_writer_cutover_not_ready' => 'La escritura SQL de M03 sigue cerrada hasta confirmar el corte del escritor API y la validación del esquema.',
             'permission_denied' => 'No tienes permiso para modificar la programación de esta localidad.',
             'worker_unavailable' => 'El trabajador no está disponible para programación.',
             'membership_unverified' => 'No se confirmó la adscripción del trabajador para toda la vigencia solicitada.',

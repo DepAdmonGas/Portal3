@@ -304,11 +304,14 @@ $assert($historyAccessPosition !== false && $historyReadPosition !== false && $h
 $assert(str_contains($routes, "Route::auth(['ChecadorController', 'createScheduleAssignment'])")
     && str_contains($routeAuth, "['auth', 'csrf', 'dpto-operativo-activo']"), 'individual assignment POST remains behind the existing authentication, CSRF and department-active middleware');
 $dailyReadSource = file_get_contents($root . '/app/Services/ChecadorDailyReadService.php') ?: '';
+$weeklySqlWriter = file_get_contents($root . '/app/Services/ChecadorWeeklyScheduleSqlWriteService.php') ?: '';
 $assert(str_contains($weeklyView, 'Asignar horario habitual')
     && str_contains($weeklyView, 'Cambios temporales')
-    && str_contains($controller, 'scheduleApiPostOperationsEnabled()')
-    && str_contains($dailyReadSource, 'CHECADOR_SHIFT_SCHEDULING_POSTS_ENABLED'),
-    'restored habitual and temporary UI routes writes through the explicit local schedule gate');
+    && str_contains($controller, 'ChecadorWeeklyScheduleSqlWriteService::enabled()')
+    && str_contains($controller, 'createHabitualPattern($user, $input)')
+    && str_contains($weeklySqlWriter, '$connection->transaction(')
+    && !str_contains($controller, 'scheduleApiPostOperationsEnabled()'),
+    'habitual and temporary schedule actions use the authenticated Portal3 SQL writer rather than an API POST gate');
 $assert(str_contains($view, 'Entrada 1') && str_contains($view, 'Salida 1')
     && str_contains($view, 'Entrada 2') && str_contains($view, 'Salida 2')
     && str_contains($controller, "'segundos_trabajados_totales'")

@@ -30,7 +30,8 @@ $restore = static function () use ($keys, $original): void {
 };
 
 $_ENV['APP_ENV'] = 'dev';
-$_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'true';
+$_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'false';
+$_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'false';
 $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
 $_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'false';
 
@@ -151,19 +152,6 @@ try {
         && ($current['data']['timezone_id'] ?? '') === 'America/Mexico_City',
         'current read resolves workplace timezone and returns the next persisted version');
 
-    $_ENV['APP_ENV'] = 'prod';
-    $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'true';
-    $_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'true';
-    $_ENV['CHECADOR_API_REAL_POSTS_ENABLED'] = 'false';
-    $assert(ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()
-        && ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled()
-        && !ChecadorDailyReadService::realApiPostOperationsEnabled(),
-        'production dedicated M11 gates remain independent from the global API POST gate');
-    $_ENV['CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'] = 'false';
-    $_ENV['CHECADOR_M11_CONFIGURATION_POSTS_ENABLED'] = 'false';
-    $assert(!ChecadorDailyReadService::attendancePolicyPostOperationsEnabled()
-        && !ChecadorDailyReadService::m11ConfigurationPostOperationsEnabled(),
-        'production write gates fail closed when dedicated flags are absent');
 } finally {
     $restore();
 }
@@ -174,6 +162,8 @@ $controllerEnd = strpos($controller, 'private function renderScheduleHistory(', 
 $method = $controllerStart === false ? '' : substr($controller, $controllerStart, $controllerEnd === false ? null : $controllerEnd - $controllerStart);
 $configurationRead = file_get_contents(__DIR__ . '/../app/Services/ChecadorConfigurationReadService.php') ?: '';
 $policyService = file_get_contents(__DIR__ . '/../app/Services/ChecadorAttendancePolicyStoreService.php') ?: '';
+$configurationWrite = file_get_contents(__DIR__ . '/../app/Services/ChecadorConfigurationWriteService.php') ?: '';
+$dailyRead = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
 $assert(str_contains($method, 'ChecadorAttendancePolicyStoreService')
     && !str_contains($method, 'readAttendancePolicy(') && !str_contains($method, 'createAttendancePolicy(')
     && !str_contains($method, '/api/v2/attendance-policies'),
@@ -190,6 +180,13 @@ $assert(str_contains($policyService, "lockForUpdate()")
     && str_contains($policyService, 'idempotency_key')
     && str_contains($policyService, 'policy_readback_mismatch'),
     'write service uses transactional locking, idempotency, and persisted-value readback');
+$assert(!str_contains($controller, 'CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED')
+    && !str_contains($controller, 'CHECADOR_M11_CONFIGURATION_POSTS_ENABLED')
+    && !str_contains($policyService, 'CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED')
+    && !str_contains($configurationWrite, 'CHECADOR_M11_CONFIGURATION_POSTS_ENABLED')
+    && !str_contains($dailyRead, 'createAttendancePolicy')
+    && !str_contains($dailyRead, 'CHECADOR_ATTENDANCE_POLICY_POSTS_ENABLED'),
+    'M11 SQL writers and controller no longer depend on the dedicated POST flags or expose an API policy-write fallback');
 
 printf("CHECADOR_M11_ATTENDANCE_POLICY_SQL_WRITE_RESULT: %d PASS / %d FAIL / isolated SQLite only\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);
