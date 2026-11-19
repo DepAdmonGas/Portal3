@@ -1,4 +1,103 @@
 document.addEventListener('alpine:init', () => {
+    const scheduleSelect2Targets = [
+        ['#habitual-schedule-assignment-modal', 'select[name^="schedule["]'],
+        ['#habitual-schedule-replacement-modal', '#habitual-replacement-source, #habitual-replacement-template'],
+        ['#temporary-schedule-assignment-modal', '#temporary-assignment-template'],
+    ];
+    const normalizeScheduleSearch = (value) => String(value ?? '')
+        .normalize('NFD')
+        .replace(/\p{M}/gu, '')
+        .toLocaleLowerCase('es-MX')
+        .replace(/\s+/g, '');
+    const scheduleSelectMatcher = (params, data) => {
+        if (!data || !String(params?.term || '').trim()) return data;
+        if (Array.isArray(data.children) && data.children.length) {
+            const children = data.children.map((child) => scheduleSelectMatcher(params, child)).filter(Boolean);
+            return children.length ? { ...data, children } : null;
+        }
+        return normalizeScheduleSearch(data.text).includes(normalizeScheduleSearch(params.term)) ? data : null;
+    };
+    let scheduleSelect2Dependencies = null;
+    const loadScheduleAsset = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.addEventListener('load', resolve, { once: true });
+        script.addEventListener('error', () => reject(new Error('No se pudo cargar un recurso local de búsqueda de horarios.')), { once: true });
+        document.body.append(script);
+    });
+    const ensureScheduleStylesheet = (href) => {
+        const path = new URL(href, location.href).pathname;
+        const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+            .find((link) => new URL(link.href, location.href).pathname === path);
+        if (existing?.sheet) return Promise.resolve();
+        const link = existing || document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        return new Promise((resolve, reject) => {
+            link.addEventListener('load', resolve, { once: true });
+            link.addEventListener('error', () => reject(new Error('No se pudo cargar el estilo local de los selectores de horarios.')), { once: true });
+            if (!existing) document.head.append(link);
+        });
+    };
+    const ensureScheduleSelect2 = () => {
+        if (scheduleSelect2Dependencies) return scheduleSelect2Dependencies;
+        scheduleSelect2Dependencies = (async () => {
+            await ensureScheduleStylesheet('/assets/libs/select2/dist/css/select2.min.css');
+            await ensureScheduleStylesheet('/assets/css/departamento-operativo/2-recursos-humanos/checador-schedule-select2.css');
+            if (!window.jQuery) await loadScheduleAsset('/assets/js/vendor.min.js');
+            if (!window.jQuery?.fn?.select2) await loadScheduleAsset('/assets/libs/select2/dist/js/select2.full.min.js');
+            return Boolean(window.jQuery?.fn?.select2);
+        })().catch((error) => {
+            scheduleSelect2Dependencies = null;
+            throw error;
+        });
+        return scheduleSelect2Dependencies;
+    };
+    const bindScheduleSelect2 = () => {
+        scheduleSelect2Targets.forEach(([modalSelector, selectSelector]) => {
+            const modal = document.querySelector(modalSelector);
+            if (!modal || modal.dataset.scheduleSelect2Bound === '1') return;
+            modal.addEventListener('shown.bs.modal', async () => {
+                try {
+                    if (!(await ensureScheduleSelect2()) || !modal.classList.contains('show')) return;
+                } catch (error) {
+                    console.warn('[Checador M03] La búsqueda de turnos no está disponible; se conserva el selector nativo.', error);
+                    return;
+                }
+                jQuery(modal).find(selectSelector).each((_index, select) => {
+                    const $select = jQuery(select);
+                    if ($select.hasClass('select2-hidden-accessible')) return;
+                    $select.select2({
+                        dropdownParent: jQuery(modal),
+                        width: '100%',
+                        minimumResultsForSearch: 0,
+                        matcher: scheduleSelectMatcher,
+                        language: {
+                            noResults: () => 'No hay horarios que coincidan.',
+                            searching: () => 'Buscando…',
+                        },
+                    });
+                    if (select.id === 'habitual-replacement-source') {
+                        $select.on('select2:select.m03Schedule select2:clear.m03Schedule', () => {
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+                    }
+                });
+            });
+            modal.addEventListener('hidden.bs.modal', () => {
+                if (!window.jQuery?.fn?.select2) return;
+                jQuery(modal).find('select.select2-hidden-accessible').each((_index, select) => {
+                    const $select = jQuery(select);
+                    $select.off('.m03Schedule');
+                    $select.select2('destroy');
+                });
+            });
+            modal.dataset.scheduleSelect2Bound = '1';
+        });
+    };
+    bindScheduleSelect2();
+
     Alpine.data('temporaryScheduleAssignment', () => ({
         loading: false,
         completed: false,
@@ -169,10 +268,12 @@ document.addEventListener('alpine:init', () => {
         dateScopedReadback: false,
         verifiedDates: [],
         loading: false,
+        completed: false,
         error: '',
         status: '',
         effectiveStartMessage: 'El patrón semanal se aplicará desde la fecha elegida; los días anteriores no generan asignaciones.',
         modal: null,
+        readbackSequence: 0,
 
         initialize(element) {
             const modalElement = element.id === 'habitual-schedule-assignment-modal'
@@ -183,6 +284,7 @@ document.addEventListener('alpine:init', () => {
             }
             modalElement?.querySelector('[name="effective_start_date"]')?.addEventListener('change', () => {
                 this.updateEffectiveStart();
+                void this.loadReadback();
             });
 
             document.addEventListener('click', async (event) => {
@@ -193,68 +295,8 @@ document.addEventListener('alpine:init', () => {
                 event.preventDefault();
                 if (this.loading) return;
                 this.open(button);
-                this.loading = true;
-                this.status = 'Consultando las fechas de esta semana…';
                 this.modal?.show();
-                try {
-                    const response = await axios.get(button.dataset.habitualAssignmentReadUrl, {
-                        params: {
-                            worker_id: button.dataset.habitualWorkerId,
-                            workplace_id: button.dataset.habitualWorkplaceId,
-                            week_start: button.dataset.habitualWeekStart,
-                        },
-                        headers: { Accept: 'application/json' },
-                    });
-                    const data = response.data?.data;
-                    if (response.data?.ok !== true || data?.complete !== true
-                        || data?.read_scope !== 'SELECTED_WEEK_DATE_FILTERS'
-                        || data?.history_complete !== false) {
-                        throw new Error(response.data?.message || 'No se confirmó la consulta de las fechas de esta semana.');
-                    }
-                    this.existingDays = data.existing_days && typeof data.existing_days === 'object' ? data.existing_days : {};
-                    this.existingDaysByDate = data.existing_days_by_date && typeof data.existing_days_by_date === 'object'
-                        ? data.existing_days_by_date
-                        : {};
-                    this.dateScopedReadback = Object.prototype.hasOwnProperty.call(data, 'existing_days_by_date');
-                    this.verifiedDates = Array.isArray(data.verified_dates) ? data.verified_dates : [];
-                    this.error = '';
-                    this.status = '';
-
-                    if (data.habitual_complete === true) {
-                        const sources = Array.isArray(data.replacement_sources) ? data.replacement_sources : [];
-                        if (sources.length !== 7) {
-                            this.error = 'El horario ya está completo, pero no se pudo confirmar cada asignación vigente para cambiarlo.';
-                            return;
-                        }
-                        const replacementWorkerId = this.workerId;
-                        const replacementWorkerName = this.workerName;
-                        this.modal?.hide();
-                        this.$nextTick(() => {
-                            const replacementTrigger = document.createElement('button');
-                            replacementTrigger.type = 'button';
-                            replacementTrigger.dataset.bsToggle = 'modal';
-                            replacementTrigger.dataset.bsTarget = '#habitual-schedule-replacement-modal';
-                            replacementTrigger.dataset.habitualReplacementWorkerId = replacementWorkerId;
-                            replacementTrigger.dataset.habitualReplacementWorkerName = replacementWorkerName;
-                            replacementTrigger.dataset.habitualReplacementSources = JSON.stringify(sources);
-                            replacementTrigger.hidden = true;
-                            document.body.append(replacementTrigger);
-                            replacementTrigger.click();
-                            replacementTrigger.remove();
-                        });
-                        return;
-                    }
-
-                    this.$nextTick(() => this.applyExistingDays());
-                } catch (requestError) {
-                    this.error = requestError.response?.data?.message
-                        || ({ 401: 'La sesión expiró. Inicia sesión nuevamente.', 403: 'No puedes administrar a este trabajador en la estación seleccionada.', 429: 'El servicio está ocupado. Espera un momento antes de reintentar.' }[Number(requestError.response?.status)]
-                        || 'No se pudo confirmar el historial. No se habilitó el formulario.');
-                    this.status = '';
-                } finally {
-                    this.loading = false;
-                    this.$nextTick(() => this.applyExistingDays());
-                }
+                await this.loadReadback(button.dataset.habitualAssignmentReadUrl);
             });
 
             modalElement?.addEventListener('hidden.bs.modal', () => this.reset());
@@ -267,19 +309,99 @@ document.addEventListener('alpine:init', () => {
             this.existingDaysByDate = {};
             this.dateScopedReadback = false;
             this.verifiedDates = [];
+            this.completed = false;
             this.error = '';
             this.status = 'Confirmando el historial de asignaciones…';
-            this.$nextTick(() => {
-                const form = document.querySelector('#habitual-schedule-assignment-modal form');
-                const effectiveInput = form?.querySelector('[name="effective_start_date"]');
-                if (effectiveInput && !effectiveInput.value) effectiveInput.value = effectiveInput.min || '';
-                document.querySelectorAll('#habitual-schedule-assignment-modal select[name^="schedule["]').forEach((select) => {
-                    select.disabled = true;
-                    select.value = '';
-                    select.options[0].textContent = 'Confirmando asignaciones…';
-                });
-                this.updateEffectiveStart();
+            const form = document.querySelector('#habitual-schedule-assignment-modal form');
+            const effectiveInput = form?.querySelector('[name="effective_start_date"]');
+            if (effectiveInput && !effectiveInput.value) effectiveInput.value = effectiveInput.min || '';
+            document.querySelectorAll('#habitual-schedule-assignment-modal select[name^="schedule["]').forEach((select) => {
+                select.disabled = true;
+                select.value = '';
+                select.options[0].textContent = 'Confirmando adscripción y asignaciones…';
             });
+            this.updateEffectiveStart();
+        },
+
+        async loadReadback(url = '') {
+            const form = document.querySelector('#habitual-schedule-assignment-modal form');
+            const effectiveStart = form?.querySelector('[name="effective_start_date"]')?.value || '';
+            const readUrl = url || document.querySelector('#habitual-schedule-assignment-modal')?.dataset?.assignmentReadUrl || '';
+            if (!this.workerId || !effectiveStart || !readUrl) return;
+            const sequence = ++this.readbackSequence;
+            this.loading = true;
+            this.error = '';
+            this.status = `Consultando las siete ocurrencias desde ${effectiveStart}…`;
+            try {
+                const response = await axios.get(readUrl, {
+                    params: {
+                        worker_id: this.workerId,
+                        workplace_id: form.querySelector('[name="workplace_id"]')?.value,
+                        week_start: form.querySelector('[name="week_start"]')?.value,
+                        effective_start_date: effectiveStart,
+                    },
+                    headers: { Accept: 'application/json' },
+                });
+                if (sequence !== this.readbackSequence) return;
+                const data = response.data?.data;
+                if (response.data?.ok !== true || data?.complete !== true
+                    || data?.read_scope !== 'EFFECTIVE_SEVEN_OCCURRENCES'
+                    || data?.history_complete !== false || data?.effective_start_date !== effectiveStart
+                    || !Array.isArray(data?.target_dates) || data.target_dates.length !== 7
+                    || !Array.isArray(data?.verified_dates)
+                    || !data?.existing_days_by_date || typeof data.existing_days_by_date !== 'object') {
+                    throw new Error(response.data?.message || 'No se confirmaron las siete fechas y adscripciones efectivas.');
+                }
+                this.existingDays = data.existing_days && typeof data.existing_days === 'object' ? data.existing_days : {};
+                this.existingDaysByDate = data.existing_days_by_date;
+                this.dateScopedReadback = true;
+                this.verifiedDates = data.verified_dates;
+                const targetDatesMatch = Array.from(form.querySelectorAll('select[name^="schedule["]')).every((select) => {
+                    const weekday = select.name.match(/^schedule\[([A-Z]+)\]$/)?.[1] || '';
+                    const expected = this.dateForWeekday(weekday);
+                    const actual = data.target_dates.find((item) => item?.weekday === weekday)?.date || '';
+                    return expected !== '' && expected === actual;
+                });
+                if (!targetDatesMatch) throw new Error('Las fechas calculadas no coinciden con el readback SQL; no se habilitó el formulario.');
+                this.error = '';
+                this.status = '';
+
+                if (data.habitual_complete === true) {
+                    const sources = Array.isArray(data.replacement_sources) ? data.replacement_sources : [];
+                    if (sources.length !== 7) {
+                        this.error = 'El patrón ya está completo, pero no se pudieron confirmar sus siete asignaciones para cambiarlo.';
+                        return;
+                    }
+                    const replacementWorkerId = this.workerId;
+                    const replacementWorkerName = this.workerName;
+                    this.modal?.hide();
+                    this.$nextTick(() => {
+                        const replacementTrigger = document.createElement('button');
+                        replacementTrigger.type = 'button';
+                        replacementTrigger.dataset.bsToggle = 'modal';
+                        replacementTrigger.dataset.bsTarget = '#habitual-schedule-replacement-modal';
+                        replacementTrigger.dataset.habitualReplacementWorkerId = replacementWorkerId;
+                        replacementTrigger.dataset.habitualReplacementWorkerName = replacementWorkerName;
+                        replacementTrigger.dataset.habitualReplacementSources = JSON.stringify(sources);
+                        replacementTrigger.hidden = true;
+                        document.body.append(replacementTrigger);
+                        replacementTrigger.click();
+                        replacementTrigger.remove();
+                    });
+                    return;
+                }
+            } catch (requestError) {
+                if (sequence !== this.readbackSequence) return;
+                this.error = requestError.response?.data?.message
+                    || ({ 401: 'La sesión expiró. Inicia sesión nuevamente.', 403: 'No puedes administrar a este trabajador en la estación seleccionada.', 409: 'Hay asignaciones incompatibles en las fechas seleccionadas.', 429: 'El servicio está ocupado. Espera un momento antes de reintentar.' }[Number(requestError.response?.status)]
+                    || 'No se pudieron confirmar las siete fechas; no se habilitó el formulario.');
+                this.status = '';
+            } finally {
+                if (sequence === this.readbackSequence) {
+                    this.loading = false;
+                    this.$nextTick(() => this.applyExistingDays());
+                }
+            }
         },
 
         applyExistingDays() {
@@ -304,7 +426,7 @@ document.addEventListener('alpine:init', () => {
 
         async submit(event) {
             const form = event.currentTarget;
-            if (this.loading) return;
+            if (this.loading || this.completed) return;
             this.error = '';
             this.status = '';
             if (!form.checkValidity()) {
@@ -325,8 +447,6 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.loading = true;
-            let confirmed = 0;
-            let stopped = false;
             try {
                 const modalElement = form.closest('#habitual-schedule-assignment-modal');
                 const readUrl = modalElement?.dataset?.assignmentReadUrl || '';
@@ -335,17 +455,20 @@ document.addEventListener('alpine:init', () => {
                         worker_id: this.workerId,
                         workplace_id: form.querySelector('[name="workplace_id"]')?.value,
                         week_start: form.querySelector('[name="week_start"]')?.value,
+                        effective_start_date: form.querySelector('[name="effective_start_date"]')?.value,
                     },
                     headers: { Accept: 'application/json' },
                 });
                 const preflightData = preflight.data?.data;
                 if (preflight.data?.ok !== true || preflightData?.complete !== true
-                    || preflightData?.read_scope !== 'SELECTED_WEEK_DATE_FILTERS'
+                    || preflightData?.read_scope !== 'EFFECTIVE_SEVEN_OCCURRENCES'
                     || preflightData?.history_complete !== false
                     || !Array.isArray(preflightData?.verified_dates)
                     || !preflightData?.existing_days_by_date
-                    || typeof preflightData.existing_days_by_date !== 'object') {
-                    throw new Error(preflight.data?.message || 'No se confirmó la consulta de esta semana; no se enviaron asignaciones.');
+                    || typeof preflightData.existing_days_by_date !== 'object'
+                    || preflightData.effective_start_date !== form.querySelector('[name="effective_start_date"]')?.value
+                    || !Array.isArray(preflightData.target_dates) || preflightData.target_dates.length !== 7) {
+                    throw new Error(preflight.data?.message || 'No se confirmaron las siete fechas efectivas; no se enviaron asignaciones.');
                 }
                 const verifiedDates = new Set(preflightData.verified_dates);
                 const existingByDate = preflightData.existing_days_by_date;
@@ -353,47 +476,25 @@ document.addEventListener('alpine:init', () => {
                     || Object.prototype.hasOwnProperty.call(existingByDate, day.targetDate));
                 if (blockedDates.length > 0) {
                     const dates = blockedDates.map((day) => day.targetDate).join(', ');
-                    throw new Error(`No se guardó ningún día. Revisa la membresía o la asignación existente para: ${dates}.`);
+                    throw new Error(`No se envió el patrón. Revisa la adscripción o las asignaciones existentes para: ${dates}.`);
                 }
-
-                for (const day of pending) {
-                    const payload = new FormData(form);
-                    for (const key of Array.from(payload.keys())) {
-                        if (key.startsWith('schedule[')) payload.delete(key);
-                    }
-                    payload.set('target_date', day.targetDate);
-                    payload.set('template_id', day.templateId);
-                    payload.set('tipo_asignacion', 'HABITUAL');
-                    const seed = String(payload.get('idempotency_seed') || '');
-                    payload.set('idempotency_key', `${seed}:${this.workerId}:${day.targetDate}`);
-
-                    try {
-                        const response = await axios.post(form.action, payload, {
-                            headers: { Accept: 'application/json' },
-                        });
-                        if (response.data?.ok !== true || ![200, 201].includes(response.status)) {
-                            throw new Error(response.data?.message || 'El servidor no confirmó la asignación.');
-                        }
-                        confirmed += 1;
-                    } catch (requestError) {
-                        const responseData = requestError.response?.data;
-                        this.error = responseData?.message || requestError.message
-                            || 'No se pudo confirmar un día; los días previos confirmados se conservaron.';
-                        stopped = true;
-                        break;
-                    }
+                const payload = new FormData(form);
+                payload.set('tipo_asignacion', 'HABITUAL');
+                const seed = String(payload.get('idempotency_seed') || '');
+                const workplaceId = String(payload.get('workplace_id') || '');
+                const effectiveStart = String(payload.get('effective_start_date') || '');
+                payload.set('idempotency_key', `${seed}:${this.workerId}:${workplaceId}:${effectiveStart}`);
+                const response = await axios.post(form.action, payload, { headers: { Accept: 'application/json' } });
+                if (response.data?.ok !== true || !Array.isArray(response.data?.assignments)
+                    || response.data.assignments.length !== pending.length) {
+                    throw new Error(response.data?.message || 'El servidor no confirmó las siete fechas seleccionadas mediante readback.');
                 }
-
-                if (!stopped && confirmed === pending.length) {
-                    this.status = `${confirmed} día${confirmed === 1 ? '' : 's'} confirmado${confirmed === 1 ? '' : 's'} mediante readback. Actualizando la matriz…`;
-                    window.setTimeout(() => window.location.reload(), 900);
-                } else if (confirmed > 0) {
-                    this.status = `${confirmed} ${confirmed === 1 ? 'día sí quedó confirmado' : 'días sí quedaron confirmados'}; los demás no se declaran guardados. Actualizando la matriz…`;
-                    window.setTimeout(() => window.location.reload(), 1800);
-                }
+                this.status = `${response.data.assignments.length} día${response.data.assignments.length === 1 ? '' : 's'} confirmado${response.data.assignments.length === 1 ? '' : 's'} en una sola transacción. Actualizando la matriz…`;
+                this.completed = true;
+                window.setTimeout(() => window.location.reload(), 900);
             } catch (requestError) {
                 this.error = requestError.response?.data?.message || requestError.message
-                    || 'No fue posible completar la validación previa; no se enviaron nuevas asignaciones.';
+                    || 'No se confirmó el patrón completo; actualiza la matriz antes de reintentar.';
             } finally {
                 this.loading = false;
             }
@@ -434,6 +535,8 @@ document.addEventListener('alpine:init', () => {
             this.error = '';
             this.status = '';
             this.loading = false;
+            this.readbackSequence++;
+            this.completed = false;
             this.effectiveStartMessage = 'El patrón semanal se aplicará desde la fecha elegida; los días anteriores no generan asignaciones.';
             const effectiveInput = document.querySelector('#habitual-schedule-assignment-modal [name="effective_start_date"]');
             if (effectiveInput) effectiveInput.value = '';

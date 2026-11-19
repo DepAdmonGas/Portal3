@@ -23,13 +23,16 @@ final class ChecadorWeeklyScheduleSqlWriteService
     private $membership;
     /** @var callable(string):bool|null */
     private $testLock;
+    /** @var callable():DateTimeImmutable */
+    private $clock;
 
     /**
      * @param callable(Usuario,int):bool|null $authorizeWrite
      * @param callable(int,int,string,string):array|null $membership
      * @param callable(string):bool|null $testLock
+     * @param callable():DateTimeImmutable|null $clock
      */
-    public function __construct(?callable $authorizeWrite = null, ?callable $membership = null, ?callable $testLock = null)
+    public function __construct(?callable $authorizeWrite = null, ?callable $membership = null, ?callable $testLock = null, ?callable $clock = null)
     {
         $this->authorizeWrite = $authorizeWrite ?? static function (Usuario $user, int $workplaceId): bool {
             $authenticated = Auth::user();
@@ -39,6 +42,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
         };
         $this->membership = $membership ?? [$this, 'resolveMembership'];
         $this->testLock = $testLock;
+        $this->clock = $clock ?? static fn(): DateTimeImmutable => new DateTimeImmutable('now', new DateTimeZone('UTC'));
     }
 
     public static function enabled(): bool
@@ -84,7 +88,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
         }
         $effectiveDate = $type === 'TEMPORAL' ? $targetDate : $effectiveStart;
         $timezone = (new ChecadorWeeklyScheduleSqlReadService())->timezoneForDate($workplaceId, $effectiveDate);
-        $today = $timezone === null ? null : ChecadorOperationalPeriod::currentLocalDate($timezone, new DateTimeImmutable('now', new DateTimeZone('UTC')));
+        $today = $timezone === null ? null : ChecadorOperationalPeriod::currentLocalDate($timezone, ($this->clock)());
         if ($today === null || ($type === 'TEMPORAL' ? $targetDate <= $today : $effectiveStart <= $today)) {
             return self::failure('invalid_effective_date', 422);
         }
@@ -98,6 +102,175 @@ final class ChecadorWeeklyScheduleSqlWriteService
             'weekday' => $weekday, 'valid_from' => $validFrom, 'valid_to' => $validTo,
             'reason' => $reason,
         ]);
+    }
+
+    /** Create selected weekdays as one immutable habitual pattern in a single SQL transaction. */
+    public function createHabitualPattern(Usuario $user, array $input): array
+    {
+        $workplaceId = (int) ($input['workplace_id'] ?? 0);
+        $workerId = (int) ($input['worker_id'] ?? 0);
+        $weekStart = trim((string) ($input['week_start'] ?? ''));
+        $effectiveStart = trim((string) ($input['effective_start_date'] ?? ''));
+        $key = trim((string) ($input['idempotency_key'] ?? ''));
+        $scheduleInput = $input['schedule'] ?? null;
+        if ($workplaceId < 1 || $workerId < 1 || !is_array($scheduleInput)
+            || ChecadorWeeklyScheduleService::monday($weekStart) !== $weekStart
+            || !self::isDate($effectiveStart) || !self::validKey($key)) {
+            return self::failure('invalid_request', 422);
+        }
+        $windowEnd = (new DateTimeImmutable($weekStart, new DateTimeZone('UTC')))->modify('+13 days')->format('Y-m-d');
+        if ($effectiveStart < $weekStart || $effectiveStart > $windowEnd) return self::failure('invalid_effective_date', 422);
+
+        $schedule = [];
+        foreach ($scheduleInput as $weekday => $templateValue) {
+            $weekday = strtoupper(trim((string) $weekday));
+            $templateValue = trim((string) $templateValue);
+            if ($templateValue === '') continue;
+            if (!in_array($weekday, ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'], true)
+                || ($templateValue !== 'REST' && filter_var($templateValue, FILTER_VALIDATE_INT) === false)) {
+                return self::failure('invalid_request', 422);
+            }
+            $templateId = $templateValue === 'REST' ? null : (int) $templateValue;
+            if ($templateId !== null && $templateId < 1) return self::failure('invalid_template', 422);
+            $targetDate = ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter($weekday, $effectiveStart);
+            if ($targetDate === null || $targetDate > $windowEnd || isset($schedule[$weekday])) {
+                return self::failure('invalid_effective_date', 422);
+            }
+            $schedule[$weekday] = ['date' => $targetDate, 'template_id' => $templateId];
+        }
+        if ($schedule === []) return self::failure('invalid_request', 422);
+        uasort($schedule, static fn(array $a, array $b): int => $a['date'] <=> $b['date']);
+        if (!($this->authorizeWrite)($user, $workplaceId)) return self::failure('permission_denied', 403);
+        if (!self::writerCutoverReady()) return self::failure('m03_writer_cutover_not_ready', 503);
+
+        $readService = new ChecadorWeeklyScheduleSqlReadService();
+        $timezone = $readService->timezoneForDate($workplaceId, $effectiveStart);
+        $today = $timezone === null ? null : ChecadorOperationalPeriod::currentLocalDate(
+            $timezone, ($this->clock)()
+        );
+        if ($today === null || $effectiveStart <= $today) return self::failure('invalid_effective_date', 422);
+
+        $actorId = (int) ($user->id ?? 0);
+        if ($actorId < 1) return self::failure('unauthenticated', 401);
+        $payload = [
+            'kind' => 'create_habitual_pattern', 'workplace_id' => $workplaceId, 'worker_id' => $workerId,
+            'effective_start_date' => $effectiveStart, 'assignments' => $schedule,
+        ];
+        $keyHash = hash('sha256', $key);
+        $fingerprint = hash('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        $connection = Capsule::connection();
+        $lockName = 'checador_m03_assignment_writer';
+        $lockAcquired = false;
+        try {
+            $lockAcquired = $this->acquireLock($connection, $lockName);
+            if (!$lockAcquired) return self::failure('concurrent_write_busy', 409);
+            $existing = $this->findIdempotentAudit($actorId, $keyHash);
+            if ($existing !== null) {
+                if (!hash_equals((string) ($existing['fingerprint'] ?? ''), $fingerprint)) {
+                    return self::failure('idempotency_conflict', 409);
+                }
+                $snapshots = $existing['habitual_batch']['assignments'] ?? null;
+                if (!is_array($snapshots) || count($snapshots) !== count($schedule)) {
+                    return self::failure('idempotency_readback_failed', 502);
+                }
+                $rows = [];
+                foreach ($snapshots as $snapshot) {
+                    $row = is_array($snapshot) ? $this->readAssignment((int) ($snapshot['id'] ?? 0), $workplaceId, $workerId) : null;
+                    if ($row === null || $row !== $snapshot) return self::failure('idempotency_readback_failed', 502);
+                    $rows[] = $row;
+                }
+                return ['ok' => true, 'assignments' => $rows, 'assignment' => $rows[0] ?? null, 'replayed' => true];
+            }
+
+            $created = $connection->transaction(function () use (
+                $connection, $user, $actorId, $workplaceId, $workerId, $effectiveStart,
+                $schedule, $keyHash, $fingerprint
+            ): array {
+                $worker = RhPersonal::query()->whereKey($workerId)->lockForUpdate()->first(['id', 'estado']);
+                if ($worker === null || (int) $worker->estado !== 1) throw new RuntimeException('worker_unavailable');
+                if (!($this->authorizeWrite)($user, $workplaceId)) throw new RuntimeException('permission_denied');
+                $snapshots = [];
+                foreach ($schedule as $weekday => $item) {
+                    $targetDate = (string) $item['date'];
+                    $validity = ($this->membership)($workerId, $workplaceId, $targetDate, '');
+                    if (($validity['ok'] ?? false) !== true) throw new RuntimeException((string) ($validity['error'] ?? 'membership_unverified'));
+
+                    $history = $connection->table('op_rh_v2_turnos_asignaciones')->where('id_personal', $workerId)
+                        ->where('id_estacion', $workplaceId)->where('dia_semana', $weekday)
+                        ->where('tipo_asignacion', 'HABITUAL')->orderBy('valido_desde')->orderBy('id')
+                        ->lockForUpdate()->get()->map(static fn($row): array => (array) $row)->all();
+                    $interval = ChecadorWeeklyScheduleService::habitualAssignmentInterval(
+                        $history, $workerId, $workplaceId, $weekday, $targetDate
+                    );
+                    if (!($interval['ok'] ?? false)) throw new RuntimeException('assignment_conflict');
+                    $validTo = self::earliestDate($interval['valid_to'] ?? null, $validity['valid_to'] ?? null);
+                    if ($validTo !== null && $validTo <= $targetDate) throw new RuntimeException('invalid_validity');
+
+                    $template = $item['template_id'] === null
+                        ? null
+                        : $this->authorizedTemplate($connection, $workplaceId, (int) $item['template_id']);
+                    if ($item['template_id'] !== null && $template === null) throw new RuntimeException('template_not_allowed');
+                    $this->assertSegments($connection, $item['template_id']);
+                    $id = (int) $connection->table('op_rh_v2_turnos_asignaciones')->insertGetId([
+                        'id_personal' => $workerId, 'id_estacion' => $workplaceId, 'id_plantilla' => $item['template_id'],
+                        'tipo_asignacion' => 'HABITUAL', 'dia_semana' => $weekday,
+                        'valido_desde' => $targetDate, 'valido_hasta' => $validTo, 'es_activo' => 1,
+                        'creado_at' => self::utcExpression($connection), 'registrado_at_utc' => self::utcExpression($connection),
+                        'creado_por_usuario_id' => $actorId, 'motivo' => null,
+                    ]);
+                    $snapshots[] = [
+                        'id' => $id, 'id_personal' => $workerId, 'id_estacion' => $workplaceId,
+                        'id_plantilla' => $item['template_id'], 'tipo_asignacion' => 'HABITUAL', 'dia_semana' => $weekday,
+                        'valido_desde' => $targetDate, 'valido_hasta' => $validTo, 'es_activo' => 1,
+                    ];
+                }
+                $batch = ['effective_start_date' => $effectiveStart, 'assignments' => $snapshots];
+                foreach ($snapshots as $snapshot) {
+                    $template = $snapshot['id_plantilla'] === null
+                        ? null
+                        : $this->templateVersion($connection, (int) $snapshot['id_plantilla']);
+                    $this->audit($connection, $actorId, $workplaceId, $workerId, (int) $snapshot['id'], 'CREATE',
+                        'HABITUAL', (string) $snapshot['valido_desde'], $snapshot['valido_hasta'],
+                        $snapshot['id_plantilla'], $template['version'] ?? null, $keyHash, $fingerprint,
+                        ['assignment_id' => (int) $snapshot['id'], 'snapshot' => $snapshot, 'habitual_batch' => $batch]);
+                }
+
+                // Read back every persisted row and audit event before COMMIT so a
+                // mismatch rolls the whole seven-day pattern back atomically.
+                $confirmed = [];
+                foreach ($snapshots as $snapshot) {
+                    $row = $this->readAssignment((int) $snapshot['id'], $workplaceId, $workerId);
+                    if ($row === null || $row !== $snapshot) throw new RuntimeException('readback_mismatch');
+                    $confirmed[] = $row;
+                }
+                if ($this->auditCount($actorId, $keyHash, $fingerprint) !== count($schedule)) {
+                    throw new RuntimeException('audit_readback_failed');
+                }
+                return $confirmed;
+            }, 1);
+
+            $rows = [];
+            foreach ($created as $confirmed) {
+                $row = $this->readAssignment((int) $confirmed['id'], $workplaceId, $workerId);
+                if ($row === null || $row !== $confirmed) return self::failure('readback_mismatch', 502);
+                $rows[] = $row;
+            }
+            return ['ok' => true, 'assignments' => $rows, 'assignment' => $rows[0] ?? null, 'replayed' => false];
+        } catch (Throwable $exception) {
+            $kind = $exception instanceof RuntimeException ? $exception->getMessage() : 'database_write_failed';
+            if (!in_array($kind, ['permission_denied', 'worker_unavailable', 'membership_unverified', 'membership_conflict',
+                'assignment_conflict', 'template_not_allowed', 'invalid_template_segments', 'invalid_validity',
+                'readback_mismatch', 'audit_readback_failed'], true)) {
+                $kind = 'database_write_failed';
+            }
+            Logger::warning('Checador M03 SQL habitual pattern write failed', [
+                'operation' => 'm03_habitual_pattern_create', 'workplace_id' => $workplaceId,
+                'worker_id' => $workerId, 'error_code' => $kind,
+            ]);
+            return self::failure($kind, in_array($kind, ['database_write_failed', 'readback_mismatch', 'audit_readback_failed'], true) ? 503 : 409);
+        } finally {
+            if ($lockAcquired) $this->releaseLock($connection, $lockName);
+        }
     }
 
     /** @return array{ok:bool,assignment?:array,error?:string,status?:int,replayed?:bool} */
@@ -441,6 +614,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
             'assignment_id' => (int) ($details['assignment_id'] ?? $row->entity_id),
             'fingerprint' => (string) ($details['payload_fingerprint'] ?? ''),
             'snapshot' => is_array($details['snapshot'] ?? null) ? $details['snapshot'] : null,
+            'habitual_batch' => is_array($details['habitual_batch'] ?? null) ? $details['habitual_batch'] : null,
         ];
     }
 

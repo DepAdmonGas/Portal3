@@ -44,7 +44,7 @@ Capsule::schema()->create('op_rh_v2_localidades_zonas_horarias', static function
     $t->increments('id'); $t->integer('id_localidad'); $t->date('valido_desde');
     $t->date('valido_hasta')->nullable(); $t->string('timezone_iana', 64);
 });
-Capsule::table('op_rh_personal')->insert([['id' => 40, 'estado' => 1], ['id' => 41, 'estado' => 1]]);
+Capsule::table('op_rh_personal')->insert(array_map(static fn(int $id): array => ['id' => $id, 'estado' => 1], [40, 41, 42, 43, 44, 45]));
 Capsule::table('op_rh_v2_localidades_zonas_horarias')->insert([
     'id_localidad' => 9, 'valido_desde' => '2020-01-01', 'valido_hasta' => null,
     'timezone_iana' => 'America/Mexico_City',
@@ -61,11 +61,14 @@ putenv('CHECADOR_M03_SQL_WRITES_ENABLED=1');
 putenv('CHECADOR_M03_API_WRITER_DISABLED=1');
 putenv('CHECADOR_M03_SCHEMA_PREFLIGHT_OK=1');
 $membership = static fn(int $workerId, int $workplaceId, string $from, string $to): array =>
-    ($workplaceId === 9 && in_array($workerId, [40, 41], true)) ? ['ok' => true, 'valid_to' => null] : ['ok' => false, 'error' => 'membership_unverified'];
+    ($workplaceId === 9 && in_array($workerId, [40, 41, 42, 43, 44, 45], true)
+        && !($workerId === 44 && $from === '2026-11-25'))
+        ? ['ok' => true, 'valid_to' => null] : ['ok' => false, 'error' => 'membership_unverified'];
 $service = new ChecadorWeeklyScheduleSqlWriteService(
     static fn(Usuario $actor, int $place): bool => $actor->id === 77 && $place === 9,
     $membership,
-    static fn(string $lock): bool => true
+    static fn(string $lock): bool => true,
+    static fn(): \DateTimeImmutable => new \DateTimeImmutable('2026-11-18T12:00:00Z', new \DateTimeZone('UTC'))
 );
 $actor = new Usuario(); $actor->id = 77;
 
@@ -122,6 +125,66 @@ $assert(($replaceReplay['ok'] ?? false) && ($replaceReplay['replayed'] ?? false)
     && ($replaceReplay['assignment']['id'] ?? 0) === ($replaced['assignment']['id'] ?? -1)
     && Capsule::table('op_rh_v2_turnos_audit_log')->count() === $replaceAuditCount,
     'replace idempotency replays the durable successor audit snapshot without a second close or assignment');
+
+$thursdayDates = array_map(static fn(string $day): ?string => App\Services\ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter($day, '2026-11-19'),
+    ['JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES']);
+$assert($thursdayDates === ['2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22', '2026-11-23', '2026-11-24', '2026-11-25'],
+    'Thursday 2026-11-19 maps to the seven consecutive weekday occurrences through Wednesday 2026-11-25');
+$patternSchedule = ['JUEVES' => '10', 'VIERNES' => 'REST', 'SABADO' => '10', 'DOMINGO' => 'REST',
+    'LUNES' => '10', 'MARTES' => '10', 'MIERCOLES' => '10'];
+$patternInput = ['workplace_id' => 9, 'worker_id' => 42, 'week_start' => '2026-11-16',
+    'effective_start_date' => '2026-11-19', 'schedule' => $patternSchedule,
+    'idempotency_key' => 'habitual-pattern-thu-000001'];
+$pattern = $service->createHabitualPattern($actor, $patternInput);
+$patternRows = Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 42)->where('id_estacion', 9)
+    ->where('tipo_asignacion', 'HABITUAL')->orderBy('valido_desde')->get()->map(static fn($row): array => (array) $row)->all();
+$assert(($pattern['ok'] ?? false) && count($pattern['assignments'] ?? []) === 7 && count($patternRows) === 7
+    && array_column($patternRows, 'valido_desde') === $thursdayDates
+    && count(Capsule::table('op_rh_v2_turnos_audit_log')->where('id_personal', 42)->get()) === 7,
+    'habitual pattern from Thursday creates and reads back all seven dates and audits inside one batch');
+$patternAuditCount = Capsule::table('op_rh_v2_turnos_audit_log')->where('id_personal', 42)->count();
+$patternReplay = $service->createHabitualPattern($actor, $patternInput);
+$assert(($patternReplay['ok'] ?? false) && ($patternReplay['replayed'] ?? false)
+    && count($patternReplay['assignments'] ?? []) === 7
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 42)->count() === 7
+    && Capsule::table('op_rh_v2_turnos_audit_log')->where('id_personal', 42)->count() === $patternAuditCount,
+    'weekly pattern idempotency replays seven persisted rows without duplicates');
+$novemberWeek = array_map(static fn(string $day): ?string => App\Services\ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter($day, '2026-11-23'),
+    ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO']);
+$fullWeek = $service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 43, 'week_start' => '2026-11-23', 'effective_start_date' => '2026-11-23',
+    'schedule' => array_fill_keys(['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'], '10'),
+    'idempotency_key' => 'habitual-pattern-mon-000001',
+]);
+$fullWeekDates = Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 43)->orderBy('valido_desde')->pluck('valido_desde')->all();
+$assert($novemberWeek === ['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27', '2026-11-28', '2026-11-29']
+    && ($fullWeek['ok'] ?? false) && count($fullWeekDates) === 7 && $fullWeekDates === $novemberWeek,
+    'full Monday 2026-11-23 pattern writes and reads back all dates through Sunday 2026-11-29');
+$beforeBatchRollbackRows = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$beforeBatchRollbackAudits = Capsule::table('op_rh_v2_turnos_audit_log')->count();
+$batchRollback = $service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 44, 'week_start' => '2026-11-16', 'effective_start_date' => '2026-11-19',
+    'schedule' => $patternSchedule, 'idempotency_key' => 'habitual-pattern-rollback-0001',
+]);
+$assert(!($batchRollback['ok'] ?? false)
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $beforeBatchRollbackRows
+    && Capsule::table('op_rh_v2_turnos_audit_log')->count() === $beforeBatchRollbackAudits
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 44)->count() === 0,
+    'failure on the seventh canonical membership check rolls back the first six SQL rows and all audit events');
+
+Capsule::statement("CREATE TRIGGER corrupt_habitual_readback AFTER INSERT ON op_rh_v2_turnos_asignaciones WHEN NEW.id_personal = 45 BEGIN UPDATE op_rh_v2_turnos_asignaciones SET valido_desde = '2026-11-24' WHERE id = NEW.id; END");
+$beforeReadbackRollbackRows = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$beforeReadbackRollbackAudits = Capsule::table('op_rh_v2_turnos_audit_log')->count();
+$readbackRollback = $service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 45, 'week_start' => '2026-11-23', 'effective_start_date' => '2026-11-23',
+    'schedule' => ['LUNES' => '10'], 'idempotency_key' => 'habitual-pattern-readback-fail-01',
+]);
+$assert(!($readbackRollback['ok'] ?? false) && ($readbackRollback['error'] ?? '') === 'readback_mismatch'
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $beforeReadbackRollbackRows
+    && Capsule::table('op_rh_v2_turnos_audit_log')->count() === $beforeReadbackRollbackAudits
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 45)->count() === 0,
+    'persisted readback mismatch is detected before commit and rolls back assignment plus audit');
+Capsule::statement('DROP TRIGGER corrupt_habitual_readback');
 
 Capsule::statement("CREATE TRIGGER fail_m03_audit BEFORE INSERT ON op_rh_v2_turnos_audit_log BEGIN SELECT RAISE(ABORT, 'audit failure'); END");
 $before = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
