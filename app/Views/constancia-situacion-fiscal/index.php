@@ -32,7 +32,7 @@
     <!-- Modal: alta de constancia -->
     <div class="modal fade" id="modalConstancia" tabindex="-1"
          data-bs-backdrop="static" data-bs-keyboard="false" x-ref="modalConstancia">
-        <div class="modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">  
                 <div class="modal-header modal-colored-header bg-primary text-white">
                    <i class="ti ti-certificate me-2"></i>
@@ -45,12 +45,18 @@
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label class="form-label">* Fecha de actualización:</label>
-                            <input type="date" class="form-control" x-ref="inputFecha">
+                            <input type="date" class="form-control"
+                                   :class="{ 'is-invalid': errores.fecha }"
+                                   x-ref="inputFecha"
+                                   @input="errores.fecha = false">
                         </div>
 
                         <div class="col-12">
                             <label class="form-label">* Constancia de Situación Fiscal:</label>
-                            <input type="file" class="form-control" accept="application/pdf" x-ref="inputArchivo">
+                            <input type="file" class="form-control" accept="application/pdf"
+                                   :class="{ 'is-invalid': errores.archivo }"
+                                   x-ref="inputArchivo"
+                                   @change="errores.archivo = false">
                         </div>
                     </div>
                 </div>

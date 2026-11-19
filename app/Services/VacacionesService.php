@@ -217,6 +217,8 @@ class VacacionesService
         foreach ($personal as $row) {
             $id = (int)$row->id;
             $solicitud = $solicitudPorPersonal[$id] ?? null;
+            $archivoPrima = (string)($primaVacacional[$id] ?? '');
+            $rutaArchivoPrima = dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/firmados/' . $archivoPrima;
             $result[] = [
                 'id_personal' => $id,
                 'id_localidad' => (int)$row->id_estacion,
@@ -226,7 +228,8 @@ class VacacionesService
                 'nombre_completo' => (string)$row->nombre_completo,
                 'nombre_puesto' => (string)($row->nombre_puesto ?? ''),
                 'mes_ingreso' => !empty($row->fecha_ingreso) ? (int)date('n', strtotime((string)$row->fecha_ingreso)) : null,
-                'prima_vacacional' => (string)($primaVacacional[$id] ?? ''),
+                'prima_vacacional' => $archivoPrima,
+                'prima_vacacional_disponible' => $archivoPrima !== '' && is_file($rutaArchivoPrima),
                 'id_formulario' => $solicitud ? (int)$solicitud->id_formulario : null,
                 'status' => $solicitud ? (int)$solicitud->status : null,
                 'status_label' => $solicitud ? self::etiquetaEstado((int)$solicitud->status) : 'Sin solicitud',

@@ -56,7 +56,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             const invalido = Object.values(this.erroresProcedimiento).some(Boolean);
-            if (invalido) this.notify('error', 'Completa correctamente los campos obligatorios.');
+            if (invalido) this.notify('error', 'Completa los campos obligatorios.');
             return !invalido;
         },
 

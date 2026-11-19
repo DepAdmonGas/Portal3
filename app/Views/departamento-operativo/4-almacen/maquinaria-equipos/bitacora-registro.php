@@ -400,7 +400,7 @@ No se han subido evidencias
 <div class="d-flex flex-column flex-md-row w-100">
     <template x-if="estadoFirma(tipo) === 'pad'">
         <button type="button" class="btn bg-danger-subtle text-danger w-100 w-md-50 rounded-top-0" style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" @click="limpiarPad(tipo)">
-            <i class="ti ti-eraser me-1"></i> Limpiar firma
+            <i class="ti ti-eraser me-1"></i> Repetir firma
         </button>
     </template>
     

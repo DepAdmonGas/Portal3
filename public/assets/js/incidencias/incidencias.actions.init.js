@@ -164,6 +164,10 @@ document.addEventListener('alpine:init', () => {
                 this.notify('error', 'No tienes permiso para agregar incidencias.');
                 return;
             }
+            if (!this.entidadId) {
+                this.notify('error', 'Selecciona una estación específica para agregar una incidencia.');
+                return;
+            }
 
             this.modo = 'nuevo';
             this.limpiarFormulario();

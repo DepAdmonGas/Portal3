@@ -342,7 +342,7 @@ data-id-depto="<?= $idDepto ?>">
 
 <!-- Botón completamente incorporado a lo ancho y pegado a la base -->
 <button type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0" style="border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;" @click="limpiarFirma()">
-<i class="ti ti-eraser me-1"></i> Limpiar firma
+<i class="ti ti-eraser me-1"></i> Repetir firma
 </button>
 
 </div>

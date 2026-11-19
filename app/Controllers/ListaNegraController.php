@@ -77,19 +77,13 @@ class ListaNegraController extends BaseController
             JsonResponse::error('No tienes permisos para agregar.');
         }
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = Request::all();
         $idPersonal = (int)($data['id_personal'] ?? 0);
         $motivo = trim((string)($data['motivo'] ?? ''));
         $detalle = trim((string)($data['detalle'] ?? ''));
 
-        if (!$idPersonal) {
-            JsonResponse::error('Selecciona un colaborador.');
-        }
-        if ($motivo === '') {
-            JsonResponse::error('El motivo es obligatorio.');
-        }
-        if ($detalle === '') {
-            JsonResponse::error('La descripción es obligatoria.');
+        if ($idPersonal <= 0 || $motivo === '' || $detalle === '') {
+            JsonResponse::error('Completa los campos obligatorios.');
         }
 
         try {
@@ -206,11 +200,11 @@ class ListaNegraController extends BaseController
         if (!$id) {
             JsonResponse::error('ID no proporcionado.');
         }
-        if ($descripcion === '') {
-            JsonResponse::error('La descripción es obligatoria.');
-        }
         if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            JsonResponse::error('Debes seleccionar un archivo.');
+            JsonResponse::error('Completa los campos obligatorios.');
+        }
+        if ($descripcion === '') {
+            JsonResponse::error('Completa los campos obligatorios.');
         }
 
         try {

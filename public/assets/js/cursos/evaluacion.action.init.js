@@ -81,7 +81,7 @@ document.addEventListener('alpine:init', () => {
 
             } catch (e) {
 
-                this.notify('error', 'No se pudo guardar respuesta');
+                window.Notify?.error?.('No se pudo guardar respuesta');
 
             }
         },

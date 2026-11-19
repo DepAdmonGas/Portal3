@@ -1182,8 +1182,19 @@ private static function getBajaUploadDir(): string
 
 private static function bajaFileAvailable(string $filename): bool
 {
-    if ($filename === '' || basename($filename) !== $filename) return false;
-    return is_file(self::getBajaUploadDir() . $filename);
+    return self::resolveBajaUpload($filename) !== null;
+}
+
+/** Busca adjuntos de baja en los almacenamientos actuales de Portal3. */
+public static function resolveBajaUpload(string $filename): ?array
+{
+    if ($filename === '' || basename($filename) !== $filename) return null;
+
+    $currentBase = self::getBajaUploadDir();
+    $currentPath = $currentBase . $filename;
+    if (is_file($currentPath)) return ['path' => $currentPath, 'base' => $currentBase];
+
+    return null;
 }
 
 public static function getAsistenciaPersonal(int $idPersonal): ?array

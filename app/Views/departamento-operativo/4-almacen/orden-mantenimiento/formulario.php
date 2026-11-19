@@ -150,7 +150,7 @@
                                 <canvas id="orden-canvas-firma" class="w-100 d-block" style="height:180px;touch-action:none"></canvas>
                             </div>
                         </div>
-                        <button id="orden-limpiar-firma" type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0 flex-shrink-0"><i class="ti ti-eraser me-1"></i> Limpiar firma</button>
+                        <button id="orden-limpiar-firma" type="button" class="btn bg-danger-subtle text-danger w-100 rounded-top-0 flex-shrink-0"><i class="ti ti-eraser me-1"></i> Repetir firma</button>
                     </div>
                 </div>
             </div>

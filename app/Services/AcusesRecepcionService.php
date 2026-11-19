@@ -450,7 +450,7 @@ class AcusesRecepcionService
             return ['success' => false, 'message' => 'Error al agregar el documento: ' . $e->getMessage()];
         }
 
-        self::notificar('agregó un documento a', $registro);
+        self::notificar('agregó un documento a', $registro, (string)$doc->documento, (int)$doc->paginas);
 
         return [
             'success' => true,
@@ -482,13 +482,16 @@ class AcusesRecepcionService
             return ['success' => false, 'message' => 'Solo se pueden eliminar documentos mientras el acuse está Pendiente.'];
         }
 
+        $nombreDocumento = (string)$documento->documento;
+        $paginas = (int)$documento->paginas;
+
         try {
             $documento->delete();
         } catch (\Throwable $e) {
             return ['success' => false, 'message' => 'Error al eliminar el documento: ' . $e->getMessage()];
         }
 
-        self::notificar('eliminó un documento de', $registro);
+        self::notificar('eliminó un documento de', $registro, $nombreDocumento, $paginas);
 
         return ['success' => true, 'message' => 'Documento eliminado exitosamente.'];
     }
@@ -629,7 +632,12 @@ class AcusesRecepcionService
      * No hay enrutado por estación: se avisa al puesto que administra el
      * módulo (misma audiencia que el módulo anterior).
      */
-    private static function notificar(string $accion, ?AcuseRecepcion $registro): void
+    private static function notificar(
+        string $accion,
+        ?AcuseRecepcion $registro,
+        string $nombreDocumento = '',
+        int $paginas = 0
+    ): void
     {
         if ($registro === null) {
             return;
@@ -639,13 +647,15 @@ class AcusesRecepcionService
             $idUsuario = self::idUsuarioActual();
             $nombreUsuario = (string)(Session::get('usuario')['nombre'] ?? Auth::user()->nombre ?? 'Usuario');
 
-            $mensaje = sprintf(
-                "<b>Acuses de Recepción</b>\n\n%s %s el acuse #%d.\nEmpresa: <b>%s</b>\nEstado: <b>%s</b>",
-                htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8'),
+            $mensaje = self::construirMensajeNotificacion(
                 $accion,
                 (int)$registro->id,
-                htmlspecialchars((string)($registro->empresa !== '' ? $registro->empresa : 'Sin empresa'), ENT_QUOTES, 'UTF-8'),
-                self::estadoTexto((int)$registro->estado)
+                (string)$registro->empresa,
+                self::estadoTexto((int)$registro->estado),
+                $nombreUsuario,
+                $nombreDocumento,
+                $paginas,
+                (string)$registro->nombre_recibe
             );
 
             $telegram = new TelegramService();
@@ -657,6 +667,48 @@ class AcusesRecepcionService
             // Una notificación fallida no debe romper la operación ya guardada.
             error_log('[AcusesRecepcion] Error notificando por Telegram: ' . $e->getMessage());
         }
+    }
+
+    /** Construye avisos uniformes con el contexto del acuse y su documento. */
+    private static function construirMensajeNotificacion(
+        string $accion,
+        int $id,
+        string $empresa,
+        string $estado,
+        string $responsable,
+        string $nombreDocumento = '',
+        int $paginas = 0,
+        string $recibe = ''
+    ): string {
+        [$emoji, $resumen] = match ($accion) {
+            'creó' => ['📝', 'Se ha creado un acuse en el apartado de <b>Acuses de Recepción</b>'],
+            'agregó un documento a' => ['📎', 'Se ha agregado un documento en el apartado de <b>Acuses de Recepción</b>'],
+            'eliminó un documento de' => ['🗑️', 'Se ha eliminado un documento del apartado de <b>Acuses de Recepción</b>'],
+            'pasó a entrega' => ['📦', 'El acuse pasó a entrega en el apartado de <b>Acuses de Recepción</b>'],
+            'finalizó' => ['✅', 'Se ha finalizado un acuse de <b>Acuses de Recepción</b>'],
+            'eliminó' => ['🗑️', 'Se ha eliminado un acuse del apartado de <b>Acuses de Recepción</b>'],
+            default => ['📄', 'Se ha actualizado un acuse en el apartado de <b>Acuses de Recepción</b>'],
+        };
+        $escape = static fn (string $valor): string => htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+
+        $mensaje = $emoji . ' ' . $resumen . ':' . PHP_EOL . PHP_EOL
+            . '🆔 <b>Folio:</b> #' . $id . PHP_EOL
+            . '🏢 <b>Empresa:</b> ' . $escape($empresa !== '' ? $empresa : 'Sin empresa') . PHP_EOL
+            . '📋 <b>Estado:</b> ' . $escape($estado !== '' ? $estado : 'Sin estado');
+
+        if ($nombreDocumento !== '') {
+            $mensaje .= PHP_EOL . '📎 <b>Documento:</b> ' . $escape($nombreDocumento);
+            if ($paginas > 0) {
+                $mensaje .= PHP_EOL . '📄 <b>Páginas:</b> ' . $paginas;
+            }
+        }
+
+        if ($recibe !== '') {
+            $mensaje .= PHP_EOL . '🙋 <b>Recibe:</b> ' . $escape($recibe);
+        }
+
+        return $mensaje . PHP_EOL . PHP_EOL
+            . '👤 <b>Responsable:</b> ' . $escape($responsable !== '' ? $responsable : 'Usuario');
     }
 
     /* ------------------------------------------------------------------ */

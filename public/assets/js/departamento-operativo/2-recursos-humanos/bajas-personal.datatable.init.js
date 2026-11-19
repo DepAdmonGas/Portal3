@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const statusBadge = (row) => {
         if (Number(row.estado_proceso) === 2) return '<span class="badge bg-success">Finalizado</span>';
-        if (Number(row.estado_proceso) === 1) return '<span class="badge bg-warning text-dark">En Proceso</span>';
+        if (Number(row.estado_proceso) === 1) return '<span class="badge bg-warning text-white">En Proceso</span>';
         return '<span class="badge bg-danger">Pendiente</span>';
     };
 

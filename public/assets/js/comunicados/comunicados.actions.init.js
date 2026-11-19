@@ -49,7 +49,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         limpiarFormulario() {
-            const f = { id: '', fecha: '', titulo: '', archivo_actual: '', archivo_url: '' };
+            const f = { id: '', fecha: '', titulo: '', archivo_actual: '', archivo_url: '', archivo_disponible: false };
             this.campos.forEach((campo) => { f[campo] = ''; });
             this.form = f;
             this.errores = {};
@@ -140,8 +140,9 @@ document.addEventListener('alpine:init', () => {
                     this.form.id = d.id;
                     this.form.fecha = d.fecha || '';
                     this.form.titulo = d.titulo || '';
-                    this.form.archivo_actual = d.existe_archivo ? (d.archivo || '') : '';
+                    this.form.archivo_actual = d.archivo || '';
                     this.form.archivo_url = d.archivo_url || '';
+                    this.form.archivo_disponible = Boolean(d.existe_archivo);
                 } else {
                     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalComunicado')).hide();
                     this.notify('error', data.message || 'No se pudo cargar el comunicado.');

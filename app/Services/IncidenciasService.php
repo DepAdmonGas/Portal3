@@ -733,14 +733,13 @@ class IncidenciasService
             $idEstacion = (int)$registro->id_estacion;
             $nombreEstacion = self::nombresEstaciones([$idEstacion])[$idEstacion] ?? ('Est #' . $idEstacion);
 
-            $mensaje = sprintf(
-                "<b>Incidencias</b>\n\n%s %s la incidencia #%d de <b>%s</b>.\nAsunto: <b>%s</b>\nIncidente: %s",
-                htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8'),
+            $mensaje = self::construirMensajeNotificacion(
                 $accion,
                 (int)$registro->id_incidencias_estaciones,
-                htmlspecialchars($nombreEstacion, ENT_QUOTES, 'UTF-8'),
-                htmlspecialchars((string)$registro->asunto, ENT_QUOTES, 'UTF-8'),
-                htmlspecialchars((string)$registro->incidente, ENT_QUOTES, 'UTF-8')
+                (string)$registro->asunto,
+                (string)$registro->incidente,
+                $nombreUsuario,
+                $nombreEstacion
             );
 
             TelegramService::notificar($idEstacion, $idUsuario, $mensaje);
@@ -748,5 +747,30 @@ class IncidenciasService
             // Una notificación fallida no debe romper la operación ya guardada.
             error_log('[Incidencias] Error notificando por Telegram: ' . $e->getMessage());
         }
+    }
+
+    /** Construye un mensaje de Telegram legible con contexto del registro. */
+    private static function construirMensajeNotificacion(
+        string $accion,
+        int $id,
+        string $asunto,
+        string $incidente,
+        string $responsable,
+        string $estacion
+    ): string {
+        [$emoji, $resumen] = match ($accion) {
+            'agregó' => ['📝', 'Se ha registrado una incidencia en el apartado de <b>Incidencias</b>'],
+            'editó' => ['✏️', 'Se ha actualizado una incidencia en el apartado de <b>Incidencias</b>'],
+            'eliminó' => ['🗑️', 'Se ha eliminado una incidencia del apartado de <b>Incidencias</b>'],
+            default => ['📋', 'Se ha realizado una acción en el apartado de <b>Incidencias</b>'],
+        };
+        $escape = static fn (string $valor): string => htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+
+        return $emoji . ' ' . $resumen . ':' . PHP_EOL . PHP_EOL
+            . '🆔 <b>Folio:</b> #' . $id . PHP_EOL
+            . '📌 <b>Asunto:</b> ' . $escape($asunto !== '' ? $asunto : 'Sin asunto') . PHP_EOL
+            . '📝 <b>Incidente:</b> ' . $escape($incidente !== '' ? $incidente : 'Sin descripción') . PHP_EOL . PHP_EOL
+            . '👤 <b>Responsable:</b> ' . $escape($responsable !== '' ? $responsable : 'Usuario') . PHP_EOL
+            . '⛽ <b>Estación:</b> ' . $escape($estacion !== '' ? $estacion : 'Sin estación');
     }
 }

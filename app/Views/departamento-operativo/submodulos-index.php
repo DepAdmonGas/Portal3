@@ -49,6 +49,14 @@
 <?php endif; ?>
 </h4>
 </div>
+<?php elseif ($submenu['clave'] === 'bajas-personal'): ?>
+<div class="align-self-center me-4 ms-auto text-end">
+<h4 class="text-white mb-0 d-flex justify-content-end">
+<?php if ((int)($pendientesBajasPersonal ?? 0) > 0): ?>
+<span class="badge-historico badge-solicitud-home"><?= (int)$pendientesBajasPersonal ?></span>
+<?php endif; ?>
+</h4>
+</div>
 <?php elseif ($submenu['clave'] === 'pedido-pinturas'): ?>
 <div class="align-self-center me-4 ms-auto text-end">
 <h4 class="text-white mb-0 d-flex justify-content-end">

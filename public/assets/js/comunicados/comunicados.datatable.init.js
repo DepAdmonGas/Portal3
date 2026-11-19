@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       + '<i class="ti ti-download me-1"></i> Descargar</a>';
             } else {
                 html += '<a class="dropdown-item disabled" aria-disabled="true">'
-                      + '<i class="ti ti-file-off me-1"></i> Descargar</a>';
+                      + '<i class="ti ti-file-off me-1"></i> Documento no disponible</a>';
             }
         }
 

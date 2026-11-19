@@ -330,6 +330,7 @@ class BitacoraRrhhService
                 'id'          => (int)$r->id,
                 'nombre'      => $r->nombre ?? '-',
                 'archivo'     => $r->archivo,
+                'disponible'  => is_file(self::UPLOAD_DIR . basename((string)$r->archivo)),
                 'subido_por'  => $user ? $user->nombre : 'Desconocido',
             ];
         }
@@ -339,6 +340,12 @@ class BitacoraRrhhService
 
     public static function addDocumento(int $idBitacora, string $nombre, array $file): bool
     {
+        $nombre = trim($nombre);
+        $bitacora = BitacoraRH::find($idBitacora);
+        if ($nombre === '' || !$bitacora || !self::puedeVerLocalidad((int)$bitacora->id_estacion)) {
+            return false;
+        }
+
         if (empty($file['tmp_name']) || ($file['error'] ?? 1) !== UPLOAD_ERR_OK) {
             return false;
         }
@@ -379,7 +386,7 @@ class BitacoraRrhhService
             return false;
         }
 
-        $ruta = self::UPLOAD_DIR . $doc->archivo;
+        $ruta = self::UPLOAD_DIR . basename((string)$doc->archivo);
         if (is_file($ruta)) {
             @unlink($ruta);
         }
