@@ -23,23 +23,29 @@ class Database
         ];
         $capsule->addConnection($default, 'default');
 
-        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        $m04Host = strtolower(trim((string) ($_ENV['DB_M04_HOST'] ?? '')));
-        $m04Database = trim((string) ($_ENV['DB_M04_DATABASE'] ?? ''));
-        $m04Username = trim((string) ($_ENV['DB_M04_USERNAME'] ?? ''));
-        $m04Password = (string) ($_ENV['DB_M04_PASSWORD'] ?? '');
-        if (in_array($environment, ['dev', 'development', 'local'], true)
-            && ($default['driver'] ?? '') === 'mysql'
-            && strtolower(trim((string) ($default['host'] ?? ''))) === 'localhost'
-            && ($default['database'] ?? '') === 'bd_admongas'
-            && $m04Host === 'localhost'
-            && $m04Database === 'bd_admongas'
-            && $m04Username === 'portal3_m04_dev'
-            && $m04Password !== '') {
+        $readPrivateEnv = static function (string $key): string {
+            $value = $_ENV[$key] ?? null;
+            if (!is_string($value) || trim($value) === '') {
+                $value = getenv($key);
+            }
+            return is_string($value) ? trim($value) : '';
+        };
+        $m04Host = $readPrivateEnv('DB_M04_HOST');
+        $m04Database = $readPrivateEnv('DB_M04_DATABASE');
+        $m04Username = $readPrivateEnv('DB_M04_USERNAME');
+        $m04PasswordValue = $_ENV['DB_M04_PASSWORD'] ?? null;
+        if (!is_string($m04PasswordValue) || $m04PasswordValue === '') {
+            $m04PasswordValue = getenv('DB_M04_PASSWORD');
+        }
+        $m04Password = is_string($m04PasswordValue) ? $m04PasswordValue : '';
+        $m04Port = $readPrivateEnv('DB_M04_PORT');
+        $validPort = $m04Port === '' || (ctype_digit($m04Port) && (int) $m04Port >= 1 && (int) $m04Port <= 65535);
+        if ($m04Host !== '' && $m04Database !== '' && $m04Username !== ''
+            && $m04Password !== '' && $validPort) {
             $capsule->addConnection([
                 'driver'    => 'mysql',
                 'host'      => $m04Host,
-                'port'      => $_ENV['DB_M04_PORT'] ?? ($default['port'] ?? null),
+                'port'      => $m04Port === '' ? 3306 : (int) $m04Port,
                 'database'  => $m04Database,
                 'username'  => $m04Username,
                 'password'  => $m04Password,
