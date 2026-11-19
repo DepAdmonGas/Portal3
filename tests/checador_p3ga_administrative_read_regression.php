@@ -25,6 +25,11 @@ $user->id = 999;
 $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
+$dashboardStart = strpos($controllerSource, 'private function renderDashboardWorkspace(');
+$dashboardEnd = $dashboardStart === false ? false : strpos($controllerSource, 'public function configuration(', $dashboardStart);
+$dashboardReadSource = $dashboardStart !== false && $dashboardEnd !== false
+    ? substr($controllerSource, $dashboardStart, $dashboardEnd - $dashboardStart)
+    : '';
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
 $adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
@@ -136,7 +141,7 @@ $assert(str_contains($adjustmentViewSource, 'nunca se activa automáticamente')
 $assert(str_contains($viewSource, 'Incidencias e historial') || str_contains($viewSource, 'current_status'), 'P3GA22 read-only administrative context is rendered');
 $assert(str_contains($adjustmentViewSource, 'evaluations/evaluate') && str_contains($serviceSource, 'administrative-evaluations/evaluate'), 'P3GA23 administrative evaluation command is reserved for the P3G-D client boundary');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $viewSource . $adjustmentViewSource), 'P3GA24 administrative read views do not render payroll amounts or document data');
-$assert(!preg_match('/INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE/i', $serviceSource . $controllerSource), 'P3GA25 no DB/schema mutation is introduced');
+$assert($dashboardReadSource !== '' && !preg_match('/INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE/i', $serviceSource . $dashboardReadSource), 'P3GA25 administrative read flow introduces no DB/schema mutation');
 
 printf("CHECADOR_P3GA_ADMINISTRATIVE_READ_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

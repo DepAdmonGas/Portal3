@@ -19,7 +19,10 @@ $tests = [
     'SGM action checks station context' => str_contains($controller, "getContext('sgm')") && str_contains($controller, '$matrix?->calendario?->id_estacion'),
     'SGM action rejects client module authority' => !str_contains($controller, "\$_GET['module']"),
     'SGM view no longer calls generic requisitos download' => !str_contains($view, "download('requisitos-legales'"),
-    'SGM datatable uses canonical matrix and variant' => str_contains($js, 'matrix_id=${row.id}') && str_contains($js, 'variant=acuse') && str_contains($js, 'variant=requisito'),
+    'SGM datatable uses validated canonical matrix ID and variants' => str_contains($js, 'const matrixId = Number(row.matrix_id)')
+        && str_contains($js, 'matrix_id=${matrixId}')
+        && str_contains($js, 'variant=acuse')
+        && str_contains($js, 'variant=requisito'),
     'generic route remains fail-closed for unresolved type' => str_contains(file_get_contents(__DIR__ . '/../app/Services/SensitiveDownloadAuthorizationService.php'), 'PERSONAL_DOCUMENTS'),
     'alternate PDF route 2 enforces SASISOPA download permission' => str_contains($docs, "validaPermiso('sasisopa', 'descargar')"),
     'alternate PDF route 3 enforces SASISOPA download permission' => str_contains($eval, "validaPermiso('sasisopa', 'descargar')"),
