@@ -15,10 +15,14 @@ final class ChecadorShiftTemplateSqlReadService
 {
     /** @var callable(Usuario,int):bool */
     private $authorizeRead;
+    private string $connectionName;
 
     /** @param callable(Usuario,int):array|bool|null $authorizeRead Test seam; production always uses the active Checador ACL. */
-    public function __construct(?callable $authorizeRead = null)
+    public function __construct(?callable $authorizeRead = null, string $connectionName = 'default')
     {
+        $this->connectionName = in_array($connectionName, ['default', 'checador_m04'], true)
+            ? $connectionName
+            : 'default';
         $this->authorizeRead = $authorizeRead ?? static function (Usuario $user, int $workplaceId): array {
             $authenticated = Auth::user();
             if ($authenticated === null || (int) ($authenticated->id ?? 0) !== (int) ($user->id ?? 0)) {
@@ -29,29 +33,36 @@ final class ChecadorShiftTemplateSqlReadService
     }
 
     /** @return array{ok:bool,data?:array{page:int,per_page:int,items:list<array<string,mixed>>},error?:array{kind:string,status:int}} */
-    public function getShiftTemplates(Usuario $user, int $workplaceId, int $page = 1, int $perPage = 200): array
+    public function getShiftTemplates(
+        Usuario $user,
+        int $workplaceId,
+        int $page = 1,
+        int $perPage = 200,
+        string $catalogScope = 'STATION'
+    ): array
     {
-        if ($workplaceId < 1 || $page < 1 || $page > 10000 || $perPage < 1 || $perPage > 200) {
+        $catalogScope = strtoupper(trim($catalogScope));
+        if ($workplaceId < 1 || $page < 1 || $page > 10000 || $perPage < 1 || $perPage > 200
+            || !in_array($catalogScope, ['STATION', 'GLOBAL'], true)) {
             return self::failure('bad_request', 400);
         }
-        $catalogWorkplaceId = $this->authorizedCatalogWorkplaceId($user, $workplaceId);
-        if ($catalogWorkplaceId === null) {
+        $catalogAccess = $this->authorizedCatalogAccess($user, $workplaceId);
+        if ($catalogAccess === null) {
+            return self::failure('permission_denied', 403);
+        }
+        $catalogWorkplaceId = $catalogAccess['workplace_id'];
+        if ($catalogScope === 'GLOBAL' && !$catalogAccess['include_global_templates']) {
             return self::failure('permission_denied', 403);
         }
 
         try {
-            $connection = Capsule::connection();
-            $scopeFilter = static function ($query) use ($catalogWorkplaceId, $workplaceId): void {
-                if ($workplaceId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID) {
+            $connection = Capsule::connection($this->connectionName);
+            $scopeFilter = static function ($query) use ($catalogWorkplaceId, $catalogScope): void {
+                if ($catalogScope === 'STATION') {
                     $query->where('scope', 'STATION')->where('id_estacion', $catalogWorkplaceId);
-                    return;
+                } else {
+                    $query->where('scope', 'GLOBAL')->whereNull('id_estacion');
                 }
-                $query->where(static function ($visible) use ($catalogWorkplaceId): void {
-                    $visible->where('scope', 'GLOBAL')
-                        ->orWhere(static function ($stationQuery) use ($catalogWorkplaceId): void {
-                            $stationQuery->where('scope', 'STATION')->where('id_estacion', $catalogWorkplaceId);
-                        });
-                });
             };
             $latest = $connection->table('op_rh_v2_turnos_plantillas')
                 ->select('clave', 'scope', 'id_estacion')
@@ -81,7 +92,8 @@ final class ChecadorShiftTemplateSqlReadService
             foreach ($rows as $row) {
                 $scope = strtoupper((string) $row->scope);
                 $stationId = $row->id_estacion === null ? null : (int) $row->id_estacion;
-                if (($scope === 'GLOBAL' && $stationId !== null)
+                if (($scope !== $catalogScope)
+                    || ($scope === 'GLOBAL' && $stationId !== null)
                     || ($scope === 'STATION' && $stationId !== $catalogWorkplaceId)
                     || !in_array($scope, ['GLOBAL', 'STATION'], true)) {
                     return self::failure('schedule_templates_unavailable', 502);
@@ -161,19 +173,20 @@ final class ChecadorShiftTemplateSqlReadService
             || ($scope === 'STATION' && $stationId === null)) {
             return self::failure('bad_request', 400);
         }
-        $catalogWorkplaceId = $this->authorizedCatalogWorkplaceId($user, $workplaceId);
-        if ($catalogWorkplaceId === null) {
+        $catalogAccess = $this->authorizedCatalogAccess($user, $workplaceId);
+        if ($catalogAccess === null) {
             return self::failure('permission_denied', 403);
         }
-        if ($workplaceId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID && $scope === 'GLOBAL') {
-            return self::failure('schedule_template_not_found', 404);
+        $catalogWorkplaceId = $catalogAccess['workplace_id'];
+        if ($scope === 'GLOBAL') {
+            if (!$catalogAccess['include_global_templates']) return self::failure('schedule_template_not_found', 404);
         }
         if ($scope === 'STATION' && $stationId !== $catalogWorkplaceId) {
             return self::failure('bad_request', 400);
         }
 
         try {
-            $query = Capsule::connection()->table('op_rh_v2_turnos_plantillas')
+            $query = Capsule::connection($this->connectionName)->table('op_rh_v2_turnos_plantillas')
                 ->where('id', $templateId)
                 ->where('clave', $templateKey)
                 ->where('version', $version)
@@ -192,7 +205,7 @@ final class ChecadorShiftTemplateSqlReadService
                 return self::failure('schedule_templates_unavailable', 502);
             }
 
-            $segments = Capsule::connection()->table('op_rh_v2_turnos_segmentos')
+            $segments = Capsule::connection($this->connectionName)->table('op_rh_v2_turnos_segmentos')
                 ->where('id_plantilla', $templateId)
                 ->orderBy('ordinal')
                 ->get([
@@ -221,7 +234,7 @@ final class ChecadorShiftTemplateSqlReadService
 
             $lineage = null;
             if ($scope === 'STATION') {
-                $lineage = Capsule::connection()->table('op_rh_v2_shift_template_station_lineage')
+                $lineage = Capsule::connection($this->connectionName)->table('op_rh_v2_shift_template_station_lineage')
                     ->where('id_estacion', $catalogWorkplaceId)
                     ->where('local_template_id', $templateId)
                     ->first(['source_global_clave', 'source_global_version']);
@@ -248,11 +261,12 @@ final class ChecadorShiftTemplateSqlReadService
         }
     }
 
-    private function authorizedCatalogWorkplaceId(Usuario $user, int $requestedWorkplaceId): ?int
+    /** @return array{workplace_id:int,include_global_templates:bool}|null */
+    private function authorizedCatalogAccess(Usuario $user, int $requestedWorkplaceId): ?array
     {
         $authorization = ($this->authorizeRead)($user, $requestedWorkplaceId);
         if ($authorization === true) {
-            return $requestedWorkplaceId;
+            return ['workplace_id' => $requestedWorkplaceId, 'include_global_templates' => false];
         }
         if (!is_array($authorization) || !($authorization['allowed'] ?? false)) {
             return null;
@@ -261,7 +275,10 @@ final class ChecadorShiftTemplateSqlReadService
         // A permission decision may not silently substitute another locality's
         // catalog (notably Autolavado 9 -> Palo Solo 2).
         return $catalogWorkplaceId !== false && $catalogWorkplaceId === $requestedWorkplaceId
-            ? $requestedWorkplaceId
+            ? [
+                'workplace_id' => $requestedWorkplaceId,
+                'include_global_templates' => (bool) ($authorization['include_global_templates'] ?? false),
+            ]
             : null;
     }
 

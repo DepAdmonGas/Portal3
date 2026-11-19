@@ -17,6 +17,7 @@ use App\Services\ChecadorRolComodinesService;
 use App\Services\ChecadorV2PermissionService;
 use App\Services\ChecadorDailyReadService;
 use App\Services\ChecadorShiftTemplateSqlReadService;
+use App\Services\ChecadorShiftTemplateSqlWriteService;
 use App\Services\ChecadorConfigurationReadService;
 use App\Services\ChecadorOperationalPeriod;
 use App\Services\ChecadorPresentationFormatter;
@@ -63,7 +64,7 @@ final class ChecadorController extends BaseController
             $path = '/departamento-operativo/recursos-humanos/checador/horarios-turnos';
             self::redirect($path . ($safeQuery === [] ? '' : '?' . http_build_query($safeQuery, '', '&', PHP_QUERY_RFC3986)));
         }
-        $this->normalizeLegacyWorkplaceUrl();
+        $this->normalizeLegacyWorkplaceUrl(true);
         $this->renderDashboardWorkspace(null, true);
     }
 
@@ -593,6 +594,17 @@ final class ChecadorController extends BaseController
             return;
         }
         $workplaces = $access['workplaces'];
+        $m04AutolavadoAdmin = $scheduleHistoryMode
+            ? ChecadorAccessService::authorizeStationTemplateAdministration(ChecadorAccessService::AUTOLAVADO_LOCALITY_ID)
+            : ['allowed' => false, 'workplaces' => []];
+        if (($m04AutolavadoAdmin['allowed'] ?? false) === true) {
+            foreach (($m04AutolavadoAdmin['workplaces'] ?? []) as $autolavado) {
+                if ((int) ($autolavado['id'] ?? 0) === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
+                    && !in_array(ChecadorAccessService::AUTOLAVADO_LOCALITY_ID, array_map('intval', array_column($workplaces, 'id')), true)) {
+                    $workplaces[] = $autolavado;
+                }
+            }
+        }
         $authorizedStationWorkplaceIds = array_values(array_map(
             static fn(array $item): int => (int) ($item['id'] ?? 0),
             is_array($access['station_workplaces'] ?? null) ? $access['station_workplaces'] : []
@@ -635,12 +647,19 @@ final class ChecadorController extends BaseController
             }
         }
         if ($requestedWorkplace !== null) {
-            $selectedAccess = ChecadorAccessService::authorize($requestedWorkplace);
+            $isM04AutolavadoSelection = $scheduleHistoryMode
+                && $requestedWorkplace === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID;
+            $selectedAccess = $isM04AutolavadoSelection
+                ? ChecadorAccessService::authorizeShiftTemplateCatalogRead($requestedWorkplace)
+                : ChecadorAccessService::authorize($requestedWorkplace);
             if (!$selectedAccess['allowed']) {
                 self::renderAccessDenied((string) ($selectedAccess['reason'] ?? 'requested_station_out_of_scope'), $requestedWorkplace);
                 return;
             }
-            if (!ModuleStationService::setChecadorWorkplaceContext($requestedWorkplace)) {
+            $contextSaved = ModuleStationService::setChecadorWorkplaceContext($requestedWorkplace)
+                || ($isM04AutolavadoSelection
+                    && ModuleStationService::setChecadorM04TemplateWorkplaceContext($requestedWorkplace));
+            if (!$contextSaved) {
                 self::renderAccessDenied('requested_station_out_of_scope', $requestedWorkplace);
                 return;
             }
@@ -650,7 +669,10 @@ final class ChecadorController extends BaseController
             ModuleStationService::setContext(ChecadorAccessService::MODULE_KEY, null, null);
         } else {
             $moduleContext = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
-            $contextWorkplace = self::positiveInteger($moduleContext['id_depto'] ?? $moduleContext['id_estacion'] ?? null);
+            $contextWorkplace = $scheduleHistoryMode
+                ? (ModuleStationService::getChecadorM04TemplateWorkplaceContext()
+                    ?? self::positiveInteger($moduleContext['id_depto'] ?? $moduleContext['id_estacion'] ?? null))
+                : self::positiveInteger($moduleContext['id_depto'] ?? $moduleContext['id_estacion'] ?? null);
             if ($contextWorkplace !== null && in_array($contextWorkplace, array_column($workplaces, 'id'), true)) {
                 $requestedWorkplace = $contextWorkplace;
             } elseif ($workplaces !== []) {
@@ -660,12 +682,19 @@ final class ChecadorController extends BaseController
                 $requestedWorkplace = (int) $workplaces[0]['id'];
             }
             if ($requestedWorkplace !== null) {
-                $selectedAccess = ChecadorAccessService::authorize($requestedWorkplace);
+                $isM04AutolavadoSelection = $scheduleHistoryMode
+                    && $requestedWorkplace === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID;
+                $selectedAccess = $isM04AutolavadoSelection
+                    ? ChecadorAccessService::authorizeShiftTemplateCatalogRead($requestedWorkplace)
+                    : ChecadorAccessService::authorize($requestedWorkplace);
                 if (!$selectedAccess['allowed']) {
                     self::renderAccessDenied((string) ($selectedAccess['reason'] ?? 'requested_station_out_of_scope'), $requestedWorkplace);
                     return;
                 }
-                if (!ModuleStationService::setChecadorWorkplaceContext($requestedWorkplace)) {
+                $contextSaved = ModuleStationService::setChecadorWorkplaceContext($requestedWorkplace)
+                    || ($isM04AutolavadoSelection
+                        && ModuleStationService::setChecadorM04TemplateWorkplaceContext($requestedWorkplace));
+                if (!$contextSaved) {
                     self::renderAccessDenied('requested_station_out_of_scope', $requestedWorkplace);
                     return;
                 }
@@ -1813,14 +1842,14 @@ final class ChecadorController extends BaseController
         self::redirect($redirect);
     }
 
-    /** Create a station-local template or append a new immutable version through the existing V2 contract. */
+    /** Create, customize, or append a station-local template version through Portal3's SQL boundary. */
     public function saveConfigurationScheduleTemplate(): void
     {
         $input = Request::all();
         if (str_contains(strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? '')), 'application/json')) {
             $this->saveScheduleTemplateJson($input);
         }
-        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $workplaceId = $this->requestM04TemplateWorkplaceId($input);
         $operation = is_string($input['operation'] ?? null) ? trim($input['operation']) : '';
         $key = is_string($input['template_key'] ?? null) ? trim($input['template_key']) : '';
         $name = is_string($input['template_name'] ?? null) ? trim($input['template_name']) : '';
@@ -1832,6 +1861,11 @@ final class ChecadorController extends BaseController
             self::scheduleTemplateFeedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.', $workplaceId);
             self::redirect($redirect);
         }
+        $formCsrf = trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $input['_token'] ?? ''));
+        if (!\App\Core\CsrfToken::validate($formCsrf)) {
+            self::scheduleTemplateFeedback('error', 'Actualiza la página antes de guardar el turno.', $workplaceId);
+            self::redirect($redirect);
+        }
         if ($workplaceId === null || !in_array($operation, ['create', 'version'], true)
             || ($input['confirm_template'] ?? '') !== '1') {
             self::scheduleTemplateFeedback('error', 'Revisa el centro y confirma la operación solicitada. No se envió la plantilla.', $workplaceId);
@@ -1841,8 +1875,8 @@ final class ChecadorController extends BaseController
             self::scheduleTemplateFeedback('error', 'El modo demostración es de consulta y no permite escribir plantillas operativas.', $workplaceId);
             self::redirect($redirect);
         }
-        if (!ChecadorDailyReadService::scheduleApiPostOperationsEnabled()) {
-            self::scheduleTemplateFeedback('error', 'La escritura de horarios está protegida por el gate local específico. No se envió la solicitud.', $workplaceId);
+        if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
+            self::scheduleTemplateFeedback('error', 'La escritura SQL de turnos está deshabilitada hasta completar el corte autorizado.', $workplaceId);
             self::redirect($redirect);
         }
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
@@ -1866,6 +1900,7 @@ final class ChecadorController extends BaseController
                 'dia_offset_fin' => isset($segment['dia_offset_fin']) ? (int) $segment['dia_offset_fin'] : 0,
             ];
         }
+        if ($type === '' && $segments !== []) $type = self::scheduleSegmentsAreOvernight($segments) ? 'NOCTURNO' : 'REGULAR';
         if ($name === '' || $type === '' || $segments === []) {
             self::scheduleTemplateFeedback('error', 'Indica nombre, tipo y al menos un segmento horario válido.', $workplaceId);
             self::redirect($redirect);
@@ -1877,26 +1912,23 @@ final class ChecadorController extends BaseController
         }
 
         try {
-            $reader = new ChecadorDailyReadService();
-            $result = $operation === 'create'
-                ? $reader->createStationShiftTemplate($user, $workplaceId, [
-                    'clave' => $key, 'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
-                ])
-                : $reader->createStationShiftTemplateVersion($user, $workplaceId, $key, [
-                    'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
-                ]);
+            $result = (new ChecadorShiftTemplateSqlWriteService())->write($user, $workplaceId, [
+                'operation' => $operation, 'template_key' => $key, 'expected_version' => $input['expected_version'] ?? null,
+                'template_name' => $name, 'template_type' => $type, 'segments' => $segments,
+                'idempotency_key' => $input['idempotency_key'] ?? '', 'confirm_action' => $input['confirm_template'] ?? '',
+            ]);
         } catch (\Throwable) {
-            $result = ['ok' => false, 'error' => ['kind' => 'unavailable']];
+            $result = ['ok' => false, 'error' => 'database_write_failed'];
         }
         self::scheduleTemplateFeedback(($result['ok'] ?? false) ? 'success' : 'error',
             ($result['ok'] ?? false)
-                ? 'La plantilla y sus segmentos se guardaron y se confirmaron mediante lectura de API V2.'
-                : 'La API no confirmó el guardado y la lectura posterior de la plantilla. Consulta el catálogo; no se declara guardada.',
+                ? 'La plantilla y sus segmentos persistidos se confirmaron mediante lectura SQL.'
+                : 'No se confirmó el guardado y la lectura SQL posterior. Consulta el catálogo antes de reintentar.',
             $workplaceId);
         self::redirect($redirect);
     }
 
-    /** Preserve the original M04 Alpine workflow while writing only through the existing V2 contract. */
+    /** Preserve the original M04 Alpine workflow while using the Portal3 SQL writer only. */
     private function saveScheduleTemplateJson(array $input): never
     {
         $headers = ['Cache-Control' => 'private, no-store'];
@@ -1908,14 +1940,14 @@ final class ChecadorController extends BaseController
         $csrf = trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
         if (!\App\Core\CsrfToken::validate($csrf)) $fail('csrf_invalid', 'Actualiza la página antes de guardar el turno.', 419);
 
-        $workplaceId = $this->requestWorkplaceId($input);
+        $workplaceId = $this->requestM04TemplateWorkplaceId($input);
         $rawWorkplace = self::positiveInteger($input['workplace_id'] ?? null);
         if ($workplaceId === null || $rawWorkplace !== $workplaceId) {
             $fail('forbidden', 'La estación solicitada no coincide con tu alcance autorizado.', 403);
         }
         if (ChecadorDailyReadService::demoModeEnabled()) $fail('demo_mode', 'La demostración es de consulta.', 403);
-        if (!ChecadorDailyReadService::scheduleApiPostOperationsEnabled()) {
-            $fail('gate_disabled', 'La escritura de horarios está deshabilitada.', 403);
+        if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
+            $fail('gate_disabled', 'La escritura SQL de turnos está deshabilitada hasta completar el corte autorizado.', 503);
         }
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
             $fail('forbidden', 'No tienes permiso para administrar turnos en esta estación.', 403);
@@ -1932,12 +1964,21 @@ final class ChecadorController extends BaseController
             $fail('confirmation_required', 'Confirma la creación del turno.', 422);
         }
 
+        $idempotencyKey = trim((string) ($input['idempotency_key'] ?? ''));
+        if (strlen($idempotencyKey) < 16 || strlen($idempotencyKey) > 128
+            || preg_match('/\A[A-Za-z0-9._:-]+\z/D', $idempotencyKey) !== 1) {
+            $fail('invalid_input', 'Actualiza la página e intenta nuevamente; no se recibió una clave segura de operación.', 422);
+        }
         try {
-            $reader = new ChecadorDailyReadService();
-            $catalog = $reader->getShiftTemplates($user, 1, 200, $workplaceId);
-            if (!($catalog['ok'] ?? false)) $fail('catalog_unavailable', 'No se pudo comprobar el catálogo autorizado.', 502);
+            $reader = new ChecadorShiftTemplateSqlReadService(null, ChecadorShiftTemplateSqlWriteService::CONNECTION_NAME);
+            $catalog = $reader->getShiftTemplates($user, $workplaceId, 1, 200);
+            if (!($catalog['ok'] ?? false)) $fail('catalog_unavailable', 'No se pudo comprobar el catálogo SQL autorizado.', 502);
             $items = $catalog['data']['items'] ?? [];
-            $result = null;
+            $templateType = self::scheduleSegmentsAreOvernight($segments) ? 'NOCTURNO' : 'REGULAR';
+            $writeInput = [
+                'operation' => $operation, 'template_name' => $name, 'template_type' => $templateType,
+                'segments' => $segments, 'idempotency_key' => $idempotencyKey,
+            ];
 
             if ($operation === 'create') {
                 $normalized = strtoupper((string) (iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name));
@@ -1950,17 +1991,23 @@ final class ChecadorController extends BaseController
                     }
                 }
                 $type = self::scheduleSegmentsAreOvernight($segments) ? 'NOCTURNO' : 'REGULAR';
-                $result = $reader->createStationShiftTemplate($user, $workplaceId, [
-                    'clave' => $key, 'nombre' => $name, 'tipo_turno' => $type, 'segmentos' => $segments,
-                ]);
+                $writeInput['confirm_action'] = '1';
             } elseif ($operation === 'customize') {
-                if (ChecadorAccessService::isDepartmentLocality($workplaceId)) {
+                if (ChecadorAccessService::isDepartmentLocality($workplaceId)
+                    && $workplaceId !== ChecadorAccessService::AUTOLAVADO_LOCALITY_ID) {
                     $fail('forbidden', 'No tienes permiso para personalizar turnos en esta estación.', 403);
                 }
                 $sourceKey = is_string($input['source_template_key'] ?? null) ? trim($input['source_template_key']) : '';
                 $sourceVersion = self::positiveInteger($input['source_template_version'] ?? null);
                 $sourceItem = null;
-                foreach ($items as $item) {
+                $globalCatalog = $reader->getShiftTemplates($user, $workplaceId, 1, 200, 'GLOBAL');
+                if (!($globalCatalog['ok'] ?? false)) {
+                    $globalError = (string) ($globalCatalog['error']['kind'] ?? 'database_unavailable');
+                    $fail($globalError === 'permission_denied' ? 'forbidden' : 'catalog_unavailable',
+                        'No se pudo verificar el catálogo GLOBAL autorizado.', $globalError === 'permission_denied' ? 403 : 502);
+                }
+                $globalItems = $globalCatalog['data']['items'] ?? [];
+                foreach ($globalItems as $item) {
                     if ((string) ($item['clave'] ?? '') === $sourceKey
                         && strtoupper((string) ($item['scope'] ?? '')) === 'GLOBAL') {
                         $sourceItem = $item;
@@ -1970,20 +2017,16 @@ final class ChecadorController extends BaseController
                 if ($sourceItem === null || $sourceVersion === null || $sourceVersion !== (int) ($sourceItem['version'] ?? 0)) {
                     $fail('source_unavailable', 'El turno global ya no está disponible. Actualiza el catálogo.', 404);
                 }
-                $source = $reader->getShiftTemplateVersion($user, $sourceKey, $sourceVersion, $workplaceId);
+                $source = $this->readAuthorizedTemplateDetail($reader, $globalItems, $user, $workplaceId, $sourceKey, $sourceVersion, 'GLOBAL');
                 if (!($source['ok'] ?? false)
                     || strtoupper((string) ($source['data']['scope'] ?? '')) !== 'GLOBAL'
                     || (int) ($source['data']['version'] ?? 0) !== $sourceVersion
                     || (int) ($source['data']['es_activo'] ?? 0) !== 1) {
                     $fail('source_unavailable', 'No se pudo confirmar el turno global de origen.', 404);
                 }
-                $result = $reader->customizeGlobalShiftTemplate(
-                    $user,
-                    ['clave' => $sourceKey, 'version' => $sourceVersion],
-                    ['nombre' => $name, 'tipo_turno' => (string) $source['data']['tipo_turno'], 'segmentos' => $segments],
-                    self::newIdempotencyKey(),
-                    $workplaceId
-                );
+                $writeInput['source_template_key'] = $sourceKey;
+                $writeInput['source_template_version'] = $sourceVersion;
+                $writeInput['template_type'] = (string) $source['data']['tipo_turno'];
             } else {
                 $key = is_string($input['template_key'] ?? null) ? trim($input['template_key']) : '';
                 $expectedVersion = self::positiveInteger($input['expected_version'] ?? null);
@@ -2000,29 +2043,38 @@ final class ChecadorController extends BaseController
                 if ((int) ($local['version'] ?? 0) !== $expectedVersion) {
                     $fail('conflict', 'El turno cambió. Actualiza el catálogo antes de editarlo.', 409);
                 }
-                $previous = $reader->getShiftTemplateVersion($user, $key, $expectedVersion, $workplaceId);
+                $previous = $this->readAuthorizedTemplateDetail($reader, $items, $user, $workplaceId, $key, $expectedVersion, 'STATION');
                 if (!($previous['ok'] ?? false)
                     || (int) ($previous['data']['id'] ?? 0) !== (int) ($local['id'] ?? 0)
                     || self::editableScheduleTemplateFields($previous['data']['segmentos'] ?? null) === null) {
                     $fail('catalog_unavailable', 'No se pudo verificar el turno seleccionado.', 502);
                 }
-                $result = $reader->createStationShiftTemplateVersion($user, $workplaceId, $key, [
-                    'nombre' => $name, 'tipo_turno' => (string) ($previous['data']['tipo_turno'] ?? 'REGULAR'), 'segmentos' => $segments,
-                ]);
+                $writeInput['template_key'] = $key;
+                $writeInput['expected_version'] = $expectedVersion;
+                $writeInput['template_type'] = (string) ($previous['data']['tipo_turno'] ?? 'REGULAR');
             }
 
+            $result = (new ChecadorShiftTemplateSqlWriteService())->write($user, $workplaceId, $writeInput);
             if (!($result['ok'] ?? false)) {
-                $kind = (string) ($result['error']['kind'] ?? 'api_unavailable');
+                $kind = (string) ($result['error'] ?? 'database_write_failed');
                 $status = match ($kind) {
-                    'bad_request' => 422,
-                    'api_authentication' => 401,
-                    'api_authorization', 'api_post_disabled' => 403,
-                    'administrative_conflict' => 409,
-                    default => 502,
+                    'invalid_input', 'confirmation_required' => 422,
+                    'permission_denied' => 403,
+                    'idempotency_conflict', 'version_conflict', 'customization_exists', 'duplicate_template_name' => 409,
+                    'template_not_found', 'source_not_found' => 404,
+                    default => (int) ($result['status'] ?? 503),
                 };
-                $fail($kind, $status === 409 ? 'Ya existe un conflicto con ese turno.' : 'No se pudo confirmar el turno. Actualiza el catálogo antes de reintentar.', $status);
+                $message = match ($kind) {
+                    'm04_sql_writer_cutover_not_ready' => 'La escritura SQL está cerrada hasta verificar el corte y los permisos de base de datos.',
+                    'm04_sql_schema_not_ready' => 'El esquema MariaDB no cumple el preflight requerido para guardar turnos.',
+                    'duplicate_template_name' => 'Ya existe un turno con este nombre. Actualiza el catálogo.',
+                    'version_conflict' => 'El turno cambió desde que abriste el formulario. Actualiza el catálogo antes de editarlo.',
+                    'idempotency_conflict' => 'La clave de operación ya se utilizó con otros datos. Actualiza la página antes de reintentar.',
+                    default => $status === 409 ? 'Ya existe un conflicto con ese turno.' : 'No se pudo confirmar el turno. Consulta el catálogo antes de reintentar.',
+                };
+                $fail($kind, $message, $status);
             }
-            $writtenTemplate = $result['data'] ?? null;
+            $writtenTemplate = $result['template'] ?? null;
             if (!is_array($writtenTemplate)
                 || !is_string($writtenTemplate['clave'] ?? null)
                 || (int) ($writtenTemplate['id'] ?? 0) < 1
@@ -2031,18 +2083,8 @@ final class ChecadorController extends BaseController
                 || (int) ($writtenTemplate['id_estacion'] ?? 0) !== $workplaceId) {
                 $fail('schedule_template_readback_unconfirmed', 'No se confirmó el turno mediante lectura posterior.', 502);
             }
-            $sqlReader = new ChecadorShiftTemplateSqlReadService();
-            $sqlReadback = $sqlReader->getShiftTemplateVersion(
-                $user,
-                (string) $writtenTemplate['clave'],
-                (int) $writtenTemplate['version'],
-                $workplaceId,
-                (int) $writtenTemplate['id'],
-                'STATION',
-                $workplaceId
-            );
-            $template = $sqlReadback['data'] ?? null;
-            if (!($sqlReadback['ok'] ?? false) || !is_array($template)
+            $template = $writtenTemplate;
+            if (!is_array($template)
                 || ($template['segmentos'] ?? null) !== $segments
                 || self::editableScheduleTemplateFields($template['segmentos'] ?? null) === null
                 || trim((string) ($template['segmentos'][0]['hora_inicio_local'] ?? '')) === ''
@@ -2051,9 +2093,11 @@ final class ChecadorController extends BaseController
             }
             JsonResponse::send([
                 'ok' => true,
-                'message' => $operation === 'customize'
-                    ? 'La personalización local y sus horas persistidas fueron confirmadas mediante lectura SQL.'
-                    : 'El turno y sus horas persistidas fueron confirmados mediante lectura SQL.',
+                'message' => ($result['replayed'] ?? false)
+                    ? 'La operación anterior y sus horas persistidas fueron confirmadas mediante lectura SQL.'
+                    : ($operation === 'customize'
+                        ? 'La personalización local y sus horas persistidas fueron confirmadas mediante lectura SQL.'
+                        : 'El turno y sus horas persistidas fueron confirmados mediante lectura SQL.'),
                 'template' => $template,
             ], $operation === 'create' ? 201 : 200, $headers);
         } catch (\Throwable) {
@@ -2084,6 +2128,27 @@ final class ChecadorController extends BaseController
             ];
         }
         return self::editableScheduleTemplateFields($segments) === null ? [] : $segments;
+    }
+
+    /** Resolve an exact item from the authorized SQL catalog before reading its persisted version. */
+    private function readAuthorizedTemplateDetail(
+        ChecadorShiftTemplateSqlReadService $reader,
+        array $items,
+        \App\Models\Usuario $user,
+        int $workplaceId,
+        string $key,
+        int $version,
+        string $scope
+    ): array {
+        foreach ($items as $item) {
+            if ((string) ($item['clave'] ?? '') !== $key || (int) ($item['version'] ?? 0) !== $version
+                || strtoupper((string) ($item['scope'] ?? '')) !== strtoupper($scope)) continue;
+            $stationId = $item['id_estacion'] === null ? null : (int) $item['id_estacion'];
+            return $reader->getShiftTemplateVersion(
+                $user, $key, $version, $workplaceId, (int) ($item['id'] ?? 0), strtoupper($scope), $stationId
+            );
+        }
+        return ['ok' => false, 'error' => ['kind' => 'schedule_template_not_found', 'status' => 404]];
     }
 
     private static function scheduleSegmentsAreOvernight(array $segments): bool
@@ -2282,8 +2347,11 @@ final class ChecadorController extends BaseController
         $scheduleTemplates = [];
         $templateCatalogStatus = 'not_requested';
         $templateCatalogMessage = '';
+        $m04AutolavadoAdmin = ChecadorAccessService::authorizeStationTemplateAdministration(
+            ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
+        );
         $canManageStationTemplates = $workplaceId !== null && !$demoMode
-            && ChecadorDailyReadService::scheduleApiPostOperationsEnabled()
+            && ChecadorShiftTemplateSqlWriteService::isOperationallyReady()
             && (ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false);
 
         if ($invalidPage || $historyPage > 10000) {
@@ -2327,12 +2395,17 @@ final class ChecadorController extends BaseController
 
         if ($workplaceId !== null && !$demoMode && $currentUser !== null) {
             try {
-                $templateReader = new ChecadorShiftTemplateSqlReadService();
+                $templateReader = new ChecadorShiftTemplateSqlReadService(null, ChecadorShiftTemplateSqlWriteService::CONNECTION_NAME);
                 $catalog = $templateReader->getShiftTemplates($currentUser, $workplaceId, 1, 200);
                 if (($catalog['ok'] ?? false) === true) {
                     $templateCatalogStatus = 'received';
                     $catalogItems = $catalog['data']['items'];
                     foreach (array_slice($catalogItems, 0, 50) as $template) {
+                        if (($template['scope'] ?? '') !== 'STATION'
+                            || (int) ($template['id_estacion'] ?? 0) !== $workplaceId) {
+                            $templateCatalogStatus = 'partial';
+                            continue;
+                        }
                         $detail = $templateReader->getShiftTemplateVersion(
                             $currentUser,
                             (string) $template['clave'],
@@ -2356,31 +2429,6 @@ final class ChecadorController extends BaseController
                     }
                     foreach ($scheduleTemplates as &$template) {
                         $template['edit_fields'] = self::editableScheduleTemplateFields($template['segmentos'] ?? null);
-                    }
-                    unset($template);
-                    $localTemplateByKey = [];
-                    $catalogWorkplaceId = (int) ($templateCatalogAccess['catalog_workplace_id'] ?? $workplaceId);
-                    foreach ($scheduleTemplates as $template) {
-                        if (strtoupper((string) ($template['scope'] ?? '')) === 'STATION'
-                            && (int) ($template['id_estacion'] ?? 0) === $catalogWorkplaceId) {
-                            $localTemplateByKey[(string) ($template['clave'] ?? '')] = $template;
-                        }
-                    }
-                    foreach ($scheduleTemplates as &$template) {
-                        if (strtoupper((string) ($template['scope'] ?? '')) !== 'GLOBAL') continue;
-                        $customization = is_array($template['station_customization'] ?? null) ? $template['station_customization'] : null;
-                        if ($customization === null) {
-                            if ((int) ($template['es_activo'] ?? 0) === 1) {
-                                $template['customize_fields'] = self::editableScheduleTemplateFields($template['segmentos'] ?? null);
-                            }
-                            continue;
-                        }
-                        $localCopy = $localTemplateByKey[(string) ($customization['clave'] ?? '')] ?? null;
-                        if ($localCopy !== null) {
-                            $template['station_customization']['template'] = $localCopy;
-                        } else {
-                            unset($template['customize_fields']);
-                        }
                     }
                     unset($template);
                     if ($templateCatalogStatus === 'database_error') {
@@ -2467,7 +2515,7 @@ final class ChecadorController extends BaseController
                     'status' => $templateCatalogStatus === 'received' ? 'ready' : $templateCatalogStatus,
                     'items' => $scheduleTemplates,
                 ],
-                'templateWritesEnabled' => ChecadorDailyReadService::scheduleApiPostOperationsEnabled() && !$demoMode,
+                'templateWritesEnabled' => ChecadorShiftTemplateSqlWriteService::isOperationallyReady() && !$demoMode,
                 'templateAdminFeedback' => $templateFeedback,
                 'canManageStationTemplates' => $canManageStationTemplates,
                 'demoMode' => $demoMode,
@@ -2480,10 +2528,13 @@ final class ChecadorController extends BaseController
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                     '/assets/js/core/module-station-selector.js',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261021-1',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js?v=20261117-2',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js?v=20261119-1',
                 ],
                 'help' => false,
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
+                'moduleStationExtraDepartments' => ($m04AutolavadoAdmin['allowed'] ?? false)
+                    ? ($m04AutolavadoAdmin['workplaces'] ?? [])
+                    : [],
             ],
             'departamento-operativo'
         );
@@ -4675,7 +4726,7 @@ final class ChecadorController extends BaseController
     }
 
     /** Strip legacy locality URL state without changing the authorized session context. */
-    private function normalizeLegacyWorkplaceUrl(): void
+    private function normalizeLegacyWorkplaceUrl(bool $m04TemplateScope = false): void
     {
         $requestUri = $_SERVER['REQUEST_URI'] ?? null;
         if (!is_string($requestUri) || $requestUri === '' || $requestUri[0] !== '/') {
@@ -4700,7 +4751,10 @@ final class ChecadorController extends BaseController
         // already authorized canonical locality in this user's session.
         $legacyId = self::positiveInteger($params['workplace_id']);
         $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
-        $sessionId = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
+        $sessionId = $m04TemplateScope
+            ? (ModuleStationService::getChecadorM04TemplateWorkplaceContext()
+                ?? self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null))
+            : self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
         $sameLocality = $legacyId !== null && $legacyId === $sessionId;
         unset($params['workplace_id']);
 
@@ -4728,6 +4782,22 @@ final class ChecadorController extends BaseController
         if (array_key_exists('workplace_id', $input)
             && self::positiveInteger($input['workplace_id']) !== $sessionId) return null;
         return $sessionId;
+    }
+
+    /** Resolve the M04 target from the server session, with only the approved Autolavado exception. */
+    private function requestM04TemplateWorkplaceId(array $input): ?int
+    {
+        $departmentId = ModuleStationService::getChecadorM04TemplateWorkplaceContext();
+        if ($departmentId === ChecadorAccessService::AUTOLAVADO_LOCALITY_ID) {
+            $requestedId = self::positiveInteger($input['workplace_id'] ?? null);
+            if ($requestedId !== ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
+                || !(ChecadorAccessService::authorizeStationTemplateAdministration($departmentId)['allowed'] ?? false)) {
+                return null;
+            }
+            return $departmentId;
+        }
+
+        return $this->requestWorkplaceId($input);
     }
 
     /** Resolve the report locality only from the current authorized session context. */

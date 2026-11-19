@@ -82,12 +82,13 @@
         data-edit-url="/departamento-operativo/recursos-humanos/checador/horarios-turnos/plantillas"
         data-edit-enabled="<?= !empty($canManageStationTemplates) ? '1' : '0' ?>"
         data-workplace-id="<?= (int) ($selectedWorkplaceId ?? 0) ?>"
+        data-workplace-name="<?= htmlspecialchars((string) ($selectedWorkplaceName ?? ''), ENT_QUOTES, 'UTF-8') ?>"
         data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-2 gap-md-3">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-clock fs-5"></i></span>
             <div>
                 <h2 class="h5 mb-0 text-white" id="m04-template-catalog-heading">Turnos disponibles</h2>
-                <span class="small text-white-50">Horarios de la estación</span>
+                <span class="small text-white-50">Plantillas locales de la localidad seleccionada</span>
             </div>
             <?php if (!empty($canManageStationTemplates)): ?>
                 <button type="button" class="btn bg-white text-primary ms-auto" @click="openCreate()" id="m04-btn-new-template">
@@ -113,7 +114,7 @@
             <?php elseif (($catalogStatus === 'partial') && ($scheduleTemplates ?? []) === []): ?>
                 <p class="mb-0 text-warning-emphasis" role="status">La consulta no pudo confirmar los horarios disponibles.</p>
             <?php elseif (($scheduleTemplates ?? []) === [] && $catalogStatus === 'received'): ?>
-                <p class="mb-0 text-muted" role="status">No hay horarios para mostrar en esta consulta.</p>
+                <p class="mb-0 text-muted" role="status">No hay horarios propios de esta localidad.</p>
             <?php else: ?>
                 <?php if ($catalogStatus === 'partial'): ?>
                     <p class="small text-warning-emphasis" role="status">La información de horarios puede estar incompleta.</p>
@@ -165,31 +166,9 @@
                                 <td><?= (int) ($template['es_activo'] ?? 0) === 1 ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>' ?></td>
                                 <?php if (!empty($canManageStationTemplates)): ?>
                                     <td class="text-center">
-                                        <?php if (strtoupper((string) ($template['scope'] ?? '')) === 'GLOBAL'
-                                            && (is_array($template['customize_fields'] ?? null)
-                                                || is_array($template['station_customization']['template']['edit_fields'] ?? null))): ?>
-                                            <?php
-                                                $existingCopy = is_array($template['station_customization']['template'] ?? null) ? $template['station_customization']['template'] : null;
-                                                $copyFields = $existingCopy['edit_fields'] ?? $template['customize_fields'];
-                                                $actionData = $existingCopy !== null
-                                                    ? ['key' => (string) $existingCopy['clave'], 'version' => (int) $existingCopy['version'], 'name' => $displayTemplateName,
-                                                        'type' => (string) ($existingCopy['tipo_turno'] ?? 'REGULAR'), 'fields' => $copyFields]
-                                                    : ['key' => (string) $template['clave'], 'version' => (int) $template['version'], 'name' => $displayTemplateName,
-                                                        'type' => (string) ($template['tipo_turno'] ?? 'REGULAR'), 'fields' => $template['customize_fields'],
-                                                        'segments' => $segments];
-                                                $actionJson = json_encode($actionData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
-                                            ?>
-                                            <div class="dropdown dropstart">
-                                                <a class="pointer" data-bs-toggle="dropdown" aria-label="Opciones del turno" aria-expanded="false" role="button" tabindex="0"><i class="ti ti-dots-vertical fs-6"></i></a>
-                                                <ul class="dropdown-menu">
-                                                    <?php if ($existingCopy !== null): ?>
-                                                        <li><a class="dropdown-item pointer" href="#" data-m04-edit-template="<?= htmlspecialchars((string) $actionJson, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-edit"></i> Editar personalización</a></li>
-                                                    <?php else: ?>
-                                                        <li><a class="dropdown-item pointer" href="#" data-m04-customize-template="<?= htmlspecialchars((string) $actionJson, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-copy"></i> Personalizar para mi estación</a></li>
-                                                    <?php endif; ?>
-                                                </ul>
-                                            </div>
-                                        <?php elseif (strtoupper((string) ($template['scope'] ?? '')) === 'STATION' && is_array($template['edit_fields'] ?? null)): ?>
+                                        <?php if (strtoupper((string) ($template['scope'] ?? '')) === 'STATION'
+                                            && (int) ($template['id_estacion'] ?? 0) === (int) ($selectedWorkplaceId ?? 0)
+                                            && is_array($template['edit_fields'] ?? null)): ?>
                                             <?php
                                                 $editData = ['key' => (string) $template['clave'], 'version' => (int) $template['version'],
                                                     'name' => $displayTemplateName, 'type' => (string) ($template['tipo_turno'] ?? 'REGULAR'),
