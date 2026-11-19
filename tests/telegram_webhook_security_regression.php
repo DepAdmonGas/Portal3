@@ -48,7 +48,7 @@ $tests = [
     'accepts replay idempotently without repeating the side effect' => static fn (): bool => $controller->handlePayload($first, 'test-webhook-secret') === 200 && $service->processed === 1,
     'processes a new update after a replay' => static fn (): bool => $controller->handlePayload($next, 'test-webhook-secret') === 200 && $service->processed === 2,
     'rejects invalid JSON without a side effect' => static fn (): bool => $controller->handlePayload('{', 'test-webhook-secret') === 400 && $service->processed === 2,
-    'rejects incomplete updates without a side effect' => static fn (): bool => $controller->handlePayload('{"update_id":7003}', 'test-webhook-secret') === 400 && $service->processed === 2,
+    'acknowledges unsupported Telegram updates without a side effect' => static fn (): bool => $controller->handlePayload('{"update_id":7003}', 'test-webhook-secret') === 200 && $service->processed === 2,
 ];
 
 $passed = 0;

@@ -639,8 +639,10 @@ return false;
 
 public static function getUploadDir(): string
 {
-$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/';
-if (!is_dir($dir)) mkdir($dir, 0750, true);
+$dir = dirname(__DIR__, 2) . '/storage/private/documentos-personal/';
+if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
+    throw new \RuntimeException('No fue posible preparar el almacenamiento privado de documentos personales.');
+}
 return $dir;
 }
 
