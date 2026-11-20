@@ -96,6 +96,10 @@ $schema->create('tb_multiestacion_puesto', static function ($table): void {
     $table->text('departamentos_puestos')->nullable(); $table->text('departamentos_localidades')->nullable();
     $table->boolean('activo')->default(true);
 });
+$schema->create('op_rh_v2_permission_grants', static function ($table): void {
+    $table->increments('id'); $table->string('permission_key'); $table->string('principal_type');
+    $table->integer('principal_id'); $table->boolean('granted'); $table->boolean('active');
+});
 
 $db = $capsule->getConnection();
 $_SESSION = [];
@@ -364,6 +368,11 @@ $db->table('tb_modulos_config')->where('modulo_key', 'checador')->update([
     'departamentos_soportados' => '[9]',
 ]);
 $db->table('tb_multiestacion_puesto')->where('id_puesto', 13)->update(['departamentos_localidades' => '[9]']);
+$db->table('op_rh_v2_permission_grants')->insert([
+    ['permission_key' => 'checador.programacion.leer', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.programacion.editar', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.programacion.leer', 'principal_type' => 'POSITION', 'principal_id' => 13, 'granted' => 1, 'active' => 1],
+]);
 $login(1300);
 $directionWithDepartment = ChecadorAccessService::authorize();
 $mixedSelector = ModuleStationService::render('checador');
@@ -376,6 +385,11 @@ $assert($directionWithDepartment['allowed']
     && str_contains($mixedSelector, 'value="depto_9"')
     && !str_contains($mixedSelector, 'value="estacion_9"'),
     'V6B4 Dirección sees its supported stations plus explicitly granted Autolavado in separate selector groups');
+$directionM03 = ChecadorAccessService::authorizeScheduling(9, 'leer');
+$directionM03Write = ChecadorAccessService::authorizeScheduling(9, 'editar');
+$assert(($directionM03['allowed'] ?? false) && ($directionM03['department_workplaces'][0]['id'] ?? 0) === 9
+    && !($directionM03Write['allowed'] ?? false),
+    'M03 Dirección reads explicitly scoped Autolavado but remains read-only');
 $assert(ModuleStationService::setChecadorWorkplaceContext(9)
     && ModuleStationService::getContext('checador')['id_depto'] === 9
     && ModuleStationService::getContext('checador')['id_estacion'] === null,
@@ -390,8 +404,9 @@ $paloSolo = ChecadorAccessService::authorize();
 $assert($paloSolo['allowed']
     && array_column($paloSolo['station_workplaces'], 'id') === [2]
     && ($paloSolo['department_workplaces'] ?? []) === []
-    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope',
-    'V7C12 position-level Autolavado grant is not inherited by ordinary Encargados');
+    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope'
+    && !ChecadorAccessService::authorizeScheduling(9, 'leer')['allowed'],
+    'M03 Encargado cannot inherit Autolavado from a position-level or Palo Solo scope');
 $db->table('tb_usuarios')->insert(['id' => 651, 'id_gas' => 111, 'id_puesto' => 6, 'estatus' => 0]);
 $db->table('tb_multiestacion_usuario')->insert([
     'id_usuario' => 651,
@@ -406,14 +421,23 @@ $assert($authorizedPaloSolo['allowed']
     && array_column($authorizedPaloSolo['department_workplaces'], 'id') === [9]
     && array_column($authorizedPaloSolo['workplaces'], 'id') === [2, 9]
     && ChecadorAccessService::authorize(9)['allowed']
+    && ChecadorAccessService::authorizeScheduling(9, 'leer')['allowed']
+    && ChecadorAccessService::authorizeScheduling(9, 'editar')['allowed']
     && ChecadorAccessService::authorize(1)['reason'] === 'requested_station_out_of_scope',
     'V7C12 individually authorized Palo Solo Encargado gets only Palo Solo 2 and Autolavado 9 despite a broad global station row');
-$db->table('tb_multiestacion_usuario')->where('id_usuario', 470)->update(['departamentos_localidades' => '[9]']);
+$db->table('tb_multiestacion_usuario')->insert([
+    'id_usuario' => 470,
+    'estaciones' => '[101,102,103]',
+    'departamentos_localidades' => '[9]',
+    'activo' => 1,
+]);
 $login(470);
 $assert(array_column(ChecadorAccessService::authorize()['station_workplaces'], 'id') === [204]
     && (ChecadorAccessService::authorize()['department_workplaces'] ?? []) === []
-    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope',
-    'V7C12 non-Palo Solo Encargado 470 cannot use an individual department scope to access Autolavado');
+    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope'
+    && ChecadorAccessService::authorizeScheduling(9, 'leer')['allowed']
+    && !ChecadorAccessService::authorizeScheduling(2, 'leer')['allowed'],
+    'M03 direct Autolavado authorization works independently of Palo Solo and does not widen the selector ACL');
 
 // V7C12 writes remain separate from read access: an authorized Checador
 // reader cannot create an incidence until the dedicated `crear` capability

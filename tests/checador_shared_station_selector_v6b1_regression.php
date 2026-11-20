@@ -30,6 +30,11 @@ $reportStart = strpos($controller, 'public function punchReport(): void');
 $dataStart = strpos($controller, 'public function punchReportData(): void');
 $index = $indexStart !== false && $reportStart !== false ? substr($controller, $indexStart, $reportStart - $indexStart) : '';
 $report = $reportStart !== false && $dataStart !== false ? substr($controller, $reportStart, $dataStart - $reportStart) : '';
+$moduleNavigationStart = strpos($controller, 'private function buildModuleNavigation(');
+$workspaceStart = strpos($controller, 'private function renderDashboardWorkspace(');
+$moduleNavigation = $moduleNavigationStart !== false && $workspaceStart !== false
+    ? substr($controller, $moduleNavigationStart, $workspaceStart - $moduleNavigationStart)
+    : '';
 
 $assert($index !== '' && $report !== ''
     && str_contains($controller, "public function dailyAttendance(): void")
@@ -40,6 +45,10 @@ $assert($index !== '' && $report !== ''
     && str_contains($layout, 'if (!empty($moduleStationSelector))')
     && str_contains($layout, '<?= $moduleStationSelector ?>'),
     'V6B1 Checador workspaces and raw report reuse the shared selector with the independent module key');
+$assert($moduleNavigation !== ''
+    && str_contains($moduleNavigation, "'href' => \$base . '/asistencia'")
+    && !str_contains($moduleNavigation, "\$queryString(\$base . '/asistencia', \$context)"),
+    'M01 directory card uses the clean attendance route while other Checador cards retain their existing context links');
 $assert(str_contains($moduleStations, 'ChecadorAccessService::authorize()')
     && str_contains($moduleStations, 'getAvailableStations(string $moduleKey)')
     && str_contains($access, 'MultiestacionService::getConfig($user)')
@@ -67,15 +76,19 @@ $assert(!preg_match('/<select\b[^>]*\bname="workplace_id"/i', $dailyView . $repo
     && !preg_match('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="workplace_id")[^>]*>/i', $dailyView)
     && str_contains($controller, '$moduleContext[\'id_depto\'] ?? $moduleContext[\'id_estacion\'] ?? null'),
     'V6B1 the shared layout owns station selection while daily AJAX filters use the server-validated session context');
-$assert(str_contains($navigation, 'url.searchParams.set(\'workplace_id\', nextStationId)')
+$assert(str_contains($navigation, "url.searchParams.delete('workplace_id')")
+    && str_contains($navigation, 'if (isJourneys) {')
+    && str_contains($navigation, 'url.searchParams.set(\'workplace_id\', nextStationId)')
     && str_contains($navigation, "url.searchParams.delete('source_workplace_id')")
-    && str_contains($navigation, "url.searchParams.delete('snapshot_ref')")
-    && str_contains($navigation, "window.location.assign(url)"),
-    'V6B1 changing station replaces URL context, drops stale source/snapshot state, and reloads the screen');
+    && str_contains($navigation, "['date', 'worker_id', 'snapshot_ref', 'page', 'per_page']")
+    && str_contains($navigation, "window.location.assign(url)")
+    && str_contains($controller, "ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY)")
+    && str_contains($moduleContext, 'ModuleStationService::setContext($moduleKey'),
+    'V6B1 persists authorized station in session, removes visible context and filter queries, and reloads');
 $assert(str_contains($navigation, 'function isCivilDate')
-    && str_contains($navigation, "url.searchParams.delete('worker_id')")
-    && str_contains($navigation, 'validRange'),
-    'V6B1 date context is retained only when valid and daily worker context is cleared on station changes');
+    && str_contains($navigation, 'validRange')
+    && str_contains($navigation, "['date', 'worker_id', 'snapshot_ref', 'page', 'per_page']"),
+    'V6B1 report date validation remains intact while M01 filters stay out of the ordinary URL');
 $reportNavigationStart = strpos($navigation, 'var fromDate = url.searchParams.get');
 $reportNavigationEnd = strpos($navigation, "url.searchParams.delete('export')", $reportNavigationStart ?: 0);
 $reportNavigation = $reportNavigationStart !== false && $reportNavigationEnd !== false
@@ -90,16 +103,24 @@ $assert($reportNavigation !== ''
     && str_contains($reportNavigation, "if (nextStationId === null) {\n                url.searchParams.delete('worker_id');")
     && !str_contains($reportNavigation, "if (nextStationId === null || stationChanged) {\n                url.searchParams.delete('worker_id');")
     && str_contains($reportNavigation, "url.searchParams.delete('source_workplace_id')")
-    && str_contains($dailyNavigation, 'nextStationId === null || stationChanged')
-    && str_contains($index, 'checador.module-station.init.js?v=20261021-1')
-    && str_contains($report, 'checador.module-station.init.js?v=20261027-1'),
-    'V6B6 report preserves a valid worker filter across locality changes while daily-screen behavior stays unchanged');
+    && str_contains($dailyNavigation, "['date', 'worker_id', 'snapshot_ref', 'page', 'per_page']")
+    && str_contains($dailyNavigation, "url.searchParams.delete(key)")
+    && str_contains($index, 'checador.module-station.init.js?v=20261116-1')
+    && str_contains($report, 'checador.module-station.init.js?v=20261113-2'),
+    'V6B6 report preserves its valid worker filter while M01 clears filters from normal URL navigation');
+$assert(str_contains($controller, '$isDailyAttendanceGet = $workspace === \'daily-attendance\' && Request::method() === \'GET\';')
+    && str_contains($controller, 'if ($isDailyAttendanceGet && $hasExplicitWorkplace)')
+    && str_contains($controller, 'ChecadorAccessService::authorize($requestedWorkplace)')
+    && str_contains($controller, '$requestedWorkplace = $sessionWorkplace;')
+    && str_contains($controller, "self::redirect('/departamento-operativo/recursos-humanos/checador/asistencia');"),
+    'M01 validates legacy workplace IDs, gives an existing authorized session selection priority, and normalizes the GET URL after saving context');
 $assert(str_contains($navigation, "typeof ModuleStationSelector !== 'undefined'")
-    && str_contains($navigation, 'currentPath !== reportPath')
+    && str_contains($navigation, "var dailyPath = checadorPath + '/asistencia';")
+    && str_contains($navigation, 'currentPath !== dailyPath && currentPath !== reportPath && currentPath !== journeysPath')
     && str_contains($navigation, "selectorApi.init('checador'")
-    && str_contains($index, 'checador.module-station.init.js?v=20261021-1')
-    && str_contains($report, 'checador.module-station.init.js?v=20261027-1'),
-    'V6B7 report installs the custom URL reload through the shared lexical class while the advanced screen keeps its prior reload path');
+    && str_contains($controller, 'checador.module-station.init.js?v=20261116-1')
+    && str_contains($report, 'checador.module-station.init.js?v=20261113-2'),
+    'M01 and report keep their route navigation while Jornadas also uses the shared selector and canonical session context');
 $assert(str_contains($navigation, '(?:estacion|depto)_([1-9][0-9]*)')
     && str_contains($moduleStations, 'value="depto_')
     && str_contains($access, "'departamentos_localidades'"),

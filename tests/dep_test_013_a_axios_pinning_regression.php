@@ -13,11 +13,19 @@ $contents = array_map(static fn (string $path): string => (string) file_get_cont
 $joined = implode('', $contents);
 $deferred = (string) file_get_contents(__DIR__ . '/../app/Views/layouts/departamento-operativo.php');
 
+$operatingLayouts = array_slice($contents, 0, 4);
 $tests = [
     'Exactly five in-scope Axios references are exact-pinned' => substr_count($joined, 'https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js') === 5,
     'No unversioned Axios URL remains in scope' => !str_contains($joined, 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js'),
     'Departamento-operativo remains unchanged and deferred' => str_contains($deferred, "asset('libs/axios/dist/axios.min.js')") && str_contains($deferred, 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js'),
-    'HTTP security loads after Axios' => count(array_filter($contents, static fn (string $html): bool => strpos($html, 'axios@1.7.9') < strpos($html, 'js/core/http-security.js'))) === 4,
+    'CSRF bootstrap loads after Axios in each operating layout' => count(array_filter($operatingLayouts, static function (string $html): bool {
+        $axios = strpos($html, 'axios@1.7.9');
+        $bootstrap = min(array_filter([
+            strpos($html, 'js/core/http-security.js'),
+            strpos($html, 'js/core/csrf-http.js'),
+        ], static fn (int|false $position): bool => $position !== false));
+        return $axios !== false && $bootstrap !== false && $axios < $bootstrap;
+    })) === 4,
     'No duplicate Axios loads in modified layouts' => count(array_filter($contents, static fn (string $html): bool => substr_count($html, 'axios@1.7.9') > 1)) === 0,
 ];
 

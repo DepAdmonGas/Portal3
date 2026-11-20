@@ -46,6 +46,21 @@ try {
 }
 ?>
 <div class="container-fluid mt-4 mb-5">
+    <section class="card mb-3" aria-labelledby="punch-report-title">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2 gap-md-3">
+            <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-fingerprint fs-5"></i></span>
+            <div class="me-auto">
+                <h1 class="h5 mb-0 text-white" id="punch-report-title">Reporte de marcaciones</h1>
+                <span class="small text-white-50"><?= htmlspecialchars((string) (($selectedWorkplaceName ?? '') !== '' ? $selectedWorkplaceName : 'Selecciona una localidad autorizada'), ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+            <div class="dropdown">
+                <button type="button" class="btn btn-light btn-sm text-primary" id="punch-report-options" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del reporte"><i class="ti ti-dots-vertical" aria-hidden="true"></i></button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="punch-report-options">
+                    <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#punch-report-filter-modal"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar marcaciones</button></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
     <form id="punch-report-period-form" method="get" action="/departamento-operativo/recursos-humanos/checador/reporte" class="row g-2 align-items-end mb-2" data-checador-period-form>
         <div class="col-12 col-sm-6 col-lg-3">
             <label class="form-label mb-1" for="punch-report-period">Periodo</label>
@@ -67,27 +82,13 @@ try {
             <label class="form-label mb-1" for="punch-report-year">Año</label>
             <input class="form-control" type="number" id="punch-report-year" name="year" min="2000" max="<?= (int) gmdate('Y') ?>" value="<?= $periodYear ?>" inputmode="numeric">
         </div>
-        <div class="col-12 col-sm-6 col-lg-3 punch-report-worker-field">
-            <label class="form-label mb-1" for="punch-report-worker">Colaborador</label>
-            <select class="form-select" id="punch-report-worker" name="worker_id"
-                data-search-url="/departamento-operativo/recursos-humanos/checador/reporte/colaboradores"
-                aria-describedby="punch-report-worker-help">
-                <option value="">Todos los colaboradores</option>
-                <?php if (is_array($selectedWorkerOption ?? null)): ?>
-                    <option value="<?= (int) $selectedWorkerOption['id'] ?>" selected><?= htmlspecialchars((string) $selectedWorkerOption['text'], ENT_QUOTES, 'UTF-8') ?></option>
-                <?php endif; ?>
-            </select>
-            <span class="visually-hidden" id="punch-report-worker-help">Busca por nombre o apellido; el identificador se conserva de forma interna.</span>
-        </div>
         <div class="col-12 col-lg-auto d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#punch-report-filter-modal">
-                <i class="ti ti-filter me-1" aria-hidden="true"></i>Más filtros
-            </button>
             <button type="submit" class="btn btn-primary"><i class="ti ti-search me-1" aria-hidden="true"></i>Consultar</button>
             <?php if ($previousPeriodHref !== null): ?><a class="btn btn-outline-secondary" href="<?= htmlspecialchars($previousPeriodHref, ENT_QUOTES, 'UTF-8') ?>">Periodo anterior</a><?php endif; ?>
         </div>
         <input type="hidden" name="capture_method" value="<?= htmlspecialchars((string) ($captureMethod ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="processing_status" value="<?= htmlspecialchars((string) ($processingStatus ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" id="punch-report-worker-value" name="worker_id" value="<?= htmlspecialchars((string) ($workerId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         <?php if ($sourceDailyContext !== []): ?>
             <input type="hidden" name="source_work_date" value="<?= htmlspecialchars((string) $sourceWorkDate, ENT_QUOTES, 'UTF-8') ?>">
             <?php if (($sourceWorkerId ?? null) !== null): ?><input type="hidden" name="source_worker_id" value="<?= (int) $sourceWorkerId ?>"><?php endif; ?>
@@ -99,17 +100,30 @@ try {
         <?php if (($captureMethod ?? '') !== ''): ?><span class="badge text-bg-light border"><?= htmlspecialchars((string) ($captureMethodOptions[$captureMethod] ?? 'Método filtrado'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
         <?php if (($processingStatus ?? '') !== ''): ?><span class="badge text-bg-light border"><?= htmlspecialchars((string) ($processingStatusOptions[$processingStatus] ?? 'Estado filtrado'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
     </div>
+        </div>
+    </section>
 
     <div class="modal fade" id="punch-report-filter-modal" tabindex="-1" aria-labelledby="punch-report-filter-modal-title" aria-hidden="true" data-checador-filter-modal>
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="punch-report-filter-form" method="get" action="/departamento-operativo/recursos-humanos/checador/reporte" data-checador-filter-form>
                     <div class="modal-header modal-colored-header bg-primary text-white">
-                        <h2 class="modal-title h5 text-white mb-0" id="punch-report-filter-modal-title">Filtros de consulta</h2>
+                        <h2 class="modal-title h5 text-white mb-0" id="punch-report-filter-modal-title"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar marcaciones</h2>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar filtros"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" id="worker_id" name="worker_id" value="<?= htmlspecialchars((string) ($workerId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                        <div class="mb-3 punch-report-worker-field">
+                            <label class="form-label" for="punch-report-worker">Colaborador</label>
+                            <select class="form-select w-100" id="punch-report-worker" name="worker_id"
+                                data-search-url="/departamento-operativo/recursos-humanos/checador/reporte/colaboradores"
+                                aria-describedby="punch-report-worker-help">
+                                <option value="">Todos los colaboradores</option>
+                                <?php if (is_array($selectedWorkerOption ?? null)): ?>
+                                    <option value="<?= (int) $selectedWorkerOption['id'] ?>" selected><?= htmlspecialchars((string) $selectedWorkerOption['text'], ENT_QUOTES, 'UTF-8') ?></option>
+                                <?php endif; ?>
+                            </select>
+                            <span class="visually-hidden" id="punch-report-worker-help">Busca por nombre o apellido; el identificador se conserva de forma interna.</span>
+                        </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6"><label class="form-label" for="from_date">Fecha inicial (UTC)</label><input class="form-control" id="from_date" name="from_date" type="date" value="<?= htmlspecialchars((string) ($fromDate ?? ''), ENT_QUOTES, 'UTF-8') ?>" required></div>
                             <div class="col-12 col-md-6"><label class="form-label" for="to_date">Fecha final (UTC)</label><input class="form-control" id="to_date" name="to_date" type="date" value="<?= htmlspecialchars((string) ($toDate ?? ''), ENT_QUOTES, 'UTF-8') ?>" required></div>
@@ -150,7 +164,7 @@ try {
                         <button class="btn btn-primary" type="submit">
                             <i class="ti ti-search me-1" aria-hidden="true"></i>Aplicar filtros
                         </button>
-                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancelar</button>
+                        <button class="btn bg-danger-subtle text-danger" type="button" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button>
                     </div>
                 </form>
             </div>
@@ -169,7 +183,7 @@ try {
             <div class="card-header bg-primary text-white d-flex flex-wrap align-items-center gap-2 gap-md-3">
                 <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-fingerprint fs-5"></i></span>
                 <div>
-                    <h2 class="h5 mb-0 text-white" id="punch-report-results-title">Marcaciones registradas</h2>
+                        <h2 class="h5 mb-0 text-white" id="punch-report-results-title">Resultados de marcaciones</h2>
                     <span class="small text-white-50"><?= htmlspecialchars((string) ($selectedWorkplaceName ?: 'Localidad no disponible'), ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
                 <span class="badge rounded-pill bg-white text-primary ms-auto">Horas en UTC</span>
@@ -212,9 +226,9 @@ try {
         <div class="modal fade" id="checador-punch-detail-modal" tabindex="-1" aria-labelledby="checador-punch-detail-title" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header bg-primary">
+                    <div class="modal-header modal-colored-header bg-primary text-white">
                         <div>
-                            <h2 class="modal-title h5 text-white mb-1" id="checador-punch-detail-title">Detalle de marcación</h2>
+                            <h2 class="modal-title h5 text-white mb-1" id="checador-punch-detail-title"><i class="ti ti-fingerprint me-1" aria-hidden="true"></i>Detalle de marcación</h2>
                             <span class="small text-white-50">Información del registro recibido</span>
                         </div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar detalle"></button>
@@ -235,7 +249,7 @@ try {
                         </dl>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button>
                     </div>
                 </div>
             </div>

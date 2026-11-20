@@ -50,10 +50,6 @@ window.performLogout = async function() {
             title: 'Error',
             text: mensaje
         });
-
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 2000);
     }
 };
 
@@ -686,11 +682,6 @@ async getAction({
                 title: 'Error',
                 text: mensaje
             });
-
-            // Forzar redirección aunque haya error
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
 
         } finally {
             this.loading = false;

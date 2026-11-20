@@ -383,7 +383,17 @@
                 this.errorFirma = Array.isArray(field) ? field[0] : (field || data.message || 'No fue posible actualizar la firma.'); Notify.error(data.message || 'No fue posible actualizar la firma.');
             } finally { this.guardandoFirma = false; }
         },
-        async cerrarSesionYRedirigir() { try { await axios.post('/logout', {}); } finally { window.location.assign('/login'); } }
+        async cerrarSesionYRedirigir() {
+            try {
+                const response = await axios.post('/logout', {});
+                if (response.data?.type !== 'success' && response.data?.success !== true) {
+                    throw new Error(response.data?.message || 'No fue posible cerrar la sesión.');
+                }
+                window.location.assign('/login');
+            } catch (error) {
+                Notify.error(error.response?.data?.message || error.message || 'No fue posible cerrar la sesión.');
+            }
+        }
     }));
 
     Alpine.data('cambiarPassword', () => ({
@@ -607,11 +617,11 @@
 
                 this.modal.hide();
                 Notify.success(response.data.message || 'Contraseña actualizada. Inicia sesión de nuevo.');
-                try {
-                    await axios.post('/logout', {});
-                } finally {
-                    window.location.assign('/login');
+                const logoutResponse = await axios.post('/logout', {});
+                if (logoutResponse.data?.type !== 'success' && logoutResponse.data?.success !== true) {
+                    throw new Error(logoutResponse.data?.message || 'No fue posible cerrar la sesión.');
                 }
+                window.location.assign('/login');
 
             } catch (error) {
 

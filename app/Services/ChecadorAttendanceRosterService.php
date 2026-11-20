@@ -322,7 +322,7 @@ final class ChecadorAttendanceRosterService
         }
     }
 
-    /** Active Portal3 workers whose canonical assignment covers local noon on the requested schedule date. */
+    /** Active workers with verified workplace membership for local noon on the schedule date. */
     public function workersForScheduleDate(int $workplaceId, string $date, string $timezone, bool $demoMode): array
     {
         if ($workplaceId < 1 || !ChecadorOperationalPeriod::isIanaTimezone($timezone)
@@ -337,37 +337,274 @@ final class ChecadorAttendanceRosterService
                 'employee_number' => null,
             ]], 'Padrón sintético aislado; no se consultó el padrón operativo.');
         }
+        // Reuse the station-scoped roster resolver used by M01. It verifies
+        // canonical memberships and only marks a current roster as partial
+        // reference where historical/future membership is not evidenced.
+        return $this->workersForAttendanceFilter($workplaceId, $date, $timezone, false);
+    }
+
+    /** Return one profile only if the requested local date resolves to this workplace. */
+    public function scheduleHistoryWorkerForDate(int $workerId, int $workplaceId, string $date, string $timezone): ?array
+    {
+        if ($workerId < 1 || $workplaceId < 1 || !self::isCivilDate($date)
+            || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) return null;
         try {
-            $effectiveAt = (new \DateTimeImmutable($date . ' 12:00:00', new \DateTimeZone($timezone)))
-                ->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
-            $people = RhPersonal::query()->where('estado', 1)->orderBy('id')
-                ->limit(self::MAX_ROSTER_ROWS + 1)->get(['id', 'nombre_completo', 'no_colaborador']);
-            $truncated = $people->count() > self::MAX_ROSTER_ROWS;
-            if ($truncated) $people = $people->take(self::MAX_ROSTER_ROWS);
+            $person = RhPersonal::query()->whereKey($workerId)
+                ->first(['id', 'id_estacion', 'nombre_completo', 'no_colaborador', 'estado']);
+            if ($person === null || !self::hasScheduleHistoryMembership(
+                $person,
+                $workplaceId,
+                ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId),
+                $date,
+                $timezone
+            )) return null;
+            $name = trim((string) $person->nombre_completo);
+            if ($name === '') return null;
+            return [
+                'worker_id' => (int) $person->id,
+                'full_name' => $name,
+                'employee_number' => $person->no_colaborador === null ? null : (string) $person->no_colaborador,
+            ];
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private static function hasScheduleHistoryMembership(
+        RhPersonal $person,
+        int $workplaceId,
+        ?int $physicalStationId,
+        string $date,
+        string $timezone
+    ): bool {
+        $workerId = (int) $person->id;
+        $membershipRows = RhPersonalLocalidadVersion::query()
+            ->where('worker_id', $workerId)
+            ->where('recorded_at_utc', '<=', (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s.u'))
+            ->orderBy('id')
+            ->get(['id', 'workplace_id', 'valid_from_utc']);
+        $effectiveAt = (new \DateTimeImmutable($date . ' 12:00:00', new \DateTimeZone($timezone)))
+            ->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\\TH:i:s.u\\Z');
+        $membership = (new WorkerWorkplaceAssignmentResolver())->resolveAssignments($workerId, $effectiveAt);
+        if (($membership['status'] ?? '') === 'RESOLVED_SINGLE'
+            && count($membership['assignments'] ?? []) === 1
+            && (int) ($membership['assignments'][0]['workplace_id'] ?? 0) === $workplaceId) return true;
+
+        if ($membershipRows->isNotEmpty()) return false;
+        return (int) ($person->estado ?? 0) === 1
+            && $physicalStationId !== null
+            && (int) ($person->id_estacion ?? 0) === $physicalStationId
+            && ChecadorOperationalPeriod::currentLocalDate(
+                $timezone,
+                new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
+            ) === $date;
+    }
+
+    /** Active workers with verified canonical membership across a schedule week. */
+    public function workersForScheduleWeek(
+        int $workplaceId,
+        string $weekStart,
+        string $timezone,
+        bool $demoMode
+    ): array {
+        $weekDates = ChecadorWeeklyScheduleService::dates($weekStart);
+        if ($workplaceId < 1 || $weekDates === [] || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
+            return self::result('unavailable', 'unknown', [], 'No se pudo validar la localidad, semana o zona horaria laboral.');
+        }
+
+        if ($demoMode && ChecadorDailyReadService::demoModeEnabled()) {
+            if ($workplaceId !== 14) {
+                return self::result('demo_unavailable', 'synthetic_only', [], 'El escenario de demostración no contiene personal para este centro.');
+            }
+            return self::result('demo_fixture', 'synthetic_only', [[
+                'worker_id' => 900001,
+                'full_name' => 'Colaborador de demostración',
+                'employee_number' => null,
+                'verified_dates' => array_column($weekDates, 'date'),
+                'versioned_verified_dates' => array_column($weekDates, 'date'),
+                'roster_status' => 'week_membership',
+            ]], 'Padrón sintético aislado; no se consultó el padrón operativo.');
+        }
+
+        try {
+            $locality = RhLocalidad::query()->whereKey($workplaceId)->first(['id', 'numlista']);
+            if ($locality === null) {
+                return self::result('unavailable', 'unknown', [], 'La localidad canónica no existe.');
+            }
+
+            $physicalStationId = ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId);
+            $isDepartmentLocality = ChecadorAccessService::isDepartmentLocality($workplaceId);
+            $legacyRosterId = $physicalStationId ?? ($isDepartmentLocality ? $workplaceId : null);
+            $legacyMappingUnavailable = (int) ($locality->numlista ?? 0) > 0
+                && $physicalStationId === null
+                && !$isDepartmentLocality;
+
+            // Translate a station locality through the validated numlista
+            // bridge before matching RhPersonal.id_estacion. A department
+            // locality has no physical station mapping and may use only its
+            // own explicit department id or versioned canonical memberships.
+            // Select those candidates before the safety ceiling so unrelated
+            // global rows cannot consume the first 250 entries.
+            $candidates = RhPersonal::query()
+                ->where('estado', 1)
+                ->where(static function ($query) use ($legacyRosterId, $workplaceId): void {
+                    if ($legacyRosterId !== null) {
+                        $query->where('id_estacion', $legacyRosterId)
+                            ->orWhereIn('id', RhPersonalLocalidadVersion::query()
+                                ->where('workplace_id', $workplaceId)
+                                ->select('worker_id')
+                                ->distinct());
+                    } else {
+                        $query->whereIn('id', RhPersonalLocalidadVersion::query()
+                            ->where('workplace_id', $workplaceId)
+                            ->select('worker_id')
+                            ->distinct());
+                    }
+                })
+                ->orderBy('id')
+                ->limit(self::MAX_ROSTER_ROWS + 1)
+                ->get(['id', 'id_estacion', 'nombre_completo', 'no_colaborador']);
+
+            $truncated = $candidates->count() > self::MAX_ROSTER_ROWS;
+            if ($truncated) {
+                $candidates = $candidates->take(self::MAX_ROSTER_ROWS);
+            }
+
+            $workerIds = $candidates->map(static fn($person): int => (int) $person->id)->all();
+            $versionedWorkerIds = $workerIds === []
+                ? []
+                : array_fill_keys(array_map('intval', RhPersonalLocalidadVersion::query()
+                    ->whereIn('worker_id', $workerIds)
+                    ->distinct()
+                    ->pluck('worker_id')
+                    ->all()), true);
+
+            $nowUtc = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+            $today = ChecadorOperationalPeriod::currentLocalDate($timezone, $nowUtc);
             $resolver = new WorkerWorkplaceAssignmentResolver();
             $workers = [];
-            $invalid = false;
-            foreach ($people as $person) {
-                $membership = $resolver->resolveAssignments((int) $person->id, $effectiveAt);
-                if (($membership['status'] ?? '') === 'DATA_INVALID') {
-                    $invalid = true;
-                    continue;
-                }
-                foreach ($membership['assignments'] ?? [] as $assignment) {
-                    if ((int) ($assignment['workplace_id'] ?? 0) === $workplaceId) {
-                        $workers[] = [
-                            'worker_id' => (int) $person->id,
-                            'full_name' => trim((string) $person->nombre_completo) ?: 'Nombre no disponible',
-                            'employee_number' => $person->no_colaborador === null ? null : (string) $person->no_colaborador,
-                        ];
-                        break;
+            $unversionedCandidates = 0;
+            $membershipGaps = false;
+            $invalidMembership = false;
+            $invalidCurrentMembership = false;
+
+            foreach ($candidates as $person) {
+                $workerId = (int) $person->id;
+                $verifiedDates = [];
+                $versionedVerifiedDates = [];
+                $currentBelongs = false;
+
+                if (!isset($versionedWorkerIds[$workerId])) {
+                    $unversionedCandidates++;
+                    $currentBelongs = $legacyRosterId !== null
+                        && (int) ($person->id_estacion ?? 0) === $legacyRosterId;
+                    // The current HR station can support only today's active
+                    // roster. It is not a historical or future effective interval.
+                    foreach ($weekDates as $day) {
+                        if ($today !== null
+                            && $day['date'] === $today
+                            && $legacyRosterId !== null
+                            && (int) ($person->id_estacion ?? 0) === $legacyRosterId) {
+                            $verifiedDates[] = $day['date'];
+                        } else {
+                            $membershipGaps = true;
+                        }
+                    }
+                } else {
+                    $currentMembership = $resolver->resolveAssignments(
+                        $workerId,
+                        $nowUtc->format('Y-m-d\TH:i:s.u\Z')
+                    );
+                    if (($currentMembership['status'] ?? '') === 'DATA_INVALID') {
+                        $invalidCurrentMembership = true;
+                    } else {
+                        $currentAssignments = $currentMembership['assignments'] ?? [];
+                        $currentBelongs = ($currentMembership['status'] ?? '') === 'RESOLVED_SINGLE'
+                            && count($currentAssignments) === 1
+                            && (int) ($currentAssignments[0]['workplace_id'] ?? 0) === $workplaceId;
+                    }
+
+                    foreach ($weekDates as $day) {
+                        $effectiveAt = (new \DateTimeImmutable($day['date'] . ' 12:00:00', new \DateTimeZone($timezone)))
+                            ->setTimezone(new \DateTimeZone('UTC'))
+                            ->format('Y-m-d\TH:i:s.u\Z');
+                        $membership = $resolver->resolveAssignments($workerId, $effectiveAt);
+                        if (($membership['status'] ?? '') === 'DATA_INVALID') {
+                            $invalidMembership = true;
+                            $membershipGaps = true;
+                            continue;
+                        }
+
+                        $belongs = false;
+                        foreach ($membership['assignments'] ?? [] as $assignment) {
+                            if ((int) ($assignment['workplace_id'] ?? 0) === $workplaceId) {
+                                $belongs = true;
+                                break;
+                            }
+                        }
+                        if ($belongs) {
+                            $verifiedDates[] = $day['date'];
+                            $versionedVerifiedDates[] = $day['date'];
+                        } elseif (($membership['status'] ?? '') === 'RESOLVED_NONE') {
+                            // An empty effective result does not establish
+                            // the missing historical interval or future roster.
+                            $membershipGaps = true;
+                        }
                     }
                 }
+
+                // Keep the independently sourced current station roster visible
+                // when the selected week has no verified membership at all.
+                // Such a row is reference-only: matrixProjection masks all its
+                // dates as membership_unverified and the date-aware selector
+                // excludes it from assignment controls.
+                if (!$currentBelongs && $verifiedDates === []) {
+                    continue;
+                }
+
+                $name = trim((string) $person->nombre_completo);
+                if ($workerId < 1 || $name === '' || $name === 'Nombre no disponible') {
+                    $invalidMembership = true;
+                    continue;
+                }
+                $employeeNumber = $person->no_colaborador === null ? '' : trim((string) $person->no_colaborador);
+                $workers[] = [
+                    'worker_id' => $workerId,
+                    'full_name' => $name,
+                    'employee_number' => $employeeNumber !== '' && $employeeNumber !== '0' ? $employeeNumber : null,
+                    'verified_dates' => $verifiedDates,
+                    'versioned_verified_dates' => $versionedVerifiedDates,
+                    'has_versioned_membership' => isset($versionedWorkerIds[$workerId]),
+                    'roster_status' => $currentBelongs ? 'current_roster' : 'week_membership',
+                ];
             }
-            if ($truncated || $invalid) return self::result('partial', 'incomplete', $workers, 'La cobertura del padrón o de las membresías canónicas es parcial.');
-            return self::result('ready', 'effective_date_membership', $workers, 'Personal activo con pertenencia canónica validada para la fecha seleccionada.');
+
+            $referenceRosterCount = count(array_filter(
+                $workers,
+                static fn(array $worker): bool => ($worker['roster_status'] ?? '') === 'current_roster'
+            ));
+            $weekOnlyCount = count($workers) - $referenceRosterCount;
+            $workersWithVersionedMembership = count(array_filter(
+                $workers,
+                static fn(array $worker): bool => ($worker['versioned_verified_dates'] ?? []) !== []
+            ));
+
+            $partial = $truncated || $legacyMappingUnavailable || $unversionedCandidates > 0
+                || $membershipGaps || $invalidMembership || $invalidCurrentMembership;
+            if (!$partial) {
+                return self::scheduleWeekResult('ready', 'versioned_weekly_membership', $workers, 'La pertenencia de los candidatos se validó para cada día de la semana.', $referenceRosterCount, $weekOnlyCount, $workersWithVersionedMembership, 0);
+            }
+
+            $reasons = [];
+            if ($truncated) $reasons[] = 'La lista local de candidatos excede el límite seguro; se omiten filas no verificadas.';
+            if ($legacyMappingUnavailable) $reasons[] = 'No se pudo resolver de forma única la estación física de esta localidad; el padrón puede estar incompleto.';
+            if ($unversionedCandidates > 0 || $membershipGaps) $reasons[] = 'El padrón activo de la localidad se conserva como referencia; la pertenencia de la semana sólo se confirma en las fechas con membresía verificable.';
+            if ($invalidMembership || $invalidCurrentMembership) $reasons[] = 'Algunas membresías no pudieron validarse; se excluyeron de la atribución de localidad y de las fechas afectadas.';
+
+            $unversionedCandidateCount = !$truncated ? $unversionedCandidates : null;
+            return self::scheduleWeekResult('partial', 'incomplete', $workers, implode(' ', array_unique($reasons)), $referenceRosterCount, $weekOnlyCount, $workersWithVersionedMembership, $unversionedCandidateCount);
         } catch (Throwable) {
-            return self::result('unavailable', 'unknown', [], 'No se pudo consultar el padrón y su pertenencia canónica.');
+            return self::result('unavailable', 'unknown', [], 'No se pudo consultar de forma segura el padrón local y sus membresías canónicas.');
         }
     }
 
@@ -382,5 +619,24 @@ final class ChecadorAttendanceRosterService
     private static function result(string $status, string $coverage, array $workers, string $message): array
     {
         return ['status' => $status, 'coverage' => $coverage, 'workers' => $workers, 'message' => $message];
+    }
+
+    /** @return array<string,mixed> */
+    private static function scheduleWeekResult(
+        string $status,
+        string $coverage,
+        array $workers,
+        string $message,
+        int $referenceRosterCount,
+        int $weekOnlyCount,
+        int $workersWithVersionedMembership,
+        ?int $unversionedMembershipCandidateCount
+    ): array {
+        return self::result($status, $coverage, $workers, $message) + [
+            'reference_roster_count' => $referenceRosterCount,
+            'week_membership_only_count' => $weekOnlyCount,
+            'workers_with_versioned_membership' => $workersWithVersionedMembership,
+            'unversioned_membership_candidate_count' => $unversionedMembershipCandidateCount,
+        ];
     }
 }

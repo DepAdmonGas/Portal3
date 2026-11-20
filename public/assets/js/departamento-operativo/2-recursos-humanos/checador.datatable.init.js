@@ -6,11 +6,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var filterModal = document.getElementById('punch-report-filter-modal');
     var filterForm = document.getElementById('punch-report-filter-form');
     var workerFilter = document.getElementById('punch-report-worker');
+    var periodWorkerValue = document.getElementById('punch-report-worker-value');
 
     if (workerFilter && window.jQuery && jQuery.fn && jQuery.fn.select2
         && !jQuery(workerFilter).hasClass('select2-hidden-accessible')) {
         jQuery(workerFilter).select2({
             width: '100%',
+            dropdownParent: filterModal ? jQuery(filterModal) : jQuery(document.body),
             dropdownCssClass: 'punch-report-worker-dropdown',
             placeholder: 'Todos los colaboradores',
             allowClear: true,
@@ -67,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
         syncPeriodControls();
         periodSelect.addEventListener('change', syncPeriodControls);
         periodForm.addEventListener('submit', function (event) {
+            if (periodWorkerValue && workerFilter) periodWorkerValue.value = workerFilter.value;
             if (periodSelect.value === 'custom') {
                 event.preventDefault();
                 openCustomRange();

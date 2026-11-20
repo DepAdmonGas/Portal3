@@ -7,6 +7,12 @@ description: Implement one verified Checador V2 functional slice in Portal3 whil
 
 For Checador V2 implementation, also follow `../portal3-native-module/SKILL.md` whenever Portal3 code or UI changes. Continue from the latest available V8A inventory and subsequent verified work; do not repeat a global audit or assume a previous status without checking the relevant evidence.
 
+## Directiva del propietario sobre transporte — 2026-11-18
+
+Leer `docs/architecture/CHECADOR_V2_PORTAL3_SQL_ACCESS_OWNER_DIRECTIVE_20261118.md` antes de cualquier cambio de Checador V2. **No introducir ni recomendar llamadas HTTP del backend Portal3 a API V2** (Guzzle, JWT, GET/POST API) para resolver consultas o escrituras de Checador. Modelo elegido: Lector → API V2 → MariaDB canónica; Portal3 backend ↔ MariaDB mediante SQL autorizado. No derivar resultados de Jornada, incidencias ni integridad si falta una proyección persistida.
+
+Los contratos históricos `FROZEN` que exigen Portal3 → API siguen en el repositorio como evidencia y requieren revisión versionada aprobada. En una contradicción, detener la parte afectada y señalar la sección exacta; **no implementar más HTTP ni reescribir un freeze silenciosamente**. El código HTTP heredado no está migrado por esta instrucción: requerirá cambios y validación por módulo.
+
 ## Contract invariants
 
 - Resolve access from authenticated server-side identity and the active Portal3 ACL. Puesto 13 (Dirección de Operaciones) may read only supported, active, authorized stations; locality departments such as Autolavado require explicit authorization. Puesto 6 (Encargado) remains limited to its own authorized station/locality. Do not infer global access for puestos 3 or 14.

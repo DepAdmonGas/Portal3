@@ -312,7 +312,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         return !empty($stations) || !empty($depts);
     }
 
-    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = '', ?string $placeholderOverride = null, array $stationLabelOverrides = [], array $extraDepartments = []): string
+    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = '', ?string $placeholderOverride = null, array $stationLabelOverrides = [], array $extraDepartments = [], bool $forceSelector = false, bool $requireExplicitSelection = false): string
     {
         $cfg = self::getConfig($moduleKey);
         if (!$cfg) {
@@ -324,6 +324,15 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $idEstacion = $ctx['id_estacion'];
         $idDepto = $ctx['id_depto'];
         $currentName = $ctx['nombre'];
+        if ($moduleKey === ChecadorAccessService::MODULE_KEY && $requireExplicitSelection) {
+            $savedContexts = Session::get('module_context') ?? [];
+            $savedChecador = $savedContexts[$moduleKey] ?? [];
+            if (empty($savedChecador['id_estacion']) && empty($savedChecador['id_depto'])) {
+                $idEstacion = null;
+                $idDepto = null;
+                $currentName = '';
+            }
+        }
         if ($idEstacion !== null && isset($stationLabelOverrides[(int)$idEstacion])) {
             $currentName = $stationLabelOverrides[(int)$idEstacion];
         }
@@ -331,14 +340,30 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $multiestacion = MultiestacionService::isEnabled();
         $stations = self::getAvailableStations($moduleKey);
         $depts = self::getAvailableDepartments($moduleKey);
+        $departmentIds = array_map(static fn(array $department): int => (int) ($department['id'] ?? 0), $depts);
         foreach ($extraDepartments as $department) {
             $departmentId = (int) ($department['id'] ?? 0);
             $departmentName = trim((string) ($department['nombre'] ?? ''));
-            if ($departmentId > 0 && $departmentName !== '') {
+            if ($departmentId > 0 && $departmentName !== '' && !in_array($departmentId, $departmentIds, true)) {
                 $depts[] = ['id' => $departmentId, 'nombre' => $departmentName];
+                $departmentIds[] = $departmentId;
                 if ($idDepto !== null && (int) $idDepto === $departmentId) {
                     $currentName = $departmentName;
                 }
+            }
+        }
+        if ($moduleKey === ChecadorAccessService::MODULE_KEY) {
+            $rawContext = Session::get('module_context') ?? [];
+            $savedDepartmentId = (int) ($rawContext[$moduleKey]['id_depto'] ?? 0);
+            $hasNoStationContext = ($rawContext[$moduleKey]['id_estacion'] ?? null) === null;
+            $isAuthorizedExtraDepartment = in_array($savedDepartmentId, $departmentIds, true)
+                && array_reduce($extraDepartments, static fn(bool $found, array $department): bool =>
+                    $found || (int) ($department['id'] ?? 0) === $savedDepartmentId, false)
+                && (ChecadorAccessService::authorizeStationTemplateAdministration($savedDepartmentId)['allowed'] ?? false);
+            if ($hasNoStationContext && $savedDepartmentId > 0 && $isAuthorizedExtraDepartment) {
+                $idEstacion = null;
+                $idDepto = $savedDepartmentId;
+                $currentName = self::resolveName($moduleKey, null, $idDepto);
             }
         }
 
@@ -359,7 +384,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $hasSelection = $nombreBadge !== '' || $idEstacion !== null || $idDepto !== null;
         $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
         $showSelector = $moduleKey === ChecadorAccessService::MODULE_KEY
-            ? ($showSelector && count($stations) + count($depts) > 1)
+            ? ($showSelector && ($forceSelector || count($stations) + count($depts) > 1))
             : ($showSelector && ($multiestacion || $hasChoices));
 
         $html = '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100 module-station-top-controls" id="module-station-wrapper-' . $moduleKey . '">';
@@ -440,6 +465,33 @@ public static function setChecadorWorkplaceContext(int $localityId): bool
         return true;
     }
     return false;
+}
+
+/** Persist Autolavado context only for the approved M04 template-admin exception. */
+public static function setChecadorM04TemplateWorkplaceContext(int $localityId): bool
+{
+    if ($localityId !== ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
+        || !(ChecadorAccessService::authorizeStationTemplateAdministration($localityId)['allowed'] ?? false)) {
+        return false;
+    }
+
+    $context = Session::get('module_context') ?? [];
+    $context[ChecadorAccessService::MODULE_KEY] = ['id_estacion' => null, 'id_depto' => $localityId];
+    Session::set('module_context', $context);
+    return true;
+}
+
+/** Return the M04-only Autolavado context without widening generic Checador/M03 context validation. */
+public static function getChecadorM04TemplateWorkplaceContext(): ?int
+{
+    $context = Session::get('module_context') ?? [];
+    $checador = $context[ChecadorAccessService::MODULE_KEY] ?? [];
+    if ((int) ($checador['id_depto'] ?? 0) !== ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
+        || ($checador['id_estacion'] ?? null) !== null
+        || !(ChecadorAccessService::authorizeStationTemplateAdministration(ChecadorAccessService::AUTOLAVADO_LOCALITY_ID)['allowed'] ?? false)) {
+        return null;
+    }
+    return ChecadorAccessService::AUTOLAVADO_LOCALITY_ID;
 }
 
 /** @param array<int,array{id:int,nombre:string}> $workplaces @return array<int,string> */
