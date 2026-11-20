@@ -1,5 +1,6 @@
 <div id="container" class="pb-4"
     data-permisos="<?= htmlspecialchars(json_encode($permisos ?? []), ENT_QUOTES, 'UTF-8') ?>"
+    data-manual-disponible="<?= !empty($manualDisponible) ? 'true' : 'false' ?>"
     data-id-usuario="<?= (int)($idUsuario ?? 0) ?>"
     data-nombre-usuario="<?= htmlspecialchars((string)($nombreUsuario ?? ''), ENT_QUOTES, 'UTF-8') ?>"
     data-id-puesto-usuario="<?= (int)($idPuestoUsuario ?? 0) ?>"
@@ -18,7 +19,7 @@
                 Programadas
             </label>
             <b class="text-success fs-5"
-               x-text="totales.programadas"></b>
+               x-text="formatearCantidad(totales.programadas)"></b>
         </div>
 
         <div class="ms-3 ms-md-5 border-end pe-3">
@@ -26,7 +27,7 @@
                 Solicitudes
             </label>
             <b class="text-warning fs-5"
-               x-text="totales.solicitudes"></b>
+               x-text="formatearCantidad(totales.solicitudes)"></b>
         </div>
 
         <div class="ms-3 ms-md-5">
@@ -34,7 +35,7 @@
                 Total
             </label>
             <b class="fs-5"
-               x-text="totales.total"></b>
+               x-text="formatearCantidad(totales.total)"></b>
         </div>
 
     </div>
@@ -54,8 +55,10 @@
         <button
             type="button"
             class="btn btn-outline-danger"
-            @click="descargarManual()">
-            <i class="ti ti-file-type-pdf fs-5"></i>
+            @click="descargarManual()"
+            :disabled="!manualDisponible"
+            :title="manualDisponible ? 'Descargar manual' : 'Manual no disponible'">
+            <i :class="manualDisponible ? 'ti ti-file-type-pdf fs-6' : 'ti ti-file-off fs-6'"></i>
             Descargar Manual
         </button>
 
@@ -628,7 +631,8 @@ x-model="nuevaJunta.fecha"
 <div class="col-md-6">
 <label class="form-label mb-1">* Hora inicio:</label>
 
-<select class="form-select" x-model="nuevaJunta.hora_inicio"
+<div class="position-relative">
+<select class="form-select" x-model="nuevaJunta.hora_inicio" style="padding-right: 2.75rem;"
 :class="{ 'is-invalid': erroresJunta.hora_inicio }"
 @change="actualizarHorasTermino(); limpiarErrorJunta('hora_inicio')"
 :disabled="cargandoHoras">
@@ -641,8 +645,10 @@ x-for="hora in horasDisponibles"
 x-text="formatearHora12(hora)"></option>
 </template>
 </select>
-
-<div class="small text-muted mt-1" x-show="cargandoHoras">Consultando disponibilidad...</div>
+<span x-show="cargandoHoras" class="position-absolute top-50 end-0 translate-middle-y me-4 d-inline-flex align-items-center" role="status" aria-label="Consultando disponibilidad">
+    <span class="spinner-border spinner-border-sm text-primary"></span>
+</span>
+</div>
 </div>
 
 <!-- Hora término -->
@@ -980,7 +986,8 @@ Solo se muestran los horarios libres de ese día.
 
 <div class="col-md-6">
 <label class="form-label mb-1">* Hora de inicio:</label>
-<select class="form-select" x-model="autorizacion.hora_inicio"
+<div class="position-relative">
+<select class="form-select" x-model="autorizacion.hora_inicio" style="padding-right: 2.75rem;"
 :class="{ 'is-invalid': erroresAutorizacion.hora_inicio }"
 :disabled="cargandoHorasAutorizacion"
 @change="calcularHorasTerminoAutorizacion(); limpiarErrorAutorizacion('hora_inicio')">
@@ -989,7 +996,10 @@ Solo se muestran los horarios libres de ese día.
 <option :value="hora" x-text="formatearHora12(hora)"></option>
 </template>
 </select>
-<div class="small text-muted mt-1" x-show="cargandoHorasAutorizacion">Consultando disponibilidad...</div>
+<span x-show="cargandoHorasAutorizacion" class="position-absolute top-50 end-0 translate-middle-y me-4 d-inline-flex align-items-center" role="status" aria-label="Consultando disponibilidad">
+    <span class="spinner-border spinner-border-sm text-primary"></span>
+</span>
+</div>
 </div>
 
 <div class="col-md-6">

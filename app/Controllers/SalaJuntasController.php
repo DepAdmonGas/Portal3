@@ -25,6 +25,9 @@ class SalaJuntasController extends BaseController
 
         // Permisos efectivos: se calculan una vez y se reutilizan en backend.
         $permisos = SalaJuntasService::getPermisos((int)$this->userId());
+        $manualDisponible = is_file(
+            dirname(__DIR__, 2) . '/public/uploads/archivos/sala-juntas/manual-sala-juntas-V1.pdf'
+        );
 
         // "Convoca" siempre es quien esta navegando y solo es informativo.
         $usuario = \App\Models\Usuario::query()
@@ -34,6 +37,7 @@ class SalaJuntasController extends BaseController
         $data = [
             'title'             => $title,
             'permisos'          => $permisos,
+            'manualDisponible'  => $manualDisponible,
             'modulo'            => $this->modulo,
             'idUsuario'         => (int)$this->userId(),
             'nombreUsuario'     => $usuario->nombre ?? '',
@@ -49,7 +53,7 @@ class SalaJuntasController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
                 '/libs/select2/dist/js/select2.full.min.js',
-                '/js/salajuntas/calendar-init.js?v=2.13.0'
+                '/js/salajuntas/calendar-init.js?v=2.15.0'
             ],
             'help'              => false
 

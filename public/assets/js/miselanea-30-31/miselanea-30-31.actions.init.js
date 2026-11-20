@@ -90,17 +90,13 @@ document.addEventListener('alpine:init', () => {
             const input = this.$refs.archivo;
             const file = input && input.files ? input.files[0] : null;
 
-            this.errores = {};
+            this.errores = {
+                detalle: detalle === '',
+                archivo: !file
+            };
 
-            if (detalle === '') {
-                this.errores.detalle = true;
-                this.notify('error', 'El detalle es obligatorio.');
-                return;
-            }
-
-            if (!file) {
-                this.errores.archivo = true;
-                this.notify('error', 'El archivo es obligatorio.');
+            if (this.errores.detalle || this.errores.archivo) {
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

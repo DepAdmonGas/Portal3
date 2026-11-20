@@ -163,7 +163,8 @@ rowCallback: function (row, rowData) {
 $(row).addClass('pointer').toggleClass('selected', selectedRows[selector] === rowData.id);
 },
 drawCallback: function () {
-if (window.Alpine) Alpine.initTree(this);
+const table = $(selector)[0];
+if (window.Alpine && table) Alpine.initTree(table);
 }
 });
 

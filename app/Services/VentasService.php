@@ -32,6 +32,66 @@ public static function getDocumentosUploadDir(): string
 return dirname(__DIR__, 2) . '/public/uploads/archivos/';
 }
 
+public static function getFirmasUploadDir(): string
+{
+return self::getDocumentosUploadDir() . 'ventas-firmas/';
+}
+
+/** Resuelve firma nueva o migrada, sin confiar en rutas guardadas en la BD. */
+public static function getFirmaImagePath(?string $firma): ?string
+{
+$nombre = basename(str_replace('\\', '/', trim((string) $firma)));
+if ($nombre === '' || $nombre === '.' || $nombre === '..') {
+return null;
+}
+
+$raiz = dirname(__DIR__, 2);
+$candidatos = [
+self::getFirmasUploadDir() . $nombre,
+$raiz . '/public/assets/img/firmas/' . $nombre,
+$raiz . '/public/uploads/firmas/' . $nombre,
+$raiz . '/imgs/firma/' . $nombre,
+$raiz . '/public/imgs/firma/' . $nombre,
+];
+
+foreach ($candidatos as $candidato) {
+if (is_file($candidato)) {
+return $candidato;
+}
+}
+
+return null;
+}
+
+public static function getFirmaImageUrl(?string $firma): ?string
+{
+$path = self::getFirmaImagePath($firma);
+if ($path === null) {
+return null;
+}
+
+$raiz = dirname(__DIR__, 2);
+$tipoPorRuta = [
+[$raiz . '/public/uploads/archivos/ventas-firmas/', 'ventas-firmas'],
+[$raiz . '/public/assets/img/firmas/', 'ventas-firmas-assets-legado'],
+[$raiz . '/public/uploads/firmas/', 'ventas-firmas-uploads-legado'],
+[$raiz . '/imgs/firma/', 'ventas-firmas-imgs-legado'],
+[$raiz . '/public/imgs/firma/', 'ventas-firmas-public-imgs-legado'],
+];
+
+foreach ($tipoPorRuta as [$directorio, $tipo]) {
+if (str_starts_with($path, $directorio)) {
+return '/download?' . http_build_query([
+'tipo' => $tipo,
+'file' => basename($path),
+'view' => 1,
+]);
+}
+}
+
+return null;
+}
+
 public static function asegurarRegistros(int $idReporte, int $idEstacion, int $idYear, int $idMes): void
 {
 self::asegurarVentasDia($idReporte);
@@ -328,6 +388,7 @@ return $firmas->map(function ($f) {
 $usuario = Usuario::find($f->id_usuario);
 $f->nombre_usuario = $usuario ? $usuario->nombre : 'Desconocido';
 $f->fecha_formateada = $f->fecha ? formatearFecha($f->fecha->format('Y-m-d')) : '';
+$f->firma_url = self::getFirmaImageUrl((string) $f->firma);
 return $f;
 });
 }
@@ -387,13 +448,21 @@ return true;
 
 public static function agregarFirma(int $idReporte, int $idUsuario, string $base64): string
 {
-$img = str_replace('data:image/png;base64,', '', $base64);
-$fileData = base64_decode($img);
+$prefix = 'data:image/png;base64,';
+if (!str_starts_with($base64, $prefix)) {
+return '';
+}
+$fileData = base64_decode(substr($base64, strlen($prefix)), true);
+if ($fileData === false || $fileData === '') {
+return '';
+}
 $fileName = uniqid() . '.png';
-$ruta = $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/firmas/';
+$ruta = self::getFirmasUploadDir();
 
 if (!is_dir($ruta)) {
-mkdir($ruta, 0755, true);
+if (!mkdir($ruta, 0775, true) && !is_dir($ruta)) {
+return '';
+}
 }
 
 if (file_put_contents($ruta . $fileName, $fileData)) {

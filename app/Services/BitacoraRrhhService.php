@@ -21,6 +21,8 @@ class BitacoraRrhhService
     public const MODULE_KEY = 'bitacora-rrhh';
 
     private const UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/bitacora-rrhh/';
+    private const MIGRATED_UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/';
+    private const LEGACY_LAYOUT_UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/bitacoraRRHH/';
 
     public static function getPermisos(): array
     {
@@ -330,7 +332,7 @@ class BitacoraRrhhService
                 'id'          => (int)$r->id,
                 'nombre'      => $r->nombre ?? '-',
                 'archivo'     => $r->archivo,
-                'disponible'  => is_file(self::UPLOAD_DIR . basename((string)$r->archivo)),
+                'disponible'  => self::resolverRutaDocumento((string)$r->archivo) !== null,
                 'subido_por'  => $user ? $user->nombre : 'Desconocido',
             ];
         }
@@ -386,12 +388,30 @@ class BitacoraRrhhService
             return false;
         }
 
-        $ruta = self::UPLOAD_DIR . basename((string)$doc->archivo);
-        if (is_file($ruta)) {
+        $ruta = self::resolverRutaDocumento((string)$doc->archivo);
+        if ($ruta !== null) {
             @unlink($ruta);
         }
 
         return (bool)$doc->delete();
+    }
+
+    /** Busca en la carpeta actual y en las ubicaciones admitidas para migración. */
+    private static function resolverRutaDocumento(string $archivo): ?string
+    {
+        $nombre = basename(str_replace('\\', '/', $archivo));
+        if ($nombre === '' || $nombre === '.') {
+            return null;
+        }
+
+        foreach ([self::UPLOAD_DIR, self::MIGRATED_UPLOAD_DIR, self::LEGACY_LAYOUT_UPLOAD_DIR] as $directorio) {
+            $ruta = $directorio . $nombre;
+            if (is_file($ruta)) {
+                return $ruta;
+            }
+        }
+
+        return null;
     }
 
     // ---------------- VISUALIZACIONES (registro) ----------------

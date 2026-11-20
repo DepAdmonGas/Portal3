@@ -109,23 +109,20 @@ Nuevos consumos y pagos</h5>
 </template>
 </select>
 </div>
-<div class="invalid-feedback mb-3" :class="validationErrors.cliente ? 'd-block' : ''" x-show="validationErrors.cliente" x-text="validationErrors.cliente"></div>
 </div>
 
 <div class="mb-3">
 <h6 class="mb-1 form-label">* Total:</h6>
-<input type="text" inputmode="decimal" class="form-control" x-ref="totalInput" :class="validationErrors.total ? 'is-invalid' : ''" :value="formatInputNumber(modalTotal)" @input="formatModalTotal($event)">
-<div class="invalid-feedback" x-show="validationErrors.total" x-text="validationErrors.total"></div>
+<input type="text" inputmode="decimal" class="form-control" x-ref="totalInput" :class="validationErrors.total ? 'is-invalid' : ''" :aria-invalid="validationErrors.total ? 'true' : 'false'" :value="formatInputNumber(modalTotal)" @input="formatModalTotal($event)">
 </div>
 
 <div class="mb-3">
 <h6 class="mb-1 form-label">* Consumo o Pago:</h6>
-<select class="form-select" x-ref="tipoSelect" x-model="modalTipo" :class="validationErrors.tipo ? 'is-invalid' : ''" @change="validationErrors.tipo = ''">
+<select class="form-select" x-ref="tipoSelect" x-model="modalTipo" :class="validationErrors.tipo ? 'is-invalid' : ''" :aria-invalid="validationErrors.tipo ? 'true' : 'false'" @change="validationErrors.tipo = false">
 <option value="">Selecciona una opción...</option>
 <option value="Consumo">Consumo</option>
 <option value="Pago">Pago</option>
 </select>
-<div class="invalid-feedback" x-show="validationErrors.tipo" x-text="validationErrors.tipo"></div>
 </div>
 
 <div x-cloak x-show="modalTipo === 'Pago'">
@@ -133,7 +130,7 @@ Nuevos consumos y pagos</h5>
 <h6 class="mb-1 form-label">
 * Forma de pago:
 </h6>
-<select class="form-select" x-ref="formaPagoSelect" x-model="modalFormaPago" :class="validationErrors.formaPago ? 'is-invalid' : ''" @change="validationErrors.formaPago = ''; validationErrors.comprobante = ''">
+<select class="form-select" x-ref="formaPagoSelect" x-model="modalFormaPago" :class="validationErrors.formaPago ? 'is-invalid' : ''" :aria-invalid="validationErrors.formaPago ? 'true' : 'false'" @change="validationErrors.formaPago = false; validationErrors.comprobante = false">
 <option value="">Forma de pago</option>
 <option value="Efectivo">Efectivo</option>
 <option value="Tarjeta">Tarjeta</option>
@@ -141,11 +138,9 @@ Nuevos consumos y pagos</h5>
 <option value="Cheque">Cheque</option>
 <option value="Monederos">Monederos</option>
 </select>
-<div class="invalid-feedback" x-show="validationErrors.formaPago" x-text="validationErrors.formaPago"></div>
 <div x-cloak x-show="modalFormaPago === 'Tarjeta' || modalFormaPago === 'Transferencia'">
 <h6 class="mb-1 mt-3 form-label">* Voucher:</h6>
-<input class="form-control" type="file" id="Comprobante" x-ref="comprobanteInput" :class="validationErrors.comprobante ? 'is-invalid' : ''" @change="modalComprobante = $event.target.files[0] || null; validationErrors.comprobante = ''">
-<div class="invalid-feedback" x-show="validationErrors.comprobante" x-text="validationErrors.comprobante"></div>
+<input class="form-control" type="file" id="Comprobante" x-ref="comprobanteInput" :class="validationErrors.comprobante ? 'is-invalid' : ''" :aria-invalid="validationErrors.comprobante ? 'true' : 'false'" @change="modalComprobante = $event.target.files[0] || null; validationErrors.comprobante = false">
 </div>
 </div>
 </div>

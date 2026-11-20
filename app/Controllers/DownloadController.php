@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\SensitiveDownloadAuthorizationService;
+use App\Services\ModuloService;
 
 class DownloadController
 {
@@ -16,8 +17,14 @@ class DownloadController
             exit;
         }
 
+        if (str_starts_with((string) $tipo, 'sasisopa-')
+            && !ModuloService::validaPermiso('sasisopa', 'descargar')) {
+            http_response_code(404);
+            exit;
+        }
+
         // LIMPIAR NOMBRE
-        $file = basename($file);
+        $file = basename(str_replace('\\', '/', (string) $file));
 
         // MAPA DE CARPETAS (CONTROLADO)
         $rutas = [
@@ -36,20 +43,36 @@ class DownloadController
             'encuestas'                            => dirname(__DIR__, 2) . '/public/uploads/archivos/encuestas/',
             'representante-tecnico'                => dirname(__DIR__, 2) . '/public/uploads/archivos/representante-tecnico/',
             'manual'                               => dirname(__DIR__, 2) . '/public/uploads/archivos/manuales/',
-            'comprobantes-clientes'                => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'comprobantes-clientes'                => [
+                dirname(__DIR__, 2) . '/public/uploads/archivos/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/clientes/',
+            ],
             'documentos-ventas'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            // Firmas del corte diario: ruta nueva y compatibilidad para migración.
+            'ventas-firmas'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/ventas-firmas/',
+            'ventas-firmas-assets-legado'           => dirname(__DIR__, 2) . '/public/assets/img/firmas/',
+            'ventas-firmas-uploads-legado'           => dirname(__DIR__, 2) . '/public/uploads/firmas/',
+            'ventas-firmas-imgs-legado'              => dirname(__DIR__, 2) . '/imgs/firma/',
+            'ventas-firmas-public-imgs-legado'       => dirname(__DIR__, 2) . '/public/imgs/firma/',
             'control-volumetrico'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/',
-            'aceites-documentos'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-documentos/',
-            'aceites-facturas'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-facturas/',
-            'aceites-diferencias'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-diferencias/',
+            'aceites-documentos'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'aceites-facturas'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'aceites-diferencias'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'monedero-documentos'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'monedero-lista-documentos'            => dirname(__DIR__, 2) . '/public/uploads/archivos/resumen-monederos-documentos/',
             'embarques'                            => dirname(__DIR__, 2) . '/public/uploads/archivos/embarques/',
-            'solicitud-cheque'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque/',
+            // Los archivos nuevos viven en su subcarpeta; las importaciones legadas
+            // se colocan directamente en /public/uploads/archivos/.
+            'solicitud-cheque'                     => [
+                dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            ],
             'solicitud-cheque-firmas'               => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-cheque-firmas/',
             'solicitud-cheque-firmas-raiz'          => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'solicitud-cheque-firmas-legado'        => dirname(__DIR__, 2) . '/public/uploads/firmas/solicitud-cheque/',
+            'solicitud-cheque-firmas-uploads'       => dirname(__DIR__, 2) . '/public/uploads/firmas/',
             'solicitud-cheque-firmas-imgs'          => dirname(__DIR__, 2) . '/public/imgs/firma/',
+            'solicitud-cheque-firmas-imgs-legado'   => dirname(__DIR__, 2) . '/imgs/firma/',
             'ingresos-facturacion'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/ingresos-facturacion/',
             'contratos'                            => dirname(__DIR__, 2) . '/public/uploads/archivos/contratos/',
             'contratos-legado'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/contratos-es/',
@@ -62,7 +85,12 @@ class DownloadController
             'solicitud-vales-legado'               => dirname(__DIR__, 2) . '/public/uploads/archivos/vales/',
             'lista-negra'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-negra/',
             'lista-negra-legado'                  => dirname(__DIR__, 3) . '/departamento-operativo/archivos/documentos-personal/solicitud-baja/',
-            'bitacora-rrhh'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-rrhh/',
+            // Documentos nuevos y archivos migrados desde archivos/bitacoraRRHH/.
+            'bitacora-rrhh'                        => [
+                dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-rrhh/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/bitacoraRRHH/',
+            ],
             'factura-monedero'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/facturas-monederos/',
             'organigrama'                          => dirname(__DIR__, 2) . '/public/uploads/archivos/organigrama/',
             'organigrama-documentos'               => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos/',
@@ -83,9 +111,30 @@ class DownloadController
             'docs-personal-baja'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/solicitud-baja/',
             'docs-personal-incidencias'            => dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias/',
             'dia-doble-firma'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/dia-doble-firma/',
-            'permisos-firma'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/permisos-firma/',
+            // Firmas actuales e importadas de Permisos: subcarpeta nueva, raíz
+            // de archivos, uploads/firmas y ubicación usada por la versión anterior.
+            'permisos-firma'                       => [
+                dirname(__DIR__, 2) . '/public/uploads/archivos/permisos-firma/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/',
+                dirname(__DIR__, 2) . '/public/uploads/firmas/permisos/',
+                dirname(__DIR__, 2) . '/public/uploads/firmas/',
+                dirname(__DIR__, 2) . '/public/imgs/firma/',
+                dirname(__DIR__, 2) . '/imgs/firma/',
+            ],
             'lista-formatos'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/lista-formatos/',
-            'formatos-alta'                        => dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/',
+            'formatos-alta'                        => [
+                dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            ],
+            // Firmas actuales y ubicaciones de migración de Formatos.
+            'formatos-firmas'                      => [
+                dirname(__DIR__, 2) . '/public/uploads/firmas/formatos/',
+                dirname(__DIR__, 2) . '/public/uploads/firmas/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/firmas/',
+                dirname(__DIR__, 2) . '/public/uploads/archivos/',
+                dirname(__DIR__, 2) . '/public/imgs/firma/',
+                dirname(__DIR__, 2) . '/imgs/firma/',
+            ],
             'formatos-alta-curriculum'             => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/curriculum/',
             'formatos-alta-ine'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/ine/',
             'formatos-alta-acta-nacimiento'        => dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/acta_nacimiento/',
@@ -134,6 +183,15 @@ class DownloadController
             'soporte-actividades'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/actividades/',
             'soporte-evidencias'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/evidencias/',
             'procedimientos-modulos'                => dirname(__DIR__, 2) . '/public/uploads/archivos/procedimientos-modulos/',
+            'sasisopa-analisis-riesgo'               => dirname(__DIR__, 2) . '/public/uploads/archivos/analisis-riesgo/',
+            'sasisopa-seguridad-contratistas'        => dirname(__DIR__, 2) . '/public/uploads/archivos/seguridad-contratistas/',
+            'sasisopa-simulacros'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/protocolo/',
+            'sasisopa-informe-revision-resultados'   => dirname(__DIR__, 2) . '/public/uploads/archivos/informe-revision-resultados/',
+            'sasisopa-atencion-hallazgos'            => dirname(__DIR__, 2) . '/public/uploads/archivos/atencion-hallazgos/',
+            'sasisopa-auditorias'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/auditorias/',
+            'sasisopa-incidentes-accidentes'         => dirname(__DIR__, 2) . '/public/uploads/archivos/incidentes-accidentes/',
+            'sasisopa-revision-resultados'           => dirname(__DIR__, 2) . '/public/uploads/archivos/revision-resultados/',
+            'sasisopa-evaluacion-desempeno'          => dirname(__DIR__, 2) . '/public/uploads/archivos/evaluacion-desempeño/',
 
         ];
 
@@ -153,8 +211,21 @@ class DownloadController
                 echo 'Tipo no permitido';
                 exit;
             }
-            $baseDirectorio = $rutas[$tipo];
-            $rutaCompleta   = $baseDirectorio . $file;
+            $directorios = (array) $rutas[$tipo];
+            $baseDirectorio = null;
+            $rutaCompleta = null;
+            foreach ($directorios as $directorio) {
+                $candidato = rtrim($directorio, '/\\') . DIRECTORY_SEPARATOR . $file;
+                if (is_file($candidato)) {
+                    $baseDirectorio = $directorio;
+                    $rutaCompleta = $candidato;
+                    break;
+                }
+            }
+            if ($baseDirectorio === null || $rutaCompleta === null) {
+                header("Location: /404");
+                exit;
+            }
         }
 
         // ============================================================

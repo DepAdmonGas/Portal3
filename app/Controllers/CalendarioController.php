@@ -137,7 +137,7 @@ class CalendarioController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sasisopa/calendar-init.js?v=1.0.2'
+                '/js/sasisopa/calendar-init.js?v=1.0.3'
 
             ]
         ];
@@ -168,7 +168,7 @@ class CalendarioController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sasisopa/calendar-init.js?v=1.0.1'
+                '/js/sasisopa/calendar-init.js?v=1.0.3'
 
             ]
         ];

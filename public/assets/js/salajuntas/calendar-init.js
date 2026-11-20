@@ -79,6 +79,7 @@ document.addEventListener('alpine:init', () => {
 
         // Permisos que llegan desde el backend; la vista tambien los usa.
         permisos: { leer: false, crear: false, editar: false, eliminar: false, descargar: false },
+        manualDisponible: false,
 
         // Quien esta navigating: define "convoca" y los comentarios propios.
         idUsuarioActual: 0,
@@ -159,6 +160,7 @@ document.addEventListener('alpine:init', () => {
                       cont.dataset.permisos,
                       this.permisos
                   );
+                  this.manualDisponible = cont.dataset.manualDisponible === 'true';
 
                   /*
                    * Quien esta navegando. "Convoca" siempre es esta persona,
@@ -339,13 +341,15 @@ document.addEventListener('alpine:init', () => {
 
                         locale: 'es',
 
-                        initialView:
-                            estado?.view
-                            ?? (
-                                this.checkWindowWidth()
-                                    ? 'listWeek'
-                                    : 'dayGridMonth'
-                            ),
+                        initialView: (() => {
+                            const vistaPredeterminada = this.checkWindowWidth()
+                                ? 'listWeek'
+                                : 'dayGridMonth';
+
+                            return estado?.view === vistaPredeterminada
+                                ? estado.view
+                                : vistaPredeterminada;
+                        })(),
 
                         initialDate:
                             estado?.date
@@ -1848,7 +1852,7 @@ document.addEventListener('alpine:init', () => {
 
 
             localStorage.setItem(
-                'calendario_estado',
+                'calendario_estado_sala-juntas',
                 JSON.stringify(
                     estado
                 )
@@ -1867,7 +1871,7 @@ document.addEventListener('alpine:init', () => {
 
             const estado =
                 localStorage.getItem(
-                    'calendario_estado'
+                    'calendario_estado_sala-juntas'
                 );
 
 
@@ -1887,7 +1891,7 @@ document.addEventListener('alpine:init', () => {
             } catch (error) {
 
                 localStorage.removeItem(
-                    'calendario_estado'
+                    'calendario_estado_sala-juntas'
                 );
 
                 return null;
@@ -1975,11 +1979,20 @@ document.addEventListener('alpine:init', () => {
 
         },
 
+        formatearCantidad(valor) {
+            return (Number(valor) || 0).toLocaleString('es-MX');
+        },
+
         /**
          * Descarga el manual de Sala de Juntas usando el mecanismo global
          * de Portal3 (/download), no una ruta del proyecto anterior.
          */
         descargarManual() {
+
+            if (!this.manualDisponible) {
+                this.notify('error', 'El manual no está disponible.');
+                return;
+            }
 
             this.download(
                 'sala-juntas',
@@ -2145,31 +2158,6 @@ document.addEventListener('alpine:init', () => {
 
         },
 
-        /** Mensaje del toast segun que campo quedo pendiente. */
-        mensajeValidacionJunta() {
-
-            if (this.erroresJunta.descripcion) {
-                return 'Captura el tema de la reunión.';
-            }
-
-            if (this.erroresJunta.fecha) {
-                return this.nuevaJunta.fecha
-                    ? 'La fecha no puede ser anterior a hoy.'
-                    : 'Selecciona la fecha programada.';
-            }
-
-            if (this.erroresJunta.hora_inicio) {
-                return 'Selecciona la hora de inicio.';
-            }
-
-            if (this.erroresJunta.hora_termino) {
-                return 'Selecciona una hora de término posterior a la de inicio.';
-            }
-
-            return 'Selecciona al menos un departamento o una persona.';
-
-        },
-
         /** Quita la marca de error en cuanto el campo ya tiene contenido. */
         limpiarErrorJunta(campo) {
 
@@ -2208,7 +2196,7 @@ document.addEventListener('alpine:init', () => {
             this.errorNuevaJunta = '';
 
             if (!this.validarJunta()) {
-                this.notify('error', this.mensajeValidacionJunta());
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 
@@ -3175,7 +3163,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (Object.values(this.erroresAutorizacion).some(Boolean)) {
-                this.notify('error', 'Elige la fecha, la hora de inicio y la de término.');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

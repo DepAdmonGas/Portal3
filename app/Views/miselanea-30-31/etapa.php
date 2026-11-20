@@ -46,6 +46,7 @@
                                     <label class="form-label mb-1">* Detalle:</label>
                                     <textarea class="form-control" rows="1"
                                               :class="{ 'is-invalid': errores.detalle }"
+                                              @input="errores.detalle = false"
                                               x-model="form.detalle"></textarea>
                                 </div>
 
@@ -56,6 +57,7 @@
         <!-- Input de archivo -->
         <input type="file" class="form-control"
                :class="{ 'is-invalid': errores.archivo }"
+               @change="errores.archivo = false"
                x-ref="archivo">
                
         <!-- Botón unido -->
@@ -63,7 +65,7 @@
                 class="btn bg-primary-subtle text-primary"
                 @click="agregarArchivo()"
                 :disabled="guardando">
-            <i class="ti ti-plus"></i> <span>Nuevo</span>
+            <i class="ti ti-plus"></i> <span x-text="guardando ? 'Guardando...' : 'Nuevo'"></span>
         </button>
     </div>
 </div>

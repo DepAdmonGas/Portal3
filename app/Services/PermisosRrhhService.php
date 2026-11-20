@@ -21,6 +21,16 @@ class PermisosRrhhService
 
     private const UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/permisos-firma/';
 
+    /** Directorios usados por la versión actual y por las migraciones de firmas. */
+    private const FIRMA_DIRS = [
+        __DIR__ . '/../../public/uploads/archivos/permisos-firma/',
+        __DIR__ . '/../../public/uploads/archivos/',
+        __DIR__ . '/../../public/uploads/firmas/permisos/',
+        __DIR__ . '/../../public/uploads/firmas/',
+        __DIR__ . '/../../public/imgs/firma/',
+        __DIR__ . '/../../imgs/firma/',
+    ];
+
     private const NOMBRE_DIRECCION = 'Dirección de operaciones';
 
     public const ESTADO_LABELS = [
@@ -444,9 +454,9 @@ class PermisosRrhhService
 
             $tipoImagen = in_array($tipo, ['A', 'B'], true);
             $nombreArchivo = basename((string)$f->firma);
-            $archivoDisponible = $tipoImagen && $nombreArchivo !== '' && (
-                is_file(self::UPLOAD_DIR . $nombreArchivo)
-            );
+            $archivoDisponible = $tipoImagen
+                && $nombreArchivo !== ''
+                && self::resolverFirmaImagen($nombreArchivo) !== null;
 
             $data[] = [
                 'id'            => (int)$f->id,
@@ -466,6 +476,29 @@ class PermisosRrhhService
         }
 
         return $data;
+    }
+
+    /** Resuelve firmas actuales e importadas sin aceptar rutas del registro. */
+    public static function resolverFirmaImagen(string $nombreArchivo): ?array
+    {
+        $nombreArchivo = basename(str_replace('\\', '/', trim($nombreArchivo)));
+        if ($nombreArchivo === '' || $nombreArchivo === '.' || $nombreArchivo === '..') {
+            return null;
+        }
+
+        foreach (self::FIRMA_DIRS as $directorio) {
+            $ruta = rtrim($directorio, '/\\') . DIRECTORY_SEPARATOR . $nombreArchivo;
+            if (is_file($ruta)) {
+                $rutaReal = realpath($ruta);
+                $baseReal = realpath($directorio);
+                if ($rutaReal !== false && $baseReal !== false
+                    && str_starts_with($rutaReal, $baseReal . DIRECTORY_SEPARATOR)) {
+                    return ['path' => $rutaReal, 'base' => $baseReal];
+                }
+            }
+        }
+
+        return null;
     }
 
     private static function calcularDias(string $fechaInicio, string $fechaTermino): int

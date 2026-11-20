@@ -80,8 +80,8 @@
 
                                                         <td class="p-0" :class="estado == 0 && !multiestacion ? '' : 'disabledOP'">
                                                             <template x-if="estado == 0 && !multiestacion">
-                                                                <select class="form-select border-0" x-model="v.producto"
-                                                                    @change="editVenta(v.id, 'producto', v.producto)">
+                                                                <select class="form-select border-0" :class="{'is-invalid': erroresProducto[v.id]}" x-model="v.producto"
+                                                                    @change="editVenta(v.id, 'producto', v.producto, $event.target)">
                                                                     <option value="">Selecciona una opción...</option>
                                                                     <option value="G SUPER">G SUPER</option>
                                                                     <option value="G PREMIUM">G PREMIUM</option>
@@ -98,7 +98,7 @@
                                                                 <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
                                                                     :value="formatInputNumber(v.litros)"
                                                                     @input="formatNumericInput($event, v, 'litros')"
-                                                                    @keyup.debounce="editVenta(v.id, 'litros', v.litros)">
+                                                                    @keyup.debounce="editVenta(v.id, 'litros', v.litros, $event.target)">
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
                                                                 <span class="p-3 d-block text-end" x-text="formatNum(v.litros)"></span>
@@ -110,7 +110,7 @@
                                                                 <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent"
                                                                     :value="formatInputNumber(v.jarras)"
                                                                     @input="formatNumericInput($event, v, 'jarras')"
-                                                                    @keyup.debounce="editVenta(v.id, 'jarras', v.jarras)">
+                                                                    @keyup.debounce="editVenta(v.id, 'jarras', v.jarras, $event.target)">
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
                                                                 <span class="p-3 d-block text-end" x-text="formatNum(v.jarras)"></span>
@@ -124,7 +124,7 @@
                                                             <template x-if="estado == 0 && !multiestacion">
                                                                 <div class="position-relative">
                                                                     <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-                                                                    <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(v.precio_litro)" @input="formatNumericInput($event, v, 'precio_litro')" @keyup.debounce="editVenta(v.id, 'precio_litro', v.precio_litro)">
+                                                                    <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(v.precio_litro)" @input="formatNumericInput($event, v, 'precio_litro')" @keyup.debounce="editVenta(v.id, 'precio_litro', v.precio_litro, $event.target)">
                                                                 </div>
                                                             </template>
 
@@ -165,7 +165,7 @@
                                                                     <div class="position-relative">
                                                                         <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
                                                                         <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(o.importe)" @input="formatNumericInput($event, o, 'importe')"
-                                                                            @keyup.debounce="editVentaOtros(o.id, o.importe)">
+                                                                            @keyup.debounce="editVentaOtros(o.id, o.importe, $event.target)">
                                                                     </div>
                                                                 </template>
 
@@ -226,7 +226,7 @@
                                                                 <input type="text" inputmode="numeric" class="border-0 p-3 text-center w-100 bg-transparent"
                                                                     :value="formatInputNumber(a.cantidad)"
                                                                     @input="formatNumericInput($event, a, 'cantidad')"
-                                                                    @keyup.debounce="editAceite(a.id, 'cantidad', a.cantidad)">
+                                                                    @keyup.debounce="editAceite(a.id, 'cantidad', a.cantidad, $event.target)">
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
                                                                 <span class="p-3 d-block text-center" x-text="a.cantidad"></span>
@@ -236,7 +236,7 @@
                                                             <template x-if="estado == 0 && !multiestacion">
                                                                 <div class="position-relative">
                                                                     <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
-                                                                    <input type="text" inputmode="decimal" class="border-0 p-3 text-center w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(a.precio_unitario)" @input="formatNumericInput($event, a, 'precio_unitario')" @keyup.debounce="editAceite(a.id, 'precio_unitario', a.precio_unitario)">
+                                                                    <input type="text" inputmode="decimal" class="border-0 p-3 text-center w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(a.precio_unitario)" @input="formatNumericInput($event, a, 'precio_unitario')" @keyup.debounce="editAceite(a.id, 'precio_unitario', a.precio_unitario, $event.target)">
                                                                 </div>
                                                             </template>
 
@@ -377,7 +377,7 @@
                                                             <template x-if="estado == 0 && !multiestacion">
                                                                 <input type="text" class="border-0 p-3 w-100 text-center bg-transparent"
                                                                     x-model="p.recibo"
-                                                                    @keyup.debounce="editProsegur(p.id, 'recibo', p.recibo)">
+                                                                    @keyup.debounce="editProsegur(p.id, 'recibo', p.recibo, $event.target)">
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
                                                                 <span class="p-3 d-block text-center" x-text="p.recibo || ''"></span>
@@ -388,7 +388,7 @@
                                                                 <div class="position-relative">
                                                                     <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
                                                                     <input type="text" inputmode="decimal" class="border-0 p-3 w-100 text-end bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(p.importe)" @input="formatNumericInput($event, p, 'importe')"
-                                                                        @keyup.debounce="editProsegur(p.id, 'importe', p.importe)">
+                                                                        @keyup.debounce="editProsegur(p.id, 'importe', p.importe, $event.target)">
                                                                 </div>
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
@@ -443,7 +443,7 @@
                                                                     <div class="position-relative">
                                                                         <span class="position-absolute top-50 start-0 translate-middle-y ps-2">$</span>
                                                                         <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 20px !important;" :value="formatInputNumber(t.baucher)" @input="formatNumericInput($event, t, 'baucher')"
-                                                                            @keyup.debounce="editTarjeta(t.id, t.baucher)">
+                                                                            @keyup.debounce="editTarjeta(t.id, t.baucher, $event.target)">
                                                                     </div>
                                                                 </template>
                                                                 <template x-if="estado != 0 || multiestacion">
@@ -496,7 +496,7 @@
                                                                 <div class="position-relative">
                                                                     <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
                                                                     <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(c.pago)" @input="formatNumericInput($event, c, 'pago')"
-                                                                        @keyup.debounce="editControlgas(c.id, 'pago', c.pago)">
+                                                                        @keyup.debounce="editControlgas(c.id, 'pago', c.pago, $event.target)">
                                                                 </div>
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
@@ -509,7 +509,7 @@
                                                                 <div class="position-relative">
                                                                     <span class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
                                                                     <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(c.consumo)" @input="formatNumericInput($event, c, 'consumo')"
-                                                                        @keyup.debounce="editControlgas(c.id, 'consumo', c.consumo)">
+                                                                        @keyup.debounce="editControlgas(c.id, 'consumo', c.consumo, $event.target)">
                                                                 </div>
                                                             </template>
 
@@ -586,7 +586,7 @@
                                                                     <span
                                                                         class="position-absolute top-50 start-0 translate-middle-y ps-3">$</span>
                                                                     <input type="text" inputmode="decimal" class="border-0 p-3 text-end w-100 bg-transparent" style="padding-left: 25px !important;" :value="formatInputNumber(pc.importe)" @input="formatNumericInput($event, pc, 'importe')"
-                                                                        @keyup.debounce="editPagoCliente(pc.id, 'importe', pc.importe)">
+                                                                        @keyup.debounce="editPagoCliente(pc.id, 'importe', pc.importe, $event.target)">
                                                                 </div>
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
@@ -596,7 +596,7 @@
                                                             <template x-if="estado == 0 && !multiestacion">
                                                                 <input type="text" class="border-0 p-3 w-100 text-center bg-transparent"
                                                                     x-model="pc.nota"
-                                                                    @keyup.debounce="editPagoCliente(pc.id, 'nota', pc.nota)">
+                                                                    @keyup.debounce="editPagoCliente(pc.id, 'nota', pc.nota, $event.target)">
                                                             </template>
                                                             <template x-if="estado != 0 || multiestacion">
                                                                 <span class="p-3 d-block text-center" x-text="pc.nota || ''"></span>
@@ -647,7 +647,7 @@
                             </div>
                         </div>
                         <div class="card-body p-0">
-                            <textarea class="form-control border-0 p-4" style="height:200px;" placeholder="Escribe tus observaciones aquí..." x-model="observaciones" @keyup="editObservaciones"
+                            <textarea class="form-control border-0 p-4" style="height:200px;" placeholder="Escribe tus observaciones aquí..." x-model="observaciones" @keyup="editObservaciones($event.target)"
                                 :disabled="multiestacion || estado != 0">
 </textarea>
                         </div>
@@ -675,14 +675,14 @@
 
                             <!-- Cuerpo con pad punteado y checkbox de términos -->
                             <div class="card-body p-3">
-                                <div id="signature-pad" class="signature-pad-wrapper" style="border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;">
+                                <div id="signature-pad" class="signature-pad-wrapper" :style="firmaPadInvalido ? 'border: 2px dashed #dc3545; border-radius: 6px; cursor: crosshair;' : 'border: 2px dashed #adb5bd; border-radius: 6px; cursor: crosshair;'">
                                     <div class="signature-pad--body">
                                         <canvas id="canvas" style="width: 100%; height: 250px; display: block;"></canvas>
                                     </div>
                                 </div>
 
                                 <div class="form-check mt-3">
-                                    <input class="form-check-input" type="checkbox" id="terminosid" x-model="aceptoTerminos">
+                                    <input class="form-check-input" :class="{'is-invalid': firmaTerminosInvalidos}" type="checkbox" id="terminosid" x-model="aceptoTerminos" @change="if (aceptoTerminos) firmaTerminosInvalidos = false">
                                     <label class="form-check-label" for="terminosid">
                                         <strong class="text-primary">Acepto los resultados del corte del día: <?= $fecha ?></strong>
                                     </label>
@@ -727,7 +727,19 @@
                                 <!-- YA FIRMÓ -->
                                 <template x-if="firmasElaboro">
                                     <div class="w-100 h-100 d-flex justify-content-center align-items-center">
-                                        <img :src="'/assets/img/firmas/' + firmasElaboro.firma" class="img-fluid" style="max-height:120px;object-fit:contain;">
+                                        <template x-if="firmasElaboro.firma_url">
+                                            <div class="ratio ratio-1x1 w-100 mx-auto" style="max-width:220px;">
+                                                <img :src="firmasElaboro.firma_url" class="img-fluid object-fit-contain p-3" :alt="'Firma de ' + firmasElaboro.nombre_usuario">
+                                            </div>
+                                        </template>
+                                        <template x-if="!firmasElaboro.firma_url">
+                                            <div class="ratio ratio-1x1 w-100 mx-auto" style="max-width:220px;">
+                                                <div class="d-flex flex-column justify-content-center align-items-center text-center p-3">
+                                                    <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
+                                                    <small class="text-muted">La firma está registrada, pero su imagen no está disponible.</small>
+                                                </div>
+                                            </div>
+                                        </template>
                                     </div>
                                 </template>
 
@@ -808,7 +820,7 @@
 
                                             <div class="col-12">
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control" placeholder="Token de seguridad" x-model="tokenInput">
+                                                    <input type="text" class="form-control" :class="{'is-invalid': tokenInputInvalido}" placeholder="Token de seguridad" x-model="tokenInput" @input="tokenInputInvalido = false">
                                                     <button class="btn btn-outline-success" type="button" @click="firmarConToken('Superviso')" :disabled="enviandoToken">
                                                         <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span> Firmar
                                                     </button>
@@ -816,8 +828,6 @@
                                             </div>
 
                                         </div>
-
-                                        <template x-if="tokenError"><small class="text-danger mt-2" x-text="tokenError"></small></template>
 
                                     </div>
                                 </template>
@@ -897,7 +907,7 @@
 
                                         <div class="col-12">
                                             <div class="input-group">
-                                                <input type="text" class="form-control" placeholder="Token de seguridad" x-model="tokenInput">
+                                                <input type="text" class="form-control" :class="{'is-invalid': tokenInputInvalido}" placeholder="Token de seguridad" x-model="tokenInput" @input="tokenInputInvalido = false">
                                                 <button class="btn btn-outline-success" type="button" @click="firmarConToken('VoBo')" :disabled="enviandoToken">
                                                     <span x-show="enviandoToken" class="spinner-border spinner-border-sm me-1"></span> Firmar
                                                 </button>
@@ -905,8 +915,6 @@
                                         </div>
 
                                     </div>
-
-                                    <template x-if="tokenError"><small class="text-danger mt-2" x-text="tokenError"></small></template>
 
                                 </div>
                             </template>
@@ -947,7 +955,7 @@
                 </div>
                 <div class="modal-body">
                     <h6 class="mb-2 form-label">* Documento:</h6>
-                    <select class="form-select mb-1" x-model="nuevoDocumento.nombre">
+                    <select class="form-select mb-1" :class="{'is-invalid': erroresDocumento.nombre}" x-model="nuevoDocumento.nombre" @change="if (nuevoDocumento.nombre) erroresDocumento.nombre = false">
                         <option value="">Selecciona una opcion...</option>
                         <option value="Ficha prosegur">Ficha prosegur</option>
                         <option value="Ficha 1 prosegur">Ficha 1 prosegur</option>
@@ -961,7 +969,7 @@
                         <option value="Ficha BBVA">Ficha BBVA</option>
                     </select>
                     <h6 class="mb-2 mt-3 form-label">* Documento:</h6>
-                    <input class="form-control" type="file" id="inputDocumento" @change="nuevoDocumento.file = $event.target.files[0]">
+                    <input class="form-control" :class="{'is-invalid': erroresDocumento.file}" type="file" id="inputDocumento" @change="nuevoDocumento.file = $event.target.files[0]; if (nuevoDocumento.file) erroresDocumento.file = false">
                 </div>
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">

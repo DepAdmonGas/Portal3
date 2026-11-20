@@ -1,0 +1,92 @@
+/* Los puntos del reporte se separan por título; su contenido usa filas y componentes nativos. */
+#container.sasisopa-reporte > .sasisopa-report-block {
+    display: block;
+    margin: 0 0 1rem;
+}
+
+#container.sasisopa-reporte > .sasisopa-report-block > .sasisopa-report-heading {
+    margin-bottom: 1rem;
+}
+
+#container.sasisopa-reporte > .sasisopa-report-block > .sasisopa-report-content {
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+#container.sasisopa-reporte .sasisopa-report-content > * + * {
+    margin-top: 1rem !important;
+}
+
+#container.sasisopa-reporte .sasisopa-report-content > .row {
+    --bs-gutter-y: 1rem;
+}
+
+#container.sasisopa-reporte .sasisopa-report-content .row > [class*="col-"] > * + * {
+    margin-top: 1rem !important;
+}
+
+#container.sasisopa-reporte .sasisopa-report-table-card {
+    margin-block: 0 !important;
+}
+
+#container.sasisopa-reporte .sasisopa-report-table-card .card-header {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+}
+
+#container.sasisopa-reporte .sasisopa-report-table-card .card-title {
+    font-size: 1.1rem;
+    line-height: 1.35;
+}
+
+#container.sasisopa-reporte .card-hover > .card-body {
+    padding-bottom: 1rem !important;
+}
+
+#container.sasisopa-reporte .sasisopa-pdf-column {
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    padding-right: 0.25rem;
+    padding-left: 0.25rem;
+    text-align: center !important;
+    vertical-align: middle;
+}
+
+#container.sasisopa-reporte .sasisopa-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-left: 0.25rem solid var(--bs-primary);
+    border-radius: 0.375rem;
+    background: linear-gradient(90deg, var(--bs-primary-bg-subtle), rgba(var(--bs-primary-rgb), 0.025));
+    color: var(--bs-emphasis-color);
+    font-weight: 600;
+}
+
+#container.sasisopa-reporte .sasisopa-section-title .badge {
+    min-width: 2rem;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+@media (max-width: 575.98px) {
+    #container.sasisopa-reporte > .sasisopa-report-block {
+        margin-bottom: 1rem;
+    }
+
+    #container.sasisopa-reporte .sasisopa-section-title {
+        gap: 0.6rem;
+        padding: 0.65rem 0.75rem;
+        font-size: 1rem;
+    }
+
+    #container.sasisopa-reporte .sasisopa-report-table-card .card-title {
+        font-size: 1rem;
+    }
+}

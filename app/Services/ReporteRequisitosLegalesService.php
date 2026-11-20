@@ -88,7 +88,12 @@ public function ultimaActualizacion(
             'fecha_emision'     => null,
             'fecha_vencimiento' => null,
             'acusepdf'          => null,
+            'matrix_id'         => null,
+            'acusepdf_disponible' => false,
+            'acusepdf_url'      => null,
             'requisitolegalpdf' => null,
+            'requisitolegalpdf_disponible' => false,
+            'requisitolegalpdf_url' => null,
             'cumplimiento'      => $this->calcularCumplimiento(null, null)
         ];
 
@@ -96,6 +101,10 @@ public function ultimaActualizacion(
 
     $fechaEmision = $registro->getRawOriginal('fecha_emision');
     $fechaVencimiento = $registro->getRawOriginal('fecha_vencimiento');
+    $acuseDisponible = !empty($registro->acusepdf)
+        && RequisitosLegalesStorageService::resolveReadablePath((string) $registro->acusepdf) !== null;
+    $requisitoDisponible = !empty($registro->requisitolegalpdf)
+        && RequisitosLegalesStorageService::resolveReadablePath((string) $registro->requisitolegalpdf) !== null;
 
     return [
 
@@ -115,11 +124,25 @@ public function ultimaActualizacion(
 
         'acusepdf' => $registro->acusepdf,
 
+        'matrix_id' => (int) $registro->id,
+
+        'acusepdf_disponible' => $acuseDisponible,
+
+        'acusepdf_url' => $acuseDisponible
+            ? '/sasisopa/requisitos-legales/download?matrix_id=' . (int) $registro->id . '&variant=acuse'
+            : null,
+
         'requisitolegalpdf' => $registro->requisitolegalpdf,
 
+        'requisitolegalpdf_disponible' => $requisitoDisponible,
+
+        'requisitolegalpdf_url' => $requisitoDisponible
+            ? '/sasisopa/requisitos-legales/download?matrix_id=' . (int) $registro->id . '&variant=requisito'
+            : null,
+
         'cumplimiento' => $this->calcularCumplimiento(
-            $registro->acusepdf,
-            $registro->requisitolegalpdf
+            $acuseDisponible ? $registro->acusepdf : null,
+            $requisitoDisponible ? $registro->requisitolegalpdf : null
         )
 
     ];
@@ -352,8 +375,8 @@ public function obtenerNivel(
 
 
     $cumplimiento = $this->calcularCumplimiento(
-        $ultima['acusepdf'] ?? null,
-        $ultima['requisitolegalpdf'] ?? null
+        !empty($ultima['acusepdf_disponible']) ? ($ultima['acusepdf'] ?? null) : null,
+        !empty($ultima['requisitolegalpdf_disponible']) ? ($ultima['requisitolegalpdf'] ?? null) : null
     );
 
 
@@ -399,7 +422,17 @@ public function obtenerNivel(
 
         'acusepdf' => $ultima['acusepdf'] ?? null,
 
+        'matrix_id' => $ultima['matrix_id'] ?? null,
+
+        'acusepdf_disponible' => $ultima['acusepdf_disponible'] ?? false,
+
+        'acusepdf_url' => $ultima['acusepdf_url'] ?? null,
+
         'requisitolegalpdf' => $ultima['requisitolegalpdf'] ?? null,
+
+        'requisitolegalpdf_disponible' => $ultima['requisitolegalpdf_disponible'] ?? false,
+
+        'requisitolegalpdf_url' => $ultima['requisitolegalpdf_url'] ?? null,
 
         'cumplimiento' => $cumplimiento,
 

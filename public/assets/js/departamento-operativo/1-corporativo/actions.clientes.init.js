@@ -31,7 +31,7 @@ modalTipo: '',
 modalFormaPago: '',
 modalComprobante: null,
 guardando: false,
-validationErrors: { cliente: '', total: '', tipo: '', formaPago: '', comprobante: '' },
+validationErrors: { cliente: false, total: false, tipo: false, formaPago: false, comprobante: false },
 
 listaLoading: false,
 listaClientes: [],
@@ -110,6 +110,8 @@ className: 'align-middle text-center',
 orderable: false,
 searchable: false,
 render: function (d, type, row) {
+const requiereComprobante = row.consumo_tipo === 'Pago' && ['Tarjeta', 'Transferencia'].includes(row.pago);
+if (!requiereComprobante) return '<span class="text-muted">N/A</span>';
 if (!d || !row.comprobante_disponible) return '<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>';
 return '<div x-data="actions()"><a class="pointer" @click="download(\'comprobantes-clientes\', \'' + d + '\')"><i class="ti ti-file-text text-success fs-6"></i></a></div>';
 }
@@ -221,7 +223,7 @@ input.setSelectionRange(nextCursor, nextCursor);
 
 formatModalTotal(event) {
 this.formatNumericInput(event, this, 'modalTotal');
-if (parseFloat(this.modalTotal) > 0) this.validationErrors.total = '';
+if (parseFloat(this.modalTotal) > 0) this.validationErrors.total = false;
 },
 
 async cargarClientes() {
@@ -272,7 +274,7 @@ if (wr) wr.classList.remove('is-select2-pending');
 }
 $select.off('change.clientesModal').on('change.clientesModal', (e) => {
 this.modalCliente = String($(e.target).val() || '');
-if (this.modalCliente) this.validationErrors.cliente = '';
+if (this.modalCliente) this.validationErrors.cliente = false;
 });
 $select.val(this.modalCliente || '').trigger('change');
 });
@@ -301,7 +303,7 @@ this.modalTotal = '';
 this.modalTipo = '';
 this.modalFormaPago = '';
 this.modalComprobante = null;
-this.validationErrors = { cliente: '', total: '', tipo: '', formaPago: '', comprobante: '' };
+this.validationErrors = { cliente: false, total: false, tipo: false, formaPago: false, comprobante: false };
 
 const select = this.$refs.selectCliente;
 if (select) select.value = '';
@@ -320,20 +322,20 @@ const amount = Number(total);
 
 const fileInput = this.$refs.comprobanteInput;
 this.modalComprobante = fileInput?.files?.[0] || this.modalComprobante || null;
-this.validationErrors = { cliente: '', total: '', tipo: '', formaPago: '', comprobante: '' };
+this.validationErrors = { cliente: false, total: false, tipo: false, formaPago: false, comprobante: false };
 
-if (!this.modalCliente) this.validationErrors.cliente = 'Selecciona un cliente.';
-if (!Number.isFinite(amount) || amount <= 0) this.validationErrors.total = 'Ingresa un total mayor a cero.';
-if (!this.modalTipo) this.validationErrors.tipo = 'Selecciona Consumo o Pago.';
+if (!this.modalCliente) this.validationErrors.cliente = true;
+if (!Number.isFinite(amount) || amount <= 0) this.validationErrors.total = true;
+if (!this.modalTipo) this.validationErrors.tipo = true;
 if (this.modalTipo === 'Pago') {
-if (!this.modalFormaPago) this.validationErrors.formaPago = 'Selecciona una forma de pago.';
+if (!this.modalFormaPago) this.validationErrors.formaPago = true;
 if (['Tarjeta', 'Transferencia'].includes(this.modalFormaPago) && !this.modalComprobante) {
-this.validationErrors.comprobante = 'Adjunta el voucher.';
+this.validationErrors.comprobante = true;
 }
 }
 
-const firstError = Object.values(this.validationErrors).find(Boolean);
-if (firstError) {
+if (Object.values(this.validationErrors).some(Boolean)) {
+if (window.Notify && window.Notify.error) window.Notify.error('Completa los campos obligatorios.');
 return false;
 }
 return true;

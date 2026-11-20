@@ -367,11 +367,11 @@ public static function eliminarDocumento(int $id): array
 $doc = AceiteDocumento::find($id);
 if (!$doc) return ['success' => false, 'message' => 'Documento no encontrado'];
 
-$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-documentos/';
+$uploadDir = self::directorioCargaAceite('aceites-documentos');
 foreach (['ficha_deposito', 'imagen_bodega', 'factura_venta'] as $campo) {
 if ($doc->$campo) {
-$rutaArchivo = self::rutaArchivoAceite('aceites-documentos', $doc->$campo);
-if ($rutaArchivo && str_starts_with($rutaArchivo, $uploadDir) && is_file($rutaArchivo)) unlink($rutaArchivo);
+$rutaArchivo = self::resolverArchivoAceite('aceites-documentos', $doc->$campo);
+if ($rutaArchivo && $uploadDir && str_starts_with($rutaArchivo, $uploadDir) && is_file($rutaArchivo)) unlink($rutaArchivo);
 }
 }
 
@@ -437,9 +437,9 @@ public static function eliminarFactura(int $id): array
 $factura = AceiteFactura::find($id);
 if (!$factura) return ['success' => false, 'message' => 'Factura no encontrada'];
 
-$uploadDir = dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-facturas/';
+$uploadDir = self::directorioCargaAceite('aceites-facturas');
 if ($factura->archivo) {
-$rutaArchivo = self::rutaArchivoAceite('aceites-facturas', $factura->archivo);
+$rutaArchivo = self::resolverArchivoAceite('aceites-facturas', $factura->archivo);
 if ($rutaArchivo && $uploadDir && str_starts_with($rutaArchivo, $uploadDir) && is_file($rutaArchivo)) unlink($rutaArchivo);
 }
 
@@ -529,13 +529,9 @@ return ['success' => true, 'message' => 'Documento actualizado'];
 
 private static function directorioCargaAceite(string $tipo): ?string
 {
-$subdirectorios = [
-'aceites-documentos' => 'aceites-documentos',
-'aceites-facturas' => 'aceites-facturas',
-'aceites-diferencias' => 'aceites-diferencias',
-];
-if (!isset($subdirectorios[$tipo])) return null;
-$directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $subdirectorios[$tipo] . '/';
+$tiposPermitidos = ['aceites-documentos', 'aceites-facturas', 'aceites-diferencias'];
+if (!in_array($tipo, $tiposPermitidos, true)) return null;
+$directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/';
 if (!is_dir($directorio) && !@mkdir($directorio, 0755, true) && !is_dir($directorio)) return null;
 return rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 }
@@ -543,16 +539,12 @@ return rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 public static function getDirectoriosArchivoAceite(string $tipo): array
 {
 $raizActual = dirname(__DIR__, 2) . '/public/uploads/archivos/';
-$raizAnterior = dirname(__DIR__, 3) . '/departamento-operativo/archivos/';
-$directorios = [
-'aceites-documentos' => [$raizActual . 'aceites-documentos/', $raizActual, $raizAnterior],
-'aceites-facturas' => [$raizActual . 'aceites-facturas/', $raizAnterior . 'aceites-facturas/'],
-'aceites-diferencias' => [$raizActual . 'aceites-diferencias/', $raizActual, $raizAnterior . 'aceites-diferencias/', $raizAnterior],
-];
-return $directorios[$tipo] ?? [];
+return in_array($tipo, ['aceites-documentos', 'aceites-facturas', 'aceites-diferencias'], true)
+? [$raizActual]
+: [];
 }
 
-private static function rutaArchivoAceite(string $tipo, string $nombre): ?string
+public static function resolverArchivoAceite(string $tipo, string $nombre): ?string
 {
 $nombre = basename($nombre);
 foreach (self::getDirectoriosArchivoAceite($tipo) as $directorio) {
@@ -564,7 +556,7 @@ return null;
 
 private static function archivoAceiteDisponible(string $tipo, string $nombre): bool
 {
-return self::rutaArchivoAceite($tipo, $nombre) !== null;
+return self::resolverArchivoAceite($tipo, $nombre) !== null;
 }
 
 public static function finalizarInventario(int $idMes): array
@@ -719,20 +711,61 @@ return [
 public static function procesarImportacionFacturas(int $idMes, array $data): array
 {
 $count = 0;
-foreach ($data as $row) {
-if (empty($row['fecha']) || empty($row['concepto']) || empty($row['archivo'])) continue;
+$omitidas = 0;
+$uploadDir = self::directorioCargaAceite('aceites-facturas');
+if (!$uploadDir) {
+return ['success' => false, 'message' => 'No fue posible preparar el almacenamiento de facturas'];
+}
 
-$nombreArchivo = uniqid() . '-' . basename($row['archivo']);
+foreach ($data as $row) {
+if (!is_array($row)) {
+$omitidas++;
+continue;
+}
+
+$fecha = trim((string) ($row['fecha'] ?? ''));
+$concepto = trim((string) ($row['concepto'] ?? ''));
+$nombreOriginal = basename(trim((string) ($row['archivo'] ?? '')));
+$fechaValida = \DateTime::createFromFormat('!Y-m-d', $fecha);
+if (!$fechaValida || $fechaValida->format('Y-m-d') !== $fecha || $concepto === '' || $nombreOriginal === '') {
+$omitidas++;
+continue;
+}
+
+$rutaOrigen = self::resolverArchivoAceite('aceites-facturas', $nombreOriginal);
+if (!$rutaOrigen) {
+$omitidas++;
+continue;
+}
+
+$nombreArchivo = uniqid() . '-' . $nombreOriginal;
+$rutaDestino = $uploadDir . $nombreArchivo;
+if (!@copy($rutaOrigen, $rutaDestino)) {
+$omitidas++;
+continue;
+}
+
+try {
 AceiteFactura::create([
 'id_mes' => $idMes,
-'fecha' => $row['fecha'],
-'nombre_anexo' => $row['concepto'],
+'fecha' => $fecha,
+'nombre_anexo' => $concepto,
 'archivo' => $nombreArchivo,
 ]);
 $count++;
+} catch (\Throwable $e) {
+if (is_file($rutaDestino)) @unlink($rutaDestino);
+error_log('Error importando factura de aceites: ' . $e->getMessage());
+$omitidas++;
+}
 }
 
-return ['success' => true, 'message' => "$count factura(s) importada(s)"];
+$mensaje = "$count factura(s) importada(s)";
+if ($omitidas > 0) $mensaje .= "; $omitidas omitida(s) por datos incompletos o archivo no encontrado";
+return [
+'success' => $count > 0,
+'message' => $count > 0 ? $mensaje : 'No se importaron facturas: revisa que el CSV tenga datos válidos y que los archivos existan en las rutas de aceites.',
+];
 }
 
 public static function getListaAceites(): array

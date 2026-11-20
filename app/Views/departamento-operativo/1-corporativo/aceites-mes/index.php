@@ -51,7 +51,7 @@ Finalizar Resumen</button>
 <!-- TODOS -->
 <li>
 <a class="dropdown-item pointer" @click.prevent="abrirModalFacturas()">
-<i class="ti ti-files"></i> Archivos de Aceites
+<i class="ti ti-files"></i> Archivos Aceites
 </a>
 </li>
 
@@ -168,8 +168,10 @@ No hay registros de aceites para este mes
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
-:value="formatInputNumber(tempValues[row.id].pedido)" @input="formatNumericInput($event, row, 'pedido')" @change="guardarCampo(row, 'pedido')">
+<div class="position-relative">
+<input class="form-control border-0 text-end shadow-none p-3 pe-5" type="text" inputmode="decimal"
+:value="formatInputNumber(tempValues[row.id].pedido)" @input="formatNumericInput($event, row, 'pedido')" @change="guardarCampo(row, 'pedido', $event.target)">
+</div>
 </template>
 <template x-if="finalizado || !puedeEditar">
 <span x-text="formatNum(row.pedido, 0)"></span>
@@ -184,9 +186,11 @@ No hay registros de aceites para este mes
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+<div class="position-relative">
+<input class="form-control border-0 text-end shadow-none p-3 pe-5" type="text" inputmode="decimal"
 :value="formatInputNumber(tempValues[row.id].inventario_bodega)" @input="formatNumericInput($event, row, 'inventario_bodega')"
-@change="guardarCampo(row, 'inventario_bodega')">
+@change="guardarCampo(row, 'inventario_bodega', $event.target)">
+</div>
 </template>
 <template x-if="finalizado || !puedeEditar">
 <span x-text="formatNum(row.inventario_bodega, 0)"></span>
@@ -199,9 +203,11 @@ No hay registros de aceites para este mes
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+<div class="position-relative">
+<input class="form-control border-0 text-end shadow-none p-3 pe-5" type="text" inputmode="decimal"
 :value="formatInputNumber(tempValues[row.id].inventario_exibidores)" @input="formatNumericInput($event, row, 'inventario_exibidores')"
-@change="guardarCampo(row, 'inventario_exibidores')">
+@change="guardarCampo(row, 'inventario_exibidores', $event.target)">
+</div>
 </template>
 <template x-if="finalizado || !puedeEditar">
 <span x-text="formatNum(row.inventario_exibidores, 0)"></span>
@@ -233,9 +239,11 @@ title="Agregar diferencia de pago"></i>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+<div class="position-relative">
+<input class="form-control border-0 text-end shadow-none p-3 pe-5" type="text" inputmode="decimal"
 :value="formatInputNumber(tempValues[row.id].producto_facturado)" @input="formatNumericInput($event, row, 'producto_facturado')"
-@change="guardarCampo(row, 'producto_facturado')">
+@change="guardarCampo(row, 'producto_facturado', $event.target)">
+</div>
 </template>
 <template x-if="finalizado || !puedeEditar">
 <span x-text="formatNum(row.producto_facturado)"></span>
@@ -248,9 +256,11 @@ title="Agregar diferencia de pago"></i>
 <template x-if="!multiestacion">
 <td class="text-center align-middle p-0">
 <template x-if="!finalizado && puedeEditar">
-<input class="form-control border-0 text-end shadow-none p-3" type="text" inputmode="decimal"
+<div class="position-relative">
+<input class="form-control border-0 text-end shadow-none p-3 pe-5" type="text" inputmode="decimal"
 :value="formatInputNumber(tempValues[row.id].factura_venta_mostrador)" @input="formatNumericInput($event, row, 'factura_venta_mostrador')"
-@change="guardarCampo(row, 'factura_venta_mostrador')">
+@change="guardarCampo(row, 'factura_venta_mostrador', $event.target)">
+</div>
 </template>
 <template x-if="finalizado || !puedeEditar">
 <span x-text="formatNum(row.factura_venta_mostrador)"></span>
@@ -670,7 +680,7 @@ Cancelar
 <h6 class="mt-3">* Documento de pago (PDF):</h6>
 <input type="file" class="form-control mt-1 mb-3" id="docDiferencia" accept=".pdf" @change="limpiarErrorCampo($event.target)">
 <h6>* Comentarios:</h6>
-<textarea class="form-control mt-1" x-model="diferenciaForm.comentario" rows="4"></textarea>
+<textarea class="form-control mt-1" id="diferencia-comentario" x-model="diferenciaForm.comentario" rows="4" @input="limpiarErrorCampo($event.target)"></textarea>
 </div>
 <div class="modal-footer">
 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
@@ -734,7 +744,7 @@ Cancelar
 <div class="modal-body">
 <div class="mb-3">
 <label class="form-label">Archivo CSV</label>
-<input type="file" class="form-control" accept=".csv" @change="csvFile = $event.target.files[0]">
+<input type="file" id="aceite-importar-csv" class="form-control" accept=".csv" @change="csvFile = $event.target.files[0]; limpiarErrorCampo($event.target)">
 </div>
 <p class="small text-muted">Formato: fecha, concepto, archivo (nombre del archivo)</p>
 </div>
