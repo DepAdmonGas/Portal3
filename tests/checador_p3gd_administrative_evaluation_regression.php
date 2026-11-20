@@ -115,6 +115,14 @@ $assert(!preg_match('/Device[-_ ]?Auth|X-Device|device[_-]credential|Id-Disposit
 $assert(str_contains($accessSource, 'authorizeEvaluation') && str_contains($accessSource, 'RESOLUTION_MODULE_KEY') && str_contains($accessSource, 'AUTHORIZATION_MODULE_KEY'), 'P3GPD05 evaluation checks the two dedicated ACL namespaces');
 $assert(str_contains($accessSource, "empty(\$resolution['editar']) && empty(\$authorization['editar'])"), 'P3GPD06 read/create-only permissions are denied');
 $assert(str_contains($accessSource, 'authorizeFalta') && str_contains($controllerSource, 'authorizeFalta($workplaceId)'), 'P3GPD07 final FALTA uses the separate authorization ACL');
+$faltaAuthorizationStart = strpos($accessSource, 'public static function authorizeFalta');
+$faltaAuthorizationEnd = $faltaAuthorizationStart === false ? false : strpos($accessSource, "\n    /**", $faltaAuthorizationStart);
+$faltaAuthorizationSource = $faltaAuthorizationStart !== false && $faltaAuthorizationEnd !== false
+    ? substr($accessSource, $faltaAuthorizationStart, $faltaAuthorizationEnd - $faltaAuthorizationStart)
+    : '';
+$assert(str_contains($faltaAuthorizationSource, 'DIRECCION_OPERACIONES_PUESTO_ID')
+    && str_contains($faltaAuthorizationSource, 'falta_direction_role_required'),
+    'final FALTA authorization requires Dirección role in addition to its dedicated effective edit grant');
 $assert(str_contains($controllerSource, 'authorizeFalta ?') && str_contains($controllerSource, "'authorize_falta'"), 'P3GPD08 resolution-only users cannot submit FALTA through the normal action');
 $assert(str_contains($viewSource, 'Autorizar FALTA explícitamente') && str_contains($viewSource, 'confirm_evaluation'), 'P3GPD09 final FALTA requires an explicit confirmation control');
 $assert(!array_key_exists('authorize_falta', $normalBody), 'P3GPD10 normal evaluation omits authorize_falta by default');

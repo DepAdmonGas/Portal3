@@ -153,7 +153,7 @@ $assert(!str_contains($serviceSource, 'segundos_trabajados_totales'), 'P3HP35 no
 $assert(!preg_match('/INSERT\\s+INTO|UPDATE\\s+op_rh_v2_/i', $serviceSource . $controllerSource), 'P3HP36 no payroll/database effect');
 $assert(str_contains($viewSource, 'review') || str_contains($viewSource, 'Requiere revisión'), 'P3HP37 review status remains visible');
 $assert(str_contains($viewSource, 'visible') || str_contains($viewSource, 'role="status"'), 'P3HP38 status text/accessibility is present');
-$assert(str_contains($viewSource, 'row-cols-1') && str_contains($viewSource, 'row-cols-sm-2'), 'P3HP39 responsive semantic layout');
+$assert(str_contains($viewSource, 'row-cols-2') && str_contains($viewSource, 'row-cols-lg-4'), 'P3HP39 responsive semantic layout');
 $assert(str_contains($viewSource, 'no se infieren posiciones'), 'P3HP40 fail-closed user-facing message');
 $assert(str_contains($contractSource, 'Every presentation') && str_contains($contractSource, 'No Portal3 runtime behavior'), 'P3HP41 presentation-only authority preserved');
 

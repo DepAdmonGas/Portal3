@@ -40,10 +40,12 @@ final class ChecadorShiftTemplateSqlWriteService
                 ->getShiftTemplateVersion($actor, $key, $version, $workplaceId, $id, 'STATION', $workplaceId);
     }
 
-    /** API availability and deployment flags are not authorization inputs for the SQL writer. */
+    /** Keep M04 writes in local development until target cutover/preflight is independently approved. */
     public static function writeGateOpen(): bool
     {
-        return !ChecadorDailyReadService::demoModeEnabled();
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        return in_array($environment, ['dev', 'development', 'local'], true)
+            && !ChecadorDailyReadService::demoModeEnabled();
     }
 
     /** UI and handlers require a live schema and effective-grant preflight. */

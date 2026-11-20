@@ -2,207 +2,251 @@
 declare(strict_types=1);
 
 $esc = static fn(mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-$incidencesByWorker = is_array($administrativeIncidences ?? null) ? $administrativeIncidences : [];
-$readErrors = is_array($administrativeErrors ?? null) ? $administrativeErrors : [];
-$categoryLabel = static fn(string $category): string => match ($category) {
-    'VACATION' => 'Vacaciones', 'PERMISSION' => 'Permiso', 'INCAPACITY' => 'Incapacidad', 'JUSTIFICATION' => 'Justificación', default => 'Tipo no disponible',
+$items = is_array($incidenceItems ?? null) ? $incidenceItems : [];
+$filters = is_array($incidenceFilters ?? null) ? $incidenceFilters : [];
+$workers = is_array($incidenceWorkers ?? null) ? $incidenceWorkers : [];
+$categories = is_array($incidenceCategories ?? null) ? $incidenceCategories : [];
+$feedback = is_array($incidenceFeedback ?? null) ? $incidenceFeedback : null;
+$feedbackMessage = is_string($feedback['message'] ?? null) && trim($feedback['message']) !== ''
+    ? trim($feedback['message'])
+    : null;
+$formValues = is_array($incidenceFormValues ?? null) ? $incidenceFormValues : [];
+$writerBlockMessage = match ((string) ($incidenceWriterBlockReason ?? '')) {
+    'api_writer_cutover_unverified' => 'El guardado permanece cerrado hasta comprobar el corte del escritor anterior',
+    'history_protection_unverified' => 'El guardado permanece cerrado hasta comprobar la protección del historial',
+    'schema_preflight_failed' => 'El guardado permanece cerrado porque no se confirmó el esquema y los permisos SQL requeridos',
+    default => 'El guardado permanece cerrado hasta verificar las condiciones operativas requeridas',
 };
+$readErrorMessage = match ((string) ($incidenceReadError ?? '')) {
+    'sql_read_failed' => 'Ocurrió un error SQL al consultar las incidencias. Intenta actualizar la página.',
+    'invalid_filter' => 'Los filtros enviados no son válidos. Corrígelos y vuelve a buscar.',
+    'permission_denied' => 'No tienes permiso efectivo para consultar incidencias en esta localidad.',
+    default => 'No fue posible consultar las incidencias. No se interpreta el error como una lista vacía.',
+};
+$pagination = is_array($incidencePagination ?? null) ? $incidencePagination : [];
+$statusLabel = static fn(string $status): string => match ($status) {
+    'PENDING_APPROVAL' => 'Pendiente de autorización',
+    'ACTIVE' => 'Activa',
+    'CANCELLED' => 'Cancelada',
+    'SUPERSEDED' => 'Sustituida',
+    'REVIEW_REQUIRED' => 'Requiere revisión',
+    'REJECTED' => 'Rechazada',
+    'REVOKED' => 'Revocada',
+    default => 'Estado no disponible',
+};
+$page = max(1, (int) ($pagination['page'] ?? 1));
+$totalPages = max(0, (int) ($pagination['total_pages'] ?? 0));
+$queryBase = array_filter([
+    'workplace_id' => (int) ($selectedWorkplaceId ?? 0),
+    'worker_id' => $filters['worker_id'] ?? null,
+    'category' => $filters['category'] ?? null,
+    'status' => $filters['status'] ?? null,
+    'start_date' => $filters['start_date'] ?? null,
+    'end_date' => $filters['end_date'] ?? null,
+], static fn(mixed $value): bool => $value !== null && $value !== '');
 ?>
 <div id="container" class="mt-4 mb-5">
-    <?php require __DIR__ . '/_workspace-context.php'; ?>
-    <section class="card" aria-labelledby="incidence-workspace-heading">
-        <div class="card-header"><h2 class="h5 mb-0" id="incidence-workspace-heading">Incidencias e historial</h2></div>
+    <section class="card mb-4" aria-labelledby="incidence-workspace-heading">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2 gap-md-3">
+            <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-alert-triangle fs-5"></i></span>
+            <h2 class="h5 mb-0 text-white" id="incidence-workspace-heading">Incidencias del personal</h2>
+            <div class="dropdown ms-auto">
+                <button type="button" class="btn btn-light dropdown-toggle text-dark" id="m06-incidence-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Opciones de incidencias">
+                    <i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="m06-incidence-options">
+                    <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-search-modal"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar incidencias</button></li>
+                    <?php if (($incidenceCanCreate ?? false) === true): ?>
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-create-modal"><i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva incidencia</button></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
         <div class="card-body">
-            <p class="text-muted">Consulta los registros y su historial. Las acciones disponibles dependen de los permisos de este perfil y se confirman mediante la lectura autorizada.</p>
-            <?php if (($demoMode ?? false) === true): ?>
-                <div class="alert alert-info" role="status">Demostración sintética: estas acciones sólo cambian el historial local. No se modifica información operativa real.</div>
-            <?php endif; ?>
-            <?php if (is_array($lifecycleFeedback ?? null)): ?>
-                <div class="alert alert-<?= ($lifecycleFeedback['type'] ?? '') === 'success' ? 'success' : 'warning' ?>" role="status">
-                    <?= $esc($lifecycleFeedback['message'] ?? 'No fue posible confirmar la acción.') ?>
+            <?php if ($feedbackMessage !== null): ?>
+                <?php $feedbackSuccess = ($feedback['type'] ?? '') === 'success'; ?>
+                <div class="alert alert-<?= $feedbackSuccess ? 'success' : 'warning' ?> d-flex align-items-start gap-2" role="status">
+                    <i class="ti <?= $feedbackSuccess ? 'ti-circle-check' : 'ti-alert-triangle' ?> mt-1" aria-hidden="true"></i>
+                    <?= $esc($feedbackMessage) ?>
                 </div>
             <?php endif; ?>
-            <?php if (($state ?? '') !== 'success'): ?><div class="alert alert-warning" role="status"><?= $esc(($stateMessage ?? '') !== '' ? $stateMessage : 'La consulta estable no está disponible; no se confirma un resultado vacío.') ?></div><?php endif; ?>
-            <?php if (($state ?? '') === 'success' && $readErrors === [] && $incidencesByWorker === []): ?>
-                <div class="alert alert-info" role="status">No hay incidencias dentro del conjunto consultado, o no se observó un trabajador elegible para esta lectura. No se infieren faltas.</div>
-            <?php endif; ?>
-            <?php foreach ($readErrors as $workerId => $kind): ?>
-                <div class="alert alert-warning" role="status">La lectura de incidencias de personal <?= (int) $workerId ?> no está disponible. Una respuesta fallida no confirma que no existan registros.</div>
-            <?php endforeach; ?>
-            <?php foreach ($incidencesByWorker as $workerId => $incidences): ?>
-                <h3 class="h6 mt-3">Personal <?= (int) $workerId ?> · <?= $esc($selectedWorkplaceName ?? 'Centro autorizado') ?> · <?= $esc($selectedDate ?? '') ?></h3>
-                <?php
-                $createFeedback = is_array($incidenceCreateFeedback ?? null)
-                    && (int) ($incidenceCreateFeedback['worker_id'] ?? 0) === (int) $workerId
-                    ? $incidenceCreateFeedback
-                    : null;
-                $createValues = is_array($createFeedback['form_values'] ?? null) ? $createFeedback['form_values'] : [];
-                ?>
-                <?php if (($incidenceCreateAllowed ?? false) === true): ?>
-                    <details class="card card-body mb-3">
-                        <summary class="fw-semibold">Registrar una incidencia</summary>
-                        <p class="small text-muted mt-2">El alta se envía a la fuente autorizada y sólo se confirma después de volver a leer el registro.</p>
-                        <?php if ($createFeedback !== null): ?>
-                            <div class="alert alert-<?= ($createFeedback['type'] ?? '') === 'success' ? 'success' : 'warning' ?> py-2" role="status">
-                                <?= $esc($createFeedback['message'] ?? 'No fue posible confirmar el alta.') ?>
-                            </div>
-                        <?php endif; ?>
-                        <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/crear" class="row g-3">
-                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                            <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                            <input type="hidden" name="worker_id" value="<?= (int) $workerId ?>">
-                            <input type="hidden" name="return_date" value="<?= $esc($selectedDate ?? '') ?>">
-                            <input type="hidden" name="snapshot_ref" value="<?= $esc($snapshotRef ?? '') ?>">
-                            <input type="hidden" name="idempotency_key" value="<?= $esc(($createFeedback['retry_idempotency_key'] ?? '') ?: ($incidenceCreateKeys[$workerId] ?? '')) ?>">
-                            <div class="col-12 col-md-4">
-                                <label class="form-label" for="incidence-category-<?= (int) $workerId ?>">Tipo</label>
-                                <select class="form-select" id="incidence-category-<?= (int) $workerId ?>" name="category" required>
-                                    <option value="">Selecciona</option>
-                                    <?php foreach (['VACATION' => 'Vacaciones', 'PERMISSION' => 'Permiso', 'INCAPACITY' => 'Incapacidad', 'JUSTIFICATION' => 'Justificación'] as $code => $label): ?>
-                                        <option value="<?= $esc($code) ?>" <?= ($createValues['category'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label" for="incidence-start-<?= (int) $workerId ?>">Desde</label>
-                                <input class="form-control" type="date" id="incidence-start-<?= (int) $workerId ?>" name="start_date" value="<?= $esc($createValues['start_date'] ?? '') ?>" required>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label" for="incidence-end-<?= (int) $workerId ?>">Hasta</label>
-                                <input class="form-control" type="date" id="incidence-end-<?= (int) $workerId ?>" name="end_date" value="<?= $esc($createValues['end_date'] ?? '') ?>" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label" for="incidence-reason-<?= (int) $workerId ?>">Motivo</label>
-                                <textarea class="form-control" id="incidence-reason-<?= (int) $workerId ?>" name="reason" required><?= $esc($createValues['reason'] ?? '') ?></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label" for="incidence-evidence-<?= (int) $workerId ?>">Referencia de evidencia (opcional)</label>
-                                <input class="form-control" id="incidence-evidence-<?= (int) $workerId ?>" name="evidence_reference" value="<?= $esc($createValues['evidence_reference'] ?? '') ?>">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" name="confirm_create" value="1" required> Confirmo enviar esta incidencia para el trabajador y periodo indicados.</label>
-                            </div>
-                            <div class="col-12"><button class="btn btn-primary" type="submit">Enviar incidencia</button></div>
-                        </form>
-                    </details>
+
+            <?php if (($incidenceState ?? '') === 'denied'): ?>
+                <div class="alert alert-danger d-flex align-items-start gap-2" role="alert"><i class="ti ti-lock mt-1" aria-hidden="true"></i><span>No tienes permiso efectivo para consultar incidencias en esta localidad.</span></div>
+            <?php elseif (($incidenceState ?? '') !== 'ready'): ?>
+                <div class="alert alert-warning d-flex align-items-start gap-2" role="alert"><i class="ti ti-alert-triangle mt-1" aria-hidden="true"></i><span><?= $esc($readErrorMessage) ?></span></div>
+            <?php else: ?>
+                <?php if (($incidenceCanCreate ?? false) === true): ?>
+                    <p class="small text-muted">Las nuevas incidencias se registran pendientes de autorización. El registro no genera faltas ni modifica marcaciones.</p>
                 <?php endif; ?>
-                <?php if ($incidences === []): ?><p class="text-muted">La consulta no devolvió incidencias para este trabajador y fecha.</p><?php else: ?>
-                    <div class="table-responsive"><table class="table table-striped table-bordered align-middle">
-                        <caption class="visually-hidden">Incidencias y estado reportado para personal <?= (int) $workerId ?></caption>
-                        <thead><tr><th scope="col">Tipo</th><th scope="col">Periodo</th><th scope="col">Estado</th><th scope="col">Revisión</th><th scope="col">Detalle e historial</th></tr></thead><tbody>
-                        <?php foreach ($incidences as $incidenceIndex => $incidence):
-                            $revisions = is_array($incidence['revisions'] ?? null) ? $incidence['revisions'] : [];
-                            $latest = $revisions === [] ? [] : $revisions[array_key_last($revisions)];
-                            $incidenceModalId = 'incidence-history-' . (int) $workerId . '-' . (int) $incidenceIndex;
-                        ?>
-                            <tr>
-                                <th scope="row"><?= $esc($categoryLabel((string) ($incidence['category'] ?? ''))) ?></th>
-                                <td><?= $esc($incidence['date_range']['start_date'] ?? 'No disponible') ?> — <?= $esc($incidence['date_range']['end_date'] ?? 'No disponible') ?></td>
-                                <td><?= $esc(\App\Services\ChecadorPresentationFormatter::incidenceStatusLabel($incidence['current_status'] ?? null)) ?></td>
-                                <td><?= (int) ($incidence['current_revision'] ?? 0) ?></td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#<?= $esc($incidenceModalId) ?>">Ver detalle</button>
-                                    <div class="modal fade" id="<?= $esc($incidenceModalId) ?>" tabindex="-1" aria-labelledby="<?= $esc($incidenceModalId) ?>-title" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-scrollable modal-lg"><div class="modal-content">
-                                            <div class="modal-header"><h4 class="modal-title h5" id="<?= $esc($incidenceModalId) ?>-title">Registro e historial · <?= $esc($categoryLabel((string) ($incidence['category'] ?? ''))) ?></h4><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar detalle de incidencia"></button></div>
-                                            <div class="modal-body">
-                                    <dl class="row small mb-2"><dt class="col-sm-4">Referencia</dt><dd class="col-sm-8 text-break"><code><?= $esc($incidence['uuid_incidencia'] ?? 'No disponible') ?></code></dd>
-                                        <dt class="col-sm-4">Motivo vigente</dt><dd class="col-sm-8"><?= $esc($incidence['summary_reason'] ?? $latest['reason'] ?? 'No disponible') ?></dd>
-                                        <dt class="col-sm-4">Evidencia</dt><dd class="col-sm-8 text-break"><?= $esc($incidence['summary_evidence_reference'] ?? $latest['evidence_reference'] ?? 'No disponible') ?></dd>
-                                    </dl>
-                                    <?php if ($revisions === []): ?><p class="small text-muted">Historial de revisiones no disponible.</p><?php else: ?><ol class="small mb-0">
-                                        <?php foreach ($revisions as $revision): ?><li class="mb-2"><strong>Revisión <?= (int) ($revision['revision_number'] ?? 0) ?> · <?= $esc(\App\Services\ChecadorPresentationFormatter::incidenceStatusLabel($revision['status'] ?? null)) ?></strong><br><?= $esc($revision['reason'] ?? 'Sin motivo disponible') ?><br>Actor <?= (int) ($revision['created_by_user_id'] ?? 0) ?> · <?= $esc($revision['created_at_utc'] ?? 'Fecha no disponible') ?> UTC<?php if (($revision['evidence_reference'] ?? null) !== null): ?><br>Evidencia: <?= $esc($revision['evidence_reference']) ?><?php endif; ?></li><?php endforeach; ?>
-                                    </ol><?php endif; ?>
-                                    <?php
-                                    $incidenceUuid = (string) ($incidence['uuid_incidencia'] ?? '');
-                                    $incidenceStatus = (string) ($incidence['current_status'] ?? 'UNKNOWN');
-                                    $incidenceRevision = (int) ($incidence['current_revision'] ?? 0);
-                                    $incidenceLifecycleKey = $lifecycleKeys[$incidenceUuid] ?? [];
-                                    $canResolve = !empty($lifecyclePermissions['resolve']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED'], true);
-                                    $canAuthorize = !empty($lifecyclePermissions['authorize']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
-                                    $canReject = !empty($lifecyclePermissions['reject']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
-                                    $canRevoke = !empty($lifecyclePermissions['revoke']) && !in_array($incidenceStatus, ['CANCELLED', 'REVOKED'], true);
-                                    ?>
-                                    <?php if ($canResolve || $canAuthorize || $canReject || $canRevoke): ?>
-                                        <div class="border-top mt-3 pt-3" aria-label="Acciones administrativas">
-                                            <p class="small text-muted mb-2">Cada acción requiere confirmación y conserva la revisión esperada. El estado se vuelve a leer después del envío.</p>
-                                            <?php if ($canResolve): ?>
-                                                <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/<?= rawurlencode($incidenceUuid) ?>/resolve" class="border rounded p-2 mb-2">
-                                                    <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                                                    <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                                                    <input type="hidden" name="worker_id" value="<?= (int) $workerId ?>">
-                                                    <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
-                                                    <input type="hidden" name="snapshot_ref" value="<?= $esc($snapshotRef ?? '') ?>">
-                                                    <input type="hidden" name="expected_current_revision" value="<?= $incidenceRevision ?>">
-                                                    <input type="hidden" name="idempotency_key" value="<?= $esc($incidenceLifecycleKey['resolve'] ?? '') ?>">
-                                                    <input type="hidden" name="resolution_action" value="CONFIRM_INCIDENCE_PREVALENCE">
-                                                    <label class="form-label small" for="resolve-notes-<?= $esc($incidenceUuid) ?>">Resolver o revisar (motivo)</label>
-                                                    <textarea class="form-control form-control-sm mb-2" id="resolve-notes-<?= $esc($incidenceUuid) ?>" name="resolution_notes" required></textarea>
-                                                    <label class="form-label small" for="resolve-evidence-<?= $esc($incidenceUuid) ?>">Evidencia (opcional)</label>
-                                                    <input class="form-control form-control-sm mb-2" id="resolve-evidence-<?= $esc($incidenceUuid) ?>" name="evidence_reference">
-                                                    <label class="small d-block mb-2"><input class="form-check-input me-1" type="checkbox" name="confirm_action" value="1" required> Confirmo esta revisión administrativa.</label>
-                                                    <button type="submit" class="btn btn-sm btn-outline-primary">Resolver o revisar</button>
-                                                </form>
-                                            <?php endif; ?>
-                                            <?php if ($canAuthorize): ?>
-                                                <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/<?= rawurlencode($incidenceUuid) ?>/authorize" class="border rounded p-2 mb-2">
-                                                    <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                                                    <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                                                    <input type="hidden" name="worker_id" value="<?= (int) $workerId ?>">
-                                                    <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
-                                                    <input type="hidden" name="snapshot_ref" value="<?= $esc($snapshotRef ?? '') ?>">
-                                                    <input type="hidden" name="expected_current_revision" value="<?= $incidenceRevision ?>">
-                                                    <input type="hidden" name="idempotency_key" value="<?= $esc($incidenceLifecycleKey['authorize'] ?? '') ?>">
-                                                    <label class="form-label small" for="authorize-notes-<?= $esc($incidenceUuid) ?>">Nota de autorización (opcional)</label>
-                                                    <textarea class="form-control form-control-sm mb-2" id="authorize-notes-<?= $esc($incidenceUuid) ?>" name="action_notes"></textarea>
-                                                    <label class="small d-block mb-2"><input class="form-check-input me-1" type="checkbox" name="confirm_action" value="1" required> Confirmo la autorización explícita.</label>
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">Autorizar</button>
-                                                </form>
-                                            <?php endif; ?>
-                                            <?php if ($canReject): ?>
-                                                <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/<?= rawurlencode($incidenceUuid) ?>/reject" class="border rounded p-2 mb-2">
-                                                    <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                                                    <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                                                    <input type="hidden" name="worker_id" value="<?= (int) $workerId ?>">
-                                                    <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
-                                                    <input type="hidden" name="snapshot_ref" value="<?= $esc($snapshotRef ?? '') ?>">
-                                                    <input type="hidden" name="expected_current_revision" value="<?= $incidenceRevision ?>">
-                                                    <input type="hidden" name="idempotency_key" value="<?= $esc($incidenceLifecycleKey['reject'] ?? '') ?>">
-                                                    <label class="form-label small" for="reject-reason-<?= $esc($incidenceUuid) ?>">Motivo del rechazo</label>
-                                                    <textarea class="form-control form-control-sm mb-2" id="reject-reason-<?= $esc($incidenceUuid) ?>" name="rejection_reason" required></textarea>
-                                                    <label class="small d-block mb-2"><input class="form-check-input me-1" type="checkbox" name="confirm_action" value="1" required> Confirmo el rechazo explícito.</label>
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar</button>
-                                                </form>
-                                            <?php endif; ?>
-                                            <?php if ($canRevoke): ?>
-                                                <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/<?= rawurlencode($incidenceUuid) ?>/revoke" class="border rounded p-2">
-                                                    <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                                                    <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                                                    <input type="hidden" name="worker_id" value="<?= (int) $workerId ?>">
-                                                    <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
-                                                    <input type="hidden" name="snapshot_ref" value="<?= $esc($snapshotRef ?? '') ?>">
-                                                    <input type="hidden" name="expected_current_revision" value="<?= $incidenceRevision ?>">
-                                                    <input type="hidden" name="idempotency_key" value="<?= $esc($incidenceLifecycleKey['revoke'] ?? '') ?>">
-                                                    <label class="form-label small" for="revoke-reason-<?= $esc($incidenceUuid) ?>">Motivo de revocación o cancelación</label>
-                                                    <textarea class="form-control form-control-sm mb-2" id="revoke-reason-<?= $esc($incidenceUuid) ?>" name="revocation_reason" required></textarea>
-                                                    <label class="form-label small" for="revoke-evidence-<?= $esc($incidenceUuid) ?>">Evidencia (opcional)</label>
-                                                    <input class="form-control form-control-sm mb-2" id="revoke-evidence-<?= $esc($incidenceUuid) ?>" name="evidence_reference">
-                                                    <label class="small d-block mb-2"><input class="form-check-input me-1" type="checkbox" name="confirm_action" value="1" required> Confirmo la revocación explícita.</label>
-                                                    <button type="submit" class="btn btn-sm btn-outline-warning">Revocar o cancelar</button>
-                                                </form>
+                <?php if ($items === []): ?>
+                    <p class="text-body-secondary text-center py-3 mb-0" role="status"><i class="ti ti-info-circle text-primary me-1" aria-hidden="true"></i>No hay incidencias registradas para los filtros seleccionados</p>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table id="m06-incidences-table" class="table table-striped table-bordered align-middle w-100" data-checador-m06-incidences>
+                            <caption class="visually-hidden">Incidencias administrativas de <?= $esc($selectedWorkplaceName ?? 'la localidad seleccionada') ?></caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Trabajador</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col">Periodo</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col">Registro UTC</th>
+                                    <th scope="col" class="text-center"><span class="visually-hidden">Acciones</span><i class="ti ti-dots-vertical" aria-hidden="true"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($items as $index => $item):
+                                    $modalId = 'm06-incidence-detail-' . $index;
+                                    $category = (string) ($item['category'] ?? '');
+                                    $status = (string) ($item['current_status'] ?? '');
+                                    $revisions = is_array($item['revisions'] ?? null) ? $item['revisions'] : [];
+                                    $uuid = (string) ($item['uuid_incidencia'] ?? '');
+                                ?>
+                                    <tr>
+                                        <td>
+                                            <span class="fw-semibold"><?= $esc($item['worker_name'] ?? 'Nombre no disponible') ?></span>
+                                            <span class="d-block small text-muted">ID <?= (int) ($item['worker_id'] ?? 0) ?></span>
+                                        </td>
+                                        <td><?= $esc($categories[$category] ?? 'Tipo no disponible') ?></td>
+                                        <td class="text-nowrap"><?= $esc($item['start_date'] ?? '') ?> — <?= $esc($item['end_date'] ?? '') ?></td>
+                                        <td><span class="badge <?= $status === 'PENDING_APPROVAL' ? 'text-bg-warning' : 'text-bg-secondary' ?>"><?= $esc($statusLabel($status)) ?></span></td>
+                                        <td class="text-nowrap"><?= $esc($item['created_at_utc'] ?? 'No disponible') ?></td>
+                                        <td class="text-center">
+                                            <div class="dropdown">
+                                                <button class="btn p-0 border-0 bg-transparent text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones para <?= $esc($item['worker_name'] ?? 'trabajador') ?>">
+                                                    <i class="ti ti-dots-vertical fs-5" aria-hidden="true"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#<?= $esc($modalId) ?>" data-incidence-tab="detail"><i class="ti ti-eye me-1" aria-hidden="true"></i>Ver detalle</button></li>
+                                                    <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#<?= $esc($modalId) ?>" data-incidence-tab="history"><i class="ti ti-history me-1" aria-hidden="true"></i>Ver historial</button></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php foreach ($items as $index => $item):
+                        $modalId = 'm06-incidence-detail-' . $index;
+                        $category = (string) ($item['category'] ?? '');
+                        $status = (string) ($item['current_status'] ?? '');
+                        $revisions = is_array($item['revisions'] ?? null) ? $item['revisions'] : [];
+                        $uuid = (string) ($item['uuid_incidencia'] ?? '');
+                    ?>
+                        <div class="modal fade" id="<?= $esc($modalId) ?>" tabindex="-1" aria-labelledby="<?= $esc($modalId) ?>-title" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable modal-lg"><div class="modal-content">
+                                <div class="modal-header modal-colored-header bg-primary text-white">
+                                    <h3 class="modal-title text-white h5" id="<?= $esc($modalId) ?>-title"><i class="ti ti-file-description me-1" aria-hidden="true"></i>Incidencia · <?= $esc($categories[$category] ?? 'Tipo no disponible') ?></h3>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <ul class="nav nav-tabs mb-3" role="tablist">
+                                        <li class="nav-item" role="presentation"><button class="nav-link active" id="<?= $esc($modalId) ?>-detail-tab" data-bs-toggle="tab" data-bs-target="#<?= $esc($modalId) ?>-detail" type="button" role="tab" aria-controls="<?= $esc($modalId) ?>-detail" aria-selected="true"><i class="ti ti-eye me-1" aria-hidden="true"></i>Detalle</button></li>
+                                        <li class="nav-item" role="presentation"><button class="nav-link" id="<?= $esc($modalId) ?>-history-tab" data-bs-toggle="tab" data-bs-target="#<?= $esc($modalId) ?>-history" type="button" role="tab" aria-controls="<?= $esc($modalId) ?>-history" aria-selected="false"><i class="ti ti-history me-1" aria-hidden="true"></i>Historial (<?= count($revisions) ?>)</button></li>
+                                    </ul>
+                                    <div class="tab-content">
+                                        <div class="tab-pane fade show active" id="<?= $esc($modalId) ?>-detail" role="tabpanel" aria-labelledby="<?= $esc($modalId) ?>-detail-tab" tabindex="0">
+                                            <dl class="row mb-0">
+                                                <dt class="col-sm-4">Trabajador</dt><dd class="col-sm-8"><?= $esc($item['worker_name'] ?? 'No disponible') ?> · ID <?= (int) ($item['worker_id'] ?? 0) ?></dd>
+                                                <dt class="col-sm-4">Localidad</dt><dd class="col-sm-8"><?= $esc($selectedWorkplaceName ?? 'No disponible') ?> · <?= (int) ($item['workplace_id'] ?? 0) ?></dd>
+                                                <dt class="col-sm-4">Tipo</dt><dd class="col-sm-8"><?= $esc($categories[$category] ?? 'No disponible') ?></dd>
+                                                <dt class="col-sm-4">Periodo</dt><dd class="col-sm-8"><?= $esc($item['start_date'] ?? 'No disponible') ?> — <?= $esc($item['end_date'] ?? 'No disponible') ?></dd>
+                                                <dt class="col-sm-4">Estado actual</dt><dd class="col-sm-8"><?= $esc($statusLabel($status)) ?></dd>
+                                                <dt class="col-sm-4">Motivo</dt><dd class="col-sm-8 text-break"><?= $esc($item['reason'] ?? 'No disponible') ?></dd>
+                                                <dt class="col-sm-4">Evidencia</dt><dd class="col-sm-8 text-break"><?= $esc($item['evidence_reference'] ?? 'No disponible') ?></dd>
+                                                <dt class="col-sm-4">Registrada UTC</dt><dd class="col-sm-8"><?= $esc($item['created_at_utc'] ?? 'No disponible') ?></dd>
+                                                <dt class="col-sm-4">Referencia</dt><dd class="col-sm-8 text-break"><code><?= $esc($uuid !== '' ? $uuid : 'No disponible') ?></code></dd>
+                                            </dl>
+                                        </div>
+                                        <div class="tab-pane fade" id="<?= $esc($modalId) ?>-history" role="tabpanel" aria-labelledby="<?= $esc($modalId) ?>-history-tab" tabindex="0">
+                                            <?php if ($revisions === []): ?>
+                                                <p class="text-muted mb-0">El historial de revisiones no está disponible para este registro.</p>
+                                            <?php else: ?>
+                                                <ol class="list-group list-group-numbered list-group-flush">
+                                                    <?php foreach ($revisions as $revision): ?>
+                                                        <li class="list-group-item px-0">
+                                                            <div class="d-flex flex-wrap justify-content-between gap-2"><strong>Revisión <?= (int) ($revision['revision_number'] ?? 0) ?> · <?= $esc($statusLabel((string) ($revision['status'] ?? ''))) ?></strong><span class="small text-muted"><?= $esc($revision['created_at_utc'] ?? 'Fecha no disponible') ?> UTC</span></div>
+                                                            <div class="small mt-1"><strong>Registró:</strong> <?= (int) ($revision['created_by_user_id'] ?? 0) > 0 ? 'Usuario ' . (int) $revision['created_by_user_id'] : 'Actor no disponible' ?></div>
+                                                            <div class="small mt-1"><strong>Motivo:</strong> <?= $esc($revision['reason'] ?? 'No disponible') ?></div>
+                                                            <div class="small text-muted mt-1"><strong>Evidencia:</strong> <?= $esc(($revision['evidence_reference'] ?? null) ?: 'No disponible') ?></div>
+                                                            <div class="small text-muted mt-1"><strong>Referencia:</strong> <code><?= $esc($uuid !== '' ? $uuid : 'No disponible') ?></code></div>
+                                                            <?php if (($revision['approved_by_user_id'] ?? null) !== null): ?><div class="small text-muted mt-1">Autorizó usuario <?= (int) $revision['approved_by_user_id'] ?></div><?php endif; ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ol>
                                             <?php endif; ?>
                                         </div>
-                                    <?php endif; ?>
-                                            </div>
-                                            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button></div>
-                                        </div></div>
                                     </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody></table></div>
+                                </div>
+                                <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button></div>
+                            </div></div>
+                        </div>
+                    <?php endforeach; ?>
+                    <?php if ($totalPages > 1): ?>
+                        <nav aria-label="Paginación de incidencias"><ul class="pagination justify-content-end mb-0">
+                            <?php foreach (range(1, $totalPages) as $pageNumber): ?>
+                                <li class="page-item <?= $pageNumber === $page ? 'active' : '' ?>"><a class="page-link" href="?<?= $esc(http_build_query($queryBase + ['page' => $pageNumber], '', '&', PHP_QUERY_RFC3986)) ?>" <?= $pageNumber === $page ? 'aria-current="page"' : '' ?>><?= $pageNumber ?></a></li>
+                            <?php endforeach; ?>
+                        </ul></nav>
+                    <?php endif; ?>
                 <?php endif; ?>
-            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </section>
 </div>
+
+<div class="modal fade" id="m06-incidence-search-modal" tabindex="-1" aria-labelledby="m06-incidence-search-title" aria-hidden="true" data-m06-select2-modal>
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="m06-incidence-search-title"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar incidencias</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <form method="get" action="/departamento-operativo/recursos-humanos/checador/incidencias">
+            <div class="modal-body row g-3">
+                <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
+                <div class="col-12"><label class="form-label" for="m06-filter-worker">Trabajador</label><div class="select2-modal-field w-100"><select class="form-select w-100" id="m06-filter-worker" name="worker_id" data-m06-worker-select="filter"><option value="">Todos</option><?php foreach ($workers as $worker): ?><option value="<?= (int) ($worker['worker_id'] ?? 0) ?>" <?= (string) ($filters['worker_id'] ?? '') === (string) ($worker['worker_id'] ?? '') ? 'selected' : '' ?>><?= $esc($worker['full_name'] ?? 'Nombre no disponible') ?> · <?= (int) ($worker['worker_id'] ?? 0) ?></option><?php endforeach; ?></select></div></div>
+                <div class="col-12"><label class="form-label" for="m06-filter-category">Tipo de incidencia</label><select class="form-select" id="m06-filter-category" name="category"><option value="">Todos</option><?php foreach ($categories as $code => $label): ?><option value="<?= $esc($code) ?>" <?= ($filters['category'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
+                <div class="col-sm-6"><label class="form-label" for="m06-filter-start">Desde</label><input class="form-control" type="date" id="m06-filter-start" name="start_date" value="<?= $esc($filters['start_date'] ?? '') ?>"></div>
+                <div class="col-sm-6"><label class="form-label" for="m06-filter-end">Hasta</label><input class="form-control" type="date" id="m06-filter-end" name="end_date" value="<?= $esc($filters['end_date'] ?? '') ?>"></div>
+                <div class="col-12"><label class="form-label" for="m06-filter-status">Estado</label><select class="form-select" id="m06-filter-status" name="status"><option value="">Todos</option><?php foreach (['PENDING_APPROVAL' => 'Pendiente de autorización', 'ACTIVE' => 'Activa', 'REVIEW_REQUIRED' => 'Requiere revisión', 'REJECTED' => 'Rechazada', 'CANCELLED' => 'Cancelada', 'REVOKED' => 'Revocada', 'SUPERSEDED' => 'Sustituida'] as $code => $label): ?><option value="<?= $esc($code) ?>" <?= ($filters['status'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
+            </div>
+            <div class="modal-footer">
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2"><a class="btn btn-outline-secondary" href="/departamento-operativo/recursos-humanos/checador/incidencias?workplace_id=<?= (int) ($selectedWorkplaceId ?? 0) ?>"><i class="ti ti-refresh me-1" aria-hidden="true"></i>Limpiar</a></div>
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2"><button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button></div>
+                    <div class="col-12 col-md-auto d-grid"><button type="submit" class="btn btn-primary"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar</button></div>
+                </div>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<?php if (($incidenceCanCreate ?? false) === true): ?>
+<div class="modal fade" id="m06-incidence-create-modal" tabindex="-1" aria-labelledby="m06-incidence-create-title" aria-hidden="true" data-m06-auto-open="<?= $feedback !== null && ($feedback['type'] ?? '') === 'error' ? '1' : '0' ?>" data-m06-select2-modal>
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="m06-incidence-create-title"><i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva incidencia</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <form method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/crear">
+            <div class="modal-body row g-3">
+                <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
+                <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
+                <input type="hidden" name="idempotency_key" value="<?= $esc($incidenceIdempotencyKey ?? '') ?>">
+                <?php foreach (['worker_id' => 'worker_id', 'category' => 'category', 'status' => 'status', 'start_date' => 'start_date', 'end_date' => 'end_date'] as $filterKey => $name): ?><?php if (($filters[$filterKey] ?? null) !== null && ($filters[$filterKey] ?? '') !== ''): ?><input type="hidden" name="filter_<?= $esc($name) ?>" value="<?= $esc($filters[$filterKey]) ?>"><?php endif; ?><?php endforeach; ?>
+                <?php if (($incidenceRosterAvailable ?? false) !== true): ?><div class="col-12"><div class="alert alert-warning mb-0" role="status">No se pudo confirmar el padrón autorizado. No hay trabajadores disponibles para seleccionar.</div></div><?php endif; ?>
+                <div class="col-12"><label class="form-label" for="m06-create-worker">Trabajador</label><div class="select2-modal-field w-100"><select class="form-select w-100" id="m06-create-worker" name="worker_id" data-m06-worker-select="create" required <?= ($incidenceRosterAvailable ?? false) !== true ? 'disabled' : '' ?>><option value="">Selecciona un trabajador</option><?php foreach ($workers as $worker): ?><option value="<?= (int) ($worker['worker_id'] ?? 0) ?>" <?= (string) ($formValues['worker_id'] ?? '') === (string) ($worker['worker_id'] ?? '') ? 'selected' : '' ?>><?= $esc($worker['full_name'] ?? 'Nombre no disponible') ?> · ID <?= (int) ($worker['worker_id'] ?? 0) ?></option><?php endforeach; ?></select></div></div>
+                <div class="col-12 col-md-6"><label class="form-label" for="m06-create-category">Tipo</label><select class="form-select" id="m06-create-category" name="category" required><option value="">Selecciona</option><?php foreach ($categories as $code => $label): ?><option value="<?= $esc($code) ?>" <?= ($formValues['category'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
+                <div class="col-12 col-md-6"><label class="form-label" for="m06-create-start">Fecha de inicio</label><input class="form-control" type="date" id="m06-create-start" name="start_date" value="<?= $esc($formValues['start_date'] ?? '') ?>" required></div>
+                <div class="col-12 col-md-6"><label class="form-label" for="m06-create-end">Fecha de término</label><input class="form-control" type="date" id="m06-create-end" name="end_date" value="<?= $esc($formValues['end_date'] ?? '') ?>" required></div>
+                <div class="col-12"><label class="form-label" for="m06-create-reason">Motivo o descripción</label><textarea class="form-control" id="m06-create-reason" name="reason" rows="3" maxlength="5000" required><?= $esc($formValues['reason'] ?? '') ?></textarea></div>
+                <div class="col-12"><label class="form-label" for="m06-create-evidence">Referencia de evidencia (opcional)</label><input class="form-control" id="m06-create-evidence" name="evidence_reference" maxlength="100" value="<?= $esc($formValues['evidence_reference'] ?? '') ?>"></div>
+                <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="m06-confirm-create" name="confirm_create" value="1" required><label class="form-check-label" for="m06-confirm-create">Confirmo el registro de esta incidencia para la persona y periodo seleccionados.</label></div></div>
+                <?php if (($incidenceWriterReady ?? false) !== true): ?><div class="col-12"><div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="status"><i class="ti ti-lock mt-1" aria-hidden="true"></i><span><?= $esc($writerBlockMessage) ?>. No se enviará ni guardará esta captura todavía.</span></div></div><?php endif; ?>
+            </div>
+            <div class="modal-footer">
+                <div class="row g-0 ms-auto w-100 justify-content-end">
+                    <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2"><button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button></div>
+                    <div class="col-12 col-md-auto d-grid"><button type="submit" class="btn btn-success" <?= (($incidenceWriterReady ?? false) !== true || ($incidenceRosterAvailable ?? false) !== true) ? 'disabled' : '' ?>><i class="ti ti-check me-1" aria-hidden="true"></i>Guardar incidencia</button></div>
+                </div>
+            </div>
+        </form>
+    </div></div>
+</div>
+<?php endif; ?>

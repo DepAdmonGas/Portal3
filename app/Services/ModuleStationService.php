@@ -312,7 +312,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         return !empty($stations) || !empty($depts);
     }
 
-    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = '', ?string $placeholderOverride = null, array $stationLabelOverrides = [], array $extraDepartments = []): string
+    public static function render(string $moduleKey, array $pendientes = [], bool $showSelector = true, string $nombreBadge = '', ?string $placeholderOverride = null, array $stationLabelOverrides = [], array $extraDepartments = [], bool $forceSelector = false, bool $requireExplicitSelection = false): string
     {
         $cfg = self::getConfig($moduleKey);
         if (!$cfg) {
@@ -324,6 +324,15 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $idEstacion = $ctx['id_estacion'];
         $idDepto = $ctx['id_depto'];
         $currentName = $ctx['nombre'];
+        if ($moduleKey === ChecadorAccessService::MODULE_KEY && $requireExplicitSelection) {
+            $savedContexts = Session::get('module_context') ?? [];
+            $savedChecador = $savedContexts[$moduleKey] ?? [];
+            if (empty($savedChecador['id_estacion']) && empty($savedChecador['id_depto'])) {
+                $idEstacion = null;
+                $idDepto = null;
+                $currentName = '';
+            }
+        }
         if ($idEstacion !== null && isset($stationLabelOverrides[(int)$idEstacion])) {
             $currentName = $stationLabelOverrides[(int)$idEstacion];
         }
@@ -375,7 +384,7 @@ return $autoLavado ? [$autoLavado->toArray()] : [];
         $hasSelection = $nombreBadge !== '' || $idEstacion !== null || $idDepto !== null;
         $hasChoices = (count($stations) > 1) || (!empty($depts) && !empty($stations));
         $showSelector = $moduleKey === ChecadorAccessService::MODULE_KEY
-            ? ($showSelector && count($stations) + count($depts) > 1)
+            ? ($showSelector && ($forceSelector || count($stations) + count($depts) > 1))
             : ($showSelector && ($multiestacion || $hasChoices));
 
         $html = '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100 module-station-top-controls" id="module-station-wrapper-' . $moduleKey . '">';

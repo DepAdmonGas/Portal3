@@ -6,6 +6,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 $viewPath = __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php';
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+$routesSource = file_get_contents(__DIR__ . '/../routes/web.php') ?: '';
 $dashboardWorkspaceStart = strpos($controllerSource, 'private function renderDashboardWorkspace');
 $configurationMethodStart = strpos($controllerSource, 'public function configuration(): void');
 $dashboardWorkspaceSource = $dashboardWorkspaceStart !== false && $configurationMethodStart !== false
@@ -224,14 +225,105 @@ $vars['incidenceCreateAllowed'] = true;
 $vars['incidenceCreateKeys'] = [900001 => 'create-key'];
 $authorizedHtml = $render($vars);
 $assert(!str_contains($authorizedHtml, 'Registrar incidencia')
-    && str_contains($authorizedHtml, 'Incidencias · No disponible en demostración')
-    && !str_contains($authorizedHtml, 'idempotency_key'), 'synthetic M01 presentation keeps administrative actions disabled even when a write key is supplied');
+    && !str_contains($authorizedHtml, 'Jornada · No disponible en demostración')
+    && !str_contains($authorizedHtml, 'Incidencias · No disponible en demostración')
+    && str_contains($authorizedHtml, 'Ver detalle')
+    && !str_contains($authorizedHtml, 'idempotency_key'), 'synthetic M01 menu exposes only detail preview and no administrative actions');
 $vars['demoMode'] = false;
 $authorizedHtml = $render($vars);
 $assert(str_contains($authorizedHtml, 'Registrar incidencia')
     && str_contains($authorizedHtml, 'href="/departamento-operativo/recursos-humanos/checador/incidencias?workplace_id=14&amp;date=2026-10-23&amp;snapshot_ref=snapshot%2Fref-1&amp;worker_id=900001"')
     && !str_contains($authorizedHtml, 'action="/departamento-operativo/recursos-humanos/checador/incidencias/crear"')
     && !str_contains($authorizedHtml, 'name="idempotency_key"'), 'incidence entry link appears only with existing server-provided permission and key and does not submit a write');
+
+$previewMethod = new ReflectionMethod(\App\Controllers\ChecadorController::class, 'm01SyntheticDetailPreviewRows');
+$previewData = $previewMethod->invoke(null, '2026-11-19');
+$previewRows = $previewData['attendance_rows'] ?? [];
+$assert(count($previewRows) === 6
+    && count(array_filter($previewRows, static fn(array $previewRow): bool => count(array_filter($previewRow['slots'] ?? [], static fn(array $slot): bool => is_array($slot['event'] ?? null))) === 4)) === 1
+    && count(array_filter($previewRows, static fn(array $previewRow): bool => ($previewRow['evaluated_raw_event_count'] ?? null) === 2)) === 1
+    && count(array_filter($previewRows, static fn(array $previewRow): bool => ($previewRow['schedule']['estado_jornada'] ?? '') === 'DAY_OFF')) === 1
+    && count(array_filter($previewRows, static fn(array $previewRow): bool => ($previewRow['status'] ?? '') === 'incomplete')) === 2
+    && count($previewData['administrative_incidences'][900005] ?? []) === 1,
+    'isolated synthetic fixture defines the six requested cases using reserved fictitious identities');
+$assert(array_reduce($previewRows, static fn(bool $syntheticOnly, array $row): bool => $syntheticOnly
+    && (int) ($row['worker_id'] ?? 0) >= 900000
+    && str_starts_with((string) ($row['employee_number'] ?? ''), 'EMP-10'), true),
+    'synthetic fixture identities remain separate from operational worker IDs');
+$previewVars = $vars;
+$previewVars['syntheticDetailPreviewMode'] = true;
+$previewVars['demoMode'] = false;
+$previewVars['state'] = 'success';
+$previewVars['selectedWorkplaceId'] = 1;
+$previewVars['selectedWorkplaceName'] = 'Interlomas';
+$previewVars['selectedDate'] = '2026-11-19';
+$previewVars['attendanceRows'] = array_values($previewRows);
+$previewVars['workerSelectOptions'] = array_map(static fn(array $row): array => [
+    'worker_id' => (int) $row['worker_id'],
+    'full_name' => (string) $row['full_name'],
+    'employee_number' => (string) $row['employee_number'],
+], array_values($previewRows));
+$previewVars['administrativeIncidences'] = $previewData['administrative_incidences'];
+$previewVars['administrativeErrors'] = [];
+$previewVars['incidenceCreateAllowed'] = false;
+$previewVars['incidenceCreateKeys'] = [];
+$previewVars['journeyEvaluationState'] = 'evaluated';
+$previewVars['attendanceCoverage'] = ['status' => 'synthetic_qa_fixture', 'complete' => false];
+$previewHtml = $render($previewVars);
+$assert(!str_contains($previewHtml, 'Ejemplos ficticios exclusivamente visuales; no son asistencia real y no se guardan ni se envían')
+    && !str_contains($previewHtml, 'Ejemplos visuales ficticios · sin localidad operativa')
+    && !str_contains($previewHtml, 'data-checador-demo-banner')
+    && str_contains($previewHtml, 'Ana Mercado') && str_contains($previewHtml, 'Luis Navarro')
+    && str_contains($previewHtml, 'Carla Salas') && str_contains($previewHtml, 'Diego Molina')
+    && str_contains($previewHtml, 'Elena Fuentes') && str_contains($previewHtml, 'Marcos Gil')
+    && substr_count($previewHtml, 'modal-header modal-colored-header bg-primary text-white') === 7
+    && substr_count($previewHtml, 'btn-close btn-close-white') === 7
+    && str_contains($previewHtml, 'Entrada 1') && str_contains($previewHtml, 'Salida 2')
+    && str_contains($previewHtml, 'id="checador-search-modal-toggle"')
+    && str_contains($previewHtml, 'id="checador-filter-modal"')
+    && !str_contains($previewHtml, 'Vista previa</a>')
+    && preg_match('/demostraci[oó]n|datos\s+sint[eé]ticos|vista\s+previa|fictici[oa]s?/iu', html_entity_decode(strip_tags($previewHtml), ENT_QUOTES | ENT_HTML5, 'UTF-8')) !== 1,
+    'isolated fixture rendering retains six synthetic records and responsive detail modals without redundant warnings or subtitle');
+$previewActionMenus = [];
+preg_match_all('/<div class="dropdown-menu dropdown-menu-end" id="daily-attendance-actions-\d+">([\s\S]*?)<\/div>/', $previewHtml, $previewActionMenus);
+$previewActionTexts = array_map(static fn(string $menu): string => trim(preg_replace('/\s+/u', ' ', strip_tags($menu)) ?? ''), $previewActionMenus[1] ?? []);
+$assert(count($previewActionTexts) === 6
+    && array_reduce($previewActionTexts, static fn(bool $onlyDetail, string $text): bool => $onlyDetail && $text === 'Ver detalle', true),
+    'each isolated synthetic row action menu contains only Ver detalle');
+$mainTableMatch = [];
+preg_match('/<table[^>]+id="checador-daily-attendance-table"[^>]*>[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/', $previewHtml, $mainTableMatch);
+$mainTableRows = [];
+preg_match_all('/<tr(?:\s|>)/', $mainTableMatch[1] ?? '', $mainTableRows);
+$assert(count($mainTableRows[0] ?? []) === 6, 'isolated synthetic presentation renders only its six fixture rows');
+$assert(str_contains($previewHtml, 'modal-dialog-scrollable modal-xl')
+    && str_contains($previewHtml, 'modal-header modal-colored-header bg-primary text-white')
+    && str_contains($previewHtml, 'row-cols-2 row-cols-lg-4')
+    && str_contains($previewHtml, '<details class="mb-3" id="attendance-evaluated-events-900001">')
+    && str_contains($previewHtml, 'Marcaciones evaluadas (4)')
+    && str_contains($previewHtml, '<details class="mb-3" id="attendance-original-events-900001">')
+    && str_contains($previewHtml, 'Marcaciones originales y trazabilidad (4 mostradas)')
+    && !preg_match('/<details\b[^>]*\bopen(?:\s|>)/i', $previewHtml),
+    'detail modal uses the wide scrollable layout and keeps both evidence tables collapsed with confirmed counts');
+$assert(str_contains($previewHtml, 'title="Referencia abreviada"')
+    && str_contains($previewHtml, 'title="Valor completo"')
+    && str_contains($previewHtml, 'user-select-all')
+    && str_contains($previewHtml, 'e7500000-0000-4000-8000-000000000101'),
+    'long references stay abbreviated until expanded, with complete values selectable for copying');
+$serverAccessCheck = strpos($dashboardWorkspaceSource, 'ChecadorAccessService::authorize(null)');
+$contextWritePosition = strpos($dashboardWorkspaceSource, 'ModuleStationService::setChecadorWorkplaceContext($requestedWorkplace)');
+$rosterReadPosition = strpos($dashboardWorkspaceSource, 'workersForAttendanceFilter($requestedWorkplace, $date, null, false)');
+$assert(!str_contains($routesSource, 'asistencia/vista-previa')
+    && !str_contains($controllerSource, 'dailyAttendancePreview')
+    && $serverAccessCheck !== false
+    && $contextWritePosition !== false && $rosterReadPosition !== false && $contextWritePosition < $rosterReadPosition
+    && !str_contains($controllerSource, "\$query['preview']")
+    && !str_contains($controllerSource, 'preview=detalle-sintetico')
+    && !str_contains($dashboardWorkspaceSource, 'syntheticDetailPreviewMode')
+    && !str_contains($dashboardWorkspaceSource, 'm01SyntheticDetailPreviewRows(')
+    && str_contains($dashboardWorkspaceSource, 'workersForAttendanceFilter($requestedWorkplace, $date, null, false)')
+    && str_contains($dashboardWorkspaceSource, "\$apiPostOperationsEnabled = \$m01DemoMode")
+    && !str_contains($dashboardWorkspaceSource, 'm01SyntheticAttendanceRosterRows('),
+    'normal M01 request revalidates and persists the selected locality before loading only its authorized roster; isolated fixtures cannot enter the operational path');
 
 printf("CHECADOR_V8P_DAILY_ATTENDANCE_UI: %d PASS / %d FAIL\n", $assertions - $failures, $failures);
 exit($failures === 0 ? 0 : 1);

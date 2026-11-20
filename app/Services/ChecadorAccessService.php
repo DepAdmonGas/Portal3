@@ -64,7 +64,7 @@ final class ChecadorAccessService
      * Resolve menu grant and server-authorized workplace scope. No client
      * station value is used to derive or expand the scope.
      *
-     * @return array{allowed: bool, reason: string, workplaces: array<int, array{id:int,nombre:string}>, station_workplaces?:array<int,array{id:int,nombre:string}>, department_workplaces?:array<int,array{id:int,nombre:string}>}
+     * @return array{allowed: bool, reason: string, workplaces: array<int, array{id:int,nombre:string}>, station_workplaces?:array<int,array{id:int,nombre:string}>, department_workplaces?:array<int,array{id:int,nombre:string}>, position_id?:int}
      */
     public static function authorize(?int $requestedLocalityId = null): array
     {
@@ -175,6 +175,7 @@ final class ChecadorAccessService
                 'workplaces' => $workplaces,
                 'station_workplaces' => $stationWorkplaces,
                 'department_workplaces' => $departmentWorkplaces,
+                'position_id' => (int) ($user->id_puesto ?? 0),
                 // Existing effective parent grant; submenu membership itself
                 // has no capability columns in this ACL model.
                 'descargar' => !empty($parent['descargar']),
@@ -935,31 +936,46 @@ final class ChecadorAccessService
         }
     }
 
-    /**
-     * Incidence creation requires its dedicated `crear` grant and `leer` so
-     * Portal3 can confirm the result through the canonical detail endpoint.
-     * The API independently repeats both authorization and workplace checks.
-     *
-     * @return array{allowed:bool,reason:string,workplaces:array<int,array{id:int,nombre:string}>,namespace?:string}
-     */
-    public static function authorizeIncidenceCreate(?int $requestedLocalityId): array
+    /** M06 read is server-authorized by role, effective read ACL, and canonical locality scope. */
+    public static function authorizeIncidenceRead(?int $requestedLocalityId): array
     {
         $scope = self::authorize($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated || !Auth::check()) return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user || !in_array((int) ($user->id_puesto ?? 0), [self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID], true)) {
+                return ['allowed' => false, 'reason' => 'incidence_read_role_denied', 'workplaces' => []];
+            }
+            $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::INCIDENCE_MODULE_KEY);
+            if (empty($permissions['leer'])) return ['allowed' => false, 'reason' => 'incidence_read_permission_denied', 'workplaces' => []];
+            return ['allowed' => true, 'reason' => 'authorized', 'workplaces' => $scope['workplaces'], 'namespace' => self::INCIDENCE_MODULE_KEY];
+        } catch (Throwable) {
+            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
+        }
+    }
+
+    /** M06 creation is Encargado-only and requires effective create and read grants. */
+    public static function authorizeIncidenceCreate(?int $requestedLocalityId): array
+    {
+        $scope = self::authorizeIncidenceRead($requestedLocalityId);
         if (!($scope['allowed'] ?? false)) {
             return $scope;
         }
 
         try {
-            $user = Auth::user();
-            if (!$user) {
+            $authenticated = Auth::user();
+            if (!$authenticated || !Auth::check()) {
                 return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            }
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user || (int) ($user->id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID) {
+                return ['allowed' => false, 'reason' => 'incidence_create_role_denied', 'workplaces' => []];
             }
             $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::INCIDENCE_MODULE_KEY);
             if (empty($permissions['crear'])) {
                 return ['allowed' => false, 'reason' => 'incidence_create_permission_denied', 'workplaces' => []];
-            }
-            if (empty($permissions['leer'])) {
-                return ['allowed' => false, 'reason' => 'incidence_readback_permission_denied', 'workplaces' => []];
             }
 
             return [
@@ -1015,6 +1031,9 @@ final class ChecadorAccessService
         $scope = self::authorize($requestedLocalityId);
         if (!($scope['allowed'] ?? false)) {
             return $scope;
+        }
+        if ((int) ($scope['position_id'] ?? 0) !== self::DIRECCION_OPERACIONES_PUESTO_ID) {
+            return ['allowed' => false, 'reason' => 'falta_direction_role_required', 'workplaces' => []];
         }
         try {
             $user = Auth::user();

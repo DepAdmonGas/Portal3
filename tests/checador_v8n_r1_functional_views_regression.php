@@ -65,24 +65,34 @@ $assert(str_contains($controller, $temporaryReadCall)
 
 $journey = $render('workspace-journeys.php', $common + [
     'state' => 'success',
+    'workerSelectOptions' => [['worker_id' => 558, 'full_name' => 'Trabajadora de prueba']],
     'journeys' => [558 => [
-        'journey_status' => 'EVALUATED',
+        'id' => 558,
+        'worker_id' => 558,
+        'worker_name' => 'Trabajadora de prueba',
+        'journey_status' => 'CALCULATED',
         'evaluated' => true,
-        'evaluated_raw_event_count' => 1,
-        'context' => ['fecha_local' => '2026-10-19', 'timezone' => 'America/Mexico_City'],
-        'schedule' => ['estado_jornada' => 'SCHEDULED'],
+        'context' => ['id_personal' => 558, 'id_estacion' => 1, 'fecha_local' => '2026-10-19', 'timezone' => 'America/Mexico_City'],
+        'schedule' => ['estado_jornada' => 'SCHEDULED', 'scheduled_start_utc' => '2026-10-19 14:00:00', 'scheduled_end_utc' => '2026-10-19 23:00:00'],
+        'pairing' => ['id' => 842, 'revision_numero' => 2, 'version_algoritmo' => 'p1-test', 'estado_pareo' => 'PAIRED'],
         'calculation' => ['estado_calculo' => 'CALCULATED', 'segundos_trabajados_totales' => 28800, 'revision_numero' => 1],
-        'source_evidence' => ['snapshot_audit_ref' => 'AUDIT-REF-1'],
+        'provenance' => ['l2_status_persisted' => 'INCOMPLETE', 'p1_algorithm_version' => 'p1-test', 'p2_algorithm_version' => 'p2-test'],
+        'source_evidence' => ['level2_verification' => 'not_independently_verifiable'],
         'evaluated_raw_events' => [['pairing_role' => 'ENTRY', 'event_uuid' => 'event-1', 'ocurrido_at_utc' => '2026-10-19T14:00:00Z', 'id_dispositivo' => 2]],
     ]],
     'journeyErrors' => [],
 ]);
 $assert(str_contains($journey, 'Jornadas laborales consultadas')
-    && str_contains($journey, 'Personal 558')
-    && str_contains($journey, 'Resultado disponible')
-    && str_contains($journey, 'AUDIT-REF-1')
+    && str_contains($journey, 'Trabajadora de prueba')
+    && str_contains($journey, 'Cálculo persistido')
+    && str_contains($journey, 'INCOMPLETE')
     && str_contains($journey, 'event-1')
-    && str_contains($journey, '08:00'), 'journey workspace renders the service result, provenance and raw event detail');
+    && str_contains($journey, '08:00')
+    && !str_contains($journey, 'AUDIT-REF-1'), 'journey workspace renders the approved persisted SQL projection without legacy API-only evidence');
+$tableEnd = strpos($journey, '</table>');
+$detailModal = strpos($journey, 'id="journey-detail-558"');
+$assert($tableEnd !== false && $detailModal !== false && $tableEnd < $detailModal,
+    'journey detail modal is rendered after the table, outside DataTables rows');
 
 $incidences = $render('workspace-incidences.php', $common + [
     'administrativeIncidences' => [558 => [[
@@ -156,9 +166,11 @@ $assert(str_contains($dailyAttendance, 'Entrada 1') && str_contains($dailyAttend
 $assert(str_contains($controller, 'authorizeScheduling($requestedWorkplace, \'leer\')')
     && str_contains($controller, 'authorizeScheduling($workplaceId, \'leer\')'), 'weekly matrix and schedule history retain their separate read ACL gate');
 $assert(str_contains($dailyAttendance, 'snapshot_ref') && str_contains($controller, '\'snapshot_ref\' => $snapshotRef'), 'daily detail navigation preserves the current snapshot and canonical station/date/worker context');
-$workspaceReadGate = strpos($controller, 'if ($workspace !== \'temporary-access\' && !$workspaceSnapshotMissing && $requestedWorkplace !== null && $date !== \'\')');
+$workspaceReadGate = strpos($controller, 'if ($workspace !== \'temporary-access\' && $workspace !== \'journeys\' && !$workspaceSnapshotMissing && $requestedWorkplace !== null && $date !== \'\')');
+$journeyReadGate = strpos($controller, '$workspace !== \'journeys\' && !$workspaceSnapshotMissing');
+$journeyReadBlock = strpos($controller, 'persisted_read_contract_unavailable');
 $snapshotCreateCall = strpos($controller, 'createDailyPunchSnapshot(');
-$assert($workspaceReadGate !== false && $snapshotCreateCall !== false && $workspaceReadGate < $snapshotCreateCall
+$assert($workspaceReadGate !== false && $journeyReadGate !== false && $journeyReadBlock !== false && $snapshotCreateCall !== false && $workspaceReadGate < $snapshotCreateCall
     && str_contains($controller, "'daily-attendance' => 'daily-attendance'"), 'secondary workspaces avoid creating daily snapshots on direct load and require the stable reference for linked reads');
 $moduleStart = strpos($controller, '$entries = [', strpos($controller, 'private function buildModuleNavigation'));
 $moduleEnd = $moduleStart === false ? false : strpos($controller, '];', $moduleStart);

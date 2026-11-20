@@ -32,8 +32,7 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
 
 $keys = [
     'APP_ENV', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO',
-    'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE', 'CHECADOR_M01_PLESK_DEMO_ENABLED',
-    'CHECADOR_M01_PLESK_DEMO_ALLOWED_USER_IDS', 'CHECADOR_M01_PLESK_DEMO_SCENARIO',
+    'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE',
 ];
 $original = [];
 foreach ($keys as $key) {
@@ -725,11 +724,12 @@ try {
         && str_contains($controllerSource, "'departamento-operativo/2-recursos-humanos/checador/index'")
         && str_contains($viewSource, 'aria-label="Directorio de módulos de Checador"'),
         'retired consolidated demo is evidenced by the module directory and separate authenticated workspace view map');
-    $assert(str_contains($dailyViewSource, 'data-checador-demo-banner')
-        && str_contains($dailyViewSource, 'No disponible en demostración')
+    $assert(!str_contains($dailyViewSource, 'data-checador-demo-banner')
+        && !str_contains($dailyViewSource, 'demostración')
+        && !str_contains($dailyViewSource, 'datos sintéticos')
         && str_contains($dailyViewSource, 'Una celda vacía no confirma una ausencia.')
         && str_contains($dailyViewSource, 'event_uuid'),
-        'attendance owns the synthetic-data notice, disabled demo actions, neutral empty slots and event provenance');
+        'M01 view has no synthetic/demo copy or actions and preserves neutral empty slots and event provenance');
     $assert(str_contains($journeyViewSource, 'No se activa automáticamente una falta')
         && str_contains($journeyViewSource, 'Detalle de auditoría')
         && str_contains($journeyViewSource, 'Zona horaria laboral')
@@ -747,51 +747,36 @@ try {
         && str_contains($adjustmentViewSource, 'CsrfToken::token()'),
         'adjustments owns evaluation controls behind effective permissions, CSRF and idempotency');
 
-    $_ENV['APP_ENV'] = 'production';
-    $_ENV['CHECADOR_M01_PLESK_DEMO_ENABLED'] = 'true';
-    $_ENV['CHECADOR_M01_PLESK_DEMO_ALLOWED_USER_IDS'] = '999';
-    $_ENV['CHECADOR_M01_PLESK_DEMO_SCENARIO'] = 'four_punches';
+    $setConfig('production', 'true', 'four_punches');
+    $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
+    $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+    $assert(ChecadorDailyReadService::demoModeEnabled() === false
+        && !str_contains($serviceSource, 'createAuthorizedM01PleskDemoReader')
+        && !str_contains($controllerSource, 'CHECADOR_M01_PLESK_DEMO'),
+        'production configuration cannot activate synthetic M01 rows through a special allowlist');
+
+    $setConfig('dev', 'true', 'four_punches');
     $director = new Usuario();
     $director->id = 999;
     $director->id_puesto = 13;
-    $pleskReader = ChecadorDailyReadService::createAuthorizedM01PleskDemoReader($director, 14, [14]);
-    $pleskTimezone = $pleskReader?->resolveWorkplaceLocalDay($director, 14, ChecadorDailyReadService::DEMO_REFERENCE_DATE);
-    $pleskSnapshot = $pleskReader?->createDailyPunchSnapshot(
-        $director,
-        14,
-        $pleskTimezone['data'] ?? [],
-        'plesk-m01-demo-test'
+    $localDemoReader = $makeService('four_punches');
+    $localDemoTimezone = $localDemoReader->resolveWorkplaceLocalDay($director, 14, ChecadorDailyReadService::DEMO_REFERENCE_DATE);
+    $localDemoSnapshot = $localDemoReader->createDailyPunchSnapshot(
+        $director, 14, $localDemoTimezone['data'] ?? [], 'local-m01-demo-test'
     );
-    $pleskPage = $pleskReader?->readDailyPunchSnapshotPage(
-        $director,
-        (string) ($pleskSnapshot['data']['snapshot_token'] ?? '')
+    $localDemoPage = $localDemoReader->readDailyPunchSnapshotPage(
+        $director, (string) ($localDemoSnapshot['data']['snapshot_token'] ?? '')
     );
-    $pleskSchedule = $pleskReader?->getEffectiveSchedule($director, 900001, 14, ChecadorDailyReadService::DEMO_REFERENCE_DATE);
-    $pleskJourney = $pleskReader?->evaluateJourney(
-        $director,
-        900001,
-        14,
-        ChecadorDailyReadService::DEMO_REFERENCE_DATE,
-        (string) ($pleskSnapshot['data']['snapshot_audit_ref'] ?? '')
-    );
-    $assert($pleskReader instanceof ChecadorDailyReadService
-        && $pleskReader->isDemoMode()
-        && $pleskReader->demoScenario() === 'four_punches'
-        && ChecadorDailyReadService::demoModeEnabled() === false,
-        'explicit production M01 demo factory does not enable the general advanced demo mode');
-    $assert(($pleskTimezone['ok'] ?? false) === true
-        && ($pleskSnapshot['ok'] ?? false) === true
-        && ($pleskPage['ok'] ?? false) === true
-        && count($pleskPage['events'] ?? []) === 4
-        && ($pleskSchedule['data']['id_personal'] ?? 0) === 900001
-        && ($pleskJourney['data']['context']['id_estacion'] ?? 0) === 14
-        && ($pleskPage['events'][0]['integrity']['status'] ?? '') === 'UNVERIFIABLE'
-        && str_starts_with((string) ($pleskPage['events'][0]['event_uuid'] ?? ''), 'DEMO-CHECADOR'),
-        'Plesk M01 reader returns only the existing synthetic four-punch, schedule and Journey fixture');
+    $assert($localDemoReader->isDemoMode()
+        && $localDemoReader->demoScenario() === 'four_punches'
+        && ($localDemoSnapshot['ok'] ?? false) === true
+        && ($localDemoPage['ok'] ?? false) === true
+        && count($localDemoPage['events'] ?? []) === 4,
+        'isolated local development preview continues to render its configured four-punch fixture');
     $m01DemoMethod = new ReflectionMethod(\App\Controllers\ChecadorController::class, 'readM01SyntheticAttendance');
     $m01DemoResult = $m01DemoMethod->invoke(
         null,
-        $pleskReader,
+        $localDemoReader,
         $director,
         14,
         ChecadorDailyReadService::DEMO_REFERENCE_DATE,
@@ -801,7 +786,7 @@ try {
     $m01DemoRow = $m01DemoResult['attendance_rows'][900001] ?? [];
     $wrongStationM01Demo = $m01DemoMethod->invoke(
         null,
-        $pleskReader,
+        $localDemoReader,
         $director,
         15,
         ChecadorDailyReadService::DEMO_REFERENCE_DATE,
@@ -810,7 +795,7 @@ try {
     );
     $wrongWorkerM01Demo = $m01DemoMethod->invoke(
         null,
-        $pleskReader,
+        $localDemoReader,
         $director,
         14,
         ChecadorDailyReadService::DEMO_REFERENCE_DATE,
@@ -835,10 +820,9 @@ try {
     $wrongRole = new Usuario();
     $wrongRole->id = 999;
     $wrongRole->id_puesto = 4;
-    $assert(ChecadorDailyReadService::createAuthorizedM01PleskDemoReader($unauthorizedDirector, 14, [14]) === null
-        && ChecadorDailyReadService::createAuthorizedM01PleskDemoReader($wrongRole, 14, [14]) === null
-        && ChecadorDailyReadService::createAuthorizedM01PleskDemoReader($director, 15, [14]) === null,
-        'Plesk M01 demo factory rejects users outside the allowlist, non-Dirección roles and workplaces outside server ACL');
+    $assert($localDemoReader->isDemoMode()
+        && ChecadorDailyReadService::demoModeEnabled() === true,
+        'local M01 fixture projection remains isolated behind the development-only gate');
     $assert($networkCalls === 0 && $tokenCalls === 0, 'demo transport makes no outbound API call and does not generate a downstream JWT');
 } finally {
     foreach ($keys as $key) {

@@ -4,6 +4,7 @@
     var checadorPath = '/departamento-operativo/recursos-humanos/checador';
     var dailyPath = checadorPath + '/asistencia';
     var reportPath = checadorPath + '/reporte';
+    var journeysPath = checadorPath + '/jornadas';
 
     function isCivilDate(value) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
@@ -23,10 +24,16 @@
         var pathname = url.pathname.replace(/\/$/, '');
         var isDaily = pathname === dailyPath;
         var isReport = pathname === reportPath;
-        if (!isDaily && !isReport) return url.toString();
+        var isJourneys = pathname === journeysPath;
+        if (!isDaily && !isReport && !isJourneys) return url.toString();
 
         var nextStationId = selectedLocalityId(selectorValue);
         if (nextStationId === null) {
+            if (isJourneys) {
+                // Keep the user on Jornadas in an explicit unselected state;
+                // the server will not query a roster or results without scope.
+                return new URL(journeysPath, window.location.origin).toString();
+            }
             // The empty selection is explicit: return to the directory after
             // the shared selector clears the saved module context.
             return new URL(checadorPath, window.location.origin).toString();
@@ -38,6 +45,15 @@
         // locality through /api/module-context/set. Normal navigation reloads
         // from session context; the server validates and normalizes legacy
         // workplace_id links before rendering M01.
+        if (isJourneys) {
+            url.searchParams.set('workplace_id', nextStationId);
+            if (stationChanged) {
+                ['start_date', 'end_date', 'worker_id', 'page']
+                    .forEach(function (key) { url.searchParams.delete(key); });
+            }
+            return url.toString();
+        }
+
         url.searchParams.delete('workplace_id');
 
         if (isDaily) {
@@ -80,7 +96,7 @@
         ? ModuleStationSelector
         : window.ModuleStationSelector;
     var currentPath = window.location.pathname.replace(/\/$/, '');
-    if (!selectorApi || (currentPath !== dailyPath && currentPath !== reportPath)) return;
+    if (!selectorApi || (currentPath !== dailyPath && currentPath !== reportPath && currentPath !== journeysPath)) return;
 
     // Persist the server-authorized context first, then replace the URL so its
     // explicit workplace_id cannot override that context on the next request.

@@ -106,7 +106,7 @@ $deniedHistory = (new ChecadorWeeklyScheduleSqlReadService(static fn(Usuario $ac
 $assert(($deniedHistory['error']['kind'] ?? '') === 'permission_denied', 'SQL assignment history denies a locality outside the server authorization');
 $source = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
 $renderStart = strpos($source, 'private function renderScheduleWeek(');
-$renderEnd = strpos($source, '/** Read the selected week date by date;', (int) $renderStart);
+$renderEnd = strpos($source, '/** Read the seven effective weekday occurrences from canonical SQL memberships.', (int) $renderStart);
 $render = substr($source, (int) $renderStart, (int) $renderEnd - (int) $renderStart);
 $assert(str_contains($render, 'ChecadorWeeklyScheduleSqlReadService')
     && !str_contains($render, 'getShiftAssignments(') && !str_contains($render, 'getShiftTemplates(')

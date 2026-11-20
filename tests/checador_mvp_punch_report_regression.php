@@ -139,6 +139,14 @@ $assert(($workerRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
 $assert(str_contains($view, 'Horas en UTC')
     && str_contains($formatter, 'Integridad no verificada por Portal3')
     && str_contains($controller, "'ocurrido_at_utc' =>"), 'view and JSON projection explain UTC and integrity remains explicitly unverified by Portal3');
+$assert(str_contains($view, 'class="card-header bg-primary text-white')
+    && str_contains($view, 'aria-label="Opciones del reporte"')
+    && str_contains($view, 'ti ti-dots-vertical')
+    && str_contains($view, 'Buscar marcaciones')
+    && str_contains($view, 'data-bs-target="#punch-report-filter-modal"'), 'report uses the institutional blue card header and three-dot search dropdown');
+$assert(str_contains($view, 'id="punch-report-worker" name="worker_id"')
+    && str_contains($datatableJs, 'dropdownParent: filterModal ? jQuery(filterModal) : jQuery(document.body)')
+    && str_contains($datatableJs, 'periodWorkerValue.value = workerFilter.value'), 'worker Select2 lives in the search modal and its selection persists in both query paths');
 $assert(str_contains($view, 'name="worker_id"') && !str_contains($view, 'name="workplace_id"')
     && str_contains($view, 'from_date') && str_contains($view, 'to_date')
     && str_contains($reportMethod, '$this->sessionWorkplaceId($access)'), 'view filters by canonical worker and UTC range while locality comes from authorized session');
@@ -154,7 +162,7 @@ $assert(str_contains($view, 'class="datatables"')
     && str_contains($view, 'class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%"')
     && str_contains($datatableJs, "title: 'Estación'")
     && !str_contains($view, '<thead'), 'report reuses the Día Doble table HTML structure and institutional responsive classes');
-$assert(str_contains($view, 'id="checador-punch-detail-modal"') && str_contains($view, 'modal-dialog-scrollable') && str_contains($view, 'aria-labelledby') && str_contains($datatableJs, 'bootstrap.Modal.getOrCreateInstance'), 'each event detail uses the shared accessible Bootstrap modal');
+$assert(str_contains($view, 'id="checador-punch-detail-modal"') && str_contains($view, 'modal-dialog-scrollable') && str_contains($view, 'aria-labelledby') && str_contains($view, 'modal-colored-header bg-primary text-white') && str_contains($view, 'btn bg-danger-subtle text-danger') && str_contains($datatableJs, 'bootstrap.Modal.getOrCreateInstance'), 'each event detail uses the shared accessible Portal3 modal and close style');
 $assert(str_contains($view, 'Hora original informada por el dispositivo') && str_contains($view, 'Fecha y hora de marcación (UTC)') && str_contains($view, 'Fecha y hora de recepción (UTC)') && str_contains($view, 'Dispositivo'), 'detail view distinguishes device, occurrence, receipt, and device fields in Spanish');
 $assert(str_contains($view, 'data-endpoint="/departamento-operativo/recursos-humanos/checador/reporte/data"')
     && str_contains($datatableJs, 'serverSide: true')

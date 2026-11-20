@@ -3,6 +3,16 @@
 declare(strict_types=1);
 
 $esc = static fn(mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+$referenceDisclosure = static function (mixed $value) use ($esc): string {
+    $full = trim((string) $value);
+    if ($full === '') {
+        return '<span class="text-muted">No disponible</span>';
+    }
+    $short = strlen($full) > 24 ? substr($full, 0, 12) . '…' . substr($full, -8) : $full;
+    return '<details class="d-inline-block"><summary><code title="Referencia abreviada">' . $esc($short)
+        . '</code></summary><code class="d-inline-block text-break user-select-all mt-1" title="Valor completo">'
+        . $esc($full) . '</code></details>';
+};
 $selectedWorkplaceId = isset($selectedWorkplaceId) ? (int) $selectedWorkplaceId : null;
 $selectedWorkplaceName = is_string($selectedWorkplaceName ?? null) ? trim($selectedWorkplaceName) : '';
 $selectedWorkplaceDisplayName = $selectedWorkplaceName !== ''
@@ -21,7 +31,8 @@ $workerSelectAvailable = $workerSelectOptions !== [];
 $attendanceRows = is_array($attendanceRows ?? null) ? $attendanceRows : [];
 $attendanceCoverage = is_array($attendanceCoverage ?? null) ? $attendanceCoverage : [];
 $journeyEvaluationState = is_string($journeyEvaluationState ?? null) ? $journeyEvaluationState : 'not_run';
-$syntheticDemoMode = ($demoMode ?? false) === true;
+$syntheticDetailPreviewMode = ($syntheticDetailPreviewMode ?? false) === true;
+$syntheticDemoMode = ($demoMode ?? false) === true || $syntheticDetailPreviewMode;
 $persistentQaFixtureMode = ($persistentQaFixtureMode ?? false) === true;
 $attendanceRoster = is_array($attendanceRoster ?? null) ? $attendanceRoster : [];
 $attendanceRosterFallbackAllowed = ($attendanceRosterFallbackAllowed ?? false) === true;
@@ -235,10 +246,12 @@ if ($rosterFallbackDisplayed) {
         <div>
             <h1 class="visually-hidden">Asistencia del día</h1>
             <div class="d-flex flex-wrap align-items-center gap-3 small text-muted">
-                <span class="d-inline-flex align-items-center gap-2">
-                    <i class="ti ti-building-store" aria-hidden="true"></i>
-                    <span><?= $esc(($selectedWorkplaceKind ?? 'Estación') . ':') ?> <strong class="text-body" data-checador-context-workplace><?= $esc($selectedWorkplaceDisplayName) ?></strong></span>
-                </span>
+                <?php if (!$syntheticDetailPreviewMode): ?>
+                    <span class="d-inline-flex align-items-center gap-2">
+                        <i class="ti ti-building-store" aria-hidden="true"></i>
+                        <span><?= $esc(($selectedWorkplaceKind ?? 'Estación') . ':') ?> <strong class="text-body" data-checador-context-workplace><?= $esc($selectedWorkplaceDisplayName) ?></strong></span>
+                    </span>
+                <?php endif; ?>
                 <?php if ($selectedDate !== ''): ?>
                     <span class="d-inline-flex align-items-center gap-2">
                         <i class="ti ti-calendar" aria-hidden="true"></i>
@@ -255,12 +268,6 @@ if ($rosterFallbackDisplayed) {
     </header>
 
     <div data-checador-attendance-results data-attendance-state="<?= $esc($state) ?>" data-attendance-roster-fallback="<?= $rosterFallbackDisplayed ? 'true' : 'false' ?>" data-workplace-id="<?= $selectedWorkplaceId ?? '' ?>">
-
-    <?php if ($syntheticDemoMode): ?>
-        <div class="alert alert-warning py-2" role="status" data-checador-demo-banner>
-            <strong>MODO DEMOSTRACIÓN — Marcaciones sintéticas. No representan asistencia real.</strong>
-        </div>
-    <?php endif; ?>
 
     <?php if ($stateMessageForAttendance !== ''): ?>
         <div class="alert <?= $state === 'idle' ? 'alert-info' : 'alert-warning' ?> py-2" role="status">
@@ -350,10 +357,10 @@ if ($rosterFallbackDisplayed) {
                                                     <a class="dropdown-item pointer disabled" aria-disabled="true" tabindex="-1"><i class="ti ti-calendar-time me-1" aria-hidden="true"></i> Jornada</a>
                                                     <a class="dropdown-item pointer disabled" aria-disabled="true" tabindex="-1"><i class="ti ti-alert-circle me-1" aria-hidden="true"></i> Incidencias</a>
                                                     <?php if ($viewRow['can_create_incidence']): ?><a class="dropdown-item pointer disabled" aria-disabled="true" tabindex="-1"><i class="ti ti-plus me-1" aria-hidden="true"></i> Registrar incidencia</a><?php endif; ?>
+                                                <?php elseif ($syntheticDetailPreviewMode): ?>
+                                                    <button type="button" class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>"><i class="ti ti-eye me-1" aria-hidden="true"></i> Ver detalle</button>
                                                 <?php elseif ($syntheticDemoMode): ?>
                                                     <button type="button" class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>"><i class="ti ti-eye me-1" aria-hidden="true"></i> Ver detalle</button>
-                                                    <span class="dropdown-item disabled" aria-disabled="true"><i class="ti ti-calendar-time me-1" aria-hidden="true"></i> Jornada · No disponible en demostración</span>
-                                                    <span class="dropdown-item disabled" aria-disabled="true"><i class="ti ti-alert-circle me-1" aria-hidden="true"></i> Incidencias · No disponible en demostración</span>
                                                 <?php else: ?>
                                                     <button type="button" class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>"><i class="ti ti-eye me-1" aria-hidden="true"></i> Ver detalle</button>
                                                     <a class="dropdown-item pointer" href="<?= $esc($viewRow['journey_href']) ?>"><i class="ti ti-calendar-time me-1" aria-hidden="true"></i> Jornada</a>
@@ -375,35 +382,37 @@ if ($rosterFallbackDisplayed) {
         <div class="modal fade" id="<?= $esc($viewRow['modal_id']) ?>" tabindex="-1" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-title" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-xl">
                 <div class="modal-content">
-                    <div class="modal-header">
+                    <div class="modal-header modal-colored-header bg-primary text-white">
                         <div>
-                            <h2 class="modal-title h5" id="<?= $esc($viewRow['modal_id']) ?>-title">Detalle de asistencia · <?= $esc($viewRow['name']) ?></h2>
-                            <p class="small text-muted mb-0"><?= $esc($selectedWorkplaceName ?? 'Centro autorizado') ?> · <?= $esc($selectedDate) ?></p>
+                            <h2 class="modal-title h5 text-white mb-0" id="<?= $esc($viewRow['modal_id']) ?>-title">Detalle de asistencia · <?= $esc($viewRow['name']) ?></h2>
+                            <p class="small text-white-50 mb-0"><?= $syntheticDetailPreviewMode ? $esc($selectedDate) : $esc($selectedWorkplaceName ?? 'Centro autorizado') . ' · ' . $esc($selectedDate) ?></p>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar detalle de asistencia"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar detalle de asistencia"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-12 col-md-6"><div class="border rounded p-3 h-100"><span class="d-block small text-muted">Horario efectivo</span><strong><?= $esc($viewRow['schedule']) ?></strong></div></div>
-                            <div class="col-12 col-md-6"><div class="border rounded p-3 h-100"><span class="d-block small text-muted">Estado disponible</span><span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span></div></div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Horario efectivo</span><strong><?= $esc($viewRow['schedule']) ?></strong></div></div>
+                            <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Estado disponible</span><span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span></div></div>
                         </div>
 
-                        <h3 class="h6">Posiciones de marcación</h3>
-                        <p class="small text-muted">Las posiciones Entrada 1, Salida 1, Entrada 2 y Salida 2 conservan la clasificación recibida; no se infieren posiciones ni ausencias a partir del orden de captura. Un espacio sin dato no representa una ausencia.</p>
-                        <div class="row row-cols-1 row-cols-sm-2 g-2 mb-4" aria-label="Cuatro posiciones de marcación en orden contractual">
+                        <section class="mb-3" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-slots-title">
+                        <h3 class="h6 mb-1" id="<?= $esc($viewRow['modal_id']) ?>-slots-title">Posiciones de marcación</h3>
+                        <p class="small text-muted mb-2">Las posiciones Entrada 1, Salida 1, Entrada 2 y Salida 2 conservan la clasificación recibida; no se infieren posiciones ni ausencias a partir del orden de captura. Un espacio sin dato no representa una ausencia.</p>
+                        <div class="row row-cols-2 row-cols-lg-4 g-2" aria-label="Cuatro posiciones de marcación en orden contractual">
                             <?php foreach ($viewRow['slots'] as $slot): ?>
                                 <?php $slotValue = $slot['value']; $local = $slot['time_local']; $event = $slot['event']; ?>
-                                <div class="col"><div class="border rounded p-3 h-100">
+                                <div class="col"><div class="border rounded p-2 h-100">
                                     <strong class="d-block"><?= $esc($slot['label']) ?></strong>
                                     <span class="d-block"><?php if (($slotValue['ambiguous'] ?? false) === true): ?>Requiere revisión<?php elseif ($local !== null): ?><?= $esc((string) ($local['date'] ?? '')) ?> <?= $esc((string) ($local['time'] ?? '')) ?><?php elseif ($event !== null): ?>Hora local no disponible<?php else: ?>Sin dato en esta consulta<?php endif; ?></span>
                                     <span class="small text-muted"><?= ($slotValue['ambiguous'] ?? false) === true ? 'Clasificación ambigua informada por la Jornada' : ($event !== null ? 'Registro observado' : 'Sin clasificación de ausencia') ?></span>
                                 </div></div>
                             <?php endforeach; ?>
                         </div>
+                        </section>
 
                         <?php if ($viewRow['evaluated_raw_events_complete']): ?>
                             <?php $evaluatedCount = (int) $viewRow['evaluated_raw_event_count']; ?>
-                            <details class="mb-4" id="attendance-evaluated-events-<?= (int) $viewRow['worker_id'] ?>">
+                            <details class="mb-3" id="attendance-evaluated-events-<?= (int) $viewRow['worker_id'] ?>">
                                 <summary><?= $evaluatedCount > 4 ? 'Ver todas las marcaciones (' . $evaluatedCount . ')' : 'Marcaciones evaluadas (' . $evaluatedCount . ')' ?></summary>
                                 <p class="small text-muted mt-2">Conjunto y cantidad informados por la evaluación; no se infiere ausencia si está vacío.</p>
                                 <?php if ($viewRow['evaluated_raw_events'] === []): ?>
@@ -412,14 +421,14 @@ if ($rosterFallbackDisplayed) {
                                     <div class="table-responsive overflow-x-auto overflow-y-hidden mt-2">
                                         <table class="table table-sm table-striped table-bordered align-middle mb-0">
                                             <caption class="visually-hidden">Todas las marcaciones evaluadas por el servicio para personal <?= (int) $viewRow['worker_id'] ?></caption>
-                                            <thead><tr><th scope="col">Clasificación</th><th scope="col">Evento</th><th scope="col">Fecha y hora UTC</th><th scope="col">Dispositivo</th><th scope="col">Método</th></tr></thead>
+                                            <thead><tr><th class="text-nowrap" scope="col">Clasificación</th><th class="text-nowrap" scope="col">Evento</th><th class="text-nowrap" scope="col">Fecha y hora UTC</th><th class="text-nowrap" scope="col">Dispositivo</th><th class="text-nowrap" scope="col">Método</th></tr></thead>
                                             <tbody><?php foreach ($viewRow['evaluated_raw_events'] as $evaluatedEvent): if (!is_array($evaluatedEvent)) continue; ?>
                                                 <tr>
-                                                    <th scope="row"><?= $esc(match ((string) ($evaluatedEvent['pairing_role'] ?? '')) { 'ENTRY' => 'Entrada', 'EXIT' => 'Salida', 'SURPLUS' => 'Marcación adicional', 'UNMATCHED' => 'Sin emparejar', default => 'Clasificación no disponible' }) ?></th>
-                                                    <td class="text-break"><code><?= $esc($evaluatedEvent['event_uuid'] ?? 'No disponible') ?></code></td>
-                                                    <td><?= $esc($evaluatedEvent['ocurrido_at_utc'] ?? 'No disponible') ?></td>
-                                                    <td><?= is_int($evaluatedEvent['id_dispositivo'] ?? null) && $evaluatedEvent['id_dispositivo'] > 0 ? (int) $evaluatedEvent['id_dispositivo'] : 'No disponible' ?></td>
-                                                    <td><?= $esc(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($evaluatedEvent['metodo_captura'] ?? null)) ?></td>
+                                                    <th class="text-nowrap" scope="row"><?= $esc(match ((string) ($evaluatedEvent['pairing_role'] ?? '')) { 'ENTRY' => 'Entrada', 'EXIT' => 'Salida', 'SURPLUS' => 'Marcación adicional', 'UNMATCHED' => 'Sin emparejar', default => 'Clasificación no disponible' }) ?></th>
+                                                    <td><?= $referenceDisclosure($evaluatedEvent['event_uuid'] ?? 'No disponible') ?></td>
+                                                    <td class="text-nowrap"><?= $esc($evaluatedEvent['ocurrido_at_utc'] ?? 'No disponible') ?></td>
+                                                    <td class="text-nowrap"><?= is_int($evaluatedEvent['id_dispositivo'] ?? null) && $evaluatedEvent['id_dispositivo'] > 0 ? (int) $evaluatedEvent['id_dispositivo'] : 'No disponible' ?></td>
+                                                    <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($evaluatedEvent['metodo_captura'] ?? null)) ?></td>
                                                 </tr>
                                             <?php endforeach; ?></tbody>
                                         </table>
@@ -430,34 +439,40 @@ if ($rosterFallbackDisplayed) {
                             <p class="alert alert-warning py-2" role="status">El conjunto de marcaciones evaluadas no pudo confirmarse; consulta la trazabilidad de la Jornada.</p>
                         <?php endif; ?>
 
-                        <h3 class="h6">Marcaciones originales y trazabilidad</h3>
+                        <?php $traceCount = count($viewRow['evidence']); ?>
+                        <details class="mb-3" id="attendance-original-events-<?= (int) $viewRow['worker_id'] ?>">
+                        <summary>Marcaciones originales y trazabilidad<?= $traceCount > 0 ? ' (' . $traceCount . ' mostradas)' : '' ?></summary>
+                        <div class="mt-2">
                         <?php if ($viewRow['evidence'] === []): ?>
-                            <p class="text-muted">No hay marcaciones atribuibles que mostrar en el detalle de esta consulta.</p>
+                            <p class="text-muted mb-0">No hay marcaciones atribuibles que mostrar en el detalle de esta consulta.</p>
                         <?php else: ?>
-                            <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2 mb-4">
-                                <table class="table table-striped table-bordered align-middle mb-0">
+                            <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
+                                <table class="table table-sm table-striped table-bordered align-middle mb-0">
                                     <caption class="visually-hidden">Marcaciones originales, hora disponible, método y referencias del trabajador</caption>
-                                    <thead><tr><th scope="col">Posición o registro</th><th scope="col">Hora local</th><th scope="col">Fecha y hora UTC</th><th scope="col">Dispositivo</th><th scope="col">Método</th><th scope="col">Recepción</th><th scope="col">Integridad</th><th scope="col">Referencia</th></tr></thead>
+                                    <thead><tr><th class="text-nowrap" scope="col">Posición o registro</th><th class="text-nowrap" scope="col">Hora local</th><th class="text-nowrap" scope="col">Fecha y hora UTC</th><th class="text-nowrap" scope="col">Dispositivo</th><th class="text-nowrap" scope="col">Método</th><th class="text-nowrap" scope="col">Recepción</th><th class="text-nowrap" scope="col">Integridad</th><th scope="col">Referencia</th></tr></thead>
                                     <tbody>
                                         <?php foreach ($viewRow['evidence'] as $item): ?>
                                             <?php $event = $item['event']; $local = is_array($item['local']) ? $item['local'] : null; ?>
                                             <tr>
-                                                <th scope="row"><?= $esc($item['label']) ?></th>
-                                                <td><?= $local !== null ? $esc((string) ($local['date'] ?? '') . ' ' . (string) ($local['time'] ?? '')) : 'No disponible' ?></td>
-                                                <td><?= $esc((string) ($event['ocurrido_at_utc'] ?? $event['captured_at_utc'] ?? 'No disponible')) ?></td>
-                                                <td><?= isset($event['id_dispositivo']) ? (int) $event['id_dispositivo'] : 'No disponible' ?></td>
-                                                <td><?= $esc(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null)) ?></td>
-                                                <td><?= $esc(\App\Services\ChecadorPresentationFormatter::processingStatusLabel($event['estado_procesamiento'] ?? $event['processing_status'] ?? null)) ?></td>
-                                                <td><?= $esc(\App\Services\ChecadorPresentationFormatter::integrityLabel()) ?></td>
-                                                <td class="text-break"><code><?= $esc((string) ($event['event_uuid'] ?? $event['id_evento'] ?? 'No disponible')) ?></code></td>
+                                                <th class="text-nowrap" scope="row"><?= $esc($item['label']) ?></th>
+                                                <td class="text-nowrap"><?= $local !== null ? $esc((string) ($local['date'] ?? '') . ' ' . (string) ($local['time'] ?? '')) : 'No disponible' ?></td>
+                                                <td class="text-nowrap"><?= $esc((string) ($event['ocurrido_at_utc'] ?? $event['captured_at_utc'] ?? 'No disponible')) ?></td>
+                                                <td class="text-nowrap"><?= isset($event['id_dispositivo']) ? (int) $event['id_dispositivo'] : 'No disponible' ?></td>
+                                                <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null)) ?></td>
+                                                <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::processingStatusLabel($event['estado_procesamiento'] ?? $event['processing_status'] ?? null)) ?></td>
+                                                <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::integrityLabel()) ?></td>
+                                                <td><?= $referenceDisclosure((string) ($event['event_uuid'] ?? $event['id_evento'] ?? 'No disponible')) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
                         <?php endif; ?>
+                        </div>
+                        </details>
 
-                        <h3 class="h6">Incidencias relacionadas</h3>
+                        <section class="border rounded p-3" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-incidences-title">
+                        <h3 class="h6 mb-2" id="<?= $esc($viewRow['modal_id']) ?>-incidences-title">Incidencias relacionadas<?php if (!$viewRow['incidence_error'] && $viewRow['incidences'] !== null): ?> (<?= count($viewRow['incidences']) ?>)<?php endif; ?></h3>
                         <?php if ($viewRow['incidence_error']): ?>
                             <p class="alert alert-warning py-2" role="status">La consulta de incidencias no está disponible; no se confirma un resultado vacío.</p>
                         <?php elseif ($viewRow['incidences'] === null): ?>
@@ -467,24 +482,25 @@ if ($rosterFallbackDisplayed) {
                         <?php else: ?>
                             <div class="table-responsive overflow-x-auto overflow-y-hidden pb-2">
                                 <table class="table table-sm table-striped table-bordered align-middle mb-0">
-                                    <thead><tr><th scope="col">Tipo</th><th scope="col">Periodo</th><th scope="col">Estado</th><th scope="col">Revisión</th><th scope="col">Referencia</th></tr></thead>
+                                    <thead><tr><th class="text-nowrap" scope="col">Tipo</th><th class="text-nowrap" scope="col">Periodo</th><th class="text-nowrap" scope="col">Estado</th><th class="text-nowrap" scope="col">Revisión</th><th scope="col">Referencia</th></tr></thead>
                                     <tbody>
                                         <?php foreach ($viewRow['incidences'] as $incidence): ?>
                                             <tr>
-                                                <th scope="row"><?= $esc($incidenceCategoryLabel($incidence['category'] ?? null)) ?></th>
-                                                <td><?= $esc($incidence['date_range']['start_date'] ?? 'No disponible') ?> — <?= $esc($incidence['date_range']['end_date'] ?? 'No disponible') ?></td>
-                                                <td><?= $esc(\App\Services\ChecadorPresentationFormatter::incidenceStatusLabel($incidence['current_status'] ?? null)) ?></td>
-                                                <td><?= isset($incidence['current_revision']) ? (int) $incidence['current_revision'] : 'No disponible' ?></td>
-                                                <td class="text-break"><code><?= $esc($incidence['uuid_incidencia'] ?? 'No disponible') ?></code></td>
+                                                <th class="text-nowrap" scope="row"><?= $esc($incidenceCategoryLabel($incidence['category'] ?? null)) ?></th>
+                                                <td class="text-nowrap"><?= $esc($incidence['date_range']['start_date'] ?? 'No disponible') ?> — <?= $esc($incidence['date_range']['end_date'] ?? 'No disponible') ?></td>
+                                                <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::incidenceStatusLabel($incidence['current_status'] ?? null)) ?></td>
+                                                <td class="text-nowrap"><?= isset($incidence['current_revision']) ? (int) $incidence['current_revision'] : 'No disponible' ?></td>
+                                                <td><?= $referenceDisclosure($incidence['uuid_incidencia'] ?? 'No disponible') ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
                         <?php endif; ?>
+                        </section>
                     </div>
                     <div class="modal-footer">
-                        <a class="btn btn-outline-secondary" href="<?= $esc($viewRow['incidence_href']) ?>">Ver incidencias</a>
+                        <?php if (!$syntheticDetailPreviewMode): ?><a class="btn btn-outline-secondary" href="<?= $esc($viewRow['incidence_href']) ?>">Ver incidencias</a><?php endif; ?>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>

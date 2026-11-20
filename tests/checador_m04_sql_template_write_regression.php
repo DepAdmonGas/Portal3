@@ -292,6 +292,10 @@ $assert(str_contains($writeServiceSource, 'Auth::user()')
 $assert(str_contains($writeServiceSource, "SHOW TABLE STATUS LIKE ' . \$connection->getPdo()->quote(\$table)")
     && !str_contains($writeServiceSource, 'SHOW TABLE STATUS LIKE ?'),
     'MariaDB table-status preflight quotes only fixed table names instead of binding an unsupported SHOW placeholder');
+$originalAppEnv = $_ENV['APP_ENV'] ?? null;
+$originalDemoFlag = $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] ?? null;
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
 $gateNames = ['CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED', 'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'];
 $savedGateValues = [];
 foreach ($gateNames as $gateName) {
@@ -310,6 +314,13 @@ $assert(!str_contains($writeServiceSource, 'CHECADOR_M04_SQL_WRITER_ENABLED')
     && !str_contains($writeServiceSource, 'CHECADOR_M04_SQL_GRANTS_VERIFIED')
     && !str_contains($writeServiceSource, 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'),
     'M04 SQL writer contains no legacy environment flag dependencies');
+$assert((static function (): bool {
+    $_ENV['APP_ENV'] = 'production';
+    $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
+    return ChecadorShiftTemplateSqlWriteService::writeGateOpen() === false;
+})(), 'M04 writes remain closed outside local development pending target cutover approval');
+if ($originalAppEnv === null) unset($_ENV['APP_ENV']); else $_ENV['APP_ENV'] = $originalAppEnv;
+if ($originalDemoFlag === null) unset($_ENV['CHECADOR_ADVANCED_DEMO_ENABLED']); else $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = $originalDemoFlag;
 
 echo "\n{$passes} PASS, {$fails} FAIL\n";
 exit($fails === 0 ? 0 : 1);

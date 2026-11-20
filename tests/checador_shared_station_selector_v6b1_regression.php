@@ -77,7 +77,8 @@ $assert(!preg_match('/<select\b[^>]*\bname="workplace_id"/i', $dailyView . $repo
     && str_contains($controller, '$moduleContext[\'id_depto\'] ?? $moduleContext[\'id_estacion\'] ?? null'),
     'V6B1 the shared layout owns station selection while daily AJAX filters use the server-validated session context');
 $assert(str_contains($navigation, "url.searchParams.delete('workplace_id')")
-    && !str_contains($navigation, 'url.searchParams.set(\'workplace_id\', nextStationId)')
+    && str_contains($navigation, 'if (isJourneys) {')
+    && str_contains($navigation, 'url.searchParams.set(\'workplace_id\', nextStationId)')
     && str_contains($navigation, "url.searchParams.delete('source_workplace_id')")
     && str_contains($navigation, "['date', 'worker_id', 'snapshot_ref', 'page', 'per_page']")
     && str_contains($navigation, "window.location.assign(url)")
@@ -115,11 +116,11 @@ $assert(str_contains($controller, '$isDailyAttendanceGet = $workspace === \'dail
     'M01 validates legacy workplace IDs, gives an existing authorized session selection priority, and normalizes the GET URL after saving context');
 $assert(str_contains($navigation, "typeof ModuleStationSelector !== 'undefined'")
     && str_contains($navigation, "var dailyPath = checadorPath + '/asistencia';")
-    && str_contains($navigation, 'currentPath !== dailyPath && currentPath !== reportPath')
+    && str_contains($navigation, 'currentPath !== dailyPath && currentPath !== reportPath && currentPath !== journeysPath')
     && str_contains($navigation, "selectorApi.init('checador'")
     && str_contains($controller, 'checador.module-station.init.js?v=20261116-1')
     && str_contains($report, 'checador.module-station.init.js?v=20261113-2'),
-    'M01 installs custom URL navigation on daily attendance and report while the saved canonical station stays in session context');
+    'M01 and report keep their route navigation while Jornadas also uses the shared selector and canonical session context');
 $assert(str_contains($navigation, '(?:estacion|depto)_([1-9][0-9]*)')
     && str_contains($moduleStations, 'value="depto_')
     && str_contains($access, "'departamentos_localidades'"),

@@ -51,8 +51,13 @@ $assert(($default['host'] ?? null) === 'portal-global-db.invalid'
 $assert($missingDedicatedConnection, 'no second M04 SQL connection is registered');
 $assert(ChecadorShiftTemplateSqlWriteService::CONNECTION_NAME === 'default',
     'M04 writer selects the default Portal3 connection');
+$assert(!ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
+    'M04 production operation gate remains closed until target cutover is approved');
+
+$_ENV['APP_ENV'] = 'dev';
+$_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
 $assert(ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
-    'M04 does not require environment flags to pass its non-demo operation gate');
+    'M04 local development gate opens without manual M04 deployment flags');
 
 foreach ([
     'CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED',
