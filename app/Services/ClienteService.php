@@ -102,7 +102,7 @@ return [
 
 private static function comprobanteDisponible(string $archivo): bool
 {
-$nombre = basename(trim($archivo));
+$nombre = basename(str_replace('\\', '/', trim($archivo)));
 if ($nombre === '' || $nombre === '.' || $nombre === '..') {
 return false;
 }
@@ -197,7 +197,11 @@ if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
 return null;
 }
 
-$nombre = uniqid('', true) . '-' . basename($file['name']);
+$nombreOriginal = basename(str_replace('\\', '/', (string) $file['name']));
+if ($nombreOriginal === '' || $nombreOriginal === '.' || $nombreOriginal === '..') {
+return null;
+}
+$nombre = uniqid('', true) . '-' . $nombreOriginal;
 if (!move_uploaded_file($file['tmp_name'], $dir . $nombre)) {
 return null;
 }

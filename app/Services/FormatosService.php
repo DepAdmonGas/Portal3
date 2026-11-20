@@ -452,7 +452,7 @@ $data[] = [
 'firma'         => $firma->firma,
         'firma_img_disponible' => $firmaImagen !== null,
         'firma_img_url' => $firmaImagen !== null
-            ? '/uploads/firmas/formatos/' . rawurlencode(basename((string)$firma->firma))
+            ? '/download?tipo=formatos-firmas&file=' . rawurlencode(basename((string)$firma->firma)) . '&view=1'
             : '',
 'firma_texto'   => in_array($tipo, ['B', 'C'], true)
 ? '<b>Fecha: ' . formatearFecha($fechaF) . ', ' . $horaF . '</b> <br> El formato se firmó por un medio electrónico.'
@@ -465,12 +465,34 @@ $data[] = [
 return $data;
 }
 
-private static function obtenerFirmaImagen(string $archivo): ?string
+public static function obtenerFirmaImagen(string $archivo): ?string
 {
-    $archivo = basename(trim($archivo));
-    if ($archivo === '' || $archivo === '.') return null;
-    $ruta = dirname(__DIR__, 2) . '/public/uploads/firmas/formatos/' . $archivo;
-    return is_file($ruta) ? $ruta : null;
+    $archivo = basename(str_replace('\\', '/', trim($archivo)));
+    if ($archivo === '' || $archivo === '.' || $archivo === '..') return null;
+
+    $raiz = dirname(__DIR__, 2);
+    $directorios = [
+        $raiz . '/public/uploads/firmas/formatos/',
+        $raiz . '/public/uploads/firmas/',
+        $raiz . '/public/uploads/archivos/formatos/firmas/',
+        $raiz . '/public/uploads/archivos/',
+        $raiz . '/public/imgs/firma/',
+        $raiz . '/imgs/firma/',
+    ];
+
+    foreach ($directorios as $directorio) {
+        $ruta = rtrim($directorio, '/\\') . DIRECTORY_SEPARATOR . $archivo;
+        if (!is_file($ruta)) continue;
+
+        $rutaReal = realpath($ruta);
+        $baseReal = realpath($directorio);
+        if ($rutaReal !== false && $baseReal !== false
+            && str_starts_with($rutaReal, $baseReal . DIRECTORY_SEPARATOR)) {
+            return $rutaReal;
+        }
+    }
+
+    return null;
 }
 
 private static function tipoDescargaArchivoAlta(string $campo, string $ruta): string
@@ -489,6 +511,7 @@ private static function tipoDescargaArchivoAlta(string $campo, string $ruta): st
 
     $archivo = basename($normalizada);
     $baseActual = dirname(__DIR__, 2) . '/public/uploads/archivos/formatos/alta/' . $archivo;
+    $baseImportada = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $archivo;
     $carpetasLegadas = [
         'curriculum' => 'curriculum', 'ine' => 'ine', 'acta_nacimiento' => 'acta_nacimiento',
         'nss' => 'nss', 'c_domicilio' => 'comprobante_domicilio', 'c_estudios' => 'comprobante_estudios',
@@ -497,7 +520,8 @@ private static function tipoDescargaArchivoAlta(string $campo, string $ruta): st
     ];
     $carpeta = $carpetasLegadas[$campo] ?? '';
     $baseLegada = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/' . $carpeta . '/' . $archivo;
-    return !is_file($baseActual) && is_file($baseLegada) ? $tipo : 'formatos-alta';
+    if (is_file($baseActual) || is_file($baseImportada)) return 'formatos-alta';
+    return is_file($baseLegada) ? $tipo : 'formatos-alta';
 }
 
 private static function archivoAltaDisponible(string $campo, string $ruta): bool
@@ -522,7 +546,8 @@ private static function archivoAltaDisponible(string $campo, string $ruta): bool
     ];
     $actual = $public . '/uploads/archivos/formatos/alta/' . $archivo;
     $legado = $public . '/uploads/archivos/documentos-personal/' . ($carpetasLegadas[$campo] ?? '') . '/' . $archivo;
-    return is_file($actual) || is_file($legado);
+    $importado = $public . '/uploads/archivos/' . $archivo;
+    return is_file($actual) || is_file($legado) || is_file($importado);
 }
 
 public static function getComentarios(int $id): array

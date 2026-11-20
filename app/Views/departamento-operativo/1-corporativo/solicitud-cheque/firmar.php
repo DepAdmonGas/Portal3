@@ -229,7 +229,10 @@ Es necesario que el responsable de <strong>firmar la autorización</strong> fina
 <template x-for="d in detalle.documentos" :key="d.id">
 <tr>
 <td x-text="d.nombre"></td>
-<td class="text-center"><i class="ti ti-download pointer text-primary fs-5" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i></td>
+<td class="text-center">
+<i x-show="d.archivo_disponible" class="ti ti-download pointer text-primary fs-6" @click.prevent="download('solicitud-cheque', d.documento)" title="Descargar"></i>
+<i x-show="!d.archivo_disponible" class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>
+</td>
 </tr>
 </template>
 </template>

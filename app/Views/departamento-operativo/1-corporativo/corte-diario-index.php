@@ -125,7 +125,6 @@ Activar Corte Diario (<span x-text="fecha" class="fw-normal"></span>)</h5>
 </template>
 
 <template x-if="!loading && step === 'history'">
-<div>
 <div class="modal-body">
 
 <div class="row g-0 ms-auto w-100 justify-content-end">
@@ -167,7 +166,6 @@ No se encontró información
 </table>
 </div>
 </div>
-</div>
 </template>
 
 <template x-if="!loading && step === 'activate'">
@@ -177,8 +175,7 @@ No se encontró información
 <label class="form-label mb-1">* Motivo:</label>
 <textarea class="form-control" x-model="motivo" rows="3"></textarea>
 </div>
-
-
+</div>
 
 <div class="modal-footer">
 <div class="row g-0 ms-auto w-100 justify-content-end">
@@ -198,7 +195,7 @@ Activar
 </div>
 </div>
 </div>
-</div>
+
 </template>
 
 </div>

@@ -830,6 +830,34 @@ $sessionUsuario = Session::get('usuario');
 $idUsuario = $sessionUsuario['id'] ?? 0;
 $nameEstacion = $sessionUsuario['nomestacion'] ?? '';
 
+$camposRequeridos = [
+    'fecha' => trim((string)($data['fecha'] ?? '')) === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($data['fecha'] ?? '')),
+    'beneficiario' => trim((string)($data['beneficiario'] ?? '')) === '',
+    'monto' => !is_numeric($data['monto'] ?? null) || (float)($data['monto'] ?? 0) < 0,
+    'moneda' => trim((string)($data['moneda'] ?? '')) === '',
+    'no_factura' => trim((string)($data['no_factura'] ?? '')) === '',
+    'email' => !filter_var((string)($data['email'] ?? ''), FILTER_VALIDATE_EMAIL),
+    'concepto' => trim((string)($data['concepto'] ?? '')) === '',
+    'solicitante' => trim((string)($data['solicitante'] ?? '')) === '',
+    'telefono' => trim((string)($data['telefono'] ?? '')) === '',
+    'cfdi' => trim((string)($data['cfdi'] ?? '')) === '',
+    'metodo_pago' => trim((string)($data['metodo_pago'] ?? '')) === '',
+    'forma_pago' => trim((string)($data['forma_pago'] ?? '')) === '',
+    'banco' => trim((string)($data['banco'] ?? '')) === '',
+    'no_cuenta' => trim((string)($data['no_cuenta'] ?? '')) === '',
+    'cuenta_clabe' => trim((string)($data['cuenta_clabe'] ?? '')) === '',
+    'referencia' => trim((string)($data['referencia'] ?? '')) === '',
+];
+if ((int)$solicitud->id_estacion === 8) {
+    $camposRequeridos['razonsocial'] = trim((string)($data['razonsocial'] ?? '')) === '';
+}
+if ((int)$solicitud->id_estacion === 14) {
+    $camposRequeridos['depto'] = (int)($data['depto'] ?? 0) <= 0;
+}
+if (in_array(true, $camposRequeridos, true)) {
+    return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => $camposRequeridos];
+}
+
 $solicitud->fecha = $data['fecha'] ?? $solicitud->fecha;
 $solicitud->beneficiario = $data['beneficiario'] ?? $solicitud->beneficiario;
 $solicitud->monto = (float)($data['monto'] ?? $solicitud->monto);
@@ -848,6 +876,7 @@ $solicitud->cuenta_clabe = $data['cuenta_clabe'] ?? $solicitud->cuenta_clabe;
 $solicitud->referencia = $data['referencia'] ?? $solicitud->referencia;
 $solicitud->observaciones = $data['observaciones'] ?? $solicitud->observaciones;
 $solicitud->razonsocial = $data['razonsocial'] ?? $solicitud->razonsocial;
+$solicitud->depto = $data['depto'] ?? $solicitud->depto;
 $solicitud->hora = Carbon::now()->format('H:i:s');
 
 try {
@@ -1157,23 +1186,21 @@ if (!$puedeArchivos) {
 return ['success' => false, 'message' => 'No es posible agregar archivos en este momento'];
 }
 
-if (empty($file) || $file['error'] !== UPLOAD_ERR_OK) {
-return ['success' => false, 'message' => 'Archivo no válido'];
+if (trim($descripcion) === '' || empty($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => ['tipo' => trim($descripcion) === '', 'archivo' => true]];
 }
 
 $sessionUsuario = Session::get('usuario');
 $idUsuario = $sessionUsuario['id'] ?? 0;
 
-$aleatorio = uniqid();
-$ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-$nombreArchivo = $aleatorio . '-' . $file['name'];
+$nombreOriginal = basename(str_replace('\\', '/', (string)($file['name'] ?? '')));
+if ($nombreOriginal === '') {
+return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => ['archivo' => true]];
+}
+$nombreArchivo = uniqid() . '-' . $nombreOriginal;
 $uploadDir = self::getUploadDir();
 
-if (!is_dir($uploadDir)) {
-mkdir($uploadDir, 0755, true);
-}
-
-if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $nombreArchivo)) {
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . DIRECTORY_SEPARATOR . $nombreArchivo)) {
 return ['success' => false, 'message' => 'Error al subir el archivo'];
 }
 
@@ -1771,19 +1798,18 @@ if (!$puedePagos) {
 return ['success' => false, 'message' => 'No es posible agregar pagos en este momento'];
 }
 
-if (empty($file) || $file['error'] !== UPLOAD_ERR_OK) {
-return ['success' => false, 'message' => 'Archivo no válido'];
+if (empty($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => ['archivo' => true]];
 }
 
-$aleatorio = uniqid();
-$nombreArchivo = $aleatorio . '-' . $file['name'];
+$nombreOriginal = basename(str_replace('\\', '/', (string)($file['name'] ?? '')));
+if ($nombreOriginal === '') {
+return ['success' => false, 'message' => 'Completa los campos obligatorios.', 'validation' => ['archivo' => true]];
+}
+$nombreArchivo = uniqid() . '-' . $nombreOriginal;
 $uploadDir = self::getUploadDir();
 
-if (!is_dir($uploadDir)) {
-mkdir($uploadDir, 0755, true);
-}
-
-if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $nombreArchivo)) {
+if (!move_uploaded_file($file['tmp_name'], $uploadDir . DIRECTORY_SEPARATOR . $nombreArchivo)) {
 return ['success' => false, 'message' => 'Error al subir el archivo'];
 }
 
@@ -2392,7 +2418,9 @@ $directorios = [
     $raiz . '/solicitud-cheque-firmas',
     $raiz,
     dirname(__DIR__, 2) . '/public/uploads/firmas/solicitud-cheque',
+    dirname(__DIR__, 2) . '/public/uploads/firmas',
     dirname(__DIR__, 2) . '/public/imgs/firma',
+    dirname(__DIR__, 2) . '/imgs/firma',
 ];
 
 foreach ($directorios as $directorio) {
@@ -2411,6 +2439,7 @@ private static function getFirmaDownloadUrl(string $nombreArchivo, string $ruta)
         '/uploads/archivos/solicitud-cheque-firmas/' => 'solicitud-cheque-firmas',
         '/uploads/archivos/' => 'solicitud-cheque-firmas-raiz',
         '/uploads/firmas/solicitud-cheque/' => 'solicitud-cheque-firmas-legado',
+        '/uploads/firmas/' => 'solicitud-cheque-firmas-uploads',
         '/imgs/firma/' => 'solicitud-cheque-firmas-imgs',
     ];
     $rutaReal = realpath($ruta);
@@ -2421,6 +2450,13 @@ private static function getFirmaDownloadUrl(string $nombreArchivo, string $ruta)
             if (str_starts_with($relativa, $prefijo)) {
                 return '/download?tipo=' . $tipo . '&file=' . rawurlencode($nombreArchivo) . '&view=1';
             }
+        }
+    }
+    $raizProyectoReal = realpath(dirname(__DIR__, 2));
+    if ($rutaReal && $raizProyectoReal && str_starts_with($rutaReal, $raizProyectoReal . DIRECTORY_SEPARATOR)) {
+        $relativaProyecto = str_replace('\\', '/', substr($rutaReal, strlen($raizProyectoReal) + 1));
+        if (str_starts_with($relativaProyecto, 'imgs/firma/')) {
+            return '/download?tipo=solicitud-cheque-firmas-imgs-legado&file=' . rawurlencode($nombreArchivo) . '&view=1';
         }
     }
     return '/download?tipo=solicitud-cheque-firmas&file=' . rawurlencode($nombreArchivo) . '&view=1';

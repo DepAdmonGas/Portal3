@@ -62,8 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 width: '48px',
                 render: function (v, t, row) {
-                    const badge = Number(row.total) > 0
-                        ? '<span class="badge-historico position-absolute top-0 start-100 translate-middle">' + row.total + '</span>'
+                    const total = Number(row.total) || 0;
+                    const badge = total > 0
+                        ? '<span class="badge-historico position-absolute top-0 start-100 translate-middle">' + total.toLocaleString('es-MX') + '</span>'
                         : '';
                     return '<a class="pointer btn-mis-documento btn-badge-historico position-relative d-inline-flex align-items-center justify-content-center"'
                          + ' data-id="' + row.id + '"'

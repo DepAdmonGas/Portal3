@@ -71,15 +71,20 @@ class SensitiveDownloadAuthorizationService
         if (!$resource || !self::isAuthorizedForPersonal((int) $resource->id_estacion)) return null;
 
         $relativeFolder = '/documentos-personal/' . ($folder === '' ? '' : $folder . '/');
-        $base = self::uploadRoot() . $relativeFolder;
         $filename = basename($file);
-        if (!is_file($base . $filename)) {
-            $privateBase = self::privateUploadRoot() . $relativeFolder;
-            if (is_file($privateBase . $filename)) {
-                $base = $privateBase;
+        $publicRoot = rtrim(self::uploadRoot(), '/\\');
+        $privateRoot = rtrim(self::privateUploadRoot(), '/\\');
+        $bases = [
+            $publicRoot . $relativeFolder,
+            $publicRoot . DIRECTORY_SEPARATOR,
+            $privateRoot . $relativeFolder,
+        ];
+        foreach ($bases as $base) {
+            if (is_file($base . $filename)) {
+                return ['path' => $base . $filename, 'base' => $base];
             }
         }
-        return ['path' => $base . $filename, 'base' => $base];
+        return null;
     }
 
     private static function isAuthorizedForPersonal(int $idEstacion): bool

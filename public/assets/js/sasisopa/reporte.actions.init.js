@@ -1,3 +1,84 @@
+let sasisopaReporteDataTableSequence = 0;
+
+window.destroySasisopaReporteDataTables = (root = document) => {
+    if (!window.jQuery?.fn?.DataTable) return;
+
+    window.jQuery(root).find('table.sasisopa-reporte-datatable').each(function () {
+        if (window.jQuery.fn.DataTable.isDataTable(this)) {
+            window.jQuery(this).DataTable().destroy();
+        }
+    });
+};
+
+window.initSasisopaReporteDataTables = (root = document, includeEmpty = false) => {
+    const $ = window.jQuery;
+    if (!$) return;
+
+    const tables = $(root).find('table.sasisopa-reporte-datatable');
+    if (!$.fn?.DataTable) return;
+
+    tables.each(function () {
+        const table = this;
+        if ($.fn.DataTable.isDataTable(table)) return;
+
+        if (!table.id) table.id = `tabla-sasisopa-reporte-${++sasisopaReporteDataTableSequence}`;
+
+        const columnCount = table.tHead?.rows[0]?.cells.length ?? 0;
+        const body = table.tBodies[0];
+        if (!columnCount || !body) return;
+
+        const hasDataRows = Array.from(body.rows).some((row) => row.cells.length === columnCount);
+        if (!hasDataRows && !includeEmpty) return;
+
+        // x-if puede dejar una fila de estado con colspan que DataTables no puede leer.
+        table.tBodies[0]?.querySelectorAll('tr').forEach((row) => {
+            if (row.cells.length === 1 && row.cells[0].colSpan > 1) {
+                row.remove();
+            }
+        });
+
+        try {
+            const initialize = () => $(table).DataTable({
+                    autoWidth: false,
+                    stateSave: false,
+                    order: [],
+                    columnDefs: [{
+                        targets: '.sasisopa-pdf-column',
+                        orderable: false,
+                        searchable: false,
+                        width: '48px',
+                        className: 'sasisopa-pdf-column text-center align-middle',
+                    }],
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
+                });
+
+            let dataTable;
+            if (window.Alpine?.mutateDom) {
+                dataTable = window.Alpine.mutateDom(initialize);
+            } else {
+                dataTable = initialize();
+            }
+
+            // El aislamiento global mueve esta tabla y Alpine elimina sus filas x-for.
+            // Mantener el wrapper en su sitio preserva el DOM reactivo del reporte.
+            const wrapper = table.closest('.dataTables_wrapper');
+            if (wrapper) wrapper.dataset.scrollIsolated = 'true';
+
+            // Reinsertar las filas desde la caché de DataTables tras el primer dibujo.
+            const draw = () => dataTable.draw(false);
+            if (window.Alpine?.mutateDom) {
+                window.Alpine.mutateDom(draw);
+            } else {
+                draw();
+            }
+        } catch (error) {
+            console.error('No se pudo inicializar la tabla del reporte SASISOPA.', error);
+        }
+    });
+};
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('reporte', (fechaInicio, fechaTermino) => ({
 
@@ -65,27 +146,39 @@ document.addEventListener('alpine:init', () => {
         implementaciones: [],
         loading18: false,
 
-    init(){
+    async init(){
 
         this.modalAsea = new bootstrap.Modal(document.getElementById('modalAsea'));
         this.modalGrupo = new bootstrap.Modal(document.getElementById('modalGrupoInterdisciplinario'));
         this.modalTercer = new bootstrap.Modal(document.getElementById('modalTercerAutorizado'));
 
-        this.cargarElemento1();
-        this.cargarElemento2();
-        this.cargarElemento3();
-        this.cargarElemento5();
-        this.cargarElemento6();
-        this.cargarElemento7();
-        this.cargarElemento10();
-        this.cargarElemento12();
-        this.cargarElemento13();
-        this.cargarElemento14();
-        this.cargarElemento15();
-        this.cargarElemento16();
-        this.cargarElemento17();
-        this.cargarElemento18();
+        await Promise.allSettled([
+            this.cargarElemento1(),
+            this.cargarElemento2(),
+            this.cargarElemento3(),
+            this.cargarElemento5(),
+            this.cargarElemento6(),
+            this.cargarElemento7(),
+            this.cargarElemento10(),
+            this.cargarElemento12(),
+            this.cargarElemento13(),
+            this.cargarElemento14(),
+            this.cargarElemento15(),
+            this.cargarElemento16(),
+            this.cargarElemento17(),
+            this.cargarElemento18(),
+        ]);
 
+        await this.actualizarTablasReporte(true);
+
+    },
+
+    async actualizarTablasReporte(incluirVacias = false) {
+        await this.$nextTick();
+        window.initSasisopaReporteDataTables(
+            document.querySelector('#container.sasisopa-reporte'),
+            incluirVacias
+        );
     },
 
     async cargarElemento1(){
@@ -103,6 +196,7 @@ document.addEventListener('alpine:init', () => {
         );
 
         this.politica=res.data;
+        await this.actualizarTablasReporte();
 
     }finally{
 
@@ -126,6 +220,7 @@ document.addEventListener('alpine:init', () => {
         );
 
         this.elemento2 = data;
+        await this.actualizarTablasReporte();
 
     }catch(e){
 
@@ -150,6 +245,7 @@ document.addEventListener('alpine:init', () => {
 
 
         this.elemento3 = data;
+        await this.actualizarTablasReporte();
 
 
     }catch(e){
@@ -180,6 +276,7 @@ document.addEventListener('alpine:init', () => {
 
 
         this.elemento5 = data;
+        await this.actualizarTablasReporte();
 
 
     }catch(e){
@@ -209,6 +306,7 @@ document.addEventListener('alpine:init', () => {
 
 
         this.elemento6 = data;
+        await this.actualizarTablasReporte();
 
 
     }catch(e){
@@ -237,6 +335,7 @@ document.addEventListener('alpine:init', () => {
             );
 
             this.elemento7 = data;
+            await this.actualizarTablasReporte();
 
         }catch(e){
 
@@ -287,6 +386,7 @@ document.addEventListener('alpine:init', () => {
             );
 
             this.elemento12 = data.data;
+            await this.actualizarTablasReporte();
 
         }finally{
 
@@ -313,6 +413,7 @@ document.addEventListener('alpine:init', () => {
             );
 
             this.elemento13 = data.data;
+            await this.actualizarTablasReporte();
 
         }finally{
 
@@ -342,6 +443,8 @@ document.addEventListener('alpine:init', () => {
 
             this.hallazgos=data.hallazgos;
 
+            await this.actualizarTablasReporte();
+
             this.loading=false;
 
         }finally{
@@ -370,14 +473,20 @@ document.addEventListener('alpine:init', () => {
 
         this.auditoriasExternas=data.externa;
 
+        await this.actualizarTablasReporte();
+
         this.loading=false;
 
     },
 
     abrirAsea(registro){
 
+        window.destroySasisopaReporteDataTables(document.getElementById('modalAsea'));
         this.ingresosAsea=registro.asea;
-        this.modalAsea.show();
+        this.$nextTick(() => {
+            window.initSasisopaReporteDataTables(document.getElementById('modalAsea'));
+            this.modalAsea.show();
+        });
 
     },
 
@@ -399,6 +508,7 @@ document.addEventListener('alpine:init', () => {
 
         this.registros = data.investigaciones ?? [];
         this.sinAccidentes = data.sin_accidentes ?? [];
+        await this.actualizarTablasReporte();
 
     }catch(e){
 
@@ -420,8 +530,10 @@ document.addEventListener('alpine:init', () => {
                     `/sasisopa/reporte/elemento16/grupo/${id}`
                 );
 
+                window.destroySasisopaReporteDataTables(document.getElementById('modalGrupoInterdisciplinario'));
                 this.grupo = data.data ?? [];
-
+                await this.$nextTick();
+                window.initSasisopaReporteDataTables(document.getElementById('modalGrupoInterdisciplinario'));
                 this.modalGrupo.show();
 
             } catch (e) {
@@ -440,8 +552,10 @@ document.addEventListener('alpine:init', () => {
                     `/sasisopa/reporte/elemento16/tercer/${id}`
                 );
 
+                window.destroySasisopaReporteDataTables(document.getElementById('modalTercerAutorizado'));
                 this.tercer = data.data;
-
+                await this.$nextTick();
+                window.initSasisopaReporteDataTables(document.getElementById('modalTercerAutorizado'));
                 this.modalTercer.show();
 
             } catch (e) {
@@ -475,6 +589,7 @@ document.addEventListener('alpine:init', () => {
             );
 
             this.revisionResultados = data.data ?? [];
+            await this.actualizarTablasReporte();
 
         }catch(e){
 
@@ -510,6 +625,7 @@ document.addEventListener('alpine:init', () => {
         this.evaluaciones = data.evaluaciones ?? [];
 
         this.implementaciones = data.implementaciones ?? [];
+        await this.actualizarTablasReporte();
 
     }catch(e){
 

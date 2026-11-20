@@ -509,9 +509,8 @@ if ($firma['fecha_pdf'] === '') {
 $firma['fecha_pdf'] = 'Fecha no disponible';
 }
 if (in_array($tipo, ['A', 'D'], true)) {
-$nombreImagen = basename((string)($firma['firma'] ?? ''));
-$rutaImagen = dirname(__DIR__, 2) . '/public/uploads/firmas/formatos/' . $nombreImagen;
-if ($nombreImagen !== '' && is_file($rutaImagen)) {
+$rutaImagen = FormatosService::obtenerFirmaImagen((string)($firma['firma'] ?? ''));
+if ($rutaImagen !== null) {
 $mime = mime_content_type($rutaImagen) ?: 'image/png';
 $firma['firma_img_data'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($rutaImagen));
 }

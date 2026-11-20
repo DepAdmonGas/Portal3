@@ -15,6 +15,7 @@ use App\Models\Sasisopa\SasisopaConsulta;
 use App\Services\ModuloService;
 use App\Services\ModuleStationService;
 use App\Services\ReporteRequisitosLegalesService;
+use App\Services\SasisopaReporteArchivosService;
 use App\Services\FileValidatorService;
 use App\Models\Sasisopa\CapacitacionExterna;
 use App\Models\Sasisopa\ComunicacionIE;
@@ -112,9 +113,13 @@ class SasisopaController extends BaseController
             'fechaInicio' => $fechainicio,
             'fechaTermino' => $fechatermino,
             'organigrama' => asset('/images/organigramas/' . $estacion->organigrama),
-            'links' => [],
+            'links' => [
+                '/css/sasisopa/reporte-secciones.css?v=' . (@filemtime(PUBLIC_PATH . '/assets/css/sasisopa/reporte-secciones.css') ?: 1),
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/sasisopa/reporte.actions.init.js?v=' . time(),
             ],
             'help' => false
@@ -179,6 +184,7 @@ class SasisopaController extends BaseController
                     'fecha' => formatearFecha($item->fecha?->format('Y-m-d')),
                     'descripcion' => $item->descripcion,
                     'documento' => $item->documento,
+                    ...SasisopaReporteArchivosService::fieldMetadata($item->documento, 'analisis-riesgo', 'documento'),
                 ];
             });
 
@@ -619,7 +625,8 @@ class SasisopaController extends BaseController
 
                     'formato14' => [
                         'existe' => $item->formato14 !== null,
-                        'archivo' => $item->formato14->archivo ?? null
+                        'archivo' => $item->formato14->archivo ?? null,
+                        ...SasisopaReporteArchivosService::metadata($item->formato14->archivo ?? null, 'seguridad-contratistas')
                     ],
 
                     'formato15' => [
@@ -681,9 +688,10 @@ class SasisopaController extends BaseController
 
                     'evaluacion' => [
 
-                        'existe' => !empty($item->ultimaEvaluacion?->archivo),
+                        'existe' => SasisopaReporteArchivosService::metadata($item->ultimaEvaluacion?->archivo, 'simulacros')['archivo_disponible'],
 
-                        'archivo' => $item->ultimaEvaluacion->archivo ?? null
+                        'archivo' => $item->ultimaEvaluacion->archivo ?? null,
+                        ...SasisopaReporteArchivosService::metadata($item->ultimaEvaluacion?->archivo, 'simulacros')
 
                     ]
 
@@ -746,7 +754,8 @@ class SasisopaController extends BaseController
                         ? formatearFecha($item->fecha->format('Y-m-d'))
                         : 'S/I',
 
-                    'archivo' => $item->archivo
+                    'archivo' => $item->archivo,
+                    ...SasisopaReporteArchivosService::metadata($item->archivo, 'informe-revision-resultados')
 
                 ];
             }),
@@ -818,10 +827,22 @@ class SasisopaController extends BaseController
                             ->firstWhere('formato', 'formato024')
                     )->archivo,
 
+                    ...SasisopaReporteArchivosService::fieldMetadata(
+                        optional($item->formatos->firstWhere('formato', 'formato024'))->archivo,
+                        'auditorias',
+                        'formato024'
+                    ),
+
                     'formato025' => optional(
                         $item->formatos
                             ->firstWhere('formato', 'formato025')
-                    )->archivo
+                    )->archivo,
+
+                    ...SasisopaReporteArchivosService::fieldMetadata(
+                        optional($item->formatos->firstWhere('formato', 'formato025'))->archivo,
+                        'auditorias',
+                        'formato025'
+                    )
 
                 ];
             }),
@@ -843,10 +864,22 @@ class SasisopaController extends BaseController
                             ->firstWhere('formato', 'formato024')
                     )->archivo,
 
+                    ...SasisopaReporteArchivosService::fieldMetadata(
+                        optional($item->formatos->firstWhere('formato', 'formato024'))->archivo,
+                        'auditorias',
+                        'formato024'
+                    ),
+
                     'formato025' => optional(
                         $item->formatos
                             ->firstWhere('formato', 'formato025')
                     )->archivo,
+
+                    ...SasisopaReporteArchivosService::fieldMetadata(
+                        optional($item->formatos->firstWhere('formato', 'formato025'))->archivo,
+                        'auditorias',
+                        'formato025'
+                    ),
 
                     'asea' => $item->asea->map(function ($a) {
 
@@ -860,7 +893,8 @@ class SasisopaController extends BaseController
 
                             'comentario' => $a->comentario,
 
-                            'archivo' => $a->archivo
+                            'archivo' => $a->archivo,
+                            ...SasisopaReporteArchivosService::metadata($a->archivo, 'auditorias')
 
                         ];
                     })
@@ -977,6 +1011,8 @@ class SasisopaController extends BaseController
                             ? $formato026->archivo
                             : null,
 
+                        ...SasisopaReporteArchivosService::metadata($formato026?->archivo, 'incidentes-accidentes'),
+
                         'tercer_autorizado' =>
 
                         $item->tercer_autorizado == 1
@@ -1086,7 +1122,8 @@ class SasisopaController extends BaseController
                     )
                     : null,
 
-                'archivo' => $tercero?->archivo
+                'archivo' => $tercero?->archivo,
+                ...SasisopaReporteArchivosService::metadata($tercero?->archivo, 'incidentes-accidentes')
 
             ]
 
@@ -1134,7 +1171,8 @@ class SasisopaController extends BaseController
 
                     'nombre' => $item->usuario?->nombre,
 
-                    'archivo' => $item->archivo
+                    'archivo' => $item->archivo,
+                    ...SasisopaReporteArchivosService::metadata($item->archivo, 'revision-resultados')
 
                 ]
 
@@ -1200,7 +1238,8 @@ class SasisopaController extends BaseController
 
                         'nombre' => $item->usuario?->nombre,
 
-                        'archivo' => $item->archivo
+                        'archivo' => $item->archivo,
+                        ...SasisopaReporteArchivosService::metadata($item->archivo, 'evaluacion-desempeno')
 
                     ]
 

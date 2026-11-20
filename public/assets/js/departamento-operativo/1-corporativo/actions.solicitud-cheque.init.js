@@ -77,11 +77,13 @@ archivoSolicitudId: null,
 documentos: [],
 nuevoDocumento: { tipo: '' },
 subiendoDocumento: false,
+erroresDocumento: { tipo: false, archivo: false },
 puedeAgregarDocumentos: false,
 
 pagoSolicitudId: null,
 pagos: [],
 subiendoPago: false,
+errorPago: false,
 puedeGestionarPagos: false,
 
 telcelSolicitudId: null,
@@ -93,6 +95,7 @@ puedeGestionarTelcel: false,
 multiestacion: false,
 telcelGlobal: [],
 guardandoTelcelGlobal: false,
+errorTelcelGlobal: false,
 telcelGlobalYear: 0,
 telcelGlobalMes: 0,
 telcelGlobalEstacion: 0,
@@ -307,6 +310,7 @@ table: '#tabla-solicitud-cheque'
 async abrirModalArchivos(id) {
 this.archivoSolicitudId = id;
 this.nuevoDocumento = { tipo: '' };
+this.erroresDocumento = { tipo: false, archivo: false };
 this.documentos = [];
 const resp = await fetch('/departamento-operativo/solicitud-cheque/documentos?id=' + id);
 const json = await resp.json();
@@ -317,9 +321,15 @@ new bootstrap.Modal(document.getElementById('modalArchivos')).show();
 async subirDocumento() {
 const $select = $(this.$refs.tipoDocumentoSelect);
 const tipo = $select.val() || '';
-if (!tipo) { if (window.Notify) Notify.error('Selecciona un tipo de documento'); return; }
 const fileInput = this.$refs.nuevoDocumentoFile;
-if (!fileInput || !fileInput.files || !fileInput.files[0]) { if (window.Notify) Notify.error('Selecciona un archivo'); return; }
+this.erroresDocumento = {
+tipo: !tipo,
+archivo: !fileInput || !fileInput.files || !fileInput.files[0],
+};
+if (this.erroresDocumento.tipo || this.erroresDocumento.archivo) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
+return;
+}
 
 this.subiendoDocumento = true;
 try {
@@ -334,6 +344,7 @@ const json = await resp.json();
 if (json.success) {
 fileInput.value = '';
 $select.val('').trigger('change.select2');
+this.erroresDocumento = { tipo: false, archivo: false };
 const resp2 = await fetch('/departamento-operativo/solicitud-cheque/documentos?id=' + this.archivoSolicitudId);
 const json2 = await resp2.json();
 if (json2.success) this.documentos = json2.documentos || [];
@@ -364,6 +375,7 @@ if (json.success) this.documentos = json.documentos || [];
 
 async abrirModalPagos(id) {
 this.pagoSolicitudId = id;
+this.errorPago = false;
 this.pagos = [];
 const resp = await fetch('/departamento-operativo/solicitud-cheque/pagos?id=' + id);
 const json = await resp.json();
@@ -373,7 +385,8 @@ new bootstrap.Modal(document.getElementById('modalPagos')).show();
 
 async subirPago() {
 const fileInput = this.$refs.nuevoPagoFile;
-if (!fileInput || !fileInput.files || !fileInput.files[0]) { if (window.Notify) Notify.error('Selecciona un archivo'); return; }
+this.errorPago = !fileInput || !fileInput.files || !fileInput.files[0];
+if (this.errorPago) { if (window.Notify) Notify.error('Completa los campos obligatorios.'); return; }
 
 this.subiendoPago = true;
 try {
@@ -386,6 +399,7 @@ const json = await resp.json();
 
 if (json.success) {
 fileInput.value = '';
+this.errorPago = false;
 const resp2 = await fetch('/departamento-operativo/solicitud-cheque/pagos?id=' + this.pagoSolicitudId);
 const json2 = await resp2.json();
 if (json2.success) this.pagos = json2.pagos || [];
@@ -481,6 +495,7 @@ async abrirModalTelcelGlobal(estacion, year, mes) {
 var c = document.getElementById('container');
 this.multiestacion = c ? c.dataset.multiestacion === 'true' : false;
 this.telcelGlobalEstacion = estacion;
+this.errorTelcelGlobal = false;
 this.telcelGlobalYear = year;
 this.telcelGlobalMes = mes;
 this.telcelGlobal = [];
@@ -494,8 +509,9 @@ new bootstrap.Modal(document.getElementById('modalTelcelGlobal')).show();
 
 async agregarTelcelGlobal() {
 var fileInput = this.$refs.nuevoTelcelGlobalFile;
-if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-if (window.Notify) Notify.error('Seleccione un archivo PDF de factura');
+this.errorTelcelGlobal = !fileInput || !fileInput.files || !fileInput.files[0];
+if (this.errorTelcelGlobal) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
 return;
 }
 this.guardandoTelcelGlobal = true;
@@ -509,6 +525,7 @@ const resp = await fetch('/departamento-operativo/solicitud-cheque/store-telcel-
 const json = await resp.json();
 if (json.success) {
 fileInput.value = '';
+this.errorTelcelGlobal = false;
 const resp2 = await fetch('/departamento-operativo/solicitud-cheque/telcel-global?idYear=' + this.telcelGlobalYear + '&idMes=' + this.telcelGlobalMes + '&idEstacion=' + this.telcelGlobalEstacion);
 const json2 = await resp2.json();
 if (json2.success) this.telcelGlobal = json2.telcel || [];

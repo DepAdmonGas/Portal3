@@ -1,16 +1,55 @@
 <style>
 /* Elimina el fondo y borde del contenedor principal de Select2 dentro de esta píldora */
-.d-inline-flex .select2-container--bootstrap-5 .select2-selection,
-.d-inline-flex .select2-container .select2-selection {
+#container .recibos-nomina-periodo-pill .select2-container--bootstrap-5 .select2-selection,
+#container .recibos-nomina-periodo-pill .select2-container .select2-selection {
 background-color: transparent !important;
 border: none !important;
 box-shadow: none !important;
 }
 
 /* Asegura que el contenedor de Select2 ocupe el espacio flexible dentro de la píldora */
-.d-inline-flex .select2-container {
+#container .recibos-nomina-periodo-pill .select2-container {
 flex-grow: 1;
 width: auto !important;
+}
+
+#container .recibos-nomina-periodo-pill {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+#container .recibos-nomina-periodo-pill .select2-container {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+}
+
+#container .recibos-nomina-periodo-pill .select2-selection__rendered {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#container .recibos-nomina-status {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+}
+
+#container .recibos-nomina-status-group {
+    width: 100%;
+    min-width: 0;
+}
+
+@media (min-width: 768px) {
+    #container .recibos-nomina-periodo-pill {
+        width: min(75%, 560px);
+    }
+
+    #container .recibos-nomina-status-group {
+        width: auto;
+    }
 }
 </style>
 
@@ -46,12 +85,12 @@ Selecciona una estación o departamento del menú superior.
 }
 </style>
 
-<div class="row align-items-center mb-3">
+<div class="row g-2 align-items-center mb-3">
 
-<!---------- COLUMNA DEL SELECT (Ocupa 100% en móvil y 50% en escritorio) ---------->
-<div class="col-10 mb-2 mb-md-0">
+<!---------- COLUMNA DEL SELECT (Ancho completo en móvil) ---------->
+<div class="col-12 col-md-10">
 <!-- Contenedor en forma de píldora que abarca todo el ancho de su columna -->
-<div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-1 w-75">
+<div class="recibos-nomina-periodo-pill d-flex align-items-center bg-light border rounded-pill px-3 px-md-4 py-2 gap-1">
 <!-- Etiqueta con ícono y texto dinámico (Semana / Quincena) -->
 <span class="text-muted fw-semibold text-nowrap d-flex align-items-center gap-1">
 <i class="ti ti-filter fs-4 text-primary"></i>
@@ -63,7 +102,7 @@ Selecciona una estación o departamento del menú superior.
 </div>
 
 <!---------- COLUMNA DEL DROPDOWN DE ACCIONES ---------->
-<div class="col-2 text-md-end d-flex align-items-center justify-content-end">
+<div class="col-12 col-md-2 d-flex align-items-center justify-content-end">
 <div class="dropdown">
 <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 <i class="ti ti-dots-vertical fs-4"></i>
@@ -137,19 +176,19 @@ Selecciona una estación o departamento del menú superior.
 
 <div class="card-body">
 
-<div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-4">
         
 <!-- ESTADO DE LA ACTIVIDAD (Lado Izquierdo) -->
 <template x-if="resumenInfo">
-<div class="d-flex align-items-center gap-2 flex-wrap">
+<div class="d-flex align-items-center gap-2 flex-wrap recibos-nomina-status-group">
 <!-- La actividad ya fue finalizada por la estación -->
 <template x-if="resumenInfo.finalizado_estacion">
-<span class="badge rounded-pill bg-success py-2 px-3">La actividad fue finalizada.</span>
+<span class="badge rounded-pill bg-success py-2 px-3 recibos-nomina-status">La actividad fue finalizada.</span>
 </template>
 
 <!-- Falta que MEXDESA suba y finalice sus recibos (solo multiestacion) -->
 <template x-if="!resumenInfo.finalizado_estacion && !resumenInfo.puede_finalizar_estacion && resumenInfo.finalizado_mexdesa === false">
-<span class="badge rounded-pill bg-danger text-white py-2 px-3">Aún no se han sido subidos los recibos de nómina.</span>
+<span class="badge rounded-pill bg-danger text-white py-2 px-3 recibos-nomina-status">Aún no se han sido subidos los recibos de nómina.</span>
 </template>
 
 <!-- Todo completo y el usuario pertenece a esta estación/departamento: el botón queda habilitado -->
@@ -161,7 +200,7 @@ Selecciona una estación o departamento del menú superior.
 
 <!-- Falta información en los registros del periodo -->
 <template x-if="!resumenInfo.finalizado_estacion && !resumenInfo.puede_finalizar_estacion && resumenInfo.finalizado_mexdesa !== false">
-<span class="badge rounded-pill bg-warning text-dark py-2 px-3">No es posible finalizar la actividad, se debe de agregar toda la información.</span>
+<span class="badge rounded-pill bg-warning text-dark py-2 px-3 recibos-nomina-status">No es posible finalizar la actividad, se debe de agregar toda la información.</span>
 </template>
 </div>
 </template>

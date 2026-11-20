@@ -56571,3 +56571,12 @@ html[data-bs-theme="light"] select option:checked {
     margin-left: 0 !important;
   }
 }
+
+/* Evita el zoom automático de Safari al enfocar campos en pantallas móviles. */
+@media (max-width: 575.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

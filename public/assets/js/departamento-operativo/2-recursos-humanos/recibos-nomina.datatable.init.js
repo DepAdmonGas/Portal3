@@ -51,12 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/>/g, '&gt;');
     }
 
-    function descargarArchivo(file, disponible, tipo, icono, color) {
-        if (!file || !disponible) return '<i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible"></i>';
+    function descargarArchivo(file, disponible, tipo, icono, color, size) {
+        if (!file || !disponible) return `<i class="ti ti-file-off text-muted ${size}" title="Archivo no disponible"></i>`;
         if (!puedeDescargar) {
-            return `<i class="${icono} ${color} fs-6 opacity-50 pointer" title="Sin permiso de descarga"></i>`;
+            return `<i class="${icono} ${color} ${size} opacity-50 pointer" title="Sin permiso de descarga"></i>`;
         }
-        return `<a href="/download?tipo=${tipo}&file=${encodeURIComponent(file)}" target="_blank"><i class="${icono} ${color} fs-6"></i></a>`;
+        return `<a href="/download?tipo=${tipo}&file=${encodeURIComponent(file)}" target="_blank"><i class="${icono} ${color} ${size}"></i></a>`;
     }
 
     // Detección automática del prefijo de ruta para evitar 404
@@ -191,19 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: null,
                 className: 'align-middle text-center',
                 orderable: false,
-                render: (row) => descargarArchivo(row.doc_nomina, row.doc_nomina_disponible, 'recibos-nomina', 'ti ti-file-text', 'text-primary')
+                render: (row) => descargarArchivo(row.doc_nomina, row.doc_nomina_disponible, 'recibos-nomina', 'ti ti-file-text', 'text-primary', 'fs-7')
             },
             {
                 data: null,
                 className: 'align-middle text-center',
                 orderable: false,
-                render: (row) => descargarArchivo(row.doc_nomina_firma, row.doc_nomina_firma_disponible, 'recibos-nomina-firma', 'ti ti-signature', 'text-success')
+                render: (row) => descargarArchivo(row.doc_nomina_firma, row.doc_nomina_firma_disponible, 'recibos-nomina-firma', 'ti ti-signature', 'text-success', 'fs-8')
             },
             {
                 data: null,
                 className: 'align-middle text-center',
                 orderable: false,
-                render: (row) => descargarArchivo(row.doc_nomina_aguinaldo, row.doc_nomina_aguinaldo_disponible, 'recibos-aguinaldo', 'ti ti-gift', 'text-warning')
+                render: (row) => descargarArchivo(row.doc_nomina_aguinaldo, row.doc_nomina_aguinaldo_disponible, 'recibos-aguinaldo', 'ti ti-gift', 'text-warning', 'fs-7')
             },
             {
                 data: 'nomina_original',

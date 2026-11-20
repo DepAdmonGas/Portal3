@@ -696,11 +696,14 @@ return ctype_digit($number) ? (int)$number : 0;
 
 private static function personalDocumentAvailable(string $filename, string $folder): bool
 {
-if ($filename === '' || basename($filename) !== $filename) return false;
+if (trim($filename) === '') return false;
+$filename = basename(str_replace('\\', '/', trim($filename)));
+if ($filename === '' || $filename === '.' || $filename === '..') return false;
 $relativeFolder = $folder === '' ? '' : $folder . '/';
 $publicPath = self::getUploadDir() . $relativeFolder . $filename;
+$importedRootPath = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $filename;
 $privatePath = dirname(__DIR__, 2) . '/storage/private/documentos-personal/' . $relativeFolder . $filename;
-return is_file($publicPath) || is_file($privatePath);
+return is_file($publicPath) || is_file($importedRootPath) || is_file($privatePath);
 }
 
 private static function deletePersonalDocumentFile(string $filename, string $folder): void

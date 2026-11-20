@@ -377,7 +377,7 @@
                                                                             <span x-data="actions()">
                                                                                 <a class="dropdown-item pointer d-flex align-items-center gap-2" href="#"
                                                                                     @click.prevent="download('control-volumetrico', d.documento)">
-                                                                                    <i class="ti ti-download fs-6"></i> Descargar
+                                                                                    <i class="ti ti-download"></i> Descargar
                                                                                 </a>
                                                                             </span>
                                                                         </li>
@@ -385,7 +385,7 @@
                                                                     <template x-if="!d.documento_disponible">
                                                                         <li>
                                                                             <span class="dropdown-item text-muted d-flex align-items-center gap-2">
-                                                                                <i class="ti ti-file-off fs-6"></i> Archivo no disponible
+                                                                                <i class="ti ti-file-off"></i> Archivo no disponible
                                                                             </span>
                                                                         </li>
                                                                     </template>
@@ -394,7 +394,7 @@
                                                                             <a class="dropdown-item pointer d-flex align-items-center gap-2"
                                                                                 href="#"
                                                                                 @click.prevent="async () => { const r = await deleteAction({url: '/departamento-operativo/control-volumetrico/eliminar-documento', id: d.id, name: d.anexos}); if (r && r.success) cargarDatos(); }">
-                                                                                <i class="ti ti-trash fs-6"></i> Eliminar
+                                                                                <i class="ti ti-trash"></i> Eliminar
                                                                             </a>
                                                                         </span>
                                                                     </li>
