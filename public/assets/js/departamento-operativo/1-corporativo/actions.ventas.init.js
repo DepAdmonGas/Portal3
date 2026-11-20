@@ -10,6 +10,7 @@ esSuperviso: false,
 esVoBo: false,
 
 ventas_dia: [],
+erroresProducto: {},
 ventas_dia_otros: [],
 selectedRows: {
 ventasDia: null,
@@ -32,16 +33,23 @@ firmas: [],
 
 signaturePad: null,
 aceptoTerminos: false,
+firmaPadInvalido: false,
+firmaTerminosInvalidos: false,
 firmando: false,
 agregandoVenta: false,
 
 nuevoDocumento: { nombre: '', file: null },
 subiendoDocumento: false,
+erroresDocumento: { nombre: false, file: false },
 
 enviandoToken: false,
 tokenGenerado: '',
 tokenInput: '',
 tokenError: '',
+tokenInputInvalido: false,
+saveCounters: new WeakMap(),
+saveIndicators: new WeakMap(),
+saveParentStates: new Map(),
 
 /* ---------- COMPUTED: totales locales ---------- */
 get totales1234() {
@@ -224,35 +232,92 @@ return (parseInt(a.cantidad) || 0) * (parseFloat(a.precio_unitario) || 0);
 
 
 /* ---------- INLINE EDIT - guardado silencioso sin loadData ---------- */
-_edit(url, data) {
-axios.put(url, data, { headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+setInputSaving(input, active) {
+if (!input || !input.parentElement) return;
+const parent = input.parentElement;
+let counter = this.saveCounters.get(input) || 0;
+let indicator = this.saveIndicators.get(input);
+
+if (active) {
+counter++;
+this.saveCounters.set(input, counter);
+if (!indicator) {
+const parentState = this.saveParentStates.get(parent) || {
+count: 0,
+addedPosition: !parent.classList.contains('position-relative'),
+};
+if (parentState.addedPosition) parent.classList.add('position-relative');
+parentState.count++;
+this.saveParentStates.set(parent, parentState);
+indicator = document.createElement('span');
+indicator.className = 'spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-2';
+indicator.setAttribute('aria-label', 'Guardando');
+indicator.style.pointerEvents = 'none';
+parent.appendChild(indicator);
+this.saveIndicators.set(input, indicator);
+}
+return;
+}
+
+counter = Math.max(0, counter - 1);
+if (counter > 0) {
+this.saveCounters.set(input, counter);
+return;
+}
+this.saveCounters.delete(input);
+indicator?.remove();
+this.saveIndicators.delete(input);
+const parentState = this.saveParentStates.get(parent);
+if (parentState) {
+parentState.count--;
+if (parentState.count <= 0) {
+if (parentState.addedPosition) parent.classList.remove('position-relative');
+this.saveParentStates.delete(parent);
+}
+}
 },
 
-editVenta(id, field, value) {
-this._edit('/departamento-operativo/ventas/editar-venta', { id, field, value });
+_edit(url, data, input = null) {
+this.setInputSaving(input, true);
+return axios.put(url, data, { headers: { 'Content-Type': 'application/json' } })
+.catch(() => {})
+.finally(() => this.setInputSaving(input, false));
 },
 
-editVentaOtros(id, value) {
-this._edit('/departamento-operativo/ventas/editar-venta-otros', { id, value });
+editVenta(id, field, value, input = null) {
+if (field === 'producto') {
+const invalido = !['G SUPER', 'G PREMIUM', 'G DIESEL'].includes(String(value || '').trim().toUpperCase());
+this.erroresProducto[id] = invalido;
+if (invalido) {
+if (window.Notify && window.Notify.error) window.Notify.error('Completa los campos obligatorios.');
+return;
+}
+}
+this._edit('/departamento-operativo/ventas/editar-venta', { id, field, value }, input);
 },
 
-editProsegur(id, field, value) {
-this._edit('/departamento-operativo/ventas/editar-prosegur', { id, field, value });
+editVentaOtros(id, value, input = null) {
+this._edit('/departamento-operativo/ventas/editar-venta-otros', { id, value }, input);
 },
 
-editTarjeta(id, value) {
-this._edit('/departamento-operativo/ventas/editar-tarjeta', { id, value });
+editProsegur(id, field, value, input = null) {
+this._edit('/departamento-operativo/ventas/editar-prosegur', { id, field, value }, input);
 },
 
-editControlgas(id, field, value) {
-this._edit('/departamento-operativo/ventas/editar-controlgas', { id, field, value });
+editTarjeta(id, value, input = null) {
+this._edit('/departamento-operativo/ventas/editar-tarjeta', { id, value }, input);
 },
 
-editPagoCliente(id, field, value) {
-this._edit('/departamento-operativo/ventas/editar-pago-cliente', { id, field, value });
+editControlgas(id, field, value, input = null) {
+this._edit('/departamento-operativo/ventas/editar-controlgas', { id, field, value }, input);
 },
 
-editAceite(id, field, value) {
+editPagoCliente(id, field, value, input = null) {
+this._edit('/departamento-operativo/ventas/editar-pago-cliente', { id, field, value }, input);
+},
+
+editAceite(id, field, value, input = null) {
+this.setInputSaving(input, true);
 axios.put('/departamento-operativo/ventas/editar-aceite', { id, field, value }, {
 headers: { 'Content-Type': 'application/json' }
 }).then(r => {
@@ -261,15 +326,16 @@ const idx = this.ventas_dia_otros.findIndex(o => o.concepto === '4 ACEITES Y LUB
 if (idx !== -1) this.ventas_dia_otros[idx] = r.data.ventas_dia_otros;
 if (r.data.aceites) this.aceites = r.data.aceites;
 }
-}).catch(() => {});
+}).catch(() => {}).finally(() => this.setInputSaving(input, false));
 },
 
-editObservaciones() {
+editObservaciones(input = null) {
 if (this._obsTimeout) clearTimeout(this._obsTimeout);
 this._obsTimeout = setTimeout(() => {
+this.setInputSaving(input, true);
 axios.put('/departamento-operativo/ventas/editar-observaciones', {
 id: this.idDia, observaciones: this.observaciones
-}, { headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+}, { headers: { 'Content-Type': 'application/json' } }).catch(() => {}).finally(() => this.setInputSaving(input, false));
 }, 500);
 },
 
@@ -291,13 +357,20 @@ this.ventas_dia.push(r.data.data);
 abrirModalDocumento() {
 this.nuevoDocumento = { nombre: '', file: null };
 this.subiendoDocumento = false;
+this.erroresDocumento = { nombre: false, file: false };
 new bootstrap.Modal(document.getElementById('modalDocumento')).show();
 },
 
 guardarDocumento() {
 if (this.subiendoDocumento) return;
-if (!this.nuevoDocumento.nombre) { if (window.Notify && window.Notify.error) window.Notify.error('Selecciona un tipo de documento'); return; }
-if (!this.nuevoDocumento.file) { if (window.Notify && window.Notify.error) window.Notify.error('Selecciona un archivo'); return; }
+this.erroresDocumento = {
+nombre: !String(this.nuevoDocumento.nombre || '').trim(),
+file: !this.nuevoDocumento.file,
+};
+if (this.erroresDocumento.nombre || this.erroresDocumento.file) {
+if (window.Notify && window.Notify.error) window.Notify.error('Completa los campos obligatorios.');
+return;
+}
 this.subiendoDocumento = true;
 const fd = new FormData();
 fd.append('NombreDocumento', this.nuevoDocumento.nombre);
@@ -339,7 +412,12 @@ window.Notify.error(this.tokenError);
 },
 
 firmarConToken() {
-if (!this.tokenInput) { this.tokenError = 'Ingresa el token de seguridad'; return; }
+this.tokenInputInvalido = !String(this.tokenInput || '').trim();
+if (this.tokenInputInvalido) {
+this.tokenError = 'Completa los campos obligatorios.';
+if (window.Notify && window.Notify.error) window.Notify.error('Completa los campos obligatorios.');
+return;
+}
 this.tokenError = '';
 this.enviandoToken = true;
 axios.post('/departamento-operativo/ventas/firmar-token', { id: this.idDia, token: this.tokenInput }, {
@@ -367,13 +445,12 @@ window.Notify.error(this.tokenError);
 
 /* ---------- FIRMA / FINALIZAR ---------- */
 abrirModalFirma() {
-if (!this.aceptoTerminos) {
-if (window.Notify && window.Notify.error) window.Notify.error('Debes aceptar los terminos del Corte Diario');
-window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-return;
-}
-if (this.signaturePad && this.signaturePad.isEmpty()) {
-if (window.Notify && window.Notify.error) window.Notify.error('Falta firma');
+this.firmaTerminosInvalidos = !this.aceptoTerminos;
+this.firmaPadInvalido = !this.signaturePad || this.signaturePad.isEmpty();
+this.ventas_dia.forEach(v => { this.erroresProducto[v.id] = !String(v.producto || '').trim(); });
+const productoFaltante = this.ventas_dia.some(v => !String(v.producto || '').trim());
+if (this.firmaTerminosInvalidos || this.firmaPadInvalido || productoFaltante) {
+if (window.Notify && window.Notify.error) window.Notify.error('Completa los campos obligatorios.');
 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 return;
 }
@@ -404,7 +481,11 @@ showConfirmButton: false,
 didOpen: () => Swal.showLoading()
 });
 const cv = document.getElementById('canvas');
-axios.post('/departamento-operativo/ventas/firmar', { id: this.idDia, base64: cv ? cv.toDataURL() : '' }, {
+axios.post('/departamento-operativo/ventas/firmar', {
+id: this.idDia,
+base64: cv ? cv.toDataURL() : '',
+acepto_terminos: this.aceptoTerminos,
+}, {
 headers: { 'Content-Type': 'application/json' }
 }).then(r => {
 this.firmando = false;
@@ -424,6 +505,7 @@ Swal.fire({ icon: 'error', title: 'Error', text: 'Error al firmar el Corte Diari
 
 limpiarFirma() {
 if (this.signaturePad) this.signaturePad.clear();
+this.firmaPadInvalido = false;
 this._resizeCanvas();
 },
 

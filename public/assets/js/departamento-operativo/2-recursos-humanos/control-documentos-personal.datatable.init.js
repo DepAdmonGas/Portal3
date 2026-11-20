@@ -58,7 +58,10 @@ if (esMultiestacion) {
 var initialUrlInactivos = buildUrlInactivos() || EMPTY_URL_INACTIVOS;
 }
 
-function docIcon(archivo, campo, disponible) {
+function docIcon(archivo, campo, disponible, row) {
+if (campo === 'c_antecedentes' && row.puesto !== 'Despachador') {
+return '<span class="text-muted">N/A</span>';
+}
 if (archivo && disponible) {
 return '<i class="ti ti-download fs-6 text-primary pointer cd-doc-download" data-archivo="' + archivo + '" data-campo="' + campo + '"></i>';
 }
@@ -141,7 +144,7 @@ data: null,
 className: 'align-middle text-center',
 orderable: false,
 searchable: false,
-render: function(v, t, row) { return docIcon(row.documentos[campo], campo, row.documentos_disponibles?.[campo]); }
+render: function(v, t, row) { return docIcon(row.documentos[campo], campo, row.documentos_disponibles?.[campo], row); }
 });
 });
 return cols;

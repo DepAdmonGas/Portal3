@@ -90,6 +90,8 @@ Comprobante de Pago</h4>
                 class="form-control" 
                 x-ref="nuevoTelcelGlobalFile" 
                 accept=".pdf"
+                :class="{'is-invalid': errorTelcelGlobal}"
+                @change="errorTelcelGlobal = false"
             >
 
             <button 
@@ -733,9 +735,9 @@ Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
 <!-- <template x-if="puedeAgregarDocumentos"> -->
 <div class="row g-2">
 
-<div class="col-12" x-ref="tipoDocumentoWrapper">
-<label class="form-label">Tipo de documento:</label>
-<select class="form-select" x-model="nuevoDocumento.tipo" x-ref="tipoDocumentoSelect">
+<div class="col-12" x-ref="tipoDocumentoWrapper" :class="{'border border-danger rounded-2 p-1': erroresDocumento.tipo}">
+<label class="form-label">* Tipo de documento:</label>
+<select class="form-select" x-model="nuevoDocumento.tipo" x-ref="tipoDocumentoSelect" :class="{'is-invalid': erroresDocumento.tipo}" @change="erroresDocumento.tipo = false">
 <option value="">Selecciona una opción...</option>
 <template x-for="t in documentTypes" :key="t">
 <option x-text="t" :value="t"></option>
@@ -744,7 +746,7 @@ Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
 </div>
 
 <div class="col-12">
-<label class="form-label mb-2">Archivo:</label>
+<label class="form-label mb-2">* Archivo:</label>
 </div>
 </div>
 
@@ -756,6 +758,8 @@ Documentos (#<span x-text="archivoSolicitudId"></span>)</h4>
                 type="file" 
                 class="form-control" 
                 x-ref="nuevoDocumentoFile"
+                :class="{'is-invalid': erroresDocumento.archivo}"
+                @change="erroresDocumento.archivo = false"
             >
 
             <button 
@@ -830,13 +834,15 @@ Comprobantes de Pago (#<span x-text="pagoSolicitudId"></span>)</h4>
 <!-- <template x-if="puedeGestionarPagos"> -->
 <div class="row g-3">
 
-<div class="col-12">
-<label class="form-label mb-1">Archivo de pago:</label>
+<div class="col-12 mb-3">
+<label class="form-label mb-1">* Archivo de pago:</label>
         <div class="input-group">
             <input 
                 type="file" 
                 class="form-control" 
                 x-ref="nuevoPagoFile"
+                :class="{'is-invalid': errorPago}"
+                @change="errorPago = false"
             >
 
             <button 

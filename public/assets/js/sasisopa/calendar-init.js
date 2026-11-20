@@ -43,6 +43,11 @@ document.addEventListener('alpine:init', () => {
             return window.innerWidth <= 1199;
         },
 
+        claveEstadoCalendario() {
+            const modulo = String(this.modulo || 'sasisopa').replace(/[^a-z0-9_-]/gi, '');
+            return `calendario_estado_${modulo || 'sasisopa'}`;
+        },
+
 
         /*
         |--------------------------------------------------------------------------
@@ -57,7 +62,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             localStorage.setItem(
-                'calendario_estado',
+                this.claveEstadoCalendario(),
                 JSON.stringify({
 
                     date: this.calendar
@@ -130,10 +135,15 @@ document.addEventListener('alpine:init', () => {
                     locale:'es',
 
 
-                    initialView: estado?.view
-                    ?? (this.checkWindowWidth()
-                        ? 'listWeek'
-                        : 'dayGridMonth'),
+                    initialView: (() => {
+                        const vistaPredeterminada = this.checkWindowWidth()
+                            ? 'listWeek'
+                            : 'dayGridMonth';
+
+                        return estado?.view === vistaPredeterminada
+                            ? estado.view
+                            : vistaPredeterminada;
+                    })(),
 
                     initialDate: estado?.date ?? new Date(),
 
@@ -455,7 +465,7 @@ document.addEventListener('alpine:init', () => {
 
             this.calendar.render();
             this.cambiarTamanoDias();
-            localStorage.removeItem('calendario_estado');
+            localStorage.removeItem(this.claveEstadoCalendario());
 
 
             /*
@@ -602,7 +612,7 @@ document.addEventListener('alpine:init', () => {
 
         obtenerEstadoCalendario() {
 
-    const estado = localStorage.getItem('calendario_estado');
+    const estado = localStorage.getItem(this.claveEstadoCalendario());
 
     if (!estado) {
         return null;

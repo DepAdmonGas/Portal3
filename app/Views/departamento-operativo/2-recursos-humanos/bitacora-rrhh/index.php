@@ -207,7 +207,7 @@
             <div class="modal-content">
                 <div class="modal-header modal-colored-header bg-primary text-white">
 <h5 class="modal-title text-white">
-    <i class="ti ti-eye me-2"></i>Detalle Bitácora RRHH <span x-text="'(#0' + docIdActual + ')'"></span>
+    <i class="ti ti-eye me-2"></i>Detalle Bitácora RRHH <span x-text="'(#00' + docIdActual + ')'"></span>
 </h5>                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 

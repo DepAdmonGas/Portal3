@@ -2,6 +2,7 @@ document.addEventListener('alpine:init', () => {
 Alpine.data('solicitudChequeEditarComponent', () => ({
 guardando: false,
 signaturePad: null,
+errores: {},
 idEstacion: parseInt(document.querySelector('[data-id-estacion]')?.dataset.idEstacion || 0),
 
 form: {
@@ -59,6 +60,37 @@ this._posicionarBadge();
         if (switcheo && switcheo.id !== 'contextBadge') switcheo.style.display = 'none';
     },
 
+formatMonto(value) {
+if (value === null || value === undefined || value === '') return '';
+const normalized = String(value).replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+return normalized.includes('.') ? grouped + '.' + decimals : grouped;
+},
+
+formatearMonto(event) {
+const input = event.target;
+const raw = input.value;
+const cursor = input.selectionStart ?? raw.length;
+const digitsBeforeCursor = raw.slice(0, cursor).replace(/,/g, '').replace(/[^0-9.]/g, '').length;
+const normalized = raw.replace(/,/g, '').replace(/[^0-9.]/g, '');
+const parts = normalized.split('.');
+const integer = parts.shift() || '';
+const decimals = parts.join('');
+const formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (normalized.includes('.') ? '.' + decimals : '');
+this.form.monto = normalized;
+input.value = formatted;
+let nextCursor = 0;
+let numericChars = 0;
+while (nextCursor < formatted.length && numericChars < digitsBeforeCursor) {
+if (/[0-9.]/.test(formatted[nextCursor])) numericChars++;
+nextCursor++;
+}
+input.setSelectionRange(nextCursor, nextCursor);
+},
+
 iniciarSignaturePad() {
 var w = document.getElementById('signature-pad');
 var cv = w ? w.querySelector('canvas') : null;
@@ -85,21 +117,30 @@ if (this.signaturePad) this.signaturePad.clear();
 },
 
 async guardar() {
-if (!this.form.fecha) { alertify?.error('Falta ingresar la fecha'); return; }
-if (!this.form.beneficiario) { alertify?.error('Falta ingresar el beneficiario'); return; }
-if (!this.form.monto) { alertify?.error('Falta ingresar el monto'); return; }
-if (!this.form.no_factura) { alertify?.error('Falta ingresar el No. de factura'); return; }
-if (!this.form.email) { alertify?.error('Falta ingresar el correo electrónico'); return; }
-if (!this.form.concepto) { alertify?.error('Falta ingresar el concepto'); return; }
-if (!this.form.solicitante) { alertify?.error('Falta ingresar el solicitante'); return; }
-if (!this.form.telefono) { alertify?.error('Falta ingresar el teléfono'); return; }
-if (!this.form.cfdi) { alertify?.error('Falta ingresar el CFDI'); return; }
-if (!this.form.metodo_pago) { alertify?.error('Falta ingresar el método de pago'); return; }
-if (!this.form.forma_pago) { alertify?.error('Falta ingresar la forma de pago'); return; }
-if (!this.form.banco) { alertify?.error('Falta ingresar el banco'); return; }
-if (!this.form.no_cuenta) { alertify?.error('Falta ingresar el No. de cuenta'); return; }
-if (!this.form.cuenta_clabe) { alertify?.error('Falta ingresar la cuenta CLABE'); return; }
-if (!this.form.referencia) { alertify?.error('Falta ingresar la referencia'); return; }
+this.errores = {
+fecha: !/^\d{4}-\d{2}-\d{2}$/.test(String(this.form.fecha || '').trim()),
+beneficiario: !String(this.form.beneficiario || '').trim(),
+monto: String(this.form.monto ?? '').trim() === '' || !Number.isFinite(Number(this.form.monto)) || Number(this.form.monto) < 0,
+moneda: !String(this.form.moneda || '').trim(),
+no_factura: !String(this.form.no_factura || '').trim(),
+email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(this.form.email || '').trim()),
+concepto: !String(this.form.concepto || '').trim(),
+solicitante: !String(this.form.solicitante || '').trim(),
+telefono: !String(this.form.telefono || '').trim(),
+cfdi: !String(this.form.cfdi || '').trim(),
+metodo_pago: !String(this.form.metodo_pago || '').trim(),
+forma_pago: !String(this.form.forma_pago || '').trim(),
+banco: !String(this.form.banco || '').trim(),
+no_cuenta: !String(this.form.no_cuenta || '').trim(),
+cuenta_clabe: !String(this.form.cuenta_clabe || '').trim(),
+referencia: !String(this.form.referencia || '').trim(),
+};
+if (this.idEstacion === 8) this.errores.razonsocial = !String(this.form.razonsocial || '').trim();
+if (this.idEstacion === 14) this.errores.depto = !String(this.form.depto || '').trim();
+if (Object.values(this.errores).some(Boolean)) {
+if (window.Notify) Notify.error('Completa los campos obligatorios.');
+return;
+}
 
 this.guardando = true;
 try {
@@ -155,7 +196,12 @@ const json = await resp.json();
             window.location.href = '/departamento-operativo/solicitud-cheque/' + idYear + '/' + idMes;
         });
     } else {
-        alertify?.error(json.message || 'Error al actualizar');
+        if (json.validation) this.errores = { ...this.errores, ...json.validation };
+        if (json.message === 'Completa los campos obligatorios.') {
+            if (window.Notify) Notify.error(json.message);
+        } else {
+            alertify?.error(json.message || 'Error al actualizar');
+        }
     }
 } catch (e) {
 console.error('Error al guardar:', e);

@@ -193,8 +193,13 @@ exit;
 }
 
 if ($field === 'producto') {
+$producto = strtoupper(trim((string) $value));
+if (!in_array($producto, ['G SUPER', 'G PREMIUM', 'G DIESEL'], true)) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
 $ieps = 0;
-switch (strtoupper($value)) {
+switch ($producto) {
 case 'G SUPER':
 $ieps = 0.4369;
 break;
@@ -205,7 +210,7 @@ case 'G DIESEL':
 $ieps = 0.3626;
 break;
 }
-$venta->update(['producto' => $value, 'ieps' => $ieps]);
+$venta->update(['producto' => $producto, 'ieps' => $ieps]);
 } else {
 $venta->update([$field => (float) $value]);
 }
@@ -508,8 +513,18 @@ $base64 = $input['base64'] ?? '';
 $usuario = Session::get('usuario');
 $idUsuario = $usuario['id'] ?? 0;
 
-if (!$idReporte || empty($base64)) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+if (!$idReporte || empty($base64) || filter_var($input['acepto_terminos'] ?? false, FILTER_VALIDATE_BOOLEAN) !== true) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
+exit;
+}
+
+$productoFaltante = VentasDia::where('idreporte_dia', $idReporte)
+->where(function ($query) {
+$query->whereNull('producto')->orWhere('producto', '');
+})
+->exists();
+if ($productoFaltante) {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
@@ -631,8 +646,8 @@ echo json_encode(['success' => false, 'message' => 'Permiso denegado']);
 exit;
 }
 
-if (!$idReporte || empty($tokenIngresado)) {
-echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+if (!$idReporte || trim((string) $tokenIngresado) === '') {
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.']);
 exit;
 }
 
@@ -989,11 +1004,10 @@ private function renderFirma($firma, string $detalle): string
 if (!$firma) return '<div class="text-muted small mt-1"><strong>¡Falta la Firma!</strong></div>';
 
 $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); };
-$rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/firmas/';
-$rutaArchivo = $rutaBase . $firma->firma;
+$rutaArchivo = VentasService::getFirmaImagePath((string) $firma->firma);
 
 if ($detalle === 'Elaboró') {
-if (file_exists($rutaArchivo)) {
+if ($rutaArchivo !== null) {
 $imgData = file_get_contents($rutaArchivo);
 $type = pathinfo($rutaArchivo, PATHINFO_EXTENSION);
 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($imgData);

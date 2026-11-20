@@ -436,10 +436,10 @@ $idAceite = (int) ($_POST['id_aceite'] ?? 0);
 $idMes = (int) ($_POST['id_mes'] ?? 0);
 $nombreAceite = $_POST['nombre_aceite'] ?? '';
 $diferencia = (int) ($_POST['diferencia'] ?? 0);
-$comentario = $_POST['comentario'] ?? '';
+$comentario = trim((string) ($_POST['comentario'] ?? ''));
 $documento = $_FILES['documento'] ?? [];
 
-if (!$idAceite || !$idMes || empty($documento) || ($documento['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+if (!$idAceite || !$idMes || $comentario === '' || empty($documento) || ($documento['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
 echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
 exit;
 }

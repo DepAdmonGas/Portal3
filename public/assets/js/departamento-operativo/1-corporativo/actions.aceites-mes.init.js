@@ -22,6 +22,10 @@ selectedModalRows: { documentos: null, facturas: null, diferencias: null, puntaj
 puntajes: { promedio_ficha: 0, promedio_factura_doc: 0, promedio_factura_anexo: 0 },
 
 tempValues: {},
+saveCounters: new WeakMap(),
+saveIndicators: new WeakMap(),
+saveParentStates: new Map(),
+saveTimeouts: new WeakMap(),
 documentoEditId: null,
 documentoEdit: {},
 documentoFiles: { ficha_deposito: null, imagen_bodega: null, factura_venta: null },
@@ -237,18 +241,77 @@ case 'factotal': total += this.factotal(row); break;
 return total;
 },
 
-guardarCampo(row, campo) {
+setInputSaving(input, active) {
+if (!input || !input.parentElement) return;
+const parent = input.parentElement;
+let counter = this.saveCounters.get(input) || 0;
+let indicator = this.saveIndicators.get(input);
+
+if (active) {
+counter++;
+this.saveCounters.set(input, counter);
+if (!indicator) {
+const parentState = this.saveParentStates.get(parent) || {
+count: 0,
+addedPosition: !parent.classList.contains('position-relative'),
+};
+if (parentState.addedPosition) parent.classList.add('position-relative');
+parentState.count++;
+this.saveParentStates.set(parent, parentState);
+indicator = document.createElement('span');
+indicator.className = 'spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-2';
+indicator.setAttribute('role', 'status');
+indicator.setAttribute('aria-label', 'Guardando');
+indicator.style.pointerEvents = 'none';
+parent.appendChild(indicator);
+this.saveIndicators.set(input, indicator);
+}
+return;
+}
+
+counter = Math.max(0, counter - 1);
+if (counter > 0) {
+this.saveCounters.set(input, counter);
+return;
+}
+this.saveCounters.delete(input);
+indicator?.remove();
+this.saveIndicators.delete(input);
+const parentState = this.saveParentStates.get(parent);
+if (parentState) {
+parentState.count--;
+if (parentState.count <= 0) {
+if (parentState.addedPosition) parent.classList.remove('position-relative');
+this.saveParentStates.delete(parent);
+}
+}
+},
+
+guardarCampo(row, campo, input = null) {
 if (this.finalizado || !this.puedeEditar) return;
 const tv = this.tempValues[row.id];
 if (!tv) return;
 const valor = parseFloat(String(tv[campo] ?? '').replace(/,/g, '')) || 0;
 row[campo] = valor;
-if (this._editTimeout) clearTimeout(this._editTimeout);
-this._editTimeout = setTimeout(() => {
+if (input) {
+const previousTimeout = this.saveTimeouts.get(input);
+if (previousTimeout) {
+clearTimeout(previousTimeout);
+this.setInputSaving(input, false);
+}
+this.setInputSaving(input, true);
+const timeout = setTimeout(() => {
+this.saveTimeouts.delete(input);
+axios.post('/departamento-operativo/aceites-mes/editar-campo', {
+id: row.id, campo: campo, valor: valor, log: 1
+}).catch(err => console.error('Error editando campo', err)).finally(() => this.setInputSaving(input, false));
+}, 400);
+this.saveTimeouts.set(input, timeout);
+return;
+}
 axios.post('/departamento-operativo/aceites-mes/editar-campo', {
 id: row.id, campo: campo, valor: valor, log: 1
 }).catch(err => console.error('Error editando campo', err));
-}, 400);
 },
 
 abrirModalDocumentos() { this.cargarDocumentos(); new bootstrap.Modal(this.$refs.modalDocumentos).show(); },
@@ -400,8 +463,12 @@ new bootstrap.Modal(this.$refs.modalDetalleDiferencia).show();
 
 async pagarDiferencia() {
 const fileInput = document.getElementById('docDiferencia');
-if (!fileInput || !fileInput.files[0]) {
-this.marcarCamposObligatorios(['docDiferencia']);
+const comentarioInput = document.getElementById('diferencia-comentario');
+const faltantes = [];
+if (!fileInput || !fileInput.files[0]) faltantes.push('docDiferencia');
+if (!comentarioInput || !comentarioInput.value.trim()) faltantes.push('diferencia-comentario');
+if (faltantes.length) {
+this.marcarCamposObligatorios(faltantes);
 return;
 }
 const ext = fileInput.value.split('.').pop().toLowerCase();
@@ -580,7 +647,7 @@ new bootstrap.Modal(this.$refs.modalImportar).show();
 
 async importarFacturas() {
 if (this.importando) return;
-if (!this.csvFile) { Notify['error']('Selecciona un archivo CSV'); return; }
+if (!this.csvFile) { this.marcarCamposObligatorios(['aceite-importar-csv']); return; }
 this.importando = true;
 try {
 const text = await this.csvFile.text();
