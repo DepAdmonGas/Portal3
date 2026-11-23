@@ -547,39 +547,39 @@ final class ChecadorController extends BaseController
     public function incidences(): void
     {
         $query = Request::query();
+        if ($query !== []) {
+            self::redirect('/departamento-operativo/recursos-humanos/checador/incidencias');
+            return;
+        }
         $access = ChecadorAccessService::authorize(null);
         if (!($access['allowed'] ?? false)) {
-            self::renderAccessDenied((string) ($access['reason'] ?? 'authorization_lookup_failed'), null);
+            $reason = (string) ($access['reason'] ?? 'authorization_lookup_failed');
+            self::logM06IncidenceAccessDenial('checador_scope', $reason, null);
+            self::renderAccessDenied($reason, null);
             return;
         }
 
         $workplaces = is_array($access['workplaces'] ?? null) ? $access['workplaces'] : [];
-        $rawWorkplace = $query['workplace_id'] ?? null;
-        $workplaceId = $rawWorkplace === null
-            ? null
-            : (is_scalar($rawWorkplace) ? self::positiveInteger($rawWorkplace) : null);
-        if (array_key_exists('workplace_id', $query) && $rawWorkplace !== '' && $workplaceId === null) {
-            self::renderAccessDenied('invalid_station_selection', null);
-            return;
-        }
+        $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
+        $contextId = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
+        $authorizedIds = array_map('intval', array_column($workplaces, 'id'));
+        $workplaceId = $contextId !== null && in_array($contextId, $authorizedIds, true)
+            ? $contextId
+            : (isset($workplaces[0]['id']) ? (int) $workplaces[0]['id'] : null);
         if ($workplaceId === null) {
-            $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
-            $contextId = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
-            $authorizedIds = array_map('intval', array_column($workplaces, 'id'));
-            $workplaceId = $contextId !== null && in_array($contextId, $authorizedIds, true)
-                ? $contextId
-                : (isset($workplaces[0]['id']) ? (int) $workplaces[0]['id'] : null);
-        }
-        if ($workplaceId === null) {
+            self::logM06IncidenceAccessDenial('locality_selection', 'empty_station_scope', null);
             self::renderAccessDenied('empty_station_scope', null);
             return;
         }
         $readAuthorization = ChecadorAccessService::authorizeIncidenceRead($workplaceId);
         if (!($readAuthorization['allowed'] ?? false)) {
-            self::renderAccessDenied((string) ($readAuthorization['reason'] ?? 'requested_station_out_of_scope'), $workplaceId);
+            $reason = (string) ($readAuthorization['reason'] ?? 'requested_station_out_of_scope');
+            self::logM06IncidenceAccessDenial('incidence_read_acl', $reason, $workplaceId);
+            self::renderAccessDenied($reason, $workplaceId);
             return;
         }
         if (!ModuleStationService::setChecadorWorkplaceContext($workplaceId)) {
+            self::logM06IncidenceAccessDenial('workplace_context', 'requested_station_out_of_scope', $workplaceId);
             self::renderAccessDenied('requested_station_out_of_scope', $workplaceId);
             return;
         }
@@ -589,43 +589,25 @@ final class ChecadorController extends BaseController
             if ((int) ($workplace['id'] ?? 0) === $workplaceId) { $selectedWorkplace = $workplace; break; }
         }
         if ($selectedWorkplace === null) {
+            self::logM06IncidenceAccessDenial('selected_workplace', 'requested_station_out_of_scope', $workplaceId);
             self::renderAccessDenied('requested_station_out_of_scope', $workplaceId);
             return;
         }
 
-        $readFilter = static function (string $key) use ($query): ?string {
-            $value = $query[$key] ?? null;
-            return is_string($value) && trim($value) !== '' ? trim($value) : null;
-        };
-        $workerFilterRaw = $query['worker_id'] ?? null;
-        $workerFilter = $workerFilterRaw === null || $workerFilterRaw === ''
-            ? null
-            : self::positiveInteger($workerFilterRaw);
-        $filters = [
-            'worker_id' => $workerFilter,
-            'category' => $readFilter('category'),
-            'status' => $readFilter('status'),
-            'start_date' => $readFilter('start_date'),
-            'end_date' => $readFilter('end_date'),
-        ];
-        $page = self::positiveInteger($query['page'] ?? 1) ?? 1;
-        $page = min($page, 100000);
         $actor = Auth::user();
         if (!$actor) {
+            self::logM06IncidenceAccessDenial('session_identity', 'unauthenticated', $workplaceId);
             self::renderAccessDenied('unauthenticated', $workplaceId);
             return;
         }
 
         $service = self::m06AdministrativeIncidenceSqlService();
-        $read = $service->listForWorkplace($actor, $workplaceId, $filters, $page, 25);
-        $state = ($read['ok'] ?? false) ? 'ready' : ((($read['error'] ?? '') === 'permission_denied') ? 'denied' : 'unavailable');
-        $items = $read['data']['items'] ?? [];
-        $pagination = $read['data']['pagination'] ?? ['page' => $page, 'per_page' => 25, 'total_records' => 0, 'total_pages' => 0];
+        $state = 'ready';
 
         $policyRead = (new ChecadorAttendancePolicyStoreService())->readCurrent($workplaceId);
         $timezone = (string) ($policyRead['data']['timezone_id'] ?? '');
         $today = (string) ($policyRead['data']['current_local_date'] ?? gmdate('Y-m-d'));
-        $rosterDate = $filters['start_date'] ?? $today;
+        $rosterDate = $today;
         $roster = (new \App\Services\ChecadorAttendanceRosterService())->workersForAttendanceFilter(
             $workplaceId,
             $rosterDate,
@@ -681,10 +663,6 @@ final class ChecadorController extends BaseController
                 'selectedDate' => $today,
                 'dashboardHref' => '/departamento-operativo/recursos-humanos/checador',
                 'incidenceState' => $state,
-                'incidenceReadError' => (string) ($read['error'] ?? ''),
-                'incidenceItems' => $items,
-                'incidenceFilters' => $filters,
-                'incidencePagination' => $pagination,
                 'incidenceWorkers' => $workers,
                 'incidenceRosterAvailable' => in_array((string) ($roster['status'] ?? ''), ['ready', 'partial', 'current_roster_only'], true),
                 'incidenceCanCreate' => $canCreate,
@@ -715,12 +693,154 @@ final class ChecadorController extends BaseController
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                     '/assets/js/core/module-station-selector.js',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261027-1',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.incidences.datatable.init.js?v=20261120-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.incidences.datatable.init.js?v=20261123-1',
                 ],
                 'help' => false,
             ],
             'departamento-operativo'
         );
+    }
+
+    /** Read M06 incidence rows for DataTables without putting filters in the URL. */
+    public function incidencesData(): void
+    {
+        $payload = Request::json();
+        $request = self::normalizeM06IncidenceDataPayload($payload);
+        $draw = (int) ($request['draw'] ?? 0);
+        $empty = ['draw' => $draw, 'recordsTotal' => 0, 'recordsFiltered' => 0, 'data' => []];
+        if (!($request['ok'] ?? false)) {
+            $message = match ((string) ($request['error'] ?? '')) {
+                'invalid_filters' => 'Los filtros enviados no son válidos.',
+                'invalid_search' => 'El texto de búsqueda no es válido.',
+                'invalid_order' => 'El orden solicitado no es válido.',
+                default => 'La solicitud de búsqueda no es válida.',
+            };
+            JsonResponse::custom($empty + ['success' => false, 'message' => $message], 422);
+        }
+        $workplaceId = (int) $request['workplace_id'];
+
+        $actor = Auth::user();
+        if (!$actor) JsonResponse::custom($empty + ['success' => false, 'message' => 'La sesión ya no está disponible.'], 401);
+
+        $access = ChecadorAccessService::authorize($workplaceId);
+        $readAuthorization = ChecadorAccessService::authorizeIncidenceRead($workplaceId);
+        if (!($access['allowed'] ?? false) || !($readAuthorization['allowed'] ?? false)) {
+            self::logM06IncidenceAccessDenial('incidence_data_acl', (string) ($readAuthorization['reason'] ?? $access['reason'] ?? 'requested_station_out_of_scope'), $workplaceId);
+            JsonResponse::custom($empty + ['success' => false, 'message' => 'No tienes permiso efectivo para consultar incidencias en esta localidad.'], 403);
+        }
+
+        $context = ModuleStationService::getContext(ChecadorAccessService::MODULE_KEY);
+        $contextId = self::positiveInteger($context['id_depto'] ?? $context['id_estacion'] ?? null);
+        if ($contextId !== $workplaceId) {
+            self::logM06IncidenceAccessDenial('incidence_data_context', 'selected_station_context_mismatch', $workplaceId);
+            JsonResponse::custom($empty + ['success' => false, 'message' => 'La localidad activa cambió. Actualiza la página y vuelve a buscar.'], 403);
+        }
+
+        $page = (int) $request['page'];
+        $read = self::m06AdministrativeIncidenceSqlService()->listForWorkplace(
+            $actor, $workplaceId, $request['filters'], $page, (int) $request['length'],
+            $request['sort_by'], $request['sort_direction']
+        );
+        if (!($read['ok'] ?? false)) {
+            $error = (string) ($read['error'] ?? 'sql_read_failed');
+            $status = $error === 'permission_denied' ? 403 : ($error === 'invalid_filter' || $error === 'invalid_request' ? 422 : 500);
+            $message = match ($error) {
+                'permission_denied' => 'No tienes permiso efectivo para consultar incidencias en esta localidad.',
+                'invalid_filter', 'invalid_request' => 'Los filtros enviados no son válidos.',
+                default => 'Ocurrió un error al consultar las incidencias. Intenta nuevamente.',
+            };
+            JsonResponse::custom($empty + ['success' => false, 'message' => $message], $status);
+        }
+
+        $data = $read['data'] ?? [];
+        $pagination = $data['pagination'] ?? [];
+        JsonResponse::custom([
+            'success' => true,
+            'draw' => $draw,
+            'recordsTotal' => (int) ($pagination['records_total'] ?? 0),
+            'recordsFiltered' => (int) ($pagination['total_records'] ?? 0),
+            'data' => is_array($data['items'] ?? null) ? $data['items'] : [],
+        ]);
+    }
+
+    /** Normalize the exact JSON shape emitted by DataTables/Axios before ACL or SQL work. */
+    private static function normalizeM06IncidenceDataPayload(array $payload): array
+    {
+        $draw = self::nonNegativeInteger($payload['draw'] ?? 0);
+        $draw = $draw !== null ? min($draw, 1000000000) : null;
+        $workplaceId = self::positiveInteger($payload['workplace_id'] ?? null);
+        $start = self::nonNegativeInteger($payload['start'] ?? 0);
+        $length = self::positiveInteger($payload['length'] ?? 25);
+        if ($draw === null || $workplaceId === null || $start === null || $start > 10000000
+            || $length === null || !in_array($length, [10, 25, 50, 100], true)) {
+            return ['ok' => false, 'error' => 'invalid_request', 'draw' => $draw ?? 0];
+        }
+
+        $workerRaw = $payload['worker_id'] ?? null;
+        $workerId = $workerRaw === null || (is_string($workerRaw) && trim($workerRaw) === '')
+            ? null
+            : self::positiveInteger(is_string($workerRaw) ? trim($workerRaw) : $workerRaw);
+        if ($workerRaw !== null && !(is_string($workerRaw) && trim($workerRaw) === '') && $workerId === null) {
+            return ['ok' => false, 'error' => 'invalid_filters', 'draw' => $draw];
+        }
+
+        $normalizeOptionalString = static function (mixed $value): mixed {
+            if ($value === null) return null;
+            if (!is_string($value)) return $value;
+            $trimmed = trim($value);
+            return $trimmed === '' ? null : $trimmed;
+        };
+        $filters = [
+            'worker_id' => $workerId,
+            'category' => $normalizeOptionalString($payload['category'] ?? null),
+            'status' => $normalizeOptionalString($payload['status'] ?? null),
+            'start_date' => $normalizeOptionalString($payload['start_date'] ?? null),
+            'end_date' => $normalizeOptionalString($payload['end_date'] ?? null),
+        ];
+
+        $search = $payload['search'] ?? [];
+        if (is_string($search)) {
+            $searchValue = trim($search);
+        } elseif (is_array($search)) {
+            $searchValue = $search['value'] ?? '';
+            $regex = $search['regex'] ?? false;
+            if (!is_bool($regex) || $regex) return ['ok' => false, 'error' => 'invalid_search', 'draw' => $draw];
+            if (!is_string($searchValue)) return ['ok' => false, 'error' => 'invalid_search', 'draw' => $draw];
+            $searchValue = trim($searchValue);
+        } else {
+            return ['ok' => false, 'error' => 'invalid_search', 'draw' => $draw];
+        }
+        if (strlen($searchValue) > 120) return ['ok' => false, 'error' => 'invalid_search', 'draw' => $draw];
+        $filters['search'] = $searchValue === '' ? null : $searchValue;
+
+        $sortColumns = [0 => 'worker_name', 1 => 'category', 2 => 'start_date', 3 => 'status', 4 => 'created_at'];
+        $sortBy = 'created_at';
+        $sortDirection = 'desc';
+        $order = $payload['order'] ?? [];
+        if (!is_array($order)) return ['ok' => false, 'error' => 'invalid_order', 'draw' => $draw];
+        if (isset($order[0])) {
+            if (!is_array($order[0])) return ['ok' => false, 'error' => 'invalid_order', 'draw' => $draw];
+            $column = self::nonNegativeInteger($order[0]['column'] ?? null);
+            $direction = $order[0]['dir'] ?? null;
+            if ($column === null || !isset($sortColumns[$column]) || !is_string($direction)
+                || !in_array(strtolower($direction), ['asc', 'desc'], true)) {
+                return ['ok' => false, 'error' => 'invalid_order', 'draw' => $draw];
+            }
+            $sortBy = $sortColumns[$column];
+            $sortDirection = strtolower($direction);
+        }
+
+        return [
+            'ok' => true,
+            'draw' => $draw,
+            'workplace_id' => $workplaceId,
+            'start' => $start,
+            'length' => $length,
+            'page' => intdiv($start, $length) + 1,
+            'filters' => $filters,
+            'sort_by' => $sortBy,
+            'sort_direction' => $sortDirection,
+        ];
     }
 
     public function adjustments(): void
@@ -4398,15 +4518,7 @@ final class ChecadorController extends BaseController
         $evidenceValid = !array_key_exists('evidence_reference', $input) || is_string($input['evidence_reference']);
         $evidence = is_string($input['evidence_reference'] ?? null) ? trim($input['evidence_reference']) : '';
         $idempotencyKey = is_string($input['idempotency_key'] ?? null) ? trim($input['idempotency_key']) : '';
-        $returnFilters = [];
-        foreach (['filter_worker_id' => 'worker_id', 'filter_category' => 'category', 'filter_status' => 'status',
-            'filter_start_date' => 'start_date', 'filter_end_date' => 'end_date'] as $inputKey => $queryKey) {
-            $value = $input[$inputKey] ?? null;
-            if (is_scalar($value) && trim((string) $value) !== '') $returnFilters[$queryKey] = trim((string) $value);
-        }
-        if ($workplaceId !== null) $returnFilters['workplace_id'] = $workplaceId;
-        $redirect = '/departamento-operativo/recursos-humanos/checador/incidencias'
-            . ($returnFilters === [] ? '' : '?' . http_build_query($returnFilters, '', '&', PHP_QUERY_RFC3986));
+        $redirect = '/departamento-operativo/recursos-humanos/checador/incidencias';
         $formValues = [
             'worker_id' => $workerId,
             'category' => $category,
@@ -5020,6 +5132,59 @@ final class ChecadorController extends BaseController
         }
 
         View::renderPartial('errors/403');
+    }
+
+    /** Log only private, non-identifying diagnostics for M06 read denials. */
+    private static function logM06IncidenceAccessDenial(
+        string $stage,
+        string $reason,
+        ?int $localityId
+    ): void {
+        $allowedStages = [
+            'checador_scope',
+            'locality_selection',
+            'incidence_read_acl',
+            'workplace_context',
+            'selected_workplace',
+            'session_identity',
+        ];
+        $path = Request::uri();
+        $path = is_string($path)
+            && preg_match('/\\A\\/[a-zA-Z0-9_\\/.\\-]{1,255}\\z/', $path) === 1
+                ? $path
+                : '/';
+        $correlationId = null;
+        foreach (['HTTP_X_REQUEST_ID', 'HTTP_X_CORRELATION_ID'] as $headerKey) {
+            $candidate = $_SERVER[$headerKey] ?? null;
+            if (is_string($candidate) && preg_match('/\\A[a-zA-Z0-9._-]{1,64}\\z/', $candidate) === 1) {
+                $correlationId = $candidate;
+                break;
+            }
+        }
+        if ($correlationId === null) {
+            try {
+                $correlationId = bin2hex(random_bytes(12));
+                if (!headers_sent()) {
+                    header('X-Correlation-ID: ' . $correlationId);
+                }
+            } catch (\Throwable) {
+                $correlationId = null;
+            }
+        }
+
+        try {
+            Logger::warning('M06 incidence access denied', [
+                'stage' => in_array($stage, $allowedStages, true) ? $stage : 'unknown',
+                'reason' => preg_match('/\\A[a-z0-9_]{1,64}\\z/', $reason) === 1
+                    ? $reason
+                    : 'authorization_lookup_failed',
+                'locality_id' => $localityId !== null && $localityId > 0 ? $localityId : null,
+                'route' => $path,
+                'correlation_id' => $correlationId,
+            ]);
+        } catch (\Throwable) {
+            // Diagnostics must never change the fail-closed authorization result.
+        }
     }
 
     /** @return array{0:string,1:string} */
@@ -6043,10 +6208,13 @@ final class ChecadorController extends BaseController
     }
 
 
-    /** Keep M06 SQL writes closed until the API cutover is independently verified. */
+    /** Enable the verified local Fedora cutover only for the local development database. */
     private static function m06AdministrativeIncidenceSqlService(): \App\Services\ChecadorAdministrativeIncidenceSqlService
     {
-        return new \App\Services\ChecadorAdministrativeIncidenceSqlService();
+        $localCutoverVerified = \App\Core\Database::isLocalDevelopmentDatabaseConnection();
+        return new \App\Services\ChecadorAdministrativeIncidenceSqlService(
+            apiWriterCutoverVerified: $localCutoverVerified
+        );
     }
 
     private static function m06WriteErrorMessage(string $error): string

@@ -155,8 +155,97 @@ $assert(($invalidCategory['error'] ?? '') === 'invalid_request', 'FALTA is not a
 $read = $service->listForWorkplace($actor, 1, [], 1, 25);
 $otherRead = $service->listForWorkplace(new Usuario(), 2, [], 1, 25);
 $assert(($read['ok'] ?? false) === true && count($read['data']['items'] ?? []) === 1
-    && ($read['data']['items'][0]['revisions'][0]['reason'] ?? '') === 'Solicitud de vacaciones',
+    && ($read['data']['items'][0]['revisions'][0]['reason'] ?? '') === 'Solicitud de vacaciones'
+    && ($read['data']['pagination']['records_total'] ?? 0) === 1,
     'SQL list returns the selected locality and complete revision history');
+$searchRead = $service->listForWorkplace($actor, 1, ['search' => 'Trabajador Uno'], 1, 10);
+$searchCategory = $service->listForWorkplace($actor, 1, ['search' => 'Vacaciones'], 1, 10);
+$searchStatus = $service->listForWorkplace($actor, 1, ['search' => 'Pendiente de autorización'], 1, 10);
+$searchMiss = $service->listForWorkplace($actor, 1, ['search' => 'No existe'], 1, 10);
+$rawAxiosEmpty = $service->listForWorkplace($actor, 1, [
+    'worker_id' => '', 'category' => '', 'status' => '', 'start_date' => '', 'end_date' => '', 'search' => '',
+], 1, 25);
+$rawAxiosWorker = $service->listForWorkplace($actor, 1, ['worker_id' => '1'], 1, 25);
+$invalidSort = $service->listForWorkplace($actor, 1, [], 1, 10, 'uuid_incidencia', 'desc');
+$assert(($searchRead['ok'] ?? false) === true && count($searchRead['data']['items'] ?? []) === 1
+    && ($searchRead['data']['pagination']['records_total'] ?? 0) === 1
+    && ($searchRead['data']['pagination']['total_records'] ?? 0) === 1
+    && ($searchCategory['data']['pagination']['total_records'] ?? 0) === 1
+    && ($searchStatus['data']['pagination']['total_records'] ?? 0) === 1
+    && ($rawAxiosEmpty['ok'] ?? false) === true
+    && ($rawAxiosWorker['ok'] ?? false) === true
+    && ($searchMiss['ok'] ?? false) === true && ($searchMiss['data']['pagination']['records_total'] ?? 0) === 1
+    && ($searchMiss['data']['pagination']['total_records'] ?? 0) === 0
+    && ($invalidSort['error'] ?? '') === 'invalid_request',
+    'SQL global search is parameterized and returns scoped total plus filtered count for DataTables');
+$m06PayloadNormalizer = new ReflectionMethod(\App\Controllers\ChecadorController::class, 'normalizeM06IncidenceDataPayload');
+$m06PayloadNormalizer->setAccessible(true);
+$baseDataTablePayload = [
+    'draw' => 1, 'workplace_id' => 1, 'start' => 0, 'length' => 25,
+    'worker_id' => '', 'category' => '', 'status' => '', 'start_date' => '', 'end_date' => '',
+    'search' => ['value' => '', 'regex' => false], 'order' => [['column' => 4, 'dir' => 'desc']],
+];
+$payloadCases = [
+    'initial' => $baseDataTablePayload,
+    'worker string' => array_replace($baseDataTablePayload, ['worker_id' => '1']),
+    'all category' => array_replace($baseDataTablePayload, ['category' => '']),
+    'all status' => array_replace($baseDataTablePayload, ['status' => '']),
+    'date range' => array_replace($baseDataTablePayload, ['start_date' => '2026-11-01', 'end_date' => '2026-11-30']),
+    'combined' => array_replace($baseDataTablePayload, [
+        'worker_id' => '23', 'category' => 'VACATION', 'status' => 'PENDING_APPROVAL',
+        'start_date' => '2026-11-01', 'end_date' => '2026-11-30',
+    ]),
+    'clear' => $baseDataTablePayload,
+    'page and order' => array_replace($baseDataTablePayload, [
+        'start' => 25, 'order' => [['column' => 2, 'dir' => 'asc']],
+    ]),
+];
+$payloadCasesOk = true;
+foreach ($payloadCases as $payload) {
+    $normalizedPayload = $m06PayloadNormalizer->invoke(null, $payload);
+    if (!($normalizedPayload['ok'] ?? false)) { $payloadCasesOk = false; break; }
+    $contractRead = $service->listForWorkplace(
+        $actor,
+        (int) $normalizedPayload['workplace_id'],
+        $normalizedPayload['filters'],
+        (int) $normalizedPayload['page'],
+        (int) $normalizedPayload['length'],
+        $normalizedPayload['sort_by'],
+        $normalizedPayload['sort_direction']
+    );
+    if (!($contractRead['ok'] ?? false)) { $payloadCasesOk = false; break; }
+}
+$normalizedBlankPayload = $m06PayloadNormalizer->invoke(null, $baseDataTablePayload);
+$normalizedWorkerString = $m06PayloadNormalizer->invoke(null, $payloadCases['worker string']);
+$normalizedCombined = $m06PayloadNormalizer->invoke(null, $payloadCases['combined']);
+$normalizedPageOrder = $m06PayloadNormalizer->invoke(null, $payloadCases['page and order']);
+$combinedSqlRead = $normalizedCombined['ok'] ?? false
+    ? $service->listForWorkplace(
+        $actor, (int) $normalizedCombined['workplace_id'], $normalizedCombined['filters'],
+        (int) $normalizedCombined['page'], (int) $normalizedCombined['length'],
+        $normalizedCombined['sort_by'], $normalizedCombined['sort_direction']
+    )
+    : ['ok' => false];
+$invalidWorkerPayload = $m06PayloadNormalizer->invoke(null, array_replace($baseDataTablePayload, ['worker_id' => 'worker-x']));
+$invalidDatePayload = $m06PayloadNormalizer->invoke(null, array_replace($baseDataTablePayload, ['start_date' => '2026-02-30']));
+$assert($payloadCasesOk
+    && array_key_exists('category', $normalizedBlankPayload['filters'] ?? []) && $normalizedBlankPayload['filters']['category'] === null
+    && array_key_exists('status', $normalizedBlankPayload['filters'] ?? []) && $normalizedBlankPayload['filters']['status'] === null
+    && array_key_exists('start_date', $normalizedBlankPayload['filters'] ?? []) && $normalizedBlankPayload['filters']['start_date'] === null
+    && array_key_exists('end_date', $normalizedBlankPayload['filters'] ?? []) && $normalizedBlankPayload['filters']['end_date'] === null
+    && ($normalizedWorkerString['filters']['worker_id'] ?? null) === 1
+    && ($normalizedCombined['filters']['worker_id'] ?? null) === 23
+    && ($normalizedCombined['sort_by'] ?? '') === 'created_at'
+    && ($normalizedPageOrder['page'] ?? 0) === 2
+    && ($normalizedPageOrder['sort_by'] ?? '') === 'start_date'
+    && ($normalizedPageOrder['sort_direction'] ?? '') === 'asc'
+    && ($combinedSqlRead['ok'] ?? false) === true
+    && count($combinedSqlRead['data']['items'] ?? []) === 1
+    && ($combinedSqlRead['data']['items'][0]['worker_id'] ?? 0) === 23
+    && ($invalidWorkerPayload['error'] ?? '') === 'invalid_filters'
+    && ($invalidDatePayload['ok'] ?? false) === true
+    && ($service->listForWorkplace($actor, 1, $invalidDatePayload['filters'], 1, 25)['error'] ?? '') === 'invalid_filter',
+    'Axios/DataTables request contract normalizes empty optional values and string IDs, reaches SQL reader for initial/filter/page/sort cases, and still rejects invalid worker/date values');
 $assert(($otherRead['error'] ?? '') === 'permission_denied', 'cross-locality reads are denied server-side');
 $detail = $service->detail($actor, 1, $uuid);
 $assert(($detail['ok'] ?? false) === true && count($detail['data']['revisions'] ?? []) === 1
@@ -254,22 +343,20 @@ $_SESSION = [];
 ob_start();
 require dirname(__DIR__) . '/app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php';
 $renderedIncidenceView = (string) ob_get_clean();
-$detailModalPosition = strpos($renderedIncidenceView, 'id="m06-incidence-detail-0"');
+$detailModalPosition = strpos($renderedIncidenceView, 'id="m06-incidence-detail-modal"');
 $tableEndPosition = strpos($renderedIncidenceView, '</table>');
 $assert($detailModalPosition !== false && $tableEndPosition !== false && $detailModalPosition > $tableEndPosition
-    && str_contains($renderedIncidenceView, 'data-bs-target="#m06-incidence-detail-0"')
+    && str_contains($renderedIncidenceView, 'data-m06-history-list')
     && str_contains($renderedIncidenceView, 'class="tab-pane fade show active"')
     && str_contains($renderedIncidenceView, 'class="tab-pane fade"'),
-    'rendered detail/history modal is outside DataTables and has valid Bootstrap tab panes');
-$assert(str_contains($renderedIncidenceView, 'Trabajador Uno')
-    && str_contains($renderedIncidenceView, 'Vacaciones')
-    && str_contains($renderedIncidenceView, 'Pendiente de autorización')
-    && str_contains($renderedIncidenceView, 'Solicitud de vacaciones')
-    && str_contains($renderedIncidenceView, 'FOLIO-23')
-    && str_contains($renderedIncidenceView, $uuid)
-    && str_contains($renderedIncidenceView, 'Revisión 1')
-    && str_contains($renderedIncidenceView, 'Usuario 7'),
-    'rendered detail and persisted revision show their real fixture values and references');
+    'shared detail/history modal is outside DataTables and retains valid Bootstrap tab panes');
+$moduleJs = file_get_contents(dirname(__DIR__) . '/public/assets/js/departamento-operativo/2-recursos-humanos/checador.incidences.datatable.init.js') ?: '';
+$assert(str_contains($moduleJs, 'showIncidence(row,')
+    && str_contains($moduleJs, 'renderHistory(row)')
+    && str_contains($moduleJs, 'Solicitud de vacaciones') === false
+    && str_contains($moduleJs, 'revision.created_by_user_id')
+    && str_contains($moduleJs, 'row.uuid_incidencia'),
+    'detail and persisted revision data are populated from the authorized SQL response after each asynchronous draw');
 $assert(str_contains($renderedIncidenceView, '<div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"')
     && str_contains($renderedIncidenceView, '>Cerrar</button></div>'),
     'shared detail/history modal uses the right-aligned Portal3 red-soft close button');
@@ -287,23 +374,24 @@ $factorySource = $factoryStart !== false && $factoryEnd !== false
     ? substr($controller, $factoryStart, $factoryEnd - $factoryStart)
     : '';
 $assert($factorySource !== ''
-    && !str_contains($factorySource, 'Database::isLocalDevelopmentDatabaseConnection()')
-    && !str_contains($factorySource, 'apiWriterCutoverVerified:')
+    && str_contains($factorySource, 'Database::isLocalDevelopmentDatabaseConnection()')
+    && str_contains($factorySource, 'apiWriterCutoverVerified: $localCutoverVerified')
+    && !str_contains($factorySource, 'apiWriterCutoverVerified: true')
     && !str_contains($factorySource, 'historyProtectionVerified:')
     && ($readiness['ready'] ?? true) === false
     && ($readiness['reason'] ?? '') === 'api_writer_cutover_unverified',
-    'M06 writer remains fail-closed only until API cutoff is independently verified; history protection is an application rule');
+    'M06 writer opens only when the existing local-development database identity proves the Fedora API cutover scope; default remains closed and history is append-only at application level');
 $assert(str_contains($view, 'm06-incidence-search-modal')
     && str_contains($view, 'm06-incidence-create-modal')
     && str_contains($view, 'data-checador-m06-incidences')
-    && str_contains($view, 'Ver historial')
+    && str_contains($moduleJs, 'Ver historial')
     && !str_contains($view, 'INCAPACITY') && !str_contains($view, 'JUSTIFICATION'),
     'Portal3-native search, new-incidence modal, table, detail/history and canonical categories are rendered');
-$assert(str_contains($renderedIncidenceView, 'data-m06-action="revision"')
-    && str_contains($renderedIncidenceView, 'data-m06-action="resolve"')
-    && str_contains($renderedIncidenceView, 'data-m06-action="authorize"')
-    && str_contains($renderedIncidenceView, 'data-m06-action="reject"')
-    && str_contains($renderedIncidenceView, 'data-m06-action="revoke"')
+$assert(str_contains($moduleJs, "lifecycle('revision'")
+    && str_contains($moduleJs, "lifecycle('resolve'")
+    && str_contains($moduleJs, "lifecycle('authorize'")
+    && str_contains($moduleJs, "lifecycle('reject'")
+    && str_contains($moduleJs, "lifecycle('revoke'")
     && str_contains($renderedIncidenceView, 'id="m06-incidence-action-modal"')
     && str_contains($renderedIncidenceView, 'data-m06-writer-ready="0"'),
     'existing M06 UI exposes ACL-controlled revision/lifecycle forms while keeping submit disabled behind the API cutoff');
@@ -321,9 +409,10 @@ $assert(str_contains($view, 'id="m06-incidence-options" data-bs-toggle="dropdown
     && str_contains($view, 'data-bs-target="#m06-incidence-create-modal"')
     && $searchOption !== false && $createOption !== false && $createPermissionGuard !== false && $createPermissionGuard < $createOption,
     'Options dropdown targets both Bootstrap modals and keeps the create option inside the server permission guard');
-$assert(str_contains($view, 'No hay incidencias registradas para los filtros seleccionados')
-    && str_contains($view, 'text-body-secondary text-center py-3')
-    && str_contains($view, 'Ocurrió un error SQL al consultar las incidencias')
+$assert(str_contains($moduleJs, 'No hay incidencias registradas para los filtros seleccionados')
+    && str_contains($moduleJs, 'No fue posible consultar las incidencias')
+    && str_contains($moduleJs, "setListState(message + (preserveRows")
+    && str_contains($moduleJs, 'lastSuccessfulResponse ||')
     && !str_contains($view, 'alert alert-light border mb-0')
     && str_contains($view, 'if ($feedbackMessage !== null):')
     && substr_count($view, '<?= $esc($writerBlockMessage) ?>') === 1,
@@ -360,6 +449,43 @@ $assert(str_contains($moduleJs, "width: '100%'")
     && str_contains($moduleJs, "select2('destroy')")
     && str_contains($moduleJs, 'select2-hidden-accessible'),
     'Select2 initializes once inside each modal on open and is destroyed before reopening');
+$assert(str_contains($view, 'x-data="m06IncidenceFilters"')
+    && str_contains($view, 'method="post" action="/departamento-operativo/recursos-humanos/checador/incidencias/data"')
+    && str_contains($view, 'name="_csrf_token"')
+    && str_contains($view, 'x-model="filters.worker_id"')
+    && str_contains($view, '@submit.prevent="buscar"')
+    && str_contains($moduleJs, 'axios.post(table.dataset.m06DataUrl')
+    && str_contains($moduleJs, "'X-CSRF-TOKEN'")
+    && str_contains($moduleJs, 'serverSide: true')
+    && str_contains($moduleJs, 'order: request.order || []')
+    && str_contains($moduleJs, 'requestId !== latestRequest')
+    && str_contains($moduleJs, 'lastSuccessfulResponse')
+    && str_contains($moduleJs, 'setListState(message + (preserveRows')
+    && !str_contains($view, 'method="get" action="/departamento-operativo/recursos-humanos/checador/incidencias"')
+    && !str_contains($view, '?workplace_id='),
+    'M06 filters use Alpine state and Axios JSON POST with CSRF, server-side DataTables, stale-response protection, and no query-string filters');
+$incidenceGetStart = strpos($controller, 'public function incidences(): void');
+$incidenceDataStart = strpos($controller, 'public function incidencesData(): void', $incidenceGetStart ?: 0);
+$incidenceCreateStart = strpos($controller, 'public function createIncidence(): void');
+$incidenceCreateEnd = $incidenceCreateStart === false ? false : strpos($controller, 'public function ', $incidenceCreateStart + 20);
+$incidenceGetSource = $incidenceGetStart !== false && $incidenceDataStart !== false
+    ? substr($controller, $incidenceGetStart, $incidenceDataStart - $incidenceGetStart)
+    : '';
+$incidenceCreateSource = $incidenceCreateStart !== false && $incidenceCreateEnd !== false
+    ? substr($controller, $incidenceCreateStart, $incidenceCreateEnd - $incidenceCreateStart)
+    : '';
+$assert(str_contains($incidenceGetSource, "if (\$query !== [])")
+    && str_contains($incidenceGetSource, "self::redirect('/departamento-operativo/recursos-humanos/checador/incidencias')")
+    && str_contains($incidenceCreateSource, "\$redirect = '/departamento-operativo/recursos-humanos/checador/incidencias';")
+    && !str_contains($incidenceCreateSource, "'workplace_id' => \$workplaceId"),
+    'legacy query strings and create redirect now settle on the clean M06 URL without workplace/filter query parameters');
+$assert(str_contains($controller, 'public function incidencesData(): void')
+    && str_contains($controller, 'normalizeM06IncidenceDataPayload($payload)')
+    && str_contains($controller, 'authorizeIncidenceRead($workplaceId)')
+    && str_contains($controller, 'selected_station_context_mismatch')
+    && str_contains($routeSource, "'/recursos-humanos/checador/incidencias/data'")
+    && str_contains($routeSource, "Route::auth(['ChecadorController', 'incidencesData'])"),
+    'async M06 read route rechecks authenticated read ACL and selected session-locality context');
 $assert(str_contains($routeSource, "'/recursos-humanos/checador/incidencias/crear'")
     && str_contains($routeSource, "'/recursos-humanos/checador/incidencias/{uuidIncidencia:[0-9a-fA-F-]{36}}/revisiones'")
     && str_contains($routeSource, "/resolver'") && str_contains($routeSource, "/autorizar'")

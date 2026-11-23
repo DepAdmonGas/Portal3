@@ -296,6 +296,8 @@ $db->table('tb_estaciones')->insert(['id' => 105, 'numlista' => 5, 'nombre' => '
 $db->table('tb_usuarios')->where('id', 600)->update(['id_gas' => 105]);
 Auth::forget();
 $assert(ChecadorAccessService::authorize()['reason'] === 'station_mapping_unavailable', 'C10 missing numlista counterpart fails closed');
+$db->table('tb_usuarios')->where('id', 600)->update(['id_gas' => 101]);
+$db->table('tb_modulos_config')->where('modulo_key', 'checador')->update(['estaciones_soportadas' => '[101,102,103,104]']);
 
 // C11-C14: Checador membership alone does not create unrelated legacy grants.
 $db->table('modulos_usuarios_do')->insert(['id_modulo' => 2, 'id_usuario' => 901, 'leer' => 1]);
@@ -449,21 +451,46 @@ $db->table('modulos_dpto_operativo')->insert([
     'activo' => 1,
 ]);
 $db->table('modulos_puestos_do')->insert([
-    'id_modulo' => 64,
-    'id_puesto' => 13,
-    'leer' => 1,
-    'crear' => 0,
+    ['id_modulo' => 64, 'id_puesto' => 6, 'leer' => 1, 'crear' => 0],
+    ['id_modulo' => 64, 'id_puesto' => 13, 'leer' => 1, 'crear' => 0],
 ]);
 $login(1300);
+$directionRead = ChecadorAccessService::authorizeIncidenceRead(201);
+$directionCreate = ChecadorAccessService::authorizeIncidenceCreate(201);
+$assert($directionRead['allowed'] && array_column($directionRead['workplaces'], 'id') === [201],
+    'M06 Dirección with effective read grant may read its authorized locality');
+$assert(!$directionCreate['allowed'] && $directionCreate['reason'] === 'incidence_create_role_denied',
+    'M06 Dirección remains read-only even when the incidence module exposes a create grant to Encargados');
+
+$login(600);
 $createDenied = ChecadorAccessService::authorizeIncidenceCreate(201);
 $assert(!$createDenied['allowed'] && $createDenied['reason'] === 'incidence_create_permission_denied',
-    'V7C12 Checador read permission does not imply incidence-create permission');
-$db->table('modulos_puestos_do')->where('id_modulo', 64)->where('id_puesto', 13)->update(['crear' => 1]);
+    'M06 Encargado without effective create grant is denied');
+$db->table('modulos_puestos_do')->where('id_modulo', 64)->where('id_puesto', 6)->update(['crear' => 1]);
 $createAllowed = ChecadorAccessService::authorizeIncidenceCreate(201);
 $assert($createAllowed['allowed']
     && $createAllowed['namespace'] === ChecadorAccessService::INCIDENCE_MODULE_KEY
     && array_column($createAllowed['workplaces'], 'id') === [201],
-    'V7C12 incidence creation requires its dedicated create grant and retains canonical station scope');
+    'M06 Encargado with effective create grant is authorized only for its canonical locality');
+
+$controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+$diagnosticStart = strpos($controllerSource, 'private static function logM06IncidenceAccessDenial(');
+$diagnosticEnd = is_int($diagnosticStart)
+    ? strpos($controllerSource, 'private static function stateForError(', $diagnosticStart)
+    : false;
+$diagnosticSource = is_int($diagnosticStart) && is_int($diagnosticEnd)
+    ? substr($controllerSource, $diagnosticStart, $diagnosticEnd - $diagnosticStart)
+    : '';
+$assert(str_contains($controllerSource, "logM06IncidenceAccessDenial('incidence_read_acl'")
+    && str_contains($controllerSource, "logM06IncidenceAccessDenial('workplace_context'")
+    && str_contains($diagnosticSource, "Logger::warning('M06 incidence access denied'")
+    && str_contains($diagnosticSource, "'stage'")
+    && str_contains($diagnosticSource, "'reason'")
+    && str_contains($diagnosticSource, "'locality_id'")
+    && str_contains($diagnosticSource, "'route'")
+    && str_contains($diagnosticSource, "'correlation_id'")
+    && !str_contains($diagnosticSource, 'APP_ENV'),
+    'M06 production denial diagnostics log only stage, reason, locality, route and correlation without an environment gate');
 
 printf("CHECADOR_ACCESS_FOUNDATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

@@ -84,9 +84,25 @@ final class ChecadorAdministrativeIncidenceSqlService
     }
 
     /** @return array{ok:bool,data?:array,error?:string} */
-    public function listForWorkplace(Usuario $actor, int $workplaceId, array $filters = [], int $page = 1, int $perPage = 25): array
+    public function listForWorkplace(
+        Usuario $actor,
+        int $workplaceId,
+        array $filters = [],
+        int $page = 1,
+        int $perPage = 25,
+        string $sortBy = 'created_at',
+        string $sortDirection = 'desc'
+    ): array
     {
-        if ($workplaceId < 1 || $page < 1 || $perPage < 1 || $perPage > 100) {
+        $sortColumns = [
+            'worker_name' => 'p.nombre_completo',
+            'category' => 'm.tipo_incidencia',
+            'start_date' => 'm.fecha_inicio_local',
+            'status' => 'm.estado_actual',
+            'created_at' => 'm.creado_at_utc',
+        ];
+        if ($workplaceId < 1 || $page < 1 || $perPage < 1 || $perPage > 100
+            || !isset($sortColumns[$sortBy]) || !in_array($sortDirection, ['asc', 'desc'], true)) {
             return ['ok' => false, 'error' => 'invalid_request'];
         }
         if (!(($this->authorizeRead)($actor, $workplaceId))) {
@@ -98,7 +114,9 @@ final class ChecadorAdministrativeIncidenceSqlService
         try {
             $base = $this->baseListQuery($workplaceId, $normalized);
             $total = (int) (clone $base)->count();
-            $rows = $base->orderByDesc('m.fecha_inicio_local')
+            $scopeOnly = self::normalizeFilters([]);
+            $recordsTotal = (int) $this->baseListQuery($workplaceId, $scopeOnly)->count();
+            $rows = $base->orderBy($sortColumns[$sortBy], $sortDirection)
                 ->orderByDesc('m.id')
                 ->offset(($page - 1) * $perPage)
                 ->limit($perPage)
@@ -134,6 +152,7 @@ final class ChecadorAdministrativeIncidenceSqlService
                     'page' => $page,
                     'per_page' => $perPage,
                     'total_records' => $total,
+                    'records_total' => $recordsTotal,
                     'total_pages' => $total === 0 ? 0 : (int) ceil($total / $perPage),
                 ],
             ]];
@@ -754,25 +773,72 @@ final class ChecadorAdministrativeIncidenceSqlService
         if ($filters['status'] !== null) $query->where('m.estado_actual', $filters['status']);
         if ($filters['start_date'] !== null) $query->where('m.fecha_fin_local', '>=', $filters['start_date']);
         if ($filters['end_date'] !== null) $query->where('m.fecha_inicio_local', '<=', $filters['end_date']);
+        if ($filters['search'] !== null) {
+            $term = addcslashes($filters['search'], "\\%_");
+            $like = '%' . $term . '%';
+            $categoryLabels = [
+                'VACATION' => 'Vacaciones', 'PERMISSION' => 'Permiso', 'DISABILITY' => 'Incapacidad',
+                'AUTHORIZED_LATENESS' => 'Retardo autorizado',
+                'AUTHORIZED_EARLY_DEPARTURE' => 'Salida anticipada autorizada', 'OFFICIAL_MISSION' => 'Misión oficial',
+            ];
+            $statusLabels = [
+                'PENDING_APPROVAL' => 'Pendiente de autorización',
+                'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta pendiente de autorización', 'ACTIVE' => 'Activa',
+                'CANCELLED' => 'Cancelada', 'SUPERSEDED' => 'Sustituida', 'REVIEW_REQUIRED' => 'Requiere revisión',
+                'REJECTED' => 'Rechazada', 'REVOKED' => 'Revocada',
+            ];
+            $categoryMatches = array_keys(array_filter($categoryLabels, static fn(string $label): bool => mb_stripos($label, $filters['search'], 0, 'UTF-8') !== false));
+            $statusMatches = array_keys(array_filter($statusLabels, static fn(string $label): bool => mb_stripos($label, $filters['search'], 0, 'UTF-8') !== false));
+            $query->where(static function ($searchQuery) use ($like, $categoryMatches, $statusMatches): void {
+                $searchQuery->where('p.nombre_completo', 'like', $like)
+                    ->orWhere('p.no_colaborador', 'like', $like)
+                    ->orWhere('m.id_personal', 'like', $like)
+                    ->orWhere('m.tipo_incidencia', 'like', $like)
+                    ->orWhere('m.estado_actual', 'like', $like)
+                    ->orWhere('m.fecha_inicio_local', 'like', $like)
+                    ->orWhere('m.fecha_fin_local', 'like', $like)
+                    ->orWhere('m.uuid_incidencia', 'like', $like);
+                if ($categoryMatches !== []) $searchQuery->orWhereIn('m.tipo_incidencia', $categoryMatches);
+                if ($statusMatches !== []) $searchQuery->orWhereIn('m.estado_actual', $statusMatches);
+            });
+        }
         return $query;
     }
 
     private static function normalizeFilters(array $filters): ?array
     {
         $worker = $filters['worker_id'] ?? null;
+        if (is_string($worker)) {
+            $worker = trim($worker);
+            if ($worker === '') $worker = null;
+            else {
+                $validatedWorker = filter_var($worker, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                if ($validatedWorker === false) return null;
+                $worker = $validatedWorker;
+            }
+        }
         if ($worker !== null && (!is_int($worker) || $worker < 1)) return null;
         $category = $filters['category'] ?? null;
+        if (is_string($category)) $category = trim($category);
+        if ($category === '') $category = null;
         if ($category !== null && !in_array($category, self::CATEGORIES, true)) return null;
         $status = $filters['status'] ?? null;
+        if (is_string($status)) $status = trim($status);
+        if ($status === '') $status = null;
         if ($status !== null && !in_array($status, [self::STATUS_PENDING, self::STATUS_RESOLVED, self::STATUS_ACTIVE,
             self::STATUS_CANCELLED, 'SUPERSEDED', 'REVIEW_REQUIRED', self::STATUS_REJECTED, 'REVOKED'], true)) return null;
         $start = $filters['start_date'] ?? null;
         $end = $filters['end_date'] ?? null;
+        if (is_string($start)) { $start = trim($start); if ($start === '') $start = null; }
+        if (is_string($end)) { $end = trim($end); if ($end === '') $end = null; }
+        $search = $filters['search'] ?? null;
+        if (is_string($search)) { $search = trim($search); if ($search === '') $search = null; }
         if (($start !== null && (!is_string($start) || !self::isCivilDate($start)))
             || ($end !== null && (!is_string($end) || !self::isCivilDate($end)))
-            || ($start !== null && $end !== null && $end < $start)) return null;
+            || ($start !== null && $end !== null && $end < $start)
+            || ($search !== null && (!is_string($search) || mb_strlen($search, 'UTF-8') > 120))) return null;
         return ['worker_id' => $worker, 'category' => $category, 'status' => $status,
-            'start_date' => $start, 'end_date' => $end];
+            'start_date' => $start, 'end_date' => $end, 'search' => $search === null || trim($search) === '' ? null : trim($search)];
     }
 
     private static function mapListRow(object $row): array

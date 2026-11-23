@@ -636,6 +636,7 @@ $r->addRoute('GET', '/recursos-humanos/checador/asistencia', Route::auth(['Checa
 $r->addRoute('POST', '/recursos-humanos/checador/asistencia', Route::auth(['ChecadorController', 'dailyAttendance']));
 $r->addRoute('GET', '/recursos-humanos/checador/jornadas', Route::auth(['ChecadorController', 'journeys']));
 $r->addRoute('GET', '/recursos-humanos/checador/incidencias', Route::auth(['ChecadorController', 'incidences']));
+$r->addRoute('POST', '/recursos-humanos/checador/incidencias/data', Route::auth(['ChecadorController', 'incidencesData']));
 $r->addRoute('GET', '/recursos-humanos/checador/ajustes', Route::auth(['ChecadorController', 'adjustments']));
 $r->addRoute('GET', '/recursos-humanos/checador/acceso-temporal', Route::auth(['ChecadorController', 'temporaryAccess']));
 $r->addRoute('GET', '/recursos-humanos/checador/configuracion', Route::auth(['ChecadorController', 'configuration']));
