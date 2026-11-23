@@ -989,6 +989,36 @@ final class ChecadorAccessService
         }
     }
 
+    /** M06 content revisions are Encargado-only; Dirección remains read-only. */
+    public static function authorizeIncidenceRevision(?int $requestedLocalityId): array
+    {
+        $scope = self::authorizeIncidenceRead($requestedLocalityId);
+        if (!($scope['allowed'] ?? false)) return $scope;
+        try {
+            $authenticated = Auth::user();
+            if (!$authenticated || !Auth::check()) {
+                return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
+            }
+            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
+            if (!$user || (int) ($user->id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID) {
+                return ['allowed' => false, 'reason' => 'incidence_revision_role_denied', 'workplaces' => []];
+            }
+            $createPermissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::INCIDENCE_MODULE_KEY);
+            $resolutionPermissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::RESOLUTION_MODULE_KEY);
+            if (empty($createPermissions['crear']) && empty($resolutionPermissions['editar'])) {
+                return ['allowed' => false, 'reason' => 'incidence_revision_permission_denied', 'workplaces' => []];
+            }
+            return [
+                'allowed' => true,
+                'reason' => 'authorized',
+                'workplaces' => $scope['workplaces'],
+                'namespace' => self::INCIDENCE_MODULE_KEY,
+            ];
+        } catch (Throwable) {
+            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
+        }
+    }
+
     /**
      * Administrative evaluation is executable with either dedicated
      * resolution or authorization edit permission. The API repeats this

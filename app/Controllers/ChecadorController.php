@@ -637,6 +637,11 @@ final class ChecadorController extends BaseController
             : [];
         $createAuthorization = ChecadorAccessService::authorizeIncidenceCreate($workplaceId);
         $canCreate = (bool) ($createAuthorization['allowed'] ?? false);
+        $revisionAuthorization = ChecadorAccessService::authorizeIncidenceRevision($workplaceId);
+        $lifecyclePermissions = [];
+        foreach (['resolve', 'authorize', 'reject', 'revoke'] as $lifecycleAction) {
+            $lifecyclePermissions[$lifecycleAction] = (bool) (ChecadorAccessService::authorizeLifecycle($workplaceId, $lifecycleAction)['allowed'] ?? false);
+        }
         $writeReadiness = $service->writeReadiness();
 
         $feedback = Session::pull('checador_m06_incidence_feedback', null);
@@ -645,6 +650,12 @@ final class ChecadorController extends BaseController
             || (int) ($feedback['user_id'] ?? 0) !== $currentUserId
             || (int) ($feedback['workplace_id'] ?? 0) !== $workplaceId) {
             $feedback = null;
+        }
+        $lifecycleFeedback = Session::pull('checador_m06_incidence_lifecycle_feedback', null);
+        if (is_array($lifecycleFeedback)
+            && (int) ($lifecycleFeedback['user_id'] ?? 0) === $currentUserId
+            && (int) ($lifecycleFeedback['workplace_id'] ?? 0) === $workplaceId) {
+            $feedback = $lifecycleFeedback;
         }
         $retryKey = is_array($feedback) && ($feedback['type'] ?? '') === 'error'
             && preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/D', (string) ($feedback['idempotency_key'] ?? ''))
@@ -677,6 +688,8 @@ final class ChecadorController extends BaseController
                 'incidenceWorkers' => $workers,
                 'incidenceRosterAvailable' => in_array((string) ($roster['status'] ?? ''), ['ready', 'partial', 'current_roster_only'], true),
                 'incidenceCanCreate' => $canCreate,
+                'incidenceCanRevise' => (bool) ($revisionAuthorization['allowed'] ?? false),
+                'incidenceLifecyclePermissions' => $lifecyclePermissions,
                 'incidenceWriterReady' => (bool) ($writeReadiness['ready'] ?? false),
                 'incidenceWriterBlockReason' => (string) ($writeReadiness['reason'] ?? 'api_writer_cutover_unverified'),
                 'incidenceFeedback' => $feedback,
@@ -4143,6 +4156,62 @@ final class ChecadorController extends BaseController
         $this->handleLifecycle($uuidIncidencia, 'revoke');
     }
 
+    public function createIncidenceRevision(string $uuidIncidencia): void
+    {
+        $input = Request::all();
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $expectedRevision = self::positiveInteger($input['expected_current_revision'] ?? null);
+        $reason = is_string($input['reason'] ?? null) ? trim((string) $input['reason']) : '';
+        $evidence = is_string($input['evidence_reference'] ?? null) ? trim((string) $input['evidence_reference']) : '';
+        $startDate = is_string($input['start_date'] ?? null) && trim((string) $input['start_date']) !== ''
+            ? trim((string) $input['start_date']) : null;
+        $endDate = is_string($input['end_date'] ?? null) && trim((string) $input['end_date']) !== ''
+            ? trim((string) $input['end_date']) : null;
+        $redirect = '/departamento-operativo/recursos-humanos/checador/incidencias'
+            . ($workplaceId === null ? '' : '?workplace_id=' . $workplaceId);
+        $store = static function (string $type, string $message) use ($workplaceId): void {
+            Session::set('checador_m06_incidence_lifecycle_feedback', [
+                'type' => $type,
+                'message' => $message,
+                'user_id' => (int) (Auth::user()->id ?? 0),
+                'workplace_id' => (int) ($workplaceId ?? 0),
+            ]);
+        };
+        $csrf = trim((string) ($input['_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
+        if (!\App\Core\CsrfToken::validate($csrf)) {
+            $store('error', 'La sesión del formulario venció. Actualiza la página antes de continuar.');
+            self::redirect($redirect);
+            return;
+        }
+        if ($workplaceId === null || $expectedRevision === null || !preg_match('/\A[0-9a-fA-F-]{36}\z/D', $uuidIncidencia)
+            || $reason === '' || mb_strlen($reason, 'UTF-8') > 5000 || mb_strlen($evidence, 'UTF-8') > 100
+            || (string) ($input['confirm_action'] ?? '') !== '1'
+            || (($startDate === null) !== ($endDate === null))) {
+            $store('error', 'La revisión requiere motivo, datos válidos y confirmación explícita.');
+            self::redirect($redirect);
+            return;
+        }
+        $actor = Auth::user();
+        if (!$actor) {
+            $store('error', 'La sesión ya no es válida. Inicia sesión nuevamente.');
+            self::redirect($redirect);
+            return;
+        }
+        $result = self::m06AdministrativeIncidenceSqlService()->appendRevision(
+            $actor, $workplaceId, $uuidIncidencia, $expectedRevision, $reason,
+            $evidence === '' ? null : $evidence, $startDate, $endDate
+        );
+        if (!($result['ok'] ?? false)) {
+            $store('error', self::m06WriteErrorMessage((string) ($result['error'] ?? 'sql_write_failed')));
+            self::redirect($redirect);
+            return;
+        }
+        $store('success', !empty($result['data']['replayed'])
+            ? 'La revisión equivalente ya existe y se confirmó mediante lectura SQL.'
+            : 'La nueva revisión quedó guardada y confirmada mediante lectura SQL.');
+        self::redirect($redirect);
+    }
+
     public function temporaryAccessAuthorize(string $requestUuid): void
     {
         $this->handleTemporaryAccessAction($requestUuid, 'authorize');
@@ -4401,19 +4470,7 @@ final class ChecadorController extends BaseController
             $idempotencyKey
         );
         if (!($result['ok'] ?? false)) {
-            $message = match ((string) ($result['error'] ?? 'sql_write_failed')) {
-                'permission_denied' => 'No tienes permiso efectivo para crear incidencias en esta localidad.',
-                'worker_scope_unverified' => 'No se confirmó la adscripción canónica del trabajador durante todo el periodo.',
-                'registration_deadline_expired' => 'El plazo de registro configurado para esta localidad ya venció.',
-                'policy_unavailable', 'workplace_timezone_unresolved' => 'No se pudo confirmar la política M11 y zona horaria para el periodo.',
-                'idempotency_conflict' => 'La clave de reintento ya corresponde a otros datos. No se creó otra incidencia.',
-                'api_writer_cutover_unverified' => 'El guardado SQL sigue cerrado hasta comprobar el corte del escritor anterior de incidencias.',
-                'history_protection_unverified' => 'El guardado sigue cerrado hasta verificar la protección append-only del historial.',
-                'schema_preflight_failed' => 'La estructura SQL requerida no está disponible; no se guardó la incidencia.',
-                'readback_unconfirmed' => 'No se confirmó el registro mediante lectura SQL; conserva la misma solicitud al reintentar.',
-                'worker_not_found' => 'El trabajador ya no está activo en el padrón autorizado.',
-                default => 'No se pudo confirmar el guardado SQL. No se muestra éxito.',
-            };
+            $message = self::m06WriteErrorMessage((string) ($result['error'] ?? 'sql_write_failed'));
             $storeFeedback('error', $message);
             self::redirect($redirect);
             return;
@@ -4543,142 +4600,68 @@ final class ChecadorController extends BaseController
     {
         $input = Request::all();
         $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
-        $workerId = self::positiveInteger($input['worker_id'] ?? null);
-        $date = is_string($input['date'] ?? null) ? trim((string) $input['date']) : '';
-        $snapshotRef = self::safeSnapshotRef($input['snapshot_ref'] ?? null);
         $expectedRevision = self::positiveInteger($input['expected_current_revision'] ?? null);
-        $idempotencyKey = is_string($input['idempotency_key'] ?? null) ? trim((string) $input['idempotency_key']) : '';
-        $redirect = '/departamento-operativo/recursos-humanos/checador/incidencias?' . http_build_query(array_filter([
-            'workplace_id' => $workplaceId,
-            'date' => $date,
-            'worker_id' => $workerId,
-            'snapshot_ref' => $snapshotRef,
-        ], static fn(mixed $value): bool => $value !== null && $value !== ''));
-
-        $feedback = static function (string $type, string $message, array $extra = []) use ($uuidIncidencia, $action): void {
-            Session::set('checador_lifecycle_feedback', array_merge([
+        $reasonField = match ($action) {
+            'resolve' => 'resolution_notes',
+            'authorize' => 'action_notes',
+            'reject' => 'rejection_reason',
+            'revoke' => 'revocation_reason',
+            default => '',
+        };
+        $reason = $reasonField !== '' && is_string($input[$reasonField] ?? null)
+            ? trim((string) $input[$reasonField]) : '';
+        $evidence = is_string($input['evidence_reference'] ?? null)
+            ? trim((string) $input['evidence_reference']) : '';
+        $redirect = '/departamento-operativo/recursos-humanos/checador/incidencias'
+            . ($workplaceId === null ? '' : '?workplace_id=' . $workplaceId);
+        $store = static function (string $type, string $message) use ($workplaceId): void {
+            Session::set('checador_m06_incidence_lifecycle_feedback', [
                 'type' => $type,
                 'message' => $message,
-                'uuid' => $uuidIncidencia,
-                'action' => $action,
-            ], $extra));
+                'user_id' => (int) (Auth::user()->id ?? 0),
+                'workplace_id' => (int) ($workplaceId ?? 0),
+            ]);
         };
-
+        $csrf = trim((string) ($input['_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''));
+        if (!\App\Core\CsrfToken::validate($csrf)) {
+            $store('error', 'La sesión del formulario venció. Actualiza la página antes de continuar.');
+            self::redirect($redirect);
+            return;
+        }
         if (!in_array($action, ['resolve', 'authorize', 'reject', 'revoke'], true)
-            || $workplaceId === null || $expectedRevision === null
-            || !preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', $idempotencyKey)
-            || $date === ''
-            || (string) ($input['confirm_action'] ?? '') !== '1') {
-            $feedback('error', 'La acción administrativa no es válida o requiere confirmación explícita.');
+            || $workplaceId === null || $expectedRevision === null || !preg_match('/\A[0-9a-fA-F-]{36}\z/D', $uuidIncidencia)
+            || ($action !== 'authorize' && $reason === '') || mb_strlen($reason, 'UTF-8') > 5000
+            || mb_strlen($evidence, 'UTF-8') > 100 || (string) ($input['confirm_action'] ?? '') !== '1') {
+            $store('error', 'La acción administrativa no es válida o requiere confirmación explícita.');
             self::redirect($redirect);
+            return;
         }
-
-        $authorization = ChecadorAccessService::authorizeLifecycle($workplaceId, $action);
-        if (!($authorization['allowed'] ?? false)) {
-            $feedback('error', 'No tienes permiso administrativo o alcance de centro de trabajo para esta acción.');
+        $actor = Auth::user();
+        if (!$actor) {
+            $store('error', 'La sesión ya no es válida. Inicia sesión nuevamente.');
             self::redirect($redirect);
+            return;
         }
-
-        $fields = match ($action) {
-            'resolve' => [
-                'resolution_action' => $input['resolution_action'] ?? 'CONFIRM_INCIDENCE_PREVALENCE',
-                'resolution_notes' => $input['resolution_notes'] ?? '',
-                'evidence_reference' => $input['evidence_reference'] ?? '',
-            ],
-            'authorize' => ['authorization_notes' => $input['action_notes'] ?? ''],
-            'reject' => ['rejection_reason' => $input['rejection_reason'] ?? ''],
-            'revoke' => [
-                'revocation_reason' => $input['revocation_reason'] ?? '',
-                'evidence_reference' => $input['evidence_reference'] ?? '',
-            ],
+        $result = self::m06AdministrativeIncidenceSqlService()->transition(
+            $actor, $workplaceId, $uuidIncidencia, $action, $expectedRevision,
+            $reason, $evidence === '' ? null : $evidence
+        );
+        if (!($result['ok'] ?? false)) {
+            $store('error', self::m06WriteErrorMessage((string) ($result['error'] ?? 'sql_write_failed')));
+            self::redirect($redirect);
+            return;
+        }
+        $incidence = is_array($result['data']['incidence'] ?? null) ? $result['data']['incidence'] : [];
+        $label = match ((string) ($incidence['current_status'] ?? '')) {
+            'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta, pendiente de autorización',
+            'ACTIVE' => 'Activa',
+            'REJECTED' => 'Rechazada',
+            'CANCELLED' => 'Cancelada',
+            default => 'Estado actualizado',
         };
-        $user = Auth::user();
-        if (!$user) {
-            $feedback('error', 'La sesión ya no es válida. Inicia sesión nuevamente.');
-            self::redirect($redirect);
-        }
-        if (!ChecadorDailyReadService::demoModeEnabled()
-            && !ChecadorDailyReadService::realApiPostOperationsEnabled()) {
-            $feedback('error', 'Las acciones reales de incidencias están deshabilitadas hasta validar el ambiente, la autenticación y los permisos del servicio.');
-            self::redirect($redirect);
-        }
-
-        try {
-            $reader = new ChecadorDailyReadService();
-            $result = $reader->lifecycleAction(
-                $user,
-                $uuidIncidencia,
-                $action,
-                $expectedRevision,
-                $idempotencyKey,
-                $fields,
-                $workplaceId
-            );
-        } catch (\Throwable) {
-            $reader = null;
-            $result = ['ok' => false, 'error' => ['kind' => 'api_unavailable', 'status' => 503]];
-        }
-
-        if (($result['ok'] ?? false) === true) {
-            $resultData = is_array($result['data'] ?? null) ? $result['data'] : [];
-            $expectedStatus = (string) (($resultData['resolution_status'] ?? null)
-                ?? ($resultData['status'] ?? ''));
-            $revisionField = match ($action) {
-                'resolve' => 'resolution_revision_number',
-                'authorize' => 'authorized_revision_number',
-                'reject' => 'rejected_revision_number',
-                'revoke' => 'revocation_revision_number',
-            };
-            $expectedRevisionNumber = self::positiveInteger(
-                $resultData['current_revision'] ?? $resultData[$revisionField] ?? null
-            );
-            $readback = $reader instanceof ChecadorDailyReadService
-                ? $reader->readIncidence($user, $uuidIncidencia)
-                : ['ok' => false];
-            $revisionConfirmed = false;
-            foreach (($readback['data']['revisions'] ?? []) as $revision) {
-                if (is_array($revision)
-                    && (int) ($revision['revision_number'] ?? 0) === $expectedRevisionNumber
-                    && (string) ($revision['status'] ?? '') === $expectedStatus) {
-                    $revisionConfirmed = true;
-                    break;
-                }
-            }
-            if (!($readback['ok'] ?? false) || !$revisionConfirmed) {
-                $message = $reader instanceof ChecadorDailyReadService && $reader->isDemoMode()
-                    ? 'La acción sintética se registró, pero la relectura del historial no pudo confirmarla. Actualiza la pantalla antes de continuar.'
-                    : 'La acción se envió, pero la relectura del historial no pudo confirmarla. Actualiza la pantalla antes de continuar.';
-                $feedback('error', $message, ['retry_idempotency_key' => $idempotencyKey]);
-                self::redirect($redirect);
-            }
-            $currentStatus = $readback['data']['current_status'] ?? $expectedStatus;
-            $currentStatusLabel = ChecadorPresentationFormatter::incidenceStatusLabel($currentStatus);
-            $message = $reader instanceof ChecadorDailyReadService && $reader->isDemoMode()
-                ? 'Acción confirmada en el historial sintético; no modifica información operativa. Estado actual: ' . $currentStatusLabel . '.'
-                : 'Acción confirmada por relectura del historial. Estado actual: ' . $currentStatusLabel . '.';
-            $feedback('success', $message);
-            self::redirect($redirect);
-        }
-
-        $kind = (string) ($result['error']['kind'] ?? 'api_unavailable');
-        $message = match ($kind) {
-            'stale_revision_conflict' => 'La incidencia cambió mientras la revisabas. Se actualizará el historial; confirma una nueva acción.',
-            'idempotency_conflict' => 'La clave de idempotencia tiene un payload distinto. La acción quedó detenida para revisión.',
-            'invalid_lifecycle_transition' => 'El estado actual ya no permite esta acción. Se actualizará el historial.',
-            'incidence_not_found' => 'La incidencia ya no está disponible dentro del alcance autorizado.',
-            'api_authentication' => 'La autenticación del servicio no está disponible.',
-            'api_authorization' => 'La API no autoriza esta acción o el centro de trabajo seleccionado.',
-            'api_post_disabled' => 'Las acciones reales de incidencias permanecen deshabilitadas hasta validar el ambiente y la integración del servicio.',
-            'bad_request' => 'La información enviada no cumple el contrato de la acción.',
-            default => 'La acción no pudo confirmarse. No se muestra éxito; puedes reintentar explícitamente.',
-        };
-        $extra = $kind === 'api_unavailable'
-            ? ['retry_idempotency_key' => $idempotencyKey]
-            : [];
-        if ($reader instanceof ChecadorDailyReadService && $reader->isDemoMode()) {
-            $message .= ' El estado sintético permanece sin cambios.';
-        }
-        $feedback('error', $message, $extra);
+        $store('success', !empty($result['data']['replayed'])
+            ? 'La misma acción ya estaba registrada y se confirmó mediante lectura SQL. Estado actual: ' . $label . '.'
+            : 'La acción quedó registrada y confirmada mediante lectura SQL. Estado actual: ' . $label . '.');
         self::redirect($redirect);
     }
 
@@ -6060,10 +6043,31 @@ final class ChecadorController extends BaseController
     }
 
 
-    /** Keep M06 writes closed until the API cutover and durable history protection are independently verified. */
+    /** Keep M06 SQL writes closed until the API cutover is independently verified. */
     private static function m06AdministrativeIncidenceSqlService(): \App\Services\ChecadorAdministrativeIncidenceSqlService
     {
         return new \App\Services\ChecadorAdministrativeIncidenceSqlService();
+    }
+
+    private static function m06WriteErrorMessage(string $error): string
+    {
+        return match ($error) {
+            'permission_denied' => 'No tienes permiso efectivo para esta operación en la localidad seleccionada.',
+            'worker_scope_unverified' => 'No se confirmó la adscripción canónica del trabajador durante todo el periodo.',
+            'registration_deadline_expired' => 'El plazo de registro configurado para esta localidad ya venció.',
+            'policy_unavailable', 'workplace_timezone_unresolved' => 'No se pudo confirmar la política M11 y zona horaria para el periodo.',
+            'idempotency_conflict' => 'La clave de reintento ya corresponde a otros datos. No se creó otra incidencia.',
+            'api_writer_cutover_unverified' => 'El guardado SQL permanece cerrado hasta comprobar el corte de los seis escritores API anteriores.',
+            'schema_preflight_failed' => 'La estructura o los permisos SQL requeridos no están disponibles; no se guardó el cambio.',
+            'readback_unconfirmed' => 'No se confirmó el cambio mediante lectura SQL; no se muestra éxito.',
+            'worker_not_found' => 'El trabajador ya no está activo en el padrón autorizado.',
+            'incidence_not_found' => 'La incidencia no existe en la localidad autorizada.',
+            'stale_revision_conflict' => 'La incidencia cambió desde que la abriste. Actualiza la página antes de volver a intentar.',
+            'invalid_lifecycle_transition' => 'El estado actual no permite esta acción.',
+            'persisted_data_inconsistent' => 'El maestro y su última revisión no coinciden. Se detuvo el cambio para proteger el historial.',
+            'invalid_request' => 'Los datos de la operación no son válidos.',
+            default => 'No se pudo confirmar el cambio SQL. No se muestra éxito.',
+        };
     }
 
     private static function loadSnapshotState(string $ref, int $userId, int $workplaceId, string $date): ?array

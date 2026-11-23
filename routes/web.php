@@ -655,6 +655,11 @@ $r->addRoute('GET', '/recursos-humanos/checador/reporte/colaboradores', Route::a
 $r->addRoute('GET', '/recursos-humanos/checador/reporte/data', Route::auth(['ChecadorController', 'punchReportData']));
 $r->addRoute('GET', '/recursos-humanos/checador/comparacion-nomina', Route::auth(['ChecadorController', 'payrollComparison']));
 $r->addRoute('POST', '/recursos-humanos/checador/incidencias/crear', Route::auth(['ChecadorController', 'createIncidence']));
+$r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia:[0-9a-fA-F-]{36}}/revisiones', Route::auth(['ChecadorController', 'createIncidenceRevision']));
+$r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia:[0-9a-fA-F-]{36}}/resolver', Route::auth(['ChecadorController', 'lifecycleResolve']));
+$r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia:[0-9a-fA-F-]{36}}/autorizar', Route::auth(['ChecadorController', 'lifecycleAuthorize']));
+$r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia:[0-9a-fA-F-]{36}}/rechazar', Route::auth(['ChecadorController', 'lifecycleReject']));
+$r->addRoute('POST', '/recursos-humanos/checador/incidencias/{uuidIncidencia:[0-9a-fA-F-]{36}}/revocar', Route::auth(['ChecadorController', 'lifecycleRevoke']));
 $r->addRoute('POST', '/recursos-humanos/checador/evaluations/evaluate', Route::auth(['ChecadorController', 'administrativeEvaluation']));
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/authorize', Route::auth(['ChecadorController', 'temporaryAccessAuthorize']));
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/reject', Route::auth(['ChecadorController', 'temporaryAccessReject']));

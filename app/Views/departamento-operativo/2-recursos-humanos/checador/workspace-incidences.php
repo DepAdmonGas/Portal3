@@ -13,7 +13,6 @@ $feedbackMessage = is_string($feedback['message'] ?? null) && trim($feedback['me
 $formValues = is_array($incidenceFormValues ?? null) ? $incidenceFormValues : [];
 $writerBlockMessage = match ((string) ($incidenceWriterBlockReason ?? '')) {
     'api_writer_cutover_unverified' => 'El guardado permanece cerrado hasta comprobar el corte del escritor anterior',
-    'history_protection_unverified' => 'El guardado permanece cerrado hasta comprobar la protección del historial',
     'schema_preflight_failed' => 'El guardado permanece cerrado porque no se confirmó el esquema y los permisos SQL requeridos',
     default => 'El guardado permanece cerrado hasta verificar las condiciones operativas requeridas',
 };
@@ -26,6 +25,7 @@ $readErrorMessage = match ((string) ($incidenceReadError ?? '')) {
 $pagination = is_array($incidencePagination ?? null) ? $incidencePagination : [];
 $statusLabel = static fn(string $status): string => match ($status) {
     'PENDING_APPROVAL' => 'Pendiente de autorización',
+    'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta · pendiente de autorización',
     'ACTIVE' => 'Activa',
     'CANCELLED' => 'Cancelada',
     'SUPERSEDED' => 'Sustituida',
@@ -34,6 +34,10 @@ $statusLabel = static fn(string $status): string => match ($status) {
     'REVOKED' => 'Revocada',
     default => 'Estado no disponible',
 };
+$lifecyclePermissions = is_array($incidenceLifecyclePermissions ?? null) ? $incidenceLifecyclePermissions : [];
+$canReviseIncidences = ($incidenceCanRevise ?? false) === true;
+$m06WriterReady = ($incidenceWriterReady ?? false) === true;
+$canManageIncidences = ($incidenceCanCreate ?? false) === true || $canReviseIncidences || in_array(true, $lifecyclePermissions, true);
 $page = max(1, (int) ($pagination['page'] ?? 1));
 $totalPages = max(0, (int) ($pagination['total_pages'] ?? 0));
 $queryBase = array_filter([
@@ -63,6 +67,7 @@ $queryBase = array_filter([
             </div>
         </div>
         <div class="card-body">
+            <?php if (!$m06WriterReady && $canManageIncidences): ?><div class="alert alert-warning d-flex align-items-start gap-2" role="status"><i class="ti ti-lock mt-1" aria-hidden="true"></i><span><?= $esc($writerBlockMessage) ?>. Las acciones de escritura permanecen deshabilitadas hasta que se compruebe el corte API.</span></div><?php endif; ?>
             <?php if ($feedbackMessage !== null): ?>
                 <?php $feedbackSuccess = ($feedback['type'] ?? '') === 'success'; ?>
                 <div class="alert alert-<?= $feedbackSuccess ? 'success' : 'warning' ?> d-flex align-items-start gap-2" role="status">
@@ -102,6 +107,12 @@ $queryBase = array_filter([
                                     $status = (string) ($item['current_status'] ?? '');
                                     $revisions = is_array($item['revisions'] ?? null) ? $item['revisions'] : [];
                                     $uuid = (string) ($item['uuid_incidencia'] ?? '');
+                                    $actionBase = '/departamento-operativo/recursos-humanos/checador/incidencias/' . rawurlencode($uuid);
+                                    $revisionTerminal = in_array($status, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
+                                    $canResolve = !empty($lifecyclePermissions['resolve']) && !in_array($status, ['CANCELLED', 'REVOKED'], true);
+                                    $canAuthorize = !empty($lifecyclePermissions['authorize']) && !in_array($status, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
+                                    $canReject = !empty($lifecyclePermissions['reject']) && !in_array($status, ['CANCELLED', 'REVOKED', 'REJECTED'], true);
+                                    $canRevoke = !empty($lifecyclePermissions['revoke']) && !in_array($status, ['CANCELLED', 'REVOKED'], true);
                                 ?>
                                     <tr>
                                         <td>
@@ -120,6 +131,12 @@ $queryBase = array_filter([
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                     <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#<?= $esc($modalId) ?>" data-incidence-tab="detail"><i class="ti ti-eye me-1" aria-hidden="true"></i>Ver detalle</button></li>
                                                     <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#<?= $esc($modalId) ?>" data-incidence-tab="history"><i class="ti ti-history me-1" aria-hidden="true"></i>Ver historial</button></li>
+                                                    <?php if (($canReviseIncidences && !$revisionTerminal) || $canResolve || $canAuthorize || $canReject || $canRevoke): ?><li><hr class="dropdown-divider"></li><?php endif; ?>
+                                                    <?php if ($canReviseIncidences && !$revisionTerminal): ?><li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-action-modal" data-m06-open-action data-m06-action="revision" data-m06-action-url="<?= $esc($actionBase . '/revisiones') ?>" data-m06-current-revision="<?= (int) ($item['current_revision'] ?? 0) ?>" data-m06-workplace="<?= (int) ($item['workplace_id'] ?? 0) ?>" data-m06-start="<?= $esc($item['start_date'] ?? '') ?>" data-m06-end="<?= $esc($item['end_date'] ?? '') ?>"><i class="ti ti-edit me-1" aria-hidden="true"></i>Crear revisión</button></li><?php endif; ?>
+                                                    <?php if ($canResolve): ?><li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-action-modal" data-m06-open-action data-m06-action="resolve" data-m06-action-url="<?= $esc($actionBase . '/resolver') ?>" data-m06-current-revision="<?= (int) ($item['current_revision'] ?? 0) ?>" data-m06-workplace="<?= (int) ($item['workplace_id'] ?? 0) ?>"><i class="ti ti-check me-1" aria-hidden="true"></i>Resolver</button></li><?php endif; ?>
+                                                    <?php if ($canAuthorize): ?><li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-action-modal" data-m06-open-action data-m06-action="authorize" data-m06-action-url="<?= $esc($actionBase . '/autorizar') ?>" data-m06-current-revision="<?= (int) ($item['current_revision'] ?? 0) ?>" data-m06-workplace="<?= (int) ($item['workplace_id'] ?? 0) ?>"><i class="ti ti-shield-check me-1" aria-hidden="true"></i>Autorizar</button></li><?php endif; ?>
+                                                    <?php if ($canReject): ?><li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-action-modal" data-m06-open-action data-m06-action="reject" data-m06-action-url="<?= $esc($actionBase . '/rechazar') ?>" data-m06-current-revision="<?= (int) ($item['current_revision'] ?? 0) ?>" data-m06-workplace="<?= (int) ($item['workplace_id'] ?? 0) ?>"><i class="ti ti-ban me-1" aria-hidden="true"></i>Rechazar</button></li><?php endif; ?>
+                                                    <?php if ($canRevoke): ?><li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#m06-incidence-action-modal" data-m06-open-action data-m06-action="revoke" data-m06-action-url="<?= $esc($actionBase . '/revocar') ?>" data-m06-current-revision="<?= (int) ($item['current_revision'] ?? 0) ?>" data-m06-workplace="<?= (int) ($item['workplace_id'] ?? 0) ?>"><i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Revocar</button></li><?php endif; ?>
                                                 </ul>
                                             </div>
                                         </td>
@@ -172,7 +189,7 @@ $queryBase = array_filter([
                                                             <div class="small mt-1"><strong>Motivo:</strong> <?= $esc($revision['reason'] ?? 'No disponible') ?></div>
                                                             <div class="small text-muted mt-1"><strong>Evidencia:</strong> <?= $esc(($revision['evidence_reference'] ?? null) ?: 'No disponible') ?></div>
                                                             <div class="small text-muted mt-1"><strong>Referencia:</strong> <code><?= $esc($uuid !== '' ? $uuid : 'No disponible') ?></code></div>
-                                                            <?php if (($revision['approved_by_user_id'] ?? null) !== null): ?><div class="small text-muted mt-1">Autorizó usuario <?= (int) $revision['approved_by_user_id'] ?></div><?php endif; ?>
+                                                            <?php if (($revision['approved_by_user_id'] ?? null) !== null): ?><div class="small text-muted mt-1">Actor de decisión usuario <?= (int) $revision['approved_by_user_id'] ?></div><?php endif; ?>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 </ol>
@@ -197,6 +214,27 @@ $queryBase = array_filter([
     </section>
 </div>
 
+<?php if ($canReviseIncidences || in_array(true, $lifecyclePermissions, true)): ?>
+<div class="modal fade" id="m06-incidence-action-modal" tabindex="-1" aria-labelledby="m06-incidence-action-title" aria-hidden="true" data-m06-action-modal data-m06-writer-ready="<?= $m06WriterReady ? '1' : '0' ?>">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="m06-incidence-action-title"><i class="ti ti-edit me-1" aria-hidden="true"></i><span data-m06-action-title>Administrar incidencia</span></h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <form method="post" action="" data-m06-action-form>
+            <div class="modal-body row g-3">
+                <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
+                <input type="hidden" name="workplace_id" value="">
+                <input type="hidden" name="expected_current_revision" value="">
+                <div class="col-12"><label class="form-label" for="m06-action-reason" data-m06-reason-label>Motivo</label><textarea class="form-control" id="m06-action-reason" name="reason" rows="3" maxlength="5000" data-m06-reason required></textarea></div>
+                <div class="col-12"><label class="form-label" for="m06-action-evidence">Referencia de evidencia (opcional)</label><input class="form-control" id="m06-action-evidence" name="evidence_reference" maxlength="100"></div>
+                <div class="col-12 col-md-6" data-m06-revision-date><label class="form-label" for="m06-action-start">Fecha de inicio</label><input class="form-control" type="date" id="m06-action-start" name="start_date"></div>
+                <div class="col-12 col-md-6" data-m06-revision-date><label class="form-label" for="m06-action-end">Fecha de término</label><input class="form-control" type="date" id="m06-action-end" name="end_date"></div>
+                <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="m06-confirm-action" name="confirm_action" value="1" required><label class="form-check-label" for="m06-confirm-action" data-m06-confirm-label>Confirmo esta acción sobre la revisión actual.</label></div></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button><button type="submit" class="btn btn-primary" data-m06-action-submit <?= $m06WriterReady ? '' : 'disabled' ?>><i class="ti ti-check me-1" aria-hidden="true"></i><span data-m06-submit-label>Confirmar</span></button></div>
+        </form>
+    </div></div>
+</div>
+<?php endif; ?>
+
 <div class="modal fade" id="m06-incidence-search-modal" tabindex="-1" aria-labelledby="m06-incidence-search-title" aria-hidden="true" data-m06-select2-modal>
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
         <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="m06-incidence-search-title"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar incidencias</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
@@ -207,7 +245,7 @@ $queryBase = array_filter([
                 <div class="col-12"><label class="form-label" for="m06-filter-category">Tipo de incidencia</label><select class="form-select" id="m06-filter-category" name="category"><option value="">Todos</option><?php foreach ($categories as $code => $label): ?><option value="<?= $esc($code) ?>" <?= ($filters['category'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
                 <div class="col-sm-6"><label class="form-label" for="m06-filter-start">Desde</label><input class="form-control" type="date" id="m06-filter-start" name="start_date" value="<?= $esc($filters['start_date'] ?? '') ?>"></div>
                 <div class="col-sm-6"><label class="form-label" for="m06-filter-end">Hasta</label><input class="form-control" type="date" id="m06-filter-end" name="end_date" value="<?= $esc($filters['end_date'] ?? '') ?>"></div>
-                <div class="col-12"><label class="form-label" for="m06-filter-status">Estado</label><select class="form-select" id="m06-filter-status" name="status"><option value="">Todos</option><?php foreach (['PENDING_APPROVAL' => 'Pendiente de autorización', 'ACTIVE' => 'Activa', 'REVIEW_REQUIRED' => 'Requiere revisión', 'REJECTED' => 'Rechazada', 'CANCELLED' => 'Cancelada', 'REVOKED' => 'Revocada', 'SUPERSEDED' => 'Sustituida'] as $code => $label): ?><option value="<?= $esc($code) ?>" <?= ($filters['status'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
+                <div class="col-12"><label class="form-label" for="m06-filter-status">Estado</label><select class="form-select" id="m06-filter-status" name="status"><option value="">Todos</option><?php foreach (['PENDING_APPROVAL' => 'Pendiente de autorización', 'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta · pendiente de autorización', 'ACTIVE' => 'Activa', 'REVIEW_REQUIRED' => 'Requiere revisión', 'REJECTED' => 'Rechazada', 'CANCELLED' => 'Cancelada', 'REVOKED' => 'Revocada', 'SUPERSEDED' => 'Sustituida'] as $code => $label): ?><option value="<?= $esc($code) ?>" <?= ($filters['status'] ?? '') === $code ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
             </div>
             <div class="modal-footer">
                 <div class="row g-0 ms-auto w-100 justify-content-end">
@@ -238,7 +276,6 @@ $queryBase = array_filter([
                 <div class="col-12"><label class="form-label" for="m06-create-reason">Motivo o descripción</label><textarea class="form-control" id="m06-create-reason" name="reason" rows="3" maxlength="5000" required><?= $esc($formValues['reason'] ?? '') ?></textarea></div>
                 <div class="col-12"><label class="form-label" for="m06-create-evidence">Referencia de evidencia (opcional)</label><input class="form-control" id="m06-create-evidence" name="evidence_reference" maxlength="100" value="<?= $esc($formValues['evidence_reference'] ?? '') ?>"></div>
                 <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="m06-confirm-create" name="confirm_create" value="1" required><label class="form-check-label" for="m06-confirm-create">Confirmo el registro de esta incidencia para la persona y periodo seleccionados.</label></div></div>
-                <?php if (($incidenceWriterReady ?? false) !== true): ?><div class="col-12"><div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="status"><i class="ti ti-lock mt-1" aria-hidden="true"></i><span><?= $esc($writerBlockMessage) ?>. No se enviará ni guardará esta captura todavía.</span></div></div><?php endif; ?>
             </div>
             <div class="modal-footer">
                 <div class="row g-0 ms-auto w-100 justify-content-end">

@@ -88,6 +88,59 @@
             });
         });
 
+        const actionModal = document.querySelector('[data-m06-action-modal]');
+        if (actionModal && actionModal.dataset.m06Bound !== '1') {
+            actionModal.dataset.m06Bound = '1';
+            const form = actionModal.querySelector('[data-m06-action-form]');
+            const reason = actionModal.querySelector('[data-m06-reason]');
+            const reasonLabel = actionModal.querySelector('[data-m06-reason-label]');
+            const dateFields = Array.from(actionModal.querySelectorAll('[data-m06-revision-date]'));
+            const dateInputs = dateFields.map(function (field) { return field.querySelector('input'); }).filter(Boolean);
+            const actionTitle = actionModal.querySelector('[data-m06-action-title]');
+            const confirmLabel = actionModal.querySelector('[data-m06-confirm-label]');
+            const submitLabel = actionModal.querySelector('[data-m06-submit-label]');
+            const reasonConfig = {
+                revision: ['reason', 'Motivo de la revisión', true, 'Crear revisión'],
+                resolve: ['resolution_notes', 'Notas de resolución', true, 'Resolver incidencia'],
+                authorize: ['action_notes', 'Notas de autorización (opcional)', false, 'Autorizar incidencia'],
+                reject: ['rejection_reason', 'Motivo del rechazo', true, 'Rechazar incidencia'],
+                revoke: ['revocation_reason', 'Motivo de la revocación', true, 'Revocar incidencia']
+            };
+            document.addEventListener('click', function (event) {
+                const trigger = event.target.closest('[data-m06-open-action]');
+                if (!trigger || !form || !reason) return;
+                const action = trigger.getAttribute('data-m06-action') || '';
+                const endpoint = trigger.getAttribute('data-m06-action-url') || '';
+                const config = reasonConfig[action];
+                if (!config || !/^\/departamento-operativo\/recursos-humanos\/checador\/incidencias\/[0-9a-f-]{36}\/(revisiones|resolver|autorizar|rechazar|revocar)$/i.test(endpoint)) {
+                    form.action = '';
+                    return;
+                }
+                form.action = endpoint;
+                form.querySelector('[name="workplace_id"]').value = trigger.getAttribute('data-m06-workplace') || '';
+                form.querySelector('[name="expected_current_revision"]').value = trigger.getAttribute('data-m06-current-revision') || '';
+                reason.name = config[0];
+                reason.value = '';
+                reason.required = config[2];
+                reasonLabel.textContent = config[1];
+                const revisionAction = action === 'revision';
+                dateFields.forEach(function (field) { field.hidden = !revisionAction; });
+                dateInputs.forEach(function (input, index) {
+                    input.disabled = !revisionAction;
+                    input.value = revisionAction ? (trigger.getAttribute(index === 0 ? 'data-m06-start' : 'data-m06-end') || '') : '';
+                });
+                if (actionTitle) actionTitle.textContent = config[3];
+                if (submitLabel) submitLabel.textContent = config[3];
+                if (confirmLabel) confirmLabel.textContent = 'Confirmo ' + config[3].toLowerCase() + ' para la revisión ' + (trigger.getAttribute('data-m06-current-revision') || '') + '.';
+                const confirm = form.querySelector('[name="confirm_action"]');
+                if (confirm) confirm.checked = false;
+            });
+            actionModal.addEventListener('hidden.bs.modal', function () {
+                if (form) form.reset();
+                if (form) form.action = '';
+            });
+        }
+
         document.querySelectorAll('[data-m06-select2-modal]').forEach(bindModalWorkerSelect2);
 
         document.querySelectorAll('[data-m06-auto-open="1"]').forEach(function (modal) {

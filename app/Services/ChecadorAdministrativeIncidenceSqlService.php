@@ -28,11 +28,19 @@ final class ChecadorAdministrativeIncidenceSqlService
 
     private const UUID_NAMESPACE = '98d64f66-bf8b-5d7b-b4d8-49d6f82a73f0';
     private const STATUS_PENDING = 'PENDING_APPROVAL';
+    private const STATUS_RESOLVED = 'RESOLVED_PENDING_AUTHORIZATION';
+    private const STATUS_ACTIVE = 'ACTIVE';
+    private const STATUS_REJECTED = 'REJECTED';
+    private const STATUS_CANCELLED = 'CANCELLED';
 
     /** @var callable(Usuario,int):bool */
     private $authorizeRead;
     /** @var callable(Usuario,int):bool */
     private $authorizeCreate;
+    /** @var callable(Usuario,int):bool */
+    private $authorizeRevision;
+    /** @var callable(Usuario,int,string):bool */
+    private $authorizeLifecycle;
     /** @var callable(int,int,string,string,string):bool */
     private $workerCoversPeriod;
     /** @var callable(int,string):array */
@@ -42,12 +50,11 @@ final class ChecadorAdministrativeIncidenceSqlService
     /** @var callable():DateTimeImmutable */
     private $clock;
     private bool $apiWriterCutoverVerified;
-    private bool $historyProtectionVerified;
 
     /**
-     * Operational cutover/protection default to false. The controller may pass
-     * verified attestations only for the local Fedora database; isolated tests
-     * can inject their own values. Remote environments remain fail-closed.
+     * The only operational gate is the independently verified API writer cutover.
+     * It defaults closed. History append-only is an application rule; the owner
+     * accepted that MariaDB does not enforce it for the shared default principal.
      */
     public function __construct(
         ?callable $authorizeRead = null,
@@ -56,19 +63,23 @@ final class ChecadorAdministrativeIncidenceSqlService
         ?callable $readPolicy = null,
         ?callable $schemaPreflight = null,
         bool $apiWriterCutoverVerified = false,
-        bool $historyProtectionVerified = false,
-        ?callable $clock = null
+        ?callable $clock = null,
+        ?callable $authorizeRevision = null,
+        ?callable $authorizeLifecycle = null
     ) {
         $this->authorizeRead = $authorizeRead ?? static fn(Usuario $actor, int $workplaceId): bool =>
             (ChecadorAccessService::authorizeIncidenceRead($workplaceId)['allowed'] ?? false) === true;
         $this->authorizeCreate = $authorizeCreate ?? static fn(Usuario $actor, int $workplaceId): bool =>
             (ChecadorAccessService::authorizeIncidenceCreate($workplaceId)['allowed'] ?? false) === true;
+        $this->authorizeRevision = $authorizeRevision ?? static fn(Usuario $actor, int $workplaceId): bool =>
+            (ChecadorAccessService::authorizeIncidenceRevision($workplaceId)['allowed'] ?? false) === true;
+        $this->authorizeLifecycle = $authorizeLifecycle ?? static fn(Usuario $actor, int $workplaceId, string $action): bool =>
+            (ChecadorAccessService::authorizeLifecycle($workplaceId, $action)['allowed'] ?? false) === true;
         $this->workerCoversPeriod = $workerCoversPeriod ?? [$this, 'canonicalWorkerCoversPeriod'];
         $this->readPolicy = $readPolicy ?? static fn(int $workplaceId, string $date): array =>
             (new ChecadorAttendancePolicyStoreService())->readForEffectiveDate($workplaceId, $date);
         $this->schemaPreflight = $schemaPreflight ?? [$this, 'mariadbSchemaReady'];
         $this->apiWriterCutoverVerified = $apiWriterCutoverVerified;
-        $this->historyProtectionVerified = $historyProtectionVerified;
         $this->clock = $clock ?? static fn(): DateTimeImmutable => new DateTimeImmutable('now', new DateTimeZone('UTC'));
     }
 
@@ -173,7 +184,6 @@ final class ChecadorAdministrativeIncidenceSqlService
     public function writeReadiness(): array
     {
         if (!$this->apiWriterCutoverVerified) return ['ready' => false, 'reason' => 'api_writer_cutover_unverified'];
-        if (!$this->historyProtectionVerified) return ['ready' => false, 'reason' => 'history_protection_unverified'];
         try {
             if (!(($this->schemaPreflight)())) return ['ready' => false, 'reason' => 'schema_preflight_failed'];
         } catch (Throwable) {
@@ -296,6 +306,235 @@ final class ChecadorAdministrativeIncidenceSqlService
         return ['ok' => true, 'data' => ['incidence' => $data, 'replayed' => (bool) ($created['replayed'] ?? false)]];
     }
 
+    /** Append a content revision while preserving the current lifecycle state. */
+    public function appendRevision(
+        Usuario $actor,
+        int $workplaceId,
+        string $uuid,
+        int $expectedRevision,
+        string $reason,
+        ?string $evidenceReference = null,
+        ?string $startDate = null,
+        ?string $endDate = null
+    ): array {
+        $reason = self::normalizeText($reason);
+        $evidenceReference = self::normalizeOptionalText($evidenceReference);
+        if ($workplaceId < 1 || !self::isUuid($uuid) || $expectedRevision < 1
+            || $reason === '' || mb_strlen($reason, 'UTF-8') > 5000
+            || ($evidenceReference !== null && mb_strlen($evidenceReference, 'UTF-8') > 100)
+            || ($startDate !== null && !self::isCivilDate($startDate))
+            || ($endDate !== null && !self::isCivilDate($endDate))) {
+            return ['ok' => false, 'error' => 'invalid_request'];
+        }
+        if (!(($this->authorizeRevision)($actor, $workplaceId))) return ['ok' => false, 'error' => 'permission_denied'];
+        $readiness = $this->writeReadiness();
+        if (!$readiness['ready']) return ['ok' => false, 'error' => $readiness['reason']];
+
+        return $this->appendPersistedRevision(
+            $actor, $workplaceId, $uuid, $expectedRevision, null, $reason,
+            $evidenceReference, $startDate, $endDate
+        );
+    }
+
+    /** Execute one of the four contract-defined lifecycle transitions. */
+    public function transition(
+        Usuario $actor,
+        int $workplaceId,
+        string $uuid,
+        string $action,
+        int $expectedRevision,
+        string $reason,
+        ?string $evidenceReference = null
+    ): array {
+        $targets = [
+            'resolve' => self::STATUS_RESOLVED,
+            'authorize' => self::STATUS_ACTIVE,
+            'reject' => self::STATUS_REJECTED,
+            'revoke' => self::STATUS_CANCELLED,
+        ];
+        $reason = self::normalizeText($reason);
+        $evidenceReference = self::normalizeOptionalText($evidenceReference);
+        $requiredReason = $action !== 'authorize';
+        if ($workplaceId < 1 || !self::isUuid($uuid) || $expectedRevision < 1 || !isset($targets[$action])
+            || ($requiredReason && $reason === '') || mb_strlen($reason, 'UTF-8') > 5000
+            || ($evidenceReference !== null && mb_strlen($evidenceReference, 'UTF-8') > 100)) {
+            return ['ok' => false, 'error' => 'invalid_request'];
+        }
+        if (!(($this->authorizeLifecycle)($actor, $workplaceId, $action))) return ['ok' => false, 'error' => 'permission_denied'];
+        $readiness = $this->writeReadiness();
+        if (!$readiness['ready']) return ['ok' => false, 'error' => $readiness['reason']];
+
+        return $this->appendPersistedRevision(
+            $actor, $workplaceId, $uuid, $expectedRevision, $targets[$action],
+            $reason, $evidenceReference, null, null, $action
+        );
+    }
+
+    /** @return array{ok:bool,data?:array,error?:string} */
+    private function appendPersistedRevision(
+        Usuario $actor,
+        int $workplaceId,
+        string $uuid,
+        int $expectedRevision,
+        ?string $targetStatus,
+        string $reason,
+        ?string $evidenceReference,
+        ?string $startDate,
+        ?string $endDate,
+        ?string $action = null
+    ): array {
+        $connection = Capsule::connection('default');
+        $newRevision = $expectedRevision + 1;
+        $statusForRetry = $targetStatus;
+        try {
+            $write = $connection->transaction(function () use (
+                $connection, $actor, $workplaceId, $uuid, $expectedRevision, $newRevision,
+                $targetStatus, $statusForRetry, $reason, $evidenceReference, $startDate, $endDate, $action
+            ): array {
+                $master = $connection->table('op_rh_v2_incidencias_maestro')
+                    ->where('uuid_incidencia', $uuid)->where('id_localidad', $workplaceId)
+                    ->lockForUpdate()->first();
+                if ($master === null) throw new DomainException('incidence_not_found');
+                $currentNumber = (int) $master->revision_actual;
+                $latest = $connection->table('op_rh_v2_incidencias_revisiones')
+                    ->where('id_incidencia_maestro', (int) $master->id)
+                    ->orderByDesc('revision_numero')->lockForUpdate()->first();
+                if ($latest === null || (int) $latest->revision_numero !== $currentNumber) {
+                    throw new DomainException('persisted_data_inconsistent');
+                }
+                $effectiveStart = $startDate ?? (string) $master->fecha_inicio_local;
+                $effectiveEnd = $endDate ?? (string) $master->fecha_fin_local;
+                $nextStatus = $targetStatus ?? (string) $master->estado_actual;
+                $approvedBy = in_array($action, ['authorize', 'reject', 'revoke'], true) ? (int) $actor->id : null;
+
+                if ($currentNumber === $newRevision && $this->matchesSemanticReplay(
+                    $master, $latest, $actor, $nextStatus, $reason, $evidenceReference,
+                    $effectiveStart, $effectiveEnd, $approvedBy
+                )) {
+                    return ['revision' => $newRevision, 'status' => $nextStatus, 'replayed' => true];
+                }
+                if ($currentNumber !== $expectedRevision) throw new DomainException('stale_revision_conflict');
+                if ($effectiveEnd < $effectiveStart) throw new DomainException('invalid_request');
+                $blockedStatuses = match ($action) {
+                    null => [self::STATUS_CANCELLED, 'REVOKED', self::STATUS_REJECTED],
+                    'resolve', 'revoke' => [self::STATUS_CANCELLED, 'REVOKED'],
+                    default => [self::STATUS_CANCELLED, 'REVOKED', self::STATUS_REJECTED],
+                };
+                if (in_array((string) $master->estado_actual, $blockedStatuses, true)) {
+                    throw new DomainException('invalid_lifecycle_transition');
+                }
+
+                if ($effectiveStart !== (string) $master->fecha_inicio_local || $effectiveEnd !== (string) $master->fecha_fin_local) {
+                    $timezone = $this->timezoneForPeriod($workplaceId, $effectiveStart, $effectiveEnd);
+                    if ($timezone === null) throw new DomainException('policy_unavailable');
+                    if (!(($this->workerCoversPeriod)(
+                        (int) $master->id_personal, $workplaceId, $effectiveStart, $effectiveEnd, $timezone
+                    ))) throw new DomainException('worker_scope_unverified');
+                }
+
+                $createdAt = ($this->clock)()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+                $connection->table('op_rh_v2_incidencias_revisiones')->insert([
+                    'id_incidencia_maestro' => (int) $master->id,
+                    'revision_numero' => $newRevision,
+                    'estado_revision' => $nextStatus,
+                    'motivo' => $reason === '' ? null : $reason,
+                    'folio_evidencia' => $evidenceReference,
+                    'creado_por_usuario_id' => (int) $actor->id,
+                    'aprobado_por_usuario_id' => $approvedBy,
+                    'creado_at_utc' => $createdAt,
+                ]);
+                $updated = $connection->table('op_rh_v2_incidencias_maestro')
+                    ->where('id', (int) $master->id)->where('id_localidad', $workplaceId)
+                    ->where('revision_actual', $expectedRevision)
+                    ->update([
+                        'fecha_inicio_local' => $effectiveStart,
+                        'fecha_fin_local' => $effectiveEnd,
+                        'estado_actual' => $nextStatus,
+                        'revision_actual' => $newRevision,
+                        'actualizado_at_utc' => $createdAt,
+                    ]);
+                if ($updated !== 1) throw new DomainException('stale_revision_conflict');
+                return ['revision' => $newRevision, 'status' => $nextStatus, 'replayed' => false];
+            });
+        } catch (DomainException $exception) {
+            return ['ok' => false, 'error' => $exception->getMessage()];
+        } catch (Throwable) {
+            return ['ok' => false, 'error' => 'sql_write_failed'];
+        }
+
+        $readback = $this->detail($actor, $workplaceId, $uuid);
+        $data = $readback['data'] ?? [];
+        $latestRead = is_array($data['revisions'] ?? null) ? end($data['revisions']) : null;
+        $expectedStart = $startDate ?? (string) ($data['start_date'] ?? '');
+        $expectedEnd = $endDate ?? (string) ($data['end_date'] ?? '');
+        $target = $statusForRetry ?? (string) ($data['current_status'] ?? '');
+        if (!($readback['ok'] ?? false) || !is_array($latestRead)
+            || (int) ($data['workplace_id'] ?? 0) !== $workplaceId
+            || (int) ($data['current_revision'] ?? 0) !== (int) $write['revision']
+            || (string) ($data['current_status'] ?? '') !== $target
+            || (string) ($data['start_date'] ?? '') !== $expectedStart
+            || (string) ($data['end_date'] ?? '') !== $expectedEnd
+            || (int) ($latestRead['revision_number'] ?? 0) !== (int) $write['revision']
+            || (string) ($latestRead['status'] ?? '') !== $target
+            || (int) ($latestRead['created_by_user_id'] ?? 0) !== (int) $actor->id
+            || (string) ($latestRead['reason'] ?? '') !== $reason
+            || ($latestRead['evidence_reference'] ?? null) !== $evidenceReference
+            || (in_array($action, ['authorize', 'reject', 'revoke'], true)
+                && (int) ($latestRead['approved_by_user_id'] ?? 0) !== (int) $actor->id)) {
+            return ['ok' => false, 'error' => 'readback_unconfirmed'];
+        }
+        return ['ok' => true, 'data' => ['incidence' => $data, 'replayed' => (bool) $write['replayed']]];
+    }
+
+    private function matchesSemanticReplay(
+        object $master,
+        object $revision,
+        Usuario $actor,
+        string $status,
+        string $reason,
+        ?string $evidenceReference,
+        string $startDate,
+        string $endDate,
+        ?int $approvedBy
+    ): bool {
+        return (string) $master->estado_actual === $status
+            && (string) $master->fecha_inicio_local === $startDate
+            && (string) $master->fecha_fin_local === $endDate
+            && (string) $revision->estado_revision === $status
+            && (string) ($revision->motivo ?? '') === $reason
+            && ($revision->folio_evidencia === null ? null : (string) $revision->folio_evidencia) === $evidenceReference
+            && (int) $revision->creado_por_usuario_id === (int) $actor->id
+            && ($revision->aprobado_por_usuario_id === null ? null : (int) $revision->aprobado_por_usuario_id) === $approvedBy;
+    }
+
+    private function timezoneForPeriod(int $workplaceId, string $startDate, string $endDate): ?string
+    {
+        try {
+            $start = ($this->readPolicy)($workplaceId, $startDate);
+            $end = $startDate === $endDate ? $start : ($this->readPolicy)($workplaceId, $endDate);
+            $startZone = (string) ($start['data']['timezone_id'] ?? '');
+            $endZone = (string) ($end['data']['timezone_id'] ?? '');
+            return ($start['ok'] ?? false) && ($end['ok'] ?? false)
+                && $startZone !== '' && $startZone === $endZone
+                && ChecadorOperationalPeriod::isIanaTimezone($startZone)
+                ? $startZone : null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private static function normalizeText(string $value): string
+    {
+        return trim(str_replace(["\r\n", "\r"], "\n", $value));
+    }
+
+    private static function normalizeOptionalText(?string $value): ?string
+    {
+        if ($value === null) return null;
+        $value = trim($value);
+        return $value === '' ? null : $value;
+    }
+
     /** Deterministic v5 aggregate identity; the idempotency key remains client-held on retry. */
     public static function uuidV5ForIdempotencyKey(string $key): string
     {
@@ -309,7 +548,7 @@ final class ChecadorAdministrativeIncidenceSqlService
             . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20, 12);
     }
 
-    /** Read-only preflight; history/cutover attestations are separately required. */
+    /** Read-only structural and effective-operation preflight on the default connection. */
     public function mariadbSchemaReady(): bool
     {
         try {
@@ -397,6 +636,7 @@ final class ChecadorAdministrativeIncidenceSqlService
             foreach (['op_rh_v2_incidencias_maestro', 'op_rh_v2_incidencias_revisiones'] as $table) {
                 if (!$this->hasEffectiveTablePrivilege($connection, $grantee, $table, 'INSERT')) return false;
             }
+            if (!$this->hasEffectiveTablePrivilege($connection, $grantee, 'op_rh_v2_incidencias_maestro', 'UPDATE')) return false;
             return true;
         } catch (Throwable) {
             return false;
@@ -524,7 +764,8 @@ final class ChecadorAdministrativeIncidenceSqlService
         $category = $filters['category'] ?? null;
         if ($category !== null && !in_array($category, self::CATEGORIES, true)) return null;
         $status = $filters['status'] ?? null;
-        if ($status !== null && !in_array($status, ['PENDING_APPROVAL', 'ACTIVE', 'CANCELLED', 'SUPERSEDED', 'REVIEW_REQUIRED', 'REJECTED', 'REVOKED'], true)) return null;
+        if ($status !== null && !in_array($status, [self::STATUS_PENDING, self::STATUS_RESOLVED, self::STATUS_ACTIVE,
+            self::STATUS_CANCELLED, 'SUPERSEDED', 'REVIEW_REQUIRED', self::STATUS_REJECTED, 'REVOKED'], true)) return null;
         $start = $filters['start_date'] ?? null;
         $end = $filters['end_date'] ?? null;
         if (($start !== null && (!is_string($start) || !self::isCivilDate($start)))
