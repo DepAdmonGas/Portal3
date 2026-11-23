@@ -73,7 +73,8 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
                 <input type="date"
                        class="form-control"
                        x-model="programacion.fecha"
-                       :class="errorsProgramacion.fecha ? 'is-invalid' : ''">
+                       :class="errorsProgramacion.fecha ? 'is-invalid' : ''"
+                       @input="errorsProgramacion.fecha = false">
 
             </div>
 
@@ -139,14 +140,14 @@ x-data="{ ...actions(), ...capacitacionInterna() }" data-idtema="<?= $idTema ?? 
 
                                     <td>
                                       <template x-if="c.estado == 1">
-                                          <a style="cursor:pointer" :href="`/cursos/descargar/${c.id}`" target="_blank">
+                                          <a style="cursor:pointer" :href="`/cursos/descargar/${c.id}`" aria-label="Descargar PDF">
                                               <i class="ti ti-download fs-6"></i>
                                           </a>
                                       </template>
 
                                       <template x-if="c.estado == 0">
                                           <a>
-                                              <i class="ti ti-x fs-6"></i>
+                                              <i class="ti ti-x text-danger fs-6"></i>
                                           </a>
                                       </template>
                                   </td>

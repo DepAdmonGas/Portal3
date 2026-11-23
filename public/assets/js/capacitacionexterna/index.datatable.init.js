@@ -63,6 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return 'S/I';
             }
 
+            const cantidad = Number(String(duracion).replace(/,/g, '').trim());
+            if (duracion !== '' && Number.isFinite(cantidad)) {
+                duracion = cantidad.toLocaleString('en-US', { maximumFractionDigits: 20 });
+            }
+
             return duracion + ' ' + detalle;
         }
     },
@@ -136,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>
 
                         <li>
-                            <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/${row.id}" class="dropdown-item pointer d-flex align-items-center gap-3">
+                            <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa/${row.id}" aria-label="Descargar PDF" class="dropdown-item pointer d-flex align-items-center gap-3">
                                 <i class="ti ti-download"></i>Descargar
                             </a>
                         </li>

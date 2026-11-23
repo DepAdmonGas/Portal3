@@ -13,7 +13,7 @@
     <!-- Card 1 -->
     <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
         <a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/aspectos-ambientales-pdf" 
-        class="card h-100 w-100 border-0 overflow-hidden position-relative card-hover">
+        class="card h-100 w-100 border-0 overflow-hidden position-relative card-hover" aria-label="Descargar PDF">
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between ">
                 <!-- Bloque Superior: Icono + Título alineados -->
                 <div class="d-flex align-items-center gap-3">
@@ -36,7 +36,7 @@
             <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
                 <span class="small">Descargar documento</span>
                 <div class="icon-transition">
-                    <i class="ti ti-download fs-5"></i>
+                    <i class="ti ti-download fs-6"></i>
                 </div>
             </div>
 </a>
@@ -45,7 +45,7 @@
     <!-- Card 2 -->
     <div class="col-12 col-md-6 d-flex align-items-stretch mb-4">
         <a href="identificacion-peligros-aspectos-ambientales-analisis-riesgo-evaluacion-impactos-ambientales/riesgos-peligros-pdf"
-         class="card h-100 w-100 border-0 overflow-hidden position-relative card-hover">
+         class="card h-100 w-100 border-0 overflow-hidden position-relative card-hover" aria-label="Descargar PDF">
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
                 <!-- Bloque Superior: Icono + Título alineados -->
                 <div class="d-flex align-items-center gap-3">
@@ -68,7 +68,7 @@
             <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
                 <span class="small">Descargar documento</span>
                 <div class="icon-transition">
-                    <i class="ti ti-download fs-5"></i>
+                    <i class="ti ti-download fs-6"></i>
                 </div>
             </div>
 </a>
@@ -234,8 +234,12 @@ Cargando...
 <tr>
 <td x-text="anexo.descripcion"></td>
 <td class="text-center">
-<a @click="download('analisis-riesgo', anexo.documento)">
-<i class="ti ti-download text-danger fs-6"></i>
+<a :href="anexo.documento_url || '#'"
+   :class="{ 'disabled': !anexo.documento_disponible }"
+   :aria-disabled="anexo.documento_disponible ? 'false' : 'true'"
+   :aria-label="anexo.documento_disponible ? 'Descargar PDF' : 'Archivo no disponible'"
+   @click.prevent="true">
+<i :class="anexo.documento_disponible ? 'ti ti-download text-danger fs-6' : 'ti ti-file-off text-muted fs-6'"></i>
 </a>
 </td>
 </tr>

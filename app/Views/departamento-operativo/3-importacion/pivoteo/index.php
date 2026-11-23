@@ -91,7 +91,7 @@
                             </div>
 
                             <!-- Líneas del pivoteo -->
-                            <template x-if="detalleData.filas.length > 0">
+                            <template x-if="detalleData.filas && detalleData.filas.length > 0">
                                 <div class="row">
                                     <template x-for="fila in detalleData.filas" :key="fila.id_detalle">
                                         <div class="col-12 mb-3">
@@ -166,7 +166,7 @@
                                 </div>
                             </template>
 
-                            <template x-if="detalleData.filas.length === 0">
+                            <template x-if="!detalleData.filas || detalleData.filas.length === 0">
                                 <div class="alert alert-secondary border-0 text-center text-muted p-5 rounded-3" role="alert">
                                     <h5 class="fw-semibold text-dark mb-2">Sin líneas registradas</h5>
                                 </div>

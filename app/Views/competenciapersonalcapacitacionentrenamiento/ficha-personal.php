@@ -24,7 +24,8 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
 <div class="row g-0 w-100 justify-content-end">
     <div class="col-12 col-md-auto d-grid mt-3 mb-3">
         <a href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/<?= $usuario->id ?? '' ?>"
-           class="btn bg-primary-subtle text-primary">
+           class="btn bg-primary-subtle text-primary"
+           aria-label="Descargar PDF">
             <i class="ti ti-download"></i> Descargar
         </a>
     </div>
@@ -46,7 +47,8 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
                 <input type="text"
                        class="form-control"
                        x-model="nombre"
-                       :class="errors.nombre ? 'is-invalid' : ''">
+                       :class="errors.nombre ? 'is-invalid' : ''"
+                       @input="errors.nombre = false">
 
                 <label class="form-label mt-3">
                     * Domicilio (Calle, Número, Colonia, Municipio, Estado, C.P.):
@@ -54,7 +56,8 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
                 <input type="text"
                        class="form-control"
                        x-model="domicilio"
-                       :class="errors.domicilio ? 'is-invalid' : ''">
+                       :class="errors.domicilio ? 'is-invalid' : ''"
+                       @input="errors.domicilio = false">
 
                 <div class="row">
 
@@ -63,14 +66,16 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
                         <input type="date"
                                class="form-control"
                                x-model="fechaNacimiento"
-                               :class="errors.fechaNacimiento ? 'is-invalid' : ''">
+                               :class="errors.fechaNacimiento ? 'is-invalid' : ''"
+                               @input="errors.fechaNacimiento = false">
                     </div>
 
                     <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mt-3">
                         <label class="form-label">* Estado civil:</label>
                         <select class="form-select"
                                 x-model="estadoCivil"
-                                :class="errors.estadoCivil ? 'is-invalid' : ''">
+                                :class="errors.estadoCivil ? 'is-invalid' : ''"
+                                @change="errors.estadoCivil = false">
                             <option value="">Selecciona una opción</option>
                             <option value="Soltero(a)">Soltero(a)</option>
                             <option value="Casado(a)">Casado(a)</option>
@@ -84,7 +89,8 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
                         <input type="text"
                                class="form-control"
                                x-model="seguroSocial"
-                               :class="errors.seguroSocial ? 'is-invalid' : ''">
+                               :class="errors.seguroSocial ? 'is-invalid' : ''"
+                               @input="errors.seguroSocial = false">
                     </div>
 
                     <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mt-3">
@@ -100,7 +106,8 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
                         <input type="email"
                                class="form-control"
                                x-model="email"
-                               :class="errors.email ? 'is-invalid' : ''">
+                               :class="errors.email ? 'is-invalid' : ''"
+                               @input="errors.email = false">
                     </div>
 
                 </div>

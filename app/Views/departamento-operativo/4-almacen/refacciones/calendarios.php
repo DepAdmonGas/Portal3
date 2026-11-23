@@ -121,13 +121,12 @@
 <?php if (!empty($permissions['crear'])): ?>
 <div class="modal fade" id="modalRefaccionesEvento" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <form data-refacciones-calendar-form novalidate data-endpoint="<?= $escape($baseUrl) ?>/calendario/guardar">
+        <form class="modal-content refacciones-scroll-form" data-refacciones-calendar-form novalidate data-endpoint="<?= $escape($baseUrl) ?>/calendario/guardar">
                 <div class="modal-header modal-colored-header bg-primary text-white">
                     <h2 class="modal-title fs-5 text-white"><i class="ti ti-calendar-plus me-1"></i>Nuevo evento</h2>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body refacciones-scroll-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-1" for="refacciones-event-type">* Tipo de evento:</label>
                         <select class="form-select" id="refacciones-event-type" name="tipo_evento" data-required>
@@ -197,7 +196,6 @@
                     <button class="btn btn-success" type="submit" data-calendar-save disabled><i class="ti ti-check me-1"></i>Guardar</button>
                 </div>
             </form>
-        </div>
     </div>
 </div>
 <?php endif; ?>

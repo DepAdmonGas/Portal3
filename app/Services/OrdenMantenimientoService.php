@@ -29,6 +29,7 @@ final class OrdenMantenimientoService
     public const PARENT_MODULE = 'almacen';
     public const UPLOAD_FOLDER = 'public/uploads/archivos/';
     public const CAUSE_UPLOAD_FOLDER = 'public/uploads/archivos/orden-mantenimiento-causa/';
+    public const EVIDENCE_UPLOAD_FOLDER = 'public/uploads/archivos/material-evidencia/';
 
     private const DEFAULT_AREAS = [
         'Zona de despacho', 'Zona de tanques', 'Cuarto eléctrico',
@@ -712,7 +713,7 @@ final class OrdenMantenimientoService
         if (!self::authorizedRecord($id)) return null;
         $links = static function (string $name): ?string {
             $name = basename($name);
-            if (self::storedFilePath($name, ['public/uploads/archivos/']) === null) return null;
+            if (self::storedFilePath($name, [self::UPLOAD_FOLDER, self::EVIDENCE_UPLOAD_FOLDER]) === null) return null;
             return '/download?tipo=orden-mantenimiento&file='.rawurlencode($name);
         };
         $causeLinks = static function (string $name): string {

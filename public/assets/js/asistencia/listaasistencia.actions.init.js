@@ -85,7 +85,7 @@ document.addEventListener('alpine:init', () => {
         async actualizar(id){
 
             if (!this.validate()) {
-                this.notify('error', 'Completa todos los campos');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

@@ -69,13 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}" 
                                     data-id="${row.id}" 
                                     @click="$dispatch('open-edit', ${row.id})">
-                                        <i class="fs-4 ti ti-edit"></i>Editar
+                                        <i class="ti ti-edit fs-6"></i>Editar
                                     </a>
                                 </li>
                                  <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
-                                    href="/sasisopa/politica/lista-comprobacion/pdf/${row.id}" target="_blank">
-                                        <i class="fs-4 ti ti-download"></i>Descargar
+                                    href="/sasisopa/politica/lista-comprobacion/pdf/${row.id}" target="_blank"
+                                    aria-label="Descargar PDF" ${!noDownload ? 'aria-disabled="true" tabindex="-1"' : ''}>
+                                        <i class="ti ti-download fs-6"></i>Descargar
                                     </a>
                                 </li>
                                 <li>
@@ -90,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     });
                                     }'
                                     `}>
-                                        <i class="fs-4 ti ti-trash"></i>Eliminar
+                                        <i class="ti ti-trash fs-6"></i>Eliminar
                                     </a>
                                 </li>
                             </ul>
