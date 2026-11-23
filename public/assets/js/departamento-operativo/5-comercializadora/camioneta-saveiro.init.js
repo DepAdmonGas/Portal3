@@ -150,7 +150,7 @@ init() {
                         render: (row) => {
                             const documentoDisponible = row.archivo_disponible === true;
                             const accionDocumento = documentoDisponible
-                                ? `<a class="dropdown-item pointer btn-descargar" data-archivo="${row.archivo}"><i class="ti ti-file-text"></i> Documento</a>`
+                                ? `<a class="dropdown-item pointer btn-descargar" data-archivo="${row.archivo}"><i class="ti ti-file-text"></i> Descargar documento</a>`
                                 : `<span class="dropdown-item disabled" aria-disabled="true"><i class="ti ti-file-off"></i> Documento no disponible</span>`;
                             return `
                                 <div class="dropdown dropstart">

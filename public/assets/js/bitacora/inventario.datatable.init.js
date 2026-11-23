@@ -64,7 +64,14 @@ return data;
 }
 },
 { data: 'aditivo', className: 'text-center align-middle', },
-{ data: 'galones', className: 'text-center align-middle', },
+{
+data: 'galones',
+className: 'text-center align-middle',
+render: function (data, type) {
+if (type !== 'display') return data;
+return Number(data || 0).toLocaleString('en-US', { maximumFractionDigits: 20 });
+}
+},
 { data: 'detalle', className: 'text-start align-middle', }
 ]
 });

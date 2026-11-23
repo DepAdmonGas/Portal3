@@ -67,10 +67,17 @@ if (!contenedor) return;
 
 contenedor.innerHTML = '';
 const noDesc = !archivo;
+const archivoSeguro = String(archivo || '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+}[char]));
 
 contenedor.innerHTML = `
 
-<button class="btn bg-primary text-white w-100 d-flex justify-content-center align-items-center gap-1 ${noDesc ? 'disabled' : ''}" ${noDesc ? '' : `@click="download('solicitud-tarjetas','${archivo}')"`}>
+<button class="btn bg-primary text-white w-100 d-flex justify-content-center align-items-center gap-1 ${noDesc ? 'disabled' : ''}" ${noDesc ? '' : `data-archivo="${archivoSeguro}" @click="download('solicitud-tarjetas',$el.dataset.archivo)"`}>
 <i class="ti ti-file-download me-1"></i> Descargar archivo
 </button>
 `;

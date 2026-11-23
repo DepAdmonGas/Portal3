@@ -22,6 +22,50 @@ document.addEventListener('alpine:init', () => {
         fecha: '',
         no_factura: '',
 
+        formatearCantidad(event, campo) {
+            const input = event.target;
+            const valorOriginal = input.value;
+            const posicion = input.selectionStart ?? valorOriginal.length;
+            const digitosAntes = valorOriginal.slice(0, posicion).replace(/\D/g, '').length;
+            let normalizado = valorOriginal.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const partes = normalizado.split('.');
+            normalizado = partes[0] + (partes.length > 1 ? '.' + partes.slice(1).join('') : '');
+
+            if (!normalizado) {
+                this[campo] = '';
+                input.value = '';
+                return;
+            }
+
+            const [entero = '', ...decimales] = normalizado.split('.');
+            const enteroAgrupado = (entero.replace(/^0+(?=\d)/, '') || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const formateado = enteroAgrupado + (normalizado.includes('.') ? '.' + decimales.join('') : '');
+            this[campo] = formateado;
+            input.value = formateado;
+
+            let vistos = 0;
+            let nuevaPosicion = input.value.length;
+            for (let i = 0; i < input.value.length; i += 1) {
+                if (/\d/.test(input.value[i])) vistos += 1;
+                if (vistos >= digitosAntes && digitosAntes > 0) {
+                    nuevaPosicion = i + 1;
+                    break;
+                }
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
+        valorCantidad(valor) {
+            const numero = Number(String(valor ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(numero) ? numero : 0;
+        },
+
+        formatearCantidadExistente(valor) {
+            if (valor === null || valor === undefined || valor === '') return '';
+            const numero = Number(String(valor).replace(/,/g, ''));
+            return Number.isFinite(numero) ? numero.toLocaleString('en-US', { maximumFractionDigits: 20 }) : '';
+        },
+
         // VALIDACIÓN
         errors: {
             litros: false,
@@ -38,7 +82,7 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            let litros = parseFloat(this.litros);
+            let litros = this.valorCantidad(this.litros);
             let PL = 20000;
             let PG = 0;
             let resultado = 0;
@@ -64,7 +108,7 @@ document.addEventListener('alpine:init', () => {
                 break;
             }
 
-            this.galones = Number(resultado.toFixed(2));
+            this.galones = Number(resultado.toFixed(2)).toLocaleString('en-US', { maximumFractionDigits: 2 });
         },
 
          openEdit(data) {
@@ -73,9 +117,9 @@ document.addEventListener('alpine:init', () => {
             this.id = data.id;
             this.errors = { litros: false, producto: false, fecha: false, no_factura: false };
 
-            this.litros = data.litros ?? '';
+            this.litros = this.formatearCantidadExistente(data.litros ?? '');
             this.producto = data.producto ?? '';
-            this.galones = data.galones ?? 0;
+            this.galones = this.formatearCantidadExistente(data.galones ?? 0);
 
             // FIX FECHA
             this.fecha = data.fecha ? data.fecha.split('T')[0] : '';
@@ -94,7 +138,7 @@ document.addEventListener('alpine:init', () => {
 
             if (this.mode === 'create') {
 
-                this.errors.litros = !this.litros;
+                this.errors.litros = this.valorCantidad(this.litros) <= 0;
                 this.errors.producto = !this.producto;
                 this.errors.fecha = !this.fecha;
                 this.errors.no_factura = !String(this.no_factura ?? '').trim();
@@ -156,7 +200,7 @@ document.addEventListener('alpine:init', () => {
         async submit() {
 
         if (!this.validate()) {
-            this.notify('error', 'Completa los campos obligatorios');
+            this.notify('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -168,7 +212,7 @@ document.addEventListener('alpine:init', () => {
             url = this.getBaseUrl() + '/create';
 
             payload = {
-                litros: this.litros,
+                litros: this.valorCantidad(this.litros),
                 producto: this.producto,
                 galones: this.galones,
                 fecha: this.fecha,

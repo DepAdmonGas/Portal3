@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+}[char]));
+
 let permisos = {};
  
 const container = document.getElementById('container');
@@ -41,7 +49,8 @@ className: 'text-center align-middle td-small',
 render: function (data, type, row) {
 
 const disabled = 'disabled opacity-50 pointer-events-none';
-const noDesc = !permisos.descargar;
+const noDesc = !permisos.descargar || !row.archivo_disponible;
+const archivo = escapeHtml(row.foto_gafete || '');
 
 return `
 <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -56,8 +65,8 @@ return `
 <li>
 <a 
 class="dropdown-item pointer d-flex align-items-center gap-1 ${noDesc ? disabled : ''}"
-${noDesc ? '' : ` @click="download('solicitud-gafetes','${row.foto_gafete}')"`}>
-<i class="ti ti-file-download"></i> Descargar 
+${noDesc ? '' : `data-archivo="${archivo}" @click="download('solicitud-gafetes',$el.dataset.archivo)"`}>
+<i class="ti ${noDesc ? 'ti-file-off' : 'ti-file-download'}"></i> Descargar
 </a>
 </li>
 

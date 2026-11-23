@@ -76,8 +76,20 @@ columns: (function () {
         },
         { data: 'no_factura', className: 'text-center align-middle', },
         { data: 'producto', className: 'text-center align-middle', },
-        { data: 'galones', className: 'text-center align-middle', },
-        { data: 'inventario_fisico', className: 'text-center align-middle', }
+        {
+            data: 'galones', className: 'text-center align-middle',
+            render: function (data, type) {
+                if (type !== 'display') return data;
+                return Number(data || 0).toLocaleString('en-US', { maximumFractionDigits: 20 });
+            }
+        },
+        {
+            data: 'inventario_fisico', className: 'text-center align-middle',
+            render: function (data, type) {
+                if (type !== 'display') return data;
+                return Number(data || 0).toLocaleString('en-US', { maximumFractionDigits: 20 });
+            }
+        }
     ];
     if (!esImportacion()) {
         cols.push({
