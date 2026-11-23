@@ -6208,12 +6208,11 @@ final class ChecadorController extends BaseController
     }
 
 
-    /** Enable the verified local Fedora cutover only for the local development database. */
+    /** M06 administrative writes are owned by Portal3 SQL; API V2 POST writers are retired. */
     private static function m06AdministrativeIncidenceSqlService(): \App\Services\ChecadorAdministrativeIncidenceSqlService
     {
-        $localCutoverVerified = \App\Core\Database::isLocalDevelopmentDatabaseConnection();
         return new \App\Services\ChecadorAdministrativeIncidenceSqlService(
-            apiWriterCutoverVerified: $localCutoverVerified
+            apiWriterCutoverVerified: true
         );
     }
 
