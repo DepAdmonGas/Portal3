@@ -29,8 +29,9 @@
 
             <div class="card mb-3">
                 <div class="card-header bg-primary"><h5 class="mb-0 text-white"><i class="ti ti-align-box-left-top me-1"></i> ¿En qué afecta a la estación?</h5></div>
-                <div class="card-body p-0">
-                    <textarea id="orden-afectacion" class="form-control p-3 border-0" rows="6" aria-label="¿En qué afecta a la estación?" placeholder="Ingresa aqui tu afectación..."></textarea>
+                <div class="card-body p-0 position-relative">
+                    <textarea id="orden-afectacion" class="form-control p-3 pe-5 border-0" rows="6" aria-label="¿En qué afecta a la estación?" placeholder="Ingresa aqui tu afectación..."></textarea>
+                    <span id="orden-afectacion-estado" class="position-absolute top-0 end-0 mt-2 me-3" aria-live="polite"></span>
                 </div>
             </div>
 
@@ -38,13 +39,13 @@
     <!-- Card 1 -->
     <div class="col-12 col-lg-4">
         <div class="card h-100">
-            <div class="card-header bg-primary">
-                <h5 class="mb-0 text-white d-flex align-items-center"><i class="ti ti-tool me-2"></i><span>Tipo de servicio</span></h5>
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0 text-white d-flex align-items-center"><i class="ti ti-tool me-2"></i><span>Tipo de servicio</span><span id="orden-tipo-estado" class="ms-auto" aria-live="polite"></span></h5>
             </div>
             <!-- Agregamos d-flex flex-column aquí -->
             <div class="card-body p-0 d-flex flex-column">
                 <div class="table-responsive flex-grow-1 d-flex">
-                    <table class="table table-bordered mb-0 text-center align-middle w-100" data-portal-table-selection="false">
+                    <table class="table table-bordered mb-0 text-center align-middle w-100 js-required-choice-table" data-portal-table-selection="false">
                         <thead>
                             <tr><th class="text-center align-middle">Preventivo</th><th class="text-center align-middle">Correctivo</th><th class="text-center align-middle">Emergente</th></tr>
                         </thead>
@@ -71,11 +72,11 @@
     <div class="col-12 col-lg-4">
         <div class="card h-100">
             <div class="card-header bg-primary">
-                <h5 class="mb-0 text-white d-flex align-items-center"><i class="ti ti-building me-2"></i><span>¿La orden de trabajo se puede atender internamente?</span></h5>
+                <h5 class="mb-0 text-white d-flex align-items-center"><i class="ti ti-building me-2"></i><span>¿La orden de trabajo se puede atender internamente?</span><span id="orden-trabajo-estado" class="ms-auto" aria-live="polite"></span></h5>
             </div>
             <div class="card-body p-0 d-flex flex-column">
                 <div class="table-responsive flex-grow-1 d-flex">
-                    <table class="table table-bordered mb-0 text-center align-middle w-100" data-portal-table-selection="false">
+                    <table class="table table-bordered mb-0 text-center align-middle w-100 js-required-choice-table" data-portal-table-selection="false">
                         <thead>
                             <tr><th class="text-center align-middle">Sí</th><th class="text-center align-middle">No</th><th class="text-center align-middle">Ambas</th></tr>
                         </thead>
@@ -102,11 +103,11 @@
     <div class="col-12 col-lg-4">
         <div class="card">
             <div class="card-header bg-primary">
-                <h5 class="mb-0 text-white d-flex align-items-center"><i class="ti ti-alert-triangle me-2"></i><span>¿La orden de trabajo es de alto riesgo?</span></h5>
+                <h5 class="mb-0 text-white d-flex align-items-center"><i class="ti ti-alert-triangle me-2"></i><span>¿La orden de trabajo es de alto riesgo?</span><span id="orden-riesgo-estado" class="ms-auto" aria-live="polite"></span></h5>
             </div>
             <div class="card-body p-0 d-flex flex-column">
                 <div class="table-responsive flex-grow-1 d-flex">
-                    <table class="table table-bordered mb-0 text-center align-middle w-100" data-portal-table-selection="false">
+                    <table class="table table-bordered mb-0 text-center align-middle w-100 js-required-choice-table" data-portal-table-selection="false">
                         <thead>
                             <tr><th class="text-center align-middle">Sí</th><th class="text-center align-middle">No</th></tr>
                         </thead>
@@ -139,7 +140,7 @@
                 <div class="col-12 col-lg-6">
                     <div class="card h-100">
                         <div class="card-header bg-primary"><h5 class="mb-0 text-white"><i class="ti ti-eye me-1"></i> OBSERVACIONES</h5></div>
-                        <div class="card-body p-0 flex-grow-1"><textarea id="orden-comentarios" class="form-control p-3 border-0 d-block w-100 h-100 m-0" rows="5" placeholder="Escribe aquí tu comentario..."></textarea></div>
+                        <div class="card-body p-0 flex-grow-1 position-relative"><textarea id="orden-comentarios" class="form-control p-3 pe-5 border-0 d-block w-100 h-100 m-0" rows="5" placeholder="Escribe aquí tu comentario..."></textarea><span id="orden-comentarios-estado" class="position-absolute top-0 end-0 mt-2 me-3" aria-live="polite"></span></div>
                     </div>
                 </div>
                 <div class="col-12 col-lg-6">

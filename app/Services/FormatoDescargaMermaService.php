@@ -34,6 +34,8 @@ class FormatoDescargaMermaService
     public const UPLOAD_DIR = '/uploads/archivos/formato-descarga-merma/';
     public const FIRMA_DIR  = '/uploads/archivos/formato-descarga-merma-firmas/';
 
+    private const MIGRATED_UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/';
+
     public static function getUploadPath(): string
     {
         return dirname(__DIR__, 2) . '/public' . self::UPLOAD_DIR;
@@ -42,6 +44,51 @@ class FormatoDescargaMermaService
     public static function getFirmaPath(): string
     {
         return dirname(__DIR__, 2) . '/public' . self::FIRMA_DIR;
+    }
+
+    public static function getUploadFilePath(?string $fileName): ?string
+    {
+        return self::resolveStoredFile($fileName, [
+            self::getUploadPath(),
+            self::MIGRATED_UPLOAD_DIR,
+            self::MIGRATED_UPLOAD_DIR . 'tuxpan/',
+        ]);
+    }
+
+    public static function getFirmaFilePath(?string $fileName): ?string
+    {
+        return self::resolveStoredFile($fileName, [
+            self::getFirmaPath(),
+            self::MIGRATED_UPLOAD_DIR,
+            dirname(__DIR__, 2) . '/public/uploads/firmas/firma-tuxpan/',
+            dirname(__DIR__, 2) . '/public/uploads/firmas/',
+            dirname(__DIR__, 2) . '/public/imgs/firma-tuxpan/',
+            dirname(__DIR__, 2) . '/imgs/firma-tuxpan/',
+        ]);
+    }
+
+    private static function resolveStoredFile(?string $fileName, array $directories): ?string
+    {
+        $safeName = basename(str_replace('\\', '/', (string)$fileName));
+        if ($safeName === '' || $safeName === '.') {
+            return null;
+        }
+
+        foreach ($directories as $directory) {
+            $basePath = realpath($directory);
+            if ($basePath === false) {
+                continue;
+            }
+
+            $filePath = realpath($basePath . DIRECTORY_SEPARATOR . $safeName);
+            if ($filePath !== false
+                && is_file($filePath)
+                && str_starts_with($filePath, $basePath . DIRECTORY_SEPARATOR)) {
+                return $filePath;
+            }
+        }
+
+        return null;
     }
 
     public static function getPermisos(): array
@@ -536,11 +583,11 @@ class FormatoDescargaMermaService
             return '';
         }
 
-        $directory = $tipo === 'formato-descarga-merma-firma'
-            ? self::getFirmaPath()
-            : self::getUploadPath();
         $safeName = basename($fileName);
-        if (!is_file($directory . $safeName)) {
+        $filePath = $tipo === 'formato-descarga-merma-firma'
+            ? self::getFirmaFilePath($safeName)
+            : self::getUploadFilePath($safeName);
+        if ($filePath === null) {
             return '';
         }
 

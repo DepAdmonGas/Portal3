@@ -384,6 +384,7 @@ class RefaccionesController extends BaseController
             'nombreBadgeEstacion' => (string) $locations[$id],
             'mostrarBadgeGlobal' => false,
             'baseUrl' => self::BASE_URL, 'context' => $context, 'locations' => $locations,
+            'warehouseLocationId' => Service::getWarehouseLocationId(),
             'salidaOriginId' => $id, 'salidaOriginName' => $locations[$id],
             'salidaEdit' => false, 'salidaRecord' => null,
             'salidaProductOptions' => Service::getProductosParaSalida($id),
@@ -775,7 +776,11 @@ class RefaccionesController extends BaseController
         $items = array_map(static fn (string $key, array $item): array => [
             'nombre' => $item['nombre'], 'icono' => $item['icono'],
             'ruta' => $key === 'dashboard' ? self::BASE_URL : self::BASE_URL . '/' . $key,
-            'badge_count' => $key === 'calendarios' ? Service::contarEventosPendientesSidebar() : 0,
+            'badge_count' => match ($key) {
+                'calendarios' => Service::contarEventosPendientesSidebar(),
+                'salidas' => Service::contarSalidasNoFinalizadasSidebar(),
+                default => 0,
+            },
         ], array_keys($sections), array_values($sections));
 
         $requestItem = [

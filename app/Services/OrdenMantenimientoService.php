@@ -305,7 +305,6 @@ final class OrdenMantenimientoService
                 }
                 return (int)$record->id;
             });
-            self::notify($id, 'creado una nueva solicitud');
             return ['success' => true, 'message' => 'Solicitud creada.', 'id' => $id, 'code' => 201];
         } catch (\Throwable $e) {
             error_log('[OrdenMantenimiento] create: '.$e->getMessage());
@@ -343,8 +342,14 @@ final class OrdenMantenimientoService
             $file = basename((string)$signature->firma);
             $type = (string)$signature->tipo_firma;
             $signatureDate = (string)$signature->getRawOriginal('fecha');
-            $imagePath = dirname(__DIR__, 2).'/public/uploads/archivos/'.$file;
-            $imageAvailable = $type === 'A' && $file !== '' && is_file($imagePath);
+            $imageAvailable = $type === 'A' && self::storedFilePath($file, [
+                'public/uploads/archivos/',
+                'public/uploads/firmas/orden-mantenimiento/',
+                'public/uploads/firmas/firma-tuxpan/',
+                'public/uploads/firmas/',
+                'public/imgs/firma/',
+                'imgs/firma/',
+            ]) !== null;
             return [
                 'tipo' => $type,
                 'titulo' => match ($type) {
@@ -591,7 +596,8 @@ final class OrdenMantenimientoService
         $record = self::authorizedRecord($id, true);
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if (!in_array((int)$record->estatus, [0, 1], true)) return self::fail('La orden ya no permite cambios.', 409);
-        $quantity = filter_var($data['cantidad'] ?? null, FILTER_VALIDATE_FLOAT);
+        $rawQuantity = str_replace(',', '', trim((string)($data['cantidad'] ?? '')));
+        $quantity = filter_var($rawQuantity, FILTER_VALIDATE_FLOAT);
         if ($quantity === false || $quantity < 1) return self::fail('La cantidad debe ser de al menos 1.', 422);
         $quantity = round((float)$quantity, 2);
         if ((bool)($record->usa_refacciones_catalogo ?? false)) {
@@ -601,17 +607,19 @@ final class OrdenMantenimientoService
                 return self::fail('La orden sólo permite agregar una refacción.', 409);
             }
             try {
-                $warehouseId = RefaccionesService::getWarehouseLocationId();
-                if ($warehouseId === null) return self::fail('No se encontró la localidad de Almacén configurada.', 500);
-                DB::transaction(static function () use ($id, $productId, $quantity, $warehouseId): void {
+                $stationId = (int)$record->id_estacion;
+                DB::transaction(static function () use ($id, $productId, $quantity, $stationId): void {
                     $product = DB::table('op_refacciones_catalogo')->where('id', (int)$productId)
                         ->where('tipo_articulo', 'refaccion')->where('activo', 1)->lockForUpdate()->first();
                     if (!$product) throw new \RuntimeException('La refacción seleccionada ya no está disponible.');
-                    $stock = DB::table('op_refacciones_existencias')->where('id_refaccion', (int)$productId)
-                        ->where('id_estacion', $warehouseId)->lockForUpdate()->first();
-                    $available = (float)($stock->existencia ?? 0);
-                    if ($available <= 0) throw new \RuntimeException('La refacción no tiene existencia disponible en Almacén.');
-                    if ((float)$quantity > $available) throw new \RuntimeException('La cantidad excede la existencia disponible en Almacén.');
+                    $stationStock = DB::table('op_refacciones_existencias')->where('id_refaccion', (int)$productId)
+                        ->where('id_estacion', $stationId)->lockForUpdate()->first();
+                    if (!$stationStock || (float)$stationStock->existencia <= 0) {
+                        throw new \RuntimeException('La refacción no está registrada con existencia en la estación de la orden.');
+                    }
+                    if ((float)$quantity > (float)$stationStock->existencia) {
+                        throw new \RuntimeException('La cantidad excede la existencia disponible en la estación.');
+                    }
                     DB::table('op_pedido_materiales_refacciones')->insert([
                         'id_pedido' => $id, 'id_refaccion' => (int)$productId,
                         'cantidad' => $quantity,
@@ -689,7 +697,7 @@ final class OrdenMantenimientoService
         $record = self::authorizedRecord($id);
         if (!$record) return null;
         if ((bool)($record->usa_refacciones_catalogo ?? false)) {
-            return RefaccionesService::getProductosAlmacenParaOrden();
+            return RefaccionesService::getProductosAlmacenParaOrden((int)$record->id_estacion);
         }
         return DB::table('op_refacciones')->where('id_estacion', (int)$record->id_estacion)
             ->where('status', 1)->orderBy('id')->get(['id', 'nombre', 'estado_r', 'unidad'])
@@ -702,18 +710,23 @@ final class OrdenMantenimientoService
     public static function files(int $id): ?array
     {
         if (!self::authorizedRecord($id)) return null;
-        $links = static fn(string $name): string => '/download?tipo=orden-mantenimiento&file='.rawurlencode(basename($name));
+        $links = static function (string $name): ?string {
+            $name = basename($name);
+            if (self::storedFilePath($name, ['public/uploads/archivos/']) === null) return null;
+            return '/download?tipo=orden-mantenimiento&file='.rawurlencode($name);
+        };
         $causeLinks = static function (string $name): string {
             $name = basename($name);
             $specificPath = dirname(__DIR__, 2).'/'.self::CAUSE_UPLOAD_FOLDER.$name;
-            $type = is_file($specificPath) ? 'orden-mantenimiento-causa' : 'orden-mantenimiento';
+            $rootPath = dirname(__DIR__, 2).'/'.self::UPLOAD_FOLDER.$name;
+            $type = is_file($specificPath) || is_file($rootPath) ? 'orden-mantenimiento-causa' : 'orden-mantenimiento';
             return '/download?tipo='.$type.'&file='.rawurlencode($name);
         };
         return [
             'instalaciones' => PedidoMaterialesInstalacion::where('id_pedido', $id)->orderBy('id')->get()->map(static fn($file) => [
                 'id' => (int)$file->id, 'archivo' => basename((string)$file->archivo),
                 'url' => $links((string)$file->archivo),
-                'preview_url' => $links((string)$file->archivo).'&view=1',
+                'preview_url' => ($url = $links((string)$file->archivo)) !== null ? $url.'&view=1' : null,
             ])->all(),
             'evidencias' => PedidoMaterialesEvidenciaArchivo::where('id_pedido', $id)->orderBy('id')->get()->map(static fn($file) => [
                 'id' => (int)$file->id, 'area' => (string)$file->area, 'motivo' => (string)$file->motivo,
@@ -725,8 +738,8 @@ final class OrdenMantenimientoService
                 'descripcion' => (string)$cause->descripcion, 'refaccion' => (string)$cause->localidad_refaccion,
                 'precio' => number_format((float)$cause->precio, 2, '.', ','),
                 'factura_pdf' => basename((string)$cause->factura_pdf), 'factura_xml' => basename((string)$cause->factura_xml),
-                'pdf_url' => (string)$cause->factura_pdf !== '' ? $causeLinks((string)$cause->factura_pdf) : null,
-                'xml_url' => (string)$cause->factura_xml !== '' ? $causeLinks((string)$cause->factura_xml) : null,
+                'pdf_url' => (string)$cause->factura_pdf !== '' && self::storedFilePath(basename((string)$cause->factura_pdf), [self::CAUSE_UPLOAD_FOLDER, self::UPLOAD_FOLDER]) !== null ? $causeLinks((string)$cause->factura_pdf) : null,
+                'xml_url' => (string)$cause->factura_xml !== '' && self::storedFilePath(basename((string)$cause->factura_xml), [self::CAUSE_UPLOAD_FOLDER, self::UPLOAD_FOLDER]) !== null ? $causeLinks((string)$cause->factura_xml) : null,
             ])->all(),
         ];
     }
@@ -815,9 +828,10 @@ final class OrdenMantenimientoService
         if (!in_array((int)$record->estatus, [2, 3], true)) return self::fail('La causa sólo puede registrarse después de la autorización.', 409);
         $description = trim((string)($data['descripcion'] ?? ''));
         $locality = trim((string)($data['refaccion'] ?? ''));
-        $rawPrice = trim((string)($data['precio'] ?? ''));
+        $rawPrice = str_replace(',', '', trim((string)($data['precio'] ?? '')));
         $price = $rawPrice === '' ? 0.0 : filter_var($rawPrice, FILTER_VALIDATE_FLOAT);
-        if ($description === '' || $locality === '' || $price === false || $price < 0) return self::fail('Completa descripción, lugar de la refacción y un precio válido.', 422);
+        if ($description === '' || $locality === '') return self::fail('Completa los campos obligatorios.', 422);
+        if ($price === false || $price < 0) return self::fail('Captura un precio válido.', 422);
         $pdfResult = self::saveUpload($pdf, ['pdf'], true, self::CAUSE_UPLOAD_FOLDER);
         if (!$pdfResult['success']) return $pdfResult;
         $xmlResult = self::saveUpload($xml, ['xml'], true, self::CAUSE_UPLOAD_FOLDER);
@@ -974,7 +988,7 @@ final class OrdenMantenimientoService
         if (!$record) return self::fail('Registro no encontrado.', 404);
         if ((int)$record->estatus !== 0) return self::fail('La orden ya se finalizó.', 409);
         $affectation = trim((string)($data['afectacion'] ?? ''));
-        if ($affectation === '') return self::fail('Completa el campo de afectación antes de finalizar.', 422);
+        if ($affectation === '') return self::fail('Completa los campos obligatorios.', 422);
         $choiceOptions = [
             'tipo_servicio' => [1, 2, 3],
             'orden_trabajo' => [1, 2, 3],
@@ -984,12 +998,16 @@ final class OrdenMantenimientoService
         foreach ($choiceOptions as $field => $allowedValues) {
             $value = filter_var($data[$field] ?? null, FILTER_VALIDATE_INT);
             if ($value === false || !in_array($value, $allowedValues, true)) {
-                return self::fail('Selecciona una opción válida en cada apartado antes de finalizar.', 422);
+                return self::fail('Completa los campos obligatorios.', 422);
             }
             $choices[$field] = $value;
         }
+        $hasRefaction = (bool)($record->usa_refacciones_catalogo ?? false)
+            ? DB::table('op_pedido_materiales_refacciones')->where('id_pedido', $id)->exists()
+            : PedidoMaterialesDetalle::where('id_pedido', $id)->exists();
+        if (!$hasRefaction) return self::fail('Agrega al menos una refacción antes de finalizar la orden.', 422);
         $png = self::decodeSignature((string)($data['firma'] ?? ''));
-        if ($png === null) return self::fail('Agrega tu firma para finalizar.', 422);
+        if ($png === null) return self::fail('Completa los campos obligatorios.', 422);
         $fileName = bin2hex(random_bytes(16)).'.png';
         $directory = dirname(__DIR__, 2).'/'.self::UPLOAD_FOLDER;
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) return self::fail('No está disponible la carpeta de firmas.', 500);
@@ -998,6 +1016,10 @@ final class OrdenMantenimientoService
             DB::transaction(static function () use ($id, $record, $fileName, $data, $affectation, $choices): void {
                 $locked = PedidoMateriales::where('id', $id)->lockForUpdate()->first();
                 if (!$locked || (int)$locked->estatus !== 0) throw new \RuntimeException('La orden cambió de estado.');
+                $hasRefaction = (bool)($locked->usa_refacciones_catalogo ?? false)
+                    ? DB::table('op_pedido_materiales_refacciones')->where('id_pedido', $id)->exists()
+                    : PedidoMaterialesDetalle::where('id_pedido', $id)->exists();
+                if (!$hasRefaction) throw new \RuntimeException('Agrega al menos una refacción antes de finalizar la orden.');
                 $locked->afectacion = $affectation;
                 $locked->comentarios = trim((string)($data['comentarios'] ?? $locked->comentarios));
                 $locked->tipo_servicio = $choices['tipo_servicio'];
@@ -1040,8 +1062,15 @@ final class OrdenMantenimientoService
                             $authorSignature = PedidoMaterialesFirma::where('id_pedido', $id)->where('tipo_firma', 'A')->first();
                             if (!$authorSignature) throw new \RuntimeException('No se encontró la firma del encargado de la orden.');
                             $authorFile = basename((string)$authorSignature->firma);
-                            $authorPath = dirname(__DIR__, 2).'/public/uploads/archivos/'.$authorFile;
-                            if ($authorFile === '' || !is_file($authorPath)) throw new \RuntimeException('No se encontró el archivo de la firma del encargado.');
+                            $authorPath = self::storedFilePath($authorFile, [
+                                self::UPLOAD_FOLDER,
+                                'public/uploads/firmas/orden-mantenimiento/',
+                                'public/uploads/firmas/firma-tuxpan/',
+                                'public/uploads/firmas/',
+                                'public/imgs/firma/',
+                                'imgs/firma/',
+                            ]);
+                            if ($authorPath === null) throw new \RuntimeException('No se encontró el archivo de la firma del encargado.');
                             $authorName = (string)(Usuario::where('id', (int)$authorSignature->id_usuario)->value('nombre') ?: 'Usuario');
                             $movementId = RefaccionesService::crearSalidaDesdeOrdenMantenimiento(
                                 $id,
@@ -1200,6 +1229,18 @@ final class OrdenMantenimientoService
         $name = bin2hex(random_bytes(12)).'.'.$extension;
         if (!move_uploaded_file((string)$file['tmp_name'], $directory.$name)) return self::fail('No se pudo mover el archivo al almacenamiento.', 500);
         return ['success' => true, 'file' => $name, 'code' => 200];
+    }
+
+    private static function storedFilePath(string $filename, array $directories): ?string
+    {
+        $filename = basename($filename);
+        if ($filename === '') return null;
+        $root = dirname(__DIR__, 2);
+        foreach ($directories as $directory) {
+            $path = $root.'/'.trim($directory, '/\\').'/'.$filename;
+            if (is_file($path)) return $path;
+        }
+        return null;
     }
 
     private static function removeUpload(string $name, string $directoryRelative = self::UPLOAD_FOLDER): void
