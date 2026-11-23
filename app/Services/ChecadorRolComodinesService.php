@@ -18,14 +18,10 @@ class ChecadorRolComodinesService
 {
     public const MODULE_KEY = 'incidencias-nomina';
 
-    /**
-     * Business-authorized RH identities for temporary Comodines coverage.
-     * A change to this roster requires explicit business authorization; station,
-     * position, and workplace data must never add workers to it implicitly.
-     * Keep this as the single server-side source used by search and writes.
-     * @var list<int>
-     */
-    public const AUTHORIZED_COVERAGE_WORKER_IDS = [96, 100, 102, 310, 432, 452, 472, 491, 500, 512];
+    /** Canonical HR role identifying staff eligible to be considered as Comodines. */
+    public const COVERAGE_WORKER_POSITION_ID = 14;
+    /** Owner-approved status values for Comodines only; no other module uses this policy. */
+    public const COVERAGE_WORKER_ALLOWED_STATES = [0, 1];
 
     /**
      * Owner-approved canonical destinations that operate as service stations.
@@ -51,7 +47,7 @@ class ChecadorRolComodinesService
         14 => ['numlista' => 8, 'station_id' => 14],
     ];
 
-    private const COVERAGE_EMPTY_ROSTER_NOTICE = 'No hay comodines elegibles. Verifica la adscripción habitual registrada por RH, el periodo y las localidades autorizadas.';
+    private const COVERAGE_EMPTY_ROSTER_NOTICE = 'No se encontraron trabajadores puesto 14 dentro del alcance autorizado. Verifica el padrón de RH y la relación entre estación física y localidad.';
 
     /**
      * Keep the pre-V1.2 legacy programming writer disabled. Canonical V1.2
@@ -253,7 +249,7 @@ class ChecadorRolComodinesService
     }
 
     /**
-     * Validate the business-approved worker identity and active RH state. The
+     * Validate the Comodín HR role and owner-approved RH states for this module. The
      * home Workplace is resolved separately from canonical membership, never
      * from the post, physical station, or selected destination.
      * Call with $lock=true only inside the canonical Portal3 writer transaction.
@@ -263,17 +259,15 @@ class ChecadorRolComodinesService
     public static function resolveCoverageCandidateSource(int $workerId, bool $lock = false): array
     {
         if ($workerId < 1) return ['ok' => false, 'reason' => 'candidate_source_mismatch'];
-        if (!in_array($workerId, self::AUTHORIZED_COVERAGE_WORKER_IDS, true)) {
-            return ['ok' => false, 'reason' => 'candidate_worker_not_authorized'];
-        }
 
         try {
             $personQuery = Capsule::table('op_rh_personal')
                 ->where('id', $workerId)
-                ->where('estado', 1);
+                ->whereIn('estado', self::COVERAGE_WORKER_ALLOWED_STATES)
+                ->where('puesto', self::COVERAGE_WORKER_POSITION_ID);
             if ($lock) $personQuery->lockForUpdate();
             if ($personQuery->first(['id']) === null) {
-                return ['ok' => false, 'reason' => 'candidate_worker_inactive_or_missing'];
+                return ['ok' => false, 'reason' => 'candidate_worker_not_eligible'];
             }
             return [
                 'ok' => true,
@@ -286,43 +280,82 @@ class ChecadorRolComodinesService
     }
 
     /**
-     * Search only the business-authorized RH roster, requiring active status and
-     * one canonical home membership covering the requested interval in the
-     * caller's authorized scope. The destination is checked by the request writer.
+     * Search puesto 14 RH workers whose states are owner-approved for Comodines.
+     * Physical station mapping limits the candidate roster to Direction's scope;
+     * canonical membership is then assessed separately for the requested interval.
+     * Ineligible candidates remain visible with a reason and cannot be submitted.
+     * The destination is checked by the request writer.
      * @param list<int> $authorizedWorkplaceIds canonical Workplace IDs
-     * @return array{ok:bool,reason?:string,workers?:list<array<string,mixed>>,has_more?:bool,eligibility_notice?:string|null}
+     * @return array{ok:bool,reason?:string,workers?:list<array<string,mixed>>,has_more?:bool,found_count?:int,eligible_count?:int,eligibility_notice?:string|null}
      */
     public static function searchCoverageWorkers(
         array $authorizedWorkplaceIds,
         string $search,
-        string $fromLocal,
-        string $toLocalExclusive
+        string $fromLocal = '',
+        string $toLocalExclusive = '',
+        int $page = 1
     ): array {
-        $from = self::coverageLocalBoundaryUtc($fromLocal);
-        $to = self::coverageLocalBoundaryUtc($toLocalExclusive);
+        $fromLocal = trim($fromLocal);
+        $toLocalExclusive = trim($toLocalExclusive);
+        $hasPeriod = trim($fromLocal) !== '' || trim($toLocalExclusive) !== '';
+        $from = trim($fromLocal) === '' ? null : self::coverageLocalBoundaryUtc($fromLocal);
+        $to = trim($toLocalExclusive) === '' ? null : self::coverageLocalBoundaryUtc($toLocalExclusive);
         $search = trim($search);
         $authorizedWorkplaceIds = self::positiveIds($authorizedWorkplaceIds);
-        if ($from === null || $to === null || $to <= $from || mb_strlen($search) > 80) {
+        if (($hasPeriod && ($from === null || $to === null || $to <= $from))
+            || mb_strlen($search) > 80
+            || $page < 1
+            || $page > 1000) {
             return ['ok' => false, 'reason' => 'invalid_worker_search'];
         }
         if ($authorizedWorkplaceIds === []) {
             return ['ok' => true, 'workers' => [], 'has_more' => false, 'eligibility_notice' => self::COVERAGE_EMPTY_ROSTER_NOTICE];
         }
 
+        $stage = 'authorized_station_scope';
         try {
-            $lastInstant = (new \DateTimeImmutable($to, new \DateTimeZone('UTC')))
-                ->modify('-1 microsecond')->format('Y-m-d H:i:s.u');
+            $physicalStationIds = [];
+            $physicalMappingUnavailable = false;
+            foreach ($authorizedWorkplaceIds as $workplaceId) {
+                $locality = RhLocalidad::query()->whereKey($workplaceId)->first(['id', 'numlista']);
+                $numlista = (int) ($locality->numlista ?? 0);
+                // Direction may have additional authorized department/station
+                // scopes that cannot be used as a physical RH roster. Omit only
+                // that scope from this source query; never broaden the roster.
+                if (!$locality || $numlista < 1) {
+                    $physicalMappingUnavailable = true;
+                    continue;
+                }
+                $stationCount = Estacion::query()->where('numlista', $numlista)->count();
+                if ($stationCount === 0) continue;
+                if ($stationCount !== 1) {
+                    $physicalMappingUnavailable = true;
+                    continue;
+                }
+                $mapping = self::resolvePhysicalStationForWorkplace($workplaceId, $authorizedWorkplaceIds);
+                if (empty($mapping['ok'])) {
+                    $physicalMappingUnavailable = true;
+                    continue;
+                }
+                $physicalStationIds[] = (int) $mapping['station_id'];
+            }
+            $physicalStationIds = self::positiveIds($physicalStationIds);
+            if ($physicalStationIds === []) {
+                if ($physicalMappingUnavailable) {
+                    return ['ok' => false, 'reason' => 'worker_workplace_mapping_unavailable'];
+                }
+                return ['ok' => true, 'workers' => [], 'has_more' => false, 'found_count' => 0, 'eligible_count' => 0, 'eligibility_notice' => self::COVERAGE_EMPTY_ROSTER_NOTICE];
+            }
+
+            $stage = 'rh_candidate_query';
+            $lastInstant = $hasPeriod
+                ? (new \DateTimeImmutable((string) $to, new \DateTimeZone('UTC')))->modify('-1 microsecond')->format('Y-m-d H:i:s.u')
+                : null;
             $recordedAsOf = gmdate('Y-m-d H:i:s.u');
             $query = Capsule::table('op_rh_personal as p')
-                ->join('op_rh_personal_localidad_version as m', 'm.worker_id', '=', 'p.id')
-                ->where('p.estado', 1)
-                ->whereIn('p.id', self::AUTHORIZED_COVERAGE_WORKER_IDS)
-                ->whereIn('m.workplace_id', $authorizedWorkplaceIds)
-                ->where('m.valid_from_utc', '<=', $from)
-                ->where('m.recorded_at_utc', '<=', $recordedAsOf)
-                ->where(static function ($validity) use ($lastInstant): void {
-                    $validity->whereNull('m.valid_to_utc')->orWhere('m.valid_to_utc', '>=', $lastInstant);
-                });
+                ->whereIn('p.id_estacion', $physicalStationIds)
+                ->whereIn('p.estado', self::COVERAGE_WORKER_ALLOWED_STATES)
+                ->where('p.puesto', self::COVERAGE_WORKER_POSITION_ID);
             if ($search !== '') {
                 $pattern = '%' . addcslashes($search, "\\%_") . '%';
                 $query->where(static function ($filter) use ($pattern): void {
@@ -331,44 +364,79 @@ class ChecadorRolComodinesService
                         ->orWhereRaw('CAST(p.id AS CHAR) LIKE ?', [$pattern]);
                 });
             }
-            $rows = $query->select(['p.id as worker_id', 'p.nombre_completo', 'p.no_colaborador'])
-                ->distinct()->orderBy('p.nombre_completo')->orderBy('p.id')->limit(501)->get();
+            $rows = $query->select(['p.id as worker_id', 'p.id_estacion', 'p.nombre_completo', 'p.no_colaborador'])
+                ->distinct()
+                ->orderBy('p.nombre_completo')
+                ->orderBy('p.id')
+                ->offset(($page - 1) * 25)
+                ->limit(26)
+                ->get();
 
             $workers = [];
-            foreach ($rows as $row) {
+            $eligibleCount = 0;
+            $stage = 'canonical_membership_validation';
+            foreach ($rows->take(25) as $row) {
                 $workerId = (int) $row->worker_id;
-                $membership = self::coverageCandidateMembership(
-                    $workerId,
-                    $authorizedWorkplaceIds,
-                    $from,
-                    $lastInstant,
-                    $recordedAsOf
-                );
-                if (empty($membership['eligible'])) continue;
-                if (count($workers) >= 25) {
-                    return ['ok' => true, 'workers' => $workers, 'has_more' => true];
+                $membership = $hasPeriod
+                    ? self::coverageCandidateMembership(
+                        $workerId,
+                        $authorizedWorkplaceIds,
+                        (string) $from,
+                        (string) $lastInstant,
+                        $recordedAsOf
+                    )
+                    : ['eligible' => false, 'reason' => 'coverage_period_required'];
+                if (($membership['reason'] ?? '') === 'candidate_membership_unverified') {
+                    return ['ok' => false, 'reason' => 'worker_membership_read_unavailable'];
                 }
-                $workers[] = [
+                $worker = [
                     'worker_id' => $workerId,
                     'full_name' => trim((string) $row->nombre_completo) ?: 'Nombre no disponible',
                     'employee_number' => $row->no_colaborador === null ? null : (string) $row->no_colaborador,
-                    'home_workplace_id' => (int) $membership['home_workplace_id'],
-                    'id_home_membership_version' => (int) $membership['membership_id'],
-                    'eligible' => true,
+                    'selection_allowed' => true,
+                    'eligible' => !empty($membership['eligible']),
+                    'eligibility_reason' => $membership['reason'] ?? null,
                 ];
-            }
-            if ($rows->count() > 500) {
-                return ['ok' => false, 'reason' => 'worker_search_limit'];
+                if (!empty($membership['eligible'])) {
+                    $worker['home_workplace_id'] = (int) $membership['home_workplace_id'];
+                    $worker['id_home_membership_version'] = (int) $membership['membership_id'];
+                    $eligibleCount++;
+                }
+                $workers[] = $worker;
             }
             return [
                 'ok' => true,
                 'workers' => $workers,
-                'has_more' => false,
+                'has_more' => $rows->count() > 25,
+                'found_count' => count($workers),
+                'eligible_count' => $eligibleCount,
                 'eligibility_notice' => $workers === [] ? self::COVERAGE_EMPTY_ROSTER_NOTICE : null,
             ];
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
+            self::logCoverageWorkerSearchFailure($exception, $stage);
             return ['ok' => false, 'reason' => 'worker_search_unavailable'];
         }
+    }
+
+    private static function logCoverageWorkerSearchFailure(\Throwable $exception, string $stage): void
+    {
+        $sqlState = null;
+        $driverCode = null;
+        for ($current = $exception; $current !== null; $current = $current->getPrevious()) {
+            $info = property_exists($current, 'errorInfo') && is_array($current->errorInfo)
+                ? $current->errorInfo
+                : [];
+            $candidateState = strtoupper((string) ($info[0] ?? ''));
+            if (preg_match('/\A[A-Z0-9]{5}\z/', $candidateState) === 1) $sqlState = $candidateState;
+            if (isset($info[1]) && is_scalar($info[1])) $driverCode = (string) $info[1];
+            if ($sqlState !== null || $driverCode !== null) break;
+        }
+        error_log('Checador Comodines worker search failed: ' . json_encode([
+            'stage' => $stage,
+            'exception_class' => get_class($exception),
+            'sqlstate' => $sqlState,
+            'driver_code' => $driverCode,
+        ], JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
     }
 
     /** @param list<int> $authorizedWorkplaceIds @return array{eligible:bool,reason?:string,membership_id?:int,home_workplace_id?:int} */
@@ -394,8 +462,10 @@ class ChecadorRolComodinesService
             $lastAssignment = $last['assignments'][0] ?? [];
             $homeWorkplaceId = (int) ($firstAssignment['workplace_id'] ?? 0);
             $membershipId = (int) ($firstAssignment['id'] ?? 0);
-            if ($homeWorkplaceId < 1 || !in_array($homeWorkplaceId, $authorizedWorkplaceIds, true)
-                || $homeWorkplaceId !== (int) ($lastAssignment['workplace_id'] ?? 0)
+            if ($homeWorkplaceId < 1 || !in_array($homeWorkplaceId, $authorizedWorkplaceIds, true)) {
+                return ['eligible' => false, 'reason' => 'candidate_membership_outside_authorized_scope'];
+            }
+            if ($homeWorkplaceId !== (int) ($lastAssignment['workplace_id'] ?? 0)
                 || $membershipId < 1 || $membershipId !== (int) ($lastAssignment['id'] ?? 0)) {
                 return ['eligible' => false, 'reason' => 'candidate_membership_not_valid_for_period'];
             }
@@ -415,7 +485,8 @@ class ChecadorRolComodinesService
                 'membership_id' => (int) $membership->id,
                 'home_workplace_id' => $homeWorkplaceId,
             ];
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
+            self::logCoverageWorkerSearchFailure($exception, 'canonical_membership_validation');
             return ['eligible' => false, 'reason' => 'candidate_membership_unverified'];
         }
     }

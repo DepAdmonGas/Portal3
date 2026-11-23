@@ -114,7 +114,7 @@ final class ChecadorComodinesController extends BaseController
         $this->sendApiResult($result, 'No se pudo consultar el historial de la cobertura.');
     }
 
-    /** Search active workers whose canonical home membership is in Direction's effective scope. */
+    /** Search Comodines candidates in Direction's scope and report canonical membership eligibility separately. */
     public function searchCoverageWorkers(): void
     {
         $user = Auth::user();
@@ -126,23 +126,34 @@ final class ChecadorComodinesController extends BaseController
         if ($authorizedWorkplaceIds === []) {
             JsonResponse::forbidden('No hay localidades dentro del alcance autorizado para buscar trabajadores.');
         }
+        $requestedPage = $query['page'] ?? 1;
+        $page = is_scalar($requestedPage)
+            ? filter_var((string) $requestedPage, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 1000]])
+            : false;
         $result = ChecadorRolComodinesService::searchCoverageWorkers(
             $authorizedWorkplaceIds,
             is_scalar($query['q'] ?? null) ? (string) $query['q'] : '',
             is_scalar($query['fecha_desde_local'] ?? null) ? (string) $query['fecha_desde_local'] : '',
-            is_scalar($query['fecha_hasta_local_exclusiva'] ?? null) ? (string) $query['fecha_hasta_local_exclusiva'] : ''
+            is_scalar($query['fecha_hasta_local_exclusiva'] ?? null) ? (string) $query['fecha_hasta_local_exclusiva'] : '',
+            $page === false ? 0 : (int) $page
         );
         if (empty($result['ok'])) {
             $invalid = ($result['reason'] ?? '') === 'invalid_worker_search';
             $tooBroad = ($result['reason'] ?? '') === 'worker_search_limit';
+            $membershipUnavailable = ($result['reason'] ?? '') === 'worker_membership_read_unavailable';
+            $mappingUnavailable = ($result['reason'] ?? '') === 'worker_workplace_mapping_unavailable';
             JsonResponse::error(
                 $invalid
-                    ? 'Selecciona un periodo válido y revisa el texto de búsqueda.'
+                    ? 'Deja ambas fechas vacías o captura un rango completo válido; revisa también el texto de búsqueda.'
                     : ($tooBroad
                         ? 'La búsqueda es demasiado amplia. Afínala por nombre, ID RH o número de colaborador.'
-                        : 'No se pudo consultar el origen de candidatos.'),
+                        : ($membershipUnavailable
+                            ? 'No se pudo verificar la adscripción canónica en MariaDB. Intenta de nuevo o consulta soporte.'
+                            : ($mappingUnavailable
+                                ? 'No se pudo confirmar el mapeo de localidad autorizado para la búsqueda.'
+                                : 'No se pudo consultar el padrón de candidatos en MariaDB. Intenta de nuevo.'))),
                 ($invalid || $tooBroad) ? 422 : 503,
-                ['code' => $invalid ? 'worker_search_invalid' : ($tooBroad ? 'worker_search_too_broad' : 'worker_search_unavailable')]
+                ['code' => $invalid ? 'worker_search_invalid' : ($tooBroad ? 'worker_search_too_broad' : ($membershipUnavailable ? 'worker_membership_read_unavailable' : ($mappingUnavailable ? 'worker_workplace_mapping_unavailable' : 'worker_search_unavailable')))]
             );
         }
         JsonResponse::send([
@@ -150,8 +161,8 @@ final class ChecadorComodinesController extends BaseController
             'workers' => $result['workers'] ?? [],
             'has_more' => (bool) ($result['has_more'] ?? false),
             'eligibility_notice' => $result['eligibility_notice'] ?? null,
-            'candidate_count' => count($result['workers'] ?? []),
-            'eligible_count' => count(array_filter($result['workers'] ?? [], static fn(array $worker): bool => !empty($worker['eligible']))),
+            'candidate_count' => (int) ($result['found_count'] ?? count($result['workers'] ?? [])),
+            'eligible_count' => (int) ($result['eligible_count'] ?? count(array_filter($result['workers'] ?? [], static fn(array $worker): bool => !empty($worker['eligible'])))),
         ], 200, ['Cache-Control' => 'private, no-store']);
     }
 
@@ -260,14 +271,12 @@ final class ChecadorComodinesController extends BaseController
         $status = (int) ($result['http_status'] ?? 503);
         $code = (string) ($result['code'] ?? 'coverage_operation_failed');
         $message = match ($code) {
-            'feature_disabled' => 'Las operaciones administrativas de cobertura permanecen desactivadas.',
             'function_permission_denied' => 'Tu permiso efectivo no autoriza esta operación.',
             'station_scope_denied', 'coverage_scope_denied' => 'La localidad no está dentro del alcance autorizado.',
             'coverage_destination_not_authorized' => 'La localidad seleccionada no está autorizada como destino de cobertura.',
             'coverage_destination_mapping_unavailable' => 'No se pudo confirmar el vínculo vigente de la estación de destino.',
             'worker_candidate_not_eligible' => 'El trabajador no cumple el origen, estado de estación o membresía requeridos para este periodo.',
             'worker_membership_unverified' => 'No se pudo confirmar la adscripción del trabajador para todo el periodo.',
-            'writer_database_not_local' => 'La escritura administrativa solo está disponible en la base local de desarrollo autorizada.',
             'coverage_state_conflict' => 'El estado de la cobertura cambió; actualiza la consulta antes de continuar.',
             'idempotency_key_conflict' => 'La operación ya se intentó con datos distintos.',
             'coverage_assignment_conflict', 'coverage_overlap_conflict' => 'El periodo se cruza con otra programación; no se guardó ningún cambio.',

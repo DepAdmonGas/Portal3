@@ -6,7 +6,6 @@ namespace App\Services;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use App\Core\Database;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use InvalidArgumentException;
 use PDO;
@@ -16,21 +15,14 @@ use Throwable;
 /**
  * The sole Portal3 administrative writer for canonical Workplace coverage.
  * Reads and mutations use Portal3's institutional PDO connection. Mutations
- * fail closed unless the process is development-only and attached to local
- * bd_admongas, and CHECADOR_COMODINES_PORTAL_WRITES is enabled.
+ * use Portal3's institutional default PDO connection. Server-side capability,
+ * canonical scope, validation, transaction, audit, and readback checks remain
+ * mandatory for every mutation.
  */
 final class RolComodinesPortalWriterService
 {
-    private const FLAG = 'CHECADOR_COMODINES_PORTAL_WRITES';
     private const TZ = 'America/Mexico_City';
     private const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
-
-    public static function writesEnabled(?string $environment = null, ?string $flag = null): bool
-    {
-        $environment ??= strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        $flag ??= (string) ($_ENV[self::FLAG] ?? getenv(self::FLAG) ?: '');
-        return in_array($environment, ['dev', 'development', 'local'], true) && trim($flag) === '1';
-    }
 
     /** @return array{ok:bool,http_status:int,code?:string,data?:array<string,mixed>} */
     public function listVisible(array $authorizedWorkplaceIds): array
@@ -122,8 +114,6 @@ final class RolComodinesPortalWriterService
     /** New request is always REQUESTED; no active shift assignment is created here. */
     public function createRequest(int $actorId, array $authorizedWorkplaceIds, array $payload, string $idempotencyKey): array
     {
-        if (!self::writesEnabled()) return self::failure('feature_disabled', 503);
-        if (!Database::isLocalDevelopmentDatabaseConnection()) return self::failure('writer_database_not_local', 503);
         if (!self::validIdempotencyKey($idempotencyKey)) return self::failure('idempotency_key_required', 422);
         try {
             $request = self::normalizeRequest($payload);
@@ -132,7 +122,6 @@ final class RolComodinesPortalWriterService
             $keyHash = hash('sha256', $idempotencyKey);
             $fingerprint = self::fingerprint('REQUEST', ['actor_user_id' => $actorId, 'request' => $request]);
             $result = Capsule::connection()->transaction(function () use ($request, $actorId, $keyHash, $fingerprint): array {
-                $this->assertLocalDevelopmentDatabase();
                 self::assertActor($actorId, ChecadorV2PermissionService::COMODINES_REQUEST);
                 $this->lockWorkerAndWorkplaces($request['id_personal'], [$request['id_home_workplace'], $request['id_coverage_workplace']]);
                 $this->assertCoverageDestination($request['id_coverage_workplace']);
@@ -186,8 +175,6 @@ final class RolComodinesPortalWriterService
     /** Explicit AUTHORIZE or CANCEL transition. REJECT is intentionally not exposed by this slice. */
     public function transition(string $coverageUuid, string $action, int $actorId, array $authorizedWorkplaceIds, string $reason, string $idempotencyKey): array
     {
-        if (!self::writesEnabled()) return self::failure('feature_disabled', 503);
-        if (!Database::isLocalDevelopmentDatabaseConnection()) return self::failure('writer_database_not_local', 503);
         $action = strtoupper(trim($action));
         $permission = $action === 'AUTHORIZE' ? ChecadorV2PermissionService::COMODINES_APPROVE
             : ($action === 'CANCEL' ? ChecadorV2PermissionService::COMODINES_CANCEL : '');
@@ -199,12 +186,15 @@ final class RolComodinesPortalWriterService
             $keyHash = hash('sha256', $idempotencyKey);
             $reason = trim($reason);
             $result = Capsule::connection()->transaction(function () use ($coverageUuid,$action,$actorId,$scope,$keyHash,$reason,$permission): array {
-                $this->assertLocalDevelopmentDatabase();
                 self::assertActor($actorId, $permission);
                 $current = $this->one('SELECT * FROM op_rh_v2_worker_workplace_coverage_versions WHERE coverage_uuid=? ORDER BY revision_no DESC LIMIT 1 FOR UPDATE', [$coverageUuid]);
                 if ($current === null) throw new RuntimeException('coverage_not_found');
                 self::assertScope($scope,(int)$current['id_home_workplace'],(int)$current['id_coverage_workplace']);
-                $this->lockWorkerAndWorkplaces((int)$current['id_personal'],[(int)$current['id_home_workplace'],(int)$current['id_coverage_workplace']]);
+                $this->lockWorkerAndWorkplaces(
+                    (int) $current['id_personal'],
+                    [(int) $current['id_home_workplace'], (int) $current['id_coverage_workplace']],
+                    $action === 'AUTHORIZE'
+                );
                 $prior = $this->one('SELECT * FROM op_rh_v2_worker_workplace_coverage_versions WHERE idempotency_key_hash=? FOR UPDATE', [$keyHash]);
                 if ($prior !== null) {
                     $fp = self::fingerprint($action,['actor_user_id'=>$actorId,'coverage_uuid'=>$coverageUuid,'source_revision_id'=>(int)($prior['supersedes_id']??0),'reason'=>$reason]);
@@ -279,9 +269,19 @@ final class RolComodinesPortalWriterService
         }
     }
 
-    private function lockWorkerAndWorkplaces(int $workerId, array $workplaceIds): void
+    private function lockWorkerAndWorkplaces(int $workerId, array $workplaceIds, bool $requireCoverageCandidate = true): void
     {
-        if ($this->one('SELECT id FROM op_rh_personal WHERE id=? AND estado=1 FOR UPDATE',[$workerId])===null) throw new RuntimeException('worker_not_active');
+        if ($requireCoverageCandidate) {
+            $worker = $this->one(
+                'SELECT id FROM op_rh_personal WHERE id=? AND puesto=? AND estado IN (?,?) FOR UPDATE',
+                [$workerId, ChecadorRolComodinesService::COVERAGE_WORKER_POSITION_ID, ...ChecadorRolComodinesService::COVERAGE_WORKER_ALLOWED_STATES]
+            );
+        } else {
+            // Cancellation acts on an already-authorized historical coverage;
+            // a later RH role/state change must not prevent its cancellation.
+            $worker = $this->one('SELECT id FROM op_rh_personal WHERE id=? FOR UPDATE', [$workerId]);
+        }
+        if ($worker === null) throw new RuntimeException('worker_candidate_not_eligible');
         $ids=self::positiveIds($workplaceIds); sort($ids,SORT_NUMERIC);
         foreach($ids as $id) if($this->one('SELECT id FROM op_rh_localidades WHERE id=? FOR UPDATE',[$id])===null) throw new RuntimeException('workplace_not_found');
     }
@@ -419,14 +419,6 @@ final class RolComodinesPortalWriterService
         $this->execute("INSERT INTO op_rh_v2_turnos_audit_log (entity_type,entity_id,operacion,id_usuario_actor,id_estacion,id_personal,valido_desde,valido_hasta,detalle_json,recorded_at_utc) VALUES ('WORKPLACE_COVERAGE',?,?,?,?,?,?,?,?,UTC_TIMESTAMP())",[$coverageId,$operation,$actorId,(int)$coverage['id_coverage_workplace'],(int)$coverage['id_personal'],$coverage['fecha_desde_local'],$coverage['fecha_hasta_local_exclusiva'],$json]);
     }
 
-    /** Fail closed if the default PDO is not the verified local development database. */
-    private function assertLocalDevelopmentDatabase(): void
-    {
-        if (!Database::isLocalDevelopmentDatabaseConnection()) {
-            throw new RuntimeException('writer_database_not_local');
-        }
-    }
-
     private static function assertActor(int $actorId,string $permission): void
     {
         $actor=Capsule::table('tb_usuarios')->where('id',$actorId)->first(['id','id_puesto']);
@@ -486,7 +478,7 @@ final class RolComodinesPortalWriterService
     private static function decodeJson(mixed $v): array { if(is_array($v))return $v;$out=json_decode((string)$v,true);return is_array($out)?$out:[]; }
     private static function normalizeRow(array $row): array { $row['proposed_weekly_schedule']=self::decodeJson($row['proposed_schedule_json']??null);foreach(['id','revision_no','supersedes_id','id_personal','id_home_workplace','id_home_membership_version','id_coverage_workplace','requested_by_usuario_id','approved_by_usuario_id','transition_actor_usuario_id'] as $key)if(array_key_exists($key,$row)&&$row[$key]!==null)$row[$key]=(int)$row[$key];return $row; }
     private static function replay(array $row,string $fingerprint,int $actorId): array { if(!hash_equals((string)$row['payload_fingerprint'],$fingerprint)||(int)$row['transition_actor_usuario_id']!==$actorId)throw new RuntimeException('idempotency_key_conflict');return ['created'=>false,'coverage'=>self::normalizeRow($row)]; }
-    private static function publicCode(Throwable $e): string { $allowed=['invalid_coverage_request','invalid_coverage_schedule','worker_not_active','workplace_not_found','worker_candidate_not_eligible','worker_membership_unverified','coverage_destination_not_authorized','coverage_destination_mapping_unavailable','coverage_template_unavailable','coverage_overlap_conflict','coverage_assignment_conflict','coverage_consolidated_date_conflict','coverage_not_future','coverage_no_future_segment','coverage_state_conflict','coverage_assignment_readback_failed','coverage_assignment_close_failed','coverage_readback_failed','coverage_scope_denied','function_permission_denied','idempotency_key_conflict','idempotency_key_required','coverage_not_found','workplace_timezone_unresolved','writer_database_not_local'];$msg=strtolower($e->getMessage());foreach($allowed as $code)if(str_contains($msg,$code))return $code;return 'coverage_operation_failed'; }
+    private static function publicCode(Throwable $e): string { $allowed=['invalid_coverage_request','invalid_coverage_schedule','worker_not_active','workplace_not_found','worker_candidate_not_eligible','worker_membership_unverified','coverage_destination_not_authorized','coverage_destination_mapping_unavailable','coverage_template_unavailable','coverage_overlap_conflict','coverage_assignment_conflict','coverage_consolidated_date_conflict','coverage_not_future','coverage_no_future_segment','coverage_state_conflict','coverage_assignment_readback_failed','coverage_assignment_close_failed','coverage_readback_failed','coverage_scope_denied','function_permission_denied','idempotency_key_conflict','idempotency_key_required','coverage_not_found','workplace_timezone_unresolved'];$msg=strtolower($e->getMessage());foreach($allowed as $code)if(str_contains($msg,$code))return $code;return 'coverage_operation_failed'; }
     private static function httpFor(Throwable $e): int { return match(self::publicCode($e)){ 'function_permission_denied','coverage_scope_denied'=>403,'coverage_not_found'=>404,'coverage_state_conflict','coverage_overlap_conflict','coverage_assignment_conflict','coverage_consolidated_date_conflict','idempotency_key_conflict'=>409,'invalid_coverage_request','invalid_coverage_schedule','worker_candidate_not_eligible','worker_membership_unverified','coverage_destination_not_authorized','coverage_template_unavailable','coverage_not_future','coverage_no_future_segment','workplace_timezone_unresolved'=>422,default=>503}; }
     private static function failure(string $code,int $status): array { return ['ok'=>false,'http_status'=>$status,'code'=>$code]; }
     private function dataConnection(): \Illuminate\Database\Connection

@@ -203,8 +203,6 @@ final class ChecadorController extends BaseController
             default => $state === 'ready' ? '' : 'No se pudo consultar el rol de comodines de forma segura.',
         };
         $coverageWriter = new \App\Services\RolComodinesPortalWriterService();
-        $coverageWriterEnabled = \App\Services\RolComodinesPortalWriterService::writesEnabled()
-            && \App\Core\Database::isLocalDevelopmentDatabaseConnection();
         // The shared MariaDB is the canonical record. The Portal3 administration UI
         // must not depend on the API HTTP service to list or mutate coverage records.
         $coverageRead = $coverageWriter->listVisible($authorizedWorkplaceIds);
@@ -233,7 +231,7 @@ final class ChecadorController extends BaseController
                 $positionId,
                 ChecadorV2PermissionService::COMODINES_CANCEL
             );
-        $coverageWorkplaces = $coverageWriterEnabled && $canRequestCoverageGrant && $workplaceId !== null
+        $coverageWorkplaces = $canRequestCoverageGrant && $workplaceId !== null
             ? array_values(array_filter(
                 ChecadorRolComodinesService::coverageWorkplaces(0),
                 static fn(array $workplace): bool => in_array((int) ($workplace['id'] ?? 0), $authorizedWorkplaceIds, true)
@@ -241,15 +239,14 @@ final class ChecadorController extends BaseController
             : [];
         $coverageTemplates = [];
         $coverageTemplateCatalogReady = false;
-        if ($coverageWriterEnabled && $canRequestCoverageGrant && $workplaceId !== null && !empty($coverageRead['ok'])) {
+        if ($canRequestCoverageGrant && $workplaceId !== null && !empty($coverageRead['ok'])) {
             $catalog = $coverageWriter->templateCatalog();
             if (!empty($catalog['ok']) && !empty($catalog['data']['complete'])) {
                 $coverageTemplates = $catalog['data']['items'] ?? [];
                 $coverageTemplateCatalogReady = true;
             }
         }
-        $canRequestCoverage = $coverageWriterEnabled
-            && $canRequestCoverageGrant
+        $canRequestCoverage = $canRequestCoverageGrant
             && $workplaceId !== null
             && !empty($coverageRead['ok'])
             && $coverageTemplateCatalogReady
@@ -269,12 +266,11 @@ final class ChecadorController extends BaseController
                 'coverageRows' => $coverageRows,
                 'coverageReadState' => !empty($coverageRead['ok']) ? 'ready' : 'unavailable',
                 'coverageReadMessage' => $coverageReadMessage,
-                'coverageWriterEnabled' => $coverageWriterEnabled,
                 'coverageWorkplaces' => $coverageWorkplaces,
                 'coverageTemplates' => $coverageTemplates,
                 'canRequestCoverage' => $canRequestCoverage,
-                'canReviewCoverage' => $coverageWriterEnabled && $canApproveCoverageGrant && !empty($coverageRead['ok']),
-                'canCancelCoverage' => $coverageWriterEnabled && $canCancelCoverageGrant && !empty($coverageRead['ok']),
+                'canReviewCoverage' => $canApproveCoverageGrant && !empty($coverageRead['ok']),
+                'canCancelCoverage' => $canCancelCoverageGrant && !empty($coverageRead['ok']),
                 'coverageCreateUrl' => '/departamento-operativo/recursos-humanos/checador/rol-comodines/coberturas',
                 'coverageWorkersUrl' => '/departamento-operativo/recursos-humanos/checador/rol-comodines/trabajadores',
                 'coverageDetailUrl' => '/departamento-operativo/recursos-humanos/checador/rol-comodines/coberturas',
@@ -293,7 +289,7 @@ final class ChecadorController extends BaseController
                     '/assets/js/core/module-station-selector.js',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261027-1',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.role-comodines.datatable.init.js?v=20261110-1',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.role-comodines.programming.init.js?v=20261110-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.role-comodines.programming.init.js?v=20261123-1',
                 ],
                 'help' => false,
             ],

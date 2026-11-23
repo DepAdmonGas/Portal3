@@ -58,6 +58,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const submit = form.querySelector('[data-checador-comodines-submit]');
         let previousPayload = '';
         let requestKey = '';
+        let selectedWorkerId = 0;
+        let eligibilityVerified = false;
+        let eligibilityRequest = null;
+        let eligibilitySequence = 0;
+        let submitting = false;
+        submit.disabled = true;
+        const isValidDate = (value) => {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+            const date = new Date(value + 'T00:00:00.000Z');
+            return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+        };
+        const hasValidPeriod = () => isValidDate(from.value) && isValidDate(to.value) && to.value > from.value;
+        const coverageSchedule = () => ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'].map((day) => {
+            const value = document.querySelector(`[data-coverage-day="${day}"]`)?.value || '';
+            if (value === 'DAY_OFF') return { dia_semana: day, tipo: 'DAY_OFF', id_plantilla: null, version_plantilla: null };
+            const [templateId, version] = value.split(':').map(Number);
+            return { dia_semana: day, tipo: 'WORK', id_plantilla: templateId || null, version_plantilla: version || null };
+        });
+        const otherRequestFieldsValid = () => {
+            const worker = Number(workerSelect.value);
+            const membership = Number(membershipId.value);
+            const home = Number(homeWorkplaceId.value);
+            const target = Number(targetSelect.value);
+            const reason = document.getElementById('checador-comodines-reason').value.trim();
+            const schedule = coverageSchedule();
+            return eligibilityVerified && worker > 0 && worker === selectedWorkerId
+                && membership > 0 && home > 0 && target > 0 && target !== home
+                && hasValidPeriod() && reason.length > 0 && reason.length <= 500
+                && schedule.every((day) => day.tipo === 'DAY_OFF' || (day.id_plantilla > 0 && day.version_plantilla > 0));
+        };
+        const refreshSubmitState = () => {
+            submit.disabled = submitting || !otherRequestFieldsValid();
+        };
+        form.addEventListener('input', refreshSubmitState);
+        form.addEventListener('change', refreshSubmitState);
         const updateHomeWorkplace = (value) => {
             const homeId = Number(value) || 0;
             homeWorkplaceId.value = homeId > 0 ? String(homeId) : '';
@@ -69,55 +104,147 @@ document.addEventListener('DOMContentLoaded', () => {
                 $(targetSelect).trigger('change');
             }
         };
+        const eligibilityReasonText = (reason) => ({
+            coverage_period_required: 'Selecciona las fechas para comprobar la adscripción del trabajador.',
+            candidate_membership_not_valid_for_period: 'Trabajador encontrado, pero sin adscripción canónica válida para este periodo.',
+            candidate_membership_outside_authorized_scope: 'La adscripción canónica queda fuera del alcance autorizado.',
+            candidate_membership_unverified: 'No se pudo verificar la adscripción canónica.',
+        }[String(reason || '')] || 'No se pudo confirmar la elegibilidad para este periodo.');
+        const invalidateEligibility = () => {
+            eligibilitySequence++;
+            if (eligibilityRequest && typeof eligibilityRequest.abort === 'function') eligibilityRequest.abort();
+            eligibilityRequest = null;
+            eligibilityVerified = false;
+            membershipId.value = '';
+            updateHomeWorkplace('');
+            refreshSubmitState();
+        };
+        const verifySelectedWorker = () => {
+            const sequence = ++eligibilitySequence;
+            if (eligibilityRequest && typeof eligibilityRequest.abort === 'function') eligibilityRequest.abort();
+            eligibilityRequest = null;
+            eligibilityVerified = false;
+            membershipId.value = '';
+            updateHomeWorkplace('');
+            refreshSubmitState();
+            if (!selectedWorkerId) return;
+            if (!from.value && !to.value) {
+                message(workerMessage, 'Trabajador encontrado. Captura el periodo para comprobar su adscripción canónica.');
+                return;
+            }
+            if (!hasValidPeriod()) {
+                message(workerMessage, 'Trabajador encontrado. Completa ambas fechas con un rango válido para comprobar la adscripción.');
+                return;
+            }
+            message(workerMessage, 'Verificando adscripción canónica para el periodo…');
+            const workerId = selectedWorkerId;
+            const rangeFrom = from.value;
+            const rangeTo = to.value;
+            eligibilityRequest = $.ajax({
+                url: form.dataset.workersUrl,
+                method: 'GET',
+                dataType: 'json',
+                cache: false,
+                data: { q: String(workerId), fecha_desde_local: rangeFrom, fecha_hasta_local_exclusiva: rangeTo },
+            }).done((payload) => {
+                if (sequence !== eligibilitySequence || selectedWorkerId !== workerId || from.value !== rangeFrom || to.value !== rangeTo) return;
+                const candidate = (Array.isArray(payload.workers) ? payload.workers : [])
+                    .find((worker) => Number(worker.worker_id) === workerId);
+                const hasMembership = candidate
+                    && candidate.eligible === true
+                    && Number(candidate.id_home_membership_version) > 0
+                    && Number(candidate.home_workplace_id) > 0;
+                if (!hasMembership) {
+                    message(workerMessage, candidate
+                        ? eligibilityReasonText(candidate.eligibility_reason)
+                        : 'Trabajador encontrado, pero no se pudo confirmar dentro del alcance autorizado para este periodo.', true);
+                    return;
+                }
+                membershipId.value = String(Number(candidate.id_home_membership_version));
+                updateHomeWorkplace(Number(candidate.home_workplace_id));
+                eligibilityVerified = true;
+                refreshSubmitState();
+                message(workerMessage, 'Adscripción canónica y periodo verificados.');
+            }).fail((xhr, status) => {
+                if (status === 'abort' || sequence !== eligibilitySequence) return;
+                const payload = xhr.responseJSON || {};
+                message(workerMessage, payload.message || 'No se pudo verificar la adscripción en MariaDB. Intenta de nuevo.', true);
+            }).always(() => {
+                if (sequence === eligibilitySequence) eligibilityRequest = null;
+            });
+        };
 
         createModal.addEventListener('shown.bs.modal', () => {
+            message(workerMessage, '');
+            message(responseMessage, '');
             initModalSelects(createModal);
-            if (!$?.fn?.select2 || $(workerSelect).hasClass('select2-hidden-accessible')) return;
-            $(workerSelect).select2({
+            if (!$?.fn?.select2) return;
+            if (!$(workerSelect).hasClass('select2-hidden-accessible')) $(workerSelect).select2({
                 dropdownParent: $(createModal),
                 width: '100%',
                 placeholder: 'Busca por nombre, ID o número',
                 allowClear: true,
                 minimumInputLength: 0,
                 language: {
-                    noResults: () => 'No hay comodines elegibles. Verifica la adscripción habitual registrada por RH, el periodo y las localidades autorizadas.',
+                    noResults: () => 'No se encontraron trabajadores puesto 14 dentro de las localidades autorizadas.',
+                    errorLoading: () => 'No se pudo consultar el padrón autorizado. Revisa la conexión e intenta de nuevo.',
                     searching: () => 'Buscando…',
-                    inputTooShort: () => 'Busca por nombre, ID RH o número de colaborador.',
                 },
                 ajax: {
                     url: form.dataset.workersUrl,
                     dataType: 'json',
                     delay: 250,
                     cache: false,
-                    data: (params) => ({
-                        q: params.term || '',
-                        fecha_desde_local: from.value,
-                        fecha_hasta_local_exclusiva: to.value,
-                    }),
+                    data: (params) => {
+                        message(workerMessage, '');
+                        const data = { q: params.term || '', page: params.page || 1 };
+                        if (hasValidPeriod()) {
+                            data.fecha_desde_local = from.value;
+                            data.fecha_hasta_local_exclusiva = to.value;
+                        }
+                        return data;
+                    },
                     processResults: (payload) => {
-                        const workers = (Array.isArray(payload.workers) ? payload.workers : [])
-                            .filter((worker) => worker.eligible === true
-                                && Number.isInteger(Number(worker.id_home_membership_version))
-                                && Number(worker.id_home_membership_version) > 0
-                                && Number.isInteger(Number(worker.home_workplace_id))
-                                && Number(worker.home_workplace_id) > 0)
-                            .map((worker) => {
+                        const reasonText = (reason) => ({
+                            candidate_membership_not_valid_for_period: 'Sin adscripción canónica válida para todo el periodo',
+                            candidate_membership_outside_authorized_scope: 'Adscripción fuera del alcance autorizado',
+                            candidate_membership_unverified: 'No se pudo verificar la adscripción canónica',
+                        }[String(reason || '')] || 'No cumple la membresía canónica requerida');
+                        const workers = (Array.isArray(payload.workers) ? payload.workers : []).map((worker) => {
                             const name = String(worker.full_name || 'Nombre no disponible');
                             const employeeNumber = worker.employee_number === null || worker.employee_number === undefined
                                 ? ''
                                 : ' · No. ' + String(worker.employee_number);
+                            const workerId = Number(worker.worker_id) || 0;
+                            const hasMembership = Number.isInteger(Number(worker.id_home_membership_version))
+                                && Number(worker.id_home_membership_version) > 0
+                                && Number.isInteger(Number(worker.home_workplace_id))
+                                && Number(worker.home_workplace_id) > 0;
+                            const eligible = worker.eligible === true && hasMembership;
+                            const reason = String(worker.eligibility_reason || '');
+                            const eligibilityMessage = eligible ? '' : reason === 'coverage_period_required'
+                                ? 'Pendiente de seleccionar fechas'
+                                : reasonText(reason);
                             return {
-                                id: String(worker.worker_id),
-                                text: name + employeeNumber + ' · Elegible',
-                                eligible: true,
-                                membershipId: Number(worker.id_home_membership_version) || 0,
-                                homeWorkplaceId: Number(worker.home_workplace_id) || 0,
+                                id: String(workerId),
+                                text: name + ' · ID ' + workerId + employeeNumber + (eligible ? ' · Elegible' : ' · ' + eligibilityMessage),
+                                disabled: worker.selection_allowed !== true,
+                                eligible,
+                                selectionAllowed: worker.selection_allowed === true,
+                                eligibilityReason: reason,
+                                eligibilityMessage,
+                                membershipId: eligible ? Number(worker.id_home_membership_version) : 0,
+                                homeWorkplaceId: eligible ? Number(worker.home_workplace_id) : 0,
                             };
                         });
-                        if (payload.has_more) message(workerMessage, 'Hay más resultados elegibles; afina la búsqueda por nombre, ID RH o número de colaborador.');
-                        else if (workers.length === 0) message(workerMessage, payload.eligibility_notice || 'No hay comodines elegibles. Verifica la adscripción habitual registrada por RH, el periodo y las localidades autorizadas.');
-                        else message(workerMessage, workers.length + ' trabajador(es) elegible(s) para el periodo.');
-                        return { results: workers, pagination: { more: false } };
+                        const foundCount = Number(payload.candidate_count ?? workers.length);
+                        const eligibleCount = Number(payload.eligible_count ?? workers.filter((worker) => worker.eligible).length);
+                        if (foundCount === 0) message(workerMessage, payload.eligibility_notice || 'No se encontraron trabajadores puesto 14 dentro de las localidades autorizadas.');
+                        else if (!hasValidPeriod()) message(workerMessage, foundCount + ' candidato(s) encontrados. Las fechas están pendientes o incompletas; la elegibilidad se verificará al completar el periodo.');
+                        else if (eligibleCount === 0) message(workerMessage, foundCount + ' comodín(es) encontrado(s); revisa el motivo de adscripción junto a cada nombre. No se habilita el guardado hasta confirmarla.', true);
+                        else if (payload.has_more) message(workerMessage, foundCount + ' encontrado(s); ' + eligibleCount + ' elegible(s) en estos resultados. Afina la búsqueda por nombre o ID para más coincidencias.');
+                        else message(workerMessage, foundCount + ' encontrado(s); ' + eligibleCount + ' elegible(s) para el periodo.');
+                        return { results: workers, pagination: { more: Boolean(payload.has_more) } };
                     },
                     error: (xhr) => {
                         const payload = xhr.responseJSON || {};
@@ -125,41 +252,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                 },
             });
-            $(workerSelect).on('select2:select.comodines', (event) => {
+            $(workerSelect).off('.comodines').on('select2:select.comodines', (event) => {
                 const selected = event.params?.data || {};
-                if (selected.eligible !== true) {
+                if (selected.selectionAllowed !== true) {
                     $(workerSelect).val(null).trigger('change');
-                    membershipId.value = '';
-                    updateHomeWorkplace('');
+                    selectedWorkerId = 0;
+                    invalidateEligibility();
                     message(workerMessage, selected.eligibilityMessage || 'El trabajador no es elegible para este periodo.', true);
                     return;
                 }
-                membershipId.value = String(selected.membershipId || '');
-                updateHomeWorkplace(selected.homeWorkplaceId);
-                message(workerMessage, 'Origen y membresía verificados para el periodo.');
+                selectedWorkerId = Number(selected.id) || 0;
+                verifySelectedWorker();
             }).on('select2:clear.comodines', () => {
-                membershipId.value = '';
-                updateHomeWorkplace('');
+                selectedWorkerId = 0;
+                invalidateEligibility();
+                message(workerMessage, '');
             }).on('select2:opening.comodines', (event) => {
-                if (!from.value || !to.value || to.value <= from.value) {
-                    event.preventDefault();
-                    message(workerMessage, 'Selecciona primero un periodo válido para buscar trabajadores.');
-                }
+                message(workerMessage, '');
             });
         });
 
         [from, to].forEach((field) => field.addEventListener('change', () => {
-            membershipId.value = '';
-            updateHomeWorkplace('');
+            invalidateEligibility();
             targetSelect.value = '';
             $(targetSelect).trigger('change');
-            if ($?.fn?.select2 && $(workerSelect).hasClass('select2-hidden-accessible')) {
-                $(workerSelect).val(null).trigger('change');
-            }
-            if (!from.value || !to.value || to.value <= from.value) {
-                message(workerMessage, 'Selecciona primero un periodo válido para buscar trabajadores.');
+            if (!hasValidPeriod()) {
+                if (selectedWorkerId) message(workerMessage, 'La elegibilidad anterior fue invalidada. Completa ambas fechas con un rango válido para volver a verificar.');
+                else message(workerMessage, 'Captura un rango válido; la búsqueda de trabajadores no requiere fechas.');
             } else {
-                message(workerMessage, 'El periodo cambió. Busca de nuevo para verificar la elegibilidad.');
+                if (selectedWorkerId) verifySelectedWorker();
+                else message(workerMessage, 'El periodo está listo. Busca y selecciona un trabajador para verificar su adscripción.');
             }
         }));
 
@@ -170,15 +292,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const home = Number(homeWorkplaceId.value);
             const target = Number(targetSelect.value);
             const reason = document.getElementById('checador-comodines-reason').value.trim();
-            const days = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
-            const schedule = days.map((day) => {
-                const value = document.querySelector(`[data-coverage-day="${day}"]`)?.value || '';
-                if (value === 'DAY_OFF') return { dia_semana: day, tipo: 'DAY_OFF', id_plantilla: null, version_plantilla: null };
-                const [templateId, version] = value.split(':').map(Number);
-                return { dia_semana: day, tipo: 'WORK', id_plantilla: templateId || null, version_plantilla: version || null };
-            });
-            if (!worker || !membership || !home || !target || target === home
-                || !from.value || !to.value || to.value <= from.value || !reason || reason.length > 500
+            const schedule = coverageSchedule();
+            if (!eligibilityVerified || !membership || !home) {
+                message(responseMessage, 'No se puede guardar: verifica primero una adscripción canónica válida para el trabajador y el periodo.', true);
+                return;
+            }
+            if (!otherRequestFieldsValid() || !worker || !target || target === home
+                || !reason || reason.length > 500
                 || schedule.some((day) => day.tipo === 'WORK' && (!day.id_plantilla || !day.version_plantilla))) {
                 message(responseMessage, 'Completa trabajador, localidad, vigencia, motivo y los siete días del patrón.', true);
                 return;
@@ -199,7 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 previousPayload = payloadSignature;
                 requestKey = `coverage-request:${makeKey()}`;
             }
-            submit.disabled = true;
+            submitting = true;
+            refreshSubmitState();
             try {
                 const response = await fetch(form.dataset.createUrl, {
                     method: 'POST',
@@ -226,7 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (_error) {
                 message(responseMessage, 'No se pudo confirmar el resultado. Actualiza la lista antes de reintentar.', true);
             } finally {
-                submit.disabled = false;
+                submitting = false;
+                refreshSubmitState();
             }
         });
     }
