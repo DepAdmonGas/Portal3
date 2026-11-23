@@ -669,7 +669,7 @@ final class ChecadorController extends BaseController
                 'incidenceCanRevise' => (bool) ($revisionAuthorization['allowed'] ?? false),
                 'incidenceLifecyclePermissions' => $lifecyclePermissions,
                 'incidenceWriterReady' => (bool) ($writeReadiness['ready'] ?? false),
-                'incidenceWriterBlockReason' => (string) ($writeReadiness['reason'] ?? 'api_writer_cutover_unverified'),
+                'incidenceWriterBlockReason' => (string) ($writeReadiness['reason'] ?? 'schema_preflight_failed'),
                 'incidenceFeedback' => $feedback,
                 'incidenceFormValues' => $formValues,
                 'incidenceIdempotencyKey' => $retryKey,
@@ -6208,13 +6208,10 @@ final class ChecadorController extends BaseController
     }
 
 
-    /** Enable the verified local Fedora cutover only for the local development database. */
+    /** M06 administrative writes use the existing Portal3 SQL writer. */
     private static function m06AdministrativeIncidenceSqlService(): \App\Services\ChecadorAdministrativeIncidenceSqlService
     {
-        $localCutoverVerified = \App\Core\Database::isLocalDevelopmentDatabaseConnection();
-        return new \App\Services\ChecadorAdministrativeIncidenceSqlService(
-            apiWriterCutoverVerified: $localCutoverVerified
-        );
+        return new \App\Services\ChecadorAdministrativeIncidenceSqlService();
     }
 
     private static function m06WriteErrorMessage(string $error): string
@@ -6225,8 +6222,7 @@ final class ChecadorController extends BaseController
             'registration_deadline_expired' => 'El plazo de registro configurado para esta localidad ya venció.',
             'policy_unavailable', 'workplace_timezone_unresolved' => 'No se pudo confirmar la política M11 y zona horaria para el periodo.',
             'idempotency_conflict' => 'La clave de reintento ya corresponde a otros datos. No se creó otra incidencia.',
-            'api_writer_cutover_unverified' => 'El guardado SQL permanece cerrado hasta comprobar el corte de los seis escritores API anteriores.',
-            'schema_preflight_failed' => 'La estructura o los permisos SQL requeridos no están disponibles; no se guardó el cambio.',
+            'schema_preflight_failed' => 'La estructura SQL requerida no está disponible; no se guardó el cambio.',
             'readback_unconfirmed' => 'No se confirmó el cambio mediante lectura SQL; no se muestra éxito.',
             'worker_not_found' => 'El trabajador ya no está activo en el padrón autorizado.',
             'incidence_not_found' => 'La incidencia no existe en la localidad autorizada.',

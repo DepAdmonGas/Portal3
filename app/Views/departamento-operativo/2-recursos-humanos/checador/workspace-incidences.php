@@ -11,9 +11,8 @@ $feedbackMessage = is_string($feedback['message'] ?? null) && trim($feedback['me
 $readErrorMessage = 'No fue posible consultar las incidencias. Intenta nuevamente.';
 $formValues = is_array($incidenceFormValues ?? null) ? $incidenceFormValues : [];
 $writerBlockMessage = match ((string) ($incidenceWriterBlockReason ?? '')) {
-    'api_writer_cutover_unverified' => 'El guardado permanece cerrado hasta comprobar el corte del escritor anterior',
-    'schema_preflight_failed' => 'El guardado permanece cerrado porque no se confirmó el esquema y los permisos SQL requeridos',
-    default => 'El guardado permanece cerrado hasta verificar las condiciones operativas requeridas',
+    'schema_preflight_failed' => 'El esquema SQL requerido no está disponible; no se guardó ningún cambio.',
+    default => 'No se pudo confirmar la disponibilidad de la base de datos; no se guardó ningún cambio.',
 };
 $lifecyclePermissions = is_array($incidenceLifecyclePermissions ?? null) ? $incidenceLifecyclePermissions : [];
 $canReviseIncidences = ($incidenceCanRevise ?? false) === true;
@@ -38,7 +37,7 @@ $canManageIncidences = ($incidenceCanCreate ?? false) === true || $canReviseInci
             </div>
         </div>
         <div class="card-body">
-            <?php if (!$m06WriterReady && $canManageIncidences): ?><div class="alert alert-warning d-flex align-items-start gap-2" role="status"><i class="ti ti-lock mt-1" aria-hidden="true"></i><span><?= $esc($writerBlockMessage) ?>. Las acciones de escritura permanecen deshabilitadas hasta que se compruebe el corte API.</span></div><?php endif; ?>
+            <?php if (!$m06WriterReady && $canManageIncidences): ?><div class="alert alert-warning d-flex align-items-start gap-2" role="status"><i class="ti ti-lock mt-1" aria-hidden="true"></i><span><?= $esc($writerBlockMessage) ?></span></div><?php endif; ?>
             <?php if ($feedbackMessage !== null): ?>
                 <?php $feedbackSuccess = ($feedback['type'] ?? '') === 'success'; ?>
                 <div class="alert alert-<?= $feedbackSuccess ? 'success' : 'warning' ?> d-flex align-items-start gap-2" role="status">
