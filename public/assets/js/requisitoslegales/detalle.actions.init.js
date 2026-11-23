@@ -10,6 +10,7 @@ document.addEventListener('alpine:init', () => {
 
         detalle: {},
         matriz: [],
+        puede_descargar: false,
         renovacion: [],
         historialRows: [],
         historialTitle: '',
@@ -84,12 +85,21 @@ document.addEventListener('alpine:init', () => {
 
             this.$watch('historialForm.fecha_emision', value => {
                 if (value) {
-                    this.errors.vigencia = false;
+                    this.historialErrors.fecha_emision = false;
                 }
 
                 this.updateHistorialFechaVencimiento();
             });
 
+        },
+
+        downloadUrl(matrixId, variant) {
+            const moduleKey = document.getElementById('container')?.dataset?.moduleStationKey || 'sasisopa';
+            const endpoint = moduleKey === 'sgm'
+                ? '/sgm/normatividad-aplicable-mediciones/requisitos-legales/download'
+                : '/sasisopa/requisitos-legales/download';
+
+            return `${endpoint}?matrix_id=${encodeURIComponent(matrixId)}&variant=${encodeURIComponent(variant)}`;
         },
 
         getContentContainer() {
@@ -447,7 +457,7 @@ document.addEventListener('alpine:init', () => {
         async submit() {
 
             if (!this.validate()) {
-                this.notify('error', 'Completa todos los campos obligatorios');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 
@@ -515,6 +525,7 @@ document.addEventListener('alpine:init', () => {
                
                 this.detalle = data.detalle;
                 this.matriz = data.matriz;
+                this.puede_descargar = Boolean(data.puede_descargar);
                 this.renovacion = data.renovacion || [];
 
                 const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
@@ -611,7 +622,7 @@ document.addEventListener('alpine:init', () => {
 
         async submitHistorial() {
             if (!this.validateHistorialForm()) {
-                this.notify('error', 'Completa los campos obligatorios');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

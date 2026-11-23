@@ -12,7 +12,7 @@ document.addEventListener('alpine:init', () => {
         correoDefault: 'cambiosdedestinovdm@g500network.com',
         guardando: false,
 
-        detalleData: {},
+        detalleData: { filas: [], firmas: [] },
         detalleLoading: false,
 
         gmailId: 0,
@@ -96,7 +96,7 @@ document.addEventListener('alpine:init', () => {
 
         async abrirDetalle(id) {
             if (!id) return;
-            this.detalleData = {};
+            this.detalleData = { filas: [], firmas: [] };
             this.detalleLoading = true;
             bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalle')).show();
 
@@ -105,7 +105,12 @@ document.addEventListener('alpine:init', () => {
             });
 
             if (res && res.success) {
-                this.detalleData = res.data || {};
+                const data = res.data && typeof res.data === 'object' ? res.data : {};
+                this.detalleData = {
+                    ...data,
+                    filas: Array.isArray(data.filas) ? data.filas : [],
+                    firmas: Array.isArray(data.firmas) ? data.firmas : []
+                };
             } else {
                 this.notify('error', (res && res.message) || 'No se pudo cargar el detalle.');
             }

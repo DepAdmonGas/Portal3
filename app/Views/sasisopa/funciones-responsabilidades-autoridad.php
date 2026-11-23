@@ -30,7 +30,7 @@
          role="status"
          aria-live="polite">
       <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center p-3 mb-3">
-        <i class="ti ti-sitemap fs-8"></i>
+        <i class="ti ti-file-off fs-6"></i>
       </span>
       <h5 class="mb-2">Organigrama no disponible</h5>
       <p class="text-muted mb-0">La estación aún no tiene un organigrama registrado.</p>

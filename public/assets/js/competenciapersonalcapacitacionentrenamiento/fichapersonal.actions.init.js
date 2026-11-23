@@ -169,6 +169,7 @@ document.addEventListener('alpine:init', () => {
         if (this.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
             this.errors.email = true;
             valid = false;
+            valid = false;
         }
 
         return valid;
@@ -179,7 +180,10 @@ document.addEventListener('alpine:init', () => {
     // ======================
     async actualizar() {
 
-        if (!this.validar()) return;
+        if (!this.validar()) {
+            this.notify('error', 'Completa los campos obligatorios.');
+            return;
+        }
 
         try {
 
@@ -238,7 +242,7 @@ document.addEventListener('alpine:init', () => {
             const res = await fetch(`/sasisopa/competencia-personal-capacitacion-entrenamiento/get-falimiares/${this.id}`);
             this.familiares = await res.json();
         } catch (e) {
-            this.notify('error', 'Completa el campo');
+            this.notify('error', 'Error al cargar familiares');
         }
     },
 
@@ -255,7 +259,7 @@ document.addEventListener('alpine:init', () => {
     async guardarFamiliar() {
 
         if (!this.validarFamiliar()) {
-            this.notify('error', 'Completa los campos obligatorios');
+            this.notify('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -330,7 +334,7 @@ document.addEventListener('alpine:init', () => {
     async guardarFormacion() {
 
         if (!this.validarFormacion()) {
-            this.notify('error', 'Completa los campos');
+            this.notify('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -405,7 +409,7 @@ document.addEventListener('alpine:init', () => {
     async guardarExperiencia() {
 
         if (!this.validarExperiencia()) {
-            this.notify('error', 'Completa el campo');
+            this.notify('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -501,7 +505,10 @@ document.addEventListener('alpine:init', () => {
 
     async guardarEmpresa() {
 
-        if (!this.validarEmpresa()) return;
+        if (!this.validarEmpresa()) {
+            this.notify('error', 'Completa los campos obligatorios.');
+            return;
+        }
 
         try {
 
@@ -529,7 +536,7 @@ document.addEventListener('alpine:init', () => {
             }
 
         } catch (e) {
-            this.notify('error', 'Completa el campo');
+            this.notify('error', 'Error al guardar');
         }
     },
 

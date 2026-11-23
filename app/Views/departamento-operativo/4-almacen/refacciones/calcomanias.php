@@ -100,11 +100,11 @@ $calcomaniaImageUrl = static fn ($image): string => !empty($image) ? '/uploads/a
 
 <?php if (!empty($permissions['crear']) || !empty($permissions['editar'])): ?>
 <div class="modal fade" id="modalRefaccionesCalcomania" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
-        <form data-refacciones-form data-catalog-section="refacciones-calcomanias" data-endpoint="<?= $escape($baseUrl) ?>/productos/guardar" data-update-endpoint="<?= $escape($baseUrl) ?>/productos/actualizar" enctype="multipart/form-data" novalidate>
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content refacciones-scroll-form" data-refacciones-form data-catalog-section="refacciones-calcomanias" data-endpoint="<?= $escape($baseUrl) ?>/productos/guardar" data-update-endpoint="<?= $escape($baseUrl) ?>/productos/actualizar" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="tipo_articulo" value="calcomania" data-product-type><input type="hidden" name="id" value="" data-product-id>
             <div class="modal-header bg-primary"><h5 class="modal-title text-white" data-product-form-title><i class="ti ti-sticker me-1"></i>Nueva calcomanía</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-            <div class="modal-body"><div class="row g-3">
+            <div class="modal-body refacciones-scroll-body"><div class="row g-3">
                 <div class="col-md-6"><label class="form-label" for="refacciones-calcomania-sku">* SKU:</label><input id="refacciones-calcomania-sku" class="form-control" name="sku" maxlength="60" data-required></div>
                 <div class="col-md-6"><label class="form-label" for="refacciones-calcomania-nombre">* Nombre:</label><input id="refacciones-calcomania-nombre" class="form-control" name="nombre" maxlength="250" data-required></div>
                 <div class="col-12"><label class="form-label" for="refacciones-calcomania-dimension">* Dimensión:</label><input id="refacciones-calcomania-dimension" class="form-control" name="dimension" maxlength="100" placeholder="Ej. 10 × 15 cm" data-required></div>
@@ -116,6 +116,6 @@ $calcomaniaImageUrl = static fn ($image): string => !empty($image) ? '/uploads/a
             </div></div>
             <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"></i>Cancelar</button><button class="btn btn-success" type="submit"><i class="ti ti-check me-1"></i><span data-product-submit-label>Guardar</span></button></div>
         </form>
-    </div></div>
+    </div>
 </div>
 <?php endif; ?>

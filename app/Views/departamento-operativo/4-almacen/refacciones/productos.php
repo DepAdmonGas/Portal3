@@ -167,11 +167,11 @@ $productImageUrl = static fn ($image): string => !empty($image) ? '/uploads/arch
 
 <?php if (!empty($permissions['crear']) || !empty($permissions['editar'])): ?>
 <div class="modal fade" id="modalRefaccionesProducto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
-        <form data-refacciones-form data-endpoint="<?= $escape($baseUrl) ?>/productos/guardar" data-update-endpoint="<?= $escape($baseUrl) ?>/productos/actualizar" enctype="multipart/form-data" novalidate>
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content refacciones-scroll-form" data-refacciones-form data-endpoint="<?= $escape($baseUrl) ?>/productos/guardar" data-update-endpoint="<?= $escape($baseUrl) ?>/productos/actualizar" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="tipo_articulo" value="refaccion" data-product-type><input type="hidden" name="id" value="" data-product-id>
             <div class="modal-header bg-primary"><h5 class="modal-title text-white" data-product-form-title><i class="ti ti-package me-1"></i>Nuevo producto</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-            <div class="modal-body"><div class="row g-3">
+            <div class="modal-body refacciones-scroll-body"><div class="row g-3">
                 <div class="col-md-6"><label class="form-label" for="refacciones-producto-sku">* SKU:</label><input id="refacciones-producto-sku" class="form-control" name="sku" maxlength="60" data-required></div>
                 <div class="col-md-6"><label class="form-label" for="refacciones-producto-nombre">* Nombre:</label><input id="refacciones-producto-nombre" class="form-control" name="nombre" maxlength="250" data-name-part data-required></div>
                 <div class="col-md-6"><label class="form-label" for="refacciones-producto-medida">* Medida:</label><input id="refacciones-producto-medida" class="form-control" name="medida" maxlength="100" placeholder="Ej. 3/16, 1/4, 5mm" data-name-part data-required></div>
@@ -186,6 +186,6 @@ $productImageUrl = static fn ($image): string => !empty($image) ? '/uploads/arch
             </div></div>
             <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"></i>Cancelar</button><button class="btn btn-success" type="submit"><i class="ti ti-check me-1"></i><span data-product-submit-label>Guardar</span></button></div>
         </form>
-    </div></div>
+    </div>
 </div>
 <?php endif; ?>

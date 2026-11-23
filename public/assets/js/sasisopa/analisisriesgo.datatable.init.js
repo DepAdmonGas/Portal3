@@ -52,8 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchable: false,
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
-
-                    const noDownload = permisos.descargar;
+                    const archivoDisponible = Boolean(row.documento_disponible && row.documento_url);
+                    const puedeDescargar = Boolean(permisos.descargar && archivoDisponible);
+                    const descarga = puedeDescargar
+                        ? `href="${row.documento_url}"`
+                        : 'href="#" aria-disabled="true" tabindex="-1"';
+                    const etiquetaDescarga = archivoDisponible ? 'Descargar PDF' : 'Archivo no disponible';
+                    const iconoDescarga = archivoDisponible ? 'ti-download' : 'ti-file-off';
                     
                     return `
                     <div x-data="actions()" class="d-flex gap-1 justify-content-center">
@@ -65,20 +70,20 @@ document.addEventListener('DOMContentLoaded', () => {
                               
                                  <li>
                                     <a
-                                    class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
-                                    ${!noDownload ? '' : `
-                                    @click="download('analisis-riesgo','${row.documento}')"
-                                    `}>
-                                        <i class="fs-4 ti ti-download"></i>Descargar
+                                    class="dropdown-item pointer d-flex align-items-center gap-3 ${puedeDescargar ? '' : 'disabled'}"
+                                    ${descarga}
+                                    aria-label="${etiquetaDescarga}"
+                                    @click.prevent="true">
+                                        <i class="ti ${iconoDescarga} fs-6"></i>Descargar
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}" 
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!permisos.descargar ? 'disabled' : ''}"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#anexos"
                                     @click="$dispatch('open-anexos', { id: ${row.id} })">
-                                        <i class="fs-4 ti ti-file"></i>Anexos
+                                        <i class="ti ti-file fs-6"></i>Anexos
                                     </a>
                                 </li>
                                 

@@ -607,7 +607,7 @@ class ObjetivosMetasIndicadoresController extends BaseController{
 
         header('Content-Type: application/json; charset=utf-8');
         $json = json_decode(file_get_contents('php://input'), true);
-        $data = $json['data'] ?? null;
+        $data = is_array($json['data'] ?? null) ? $json['data'] : [];
 
         if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
@@ -617,11 +617,16 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             return;
         }
 
-         if (!$data['fecha'] && !$data['capacitacion'] && !$data['experiencia']
-                && !$data['ventas'] && !$data['medidas'] && !$data['fecha_aplicacion']) {
+        $camposObligatorios = ['fecha', 'capacitacion', 'experiencia', 'ventas', 'medidas', 'fecha_aplicacion'];
+        $faltanCampos = array_filter($camposObligatorios, static function ($campo) use ($data) {
+            $valor = $data[$campo] ?? null;
+            return !is_scalar($valor) || trim((string) $valor) === '';
+        });
+
+        if ($faltanCampos !== []) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Faltan campos obligatorios'
+                'message' => 'Completa los campos obligatorios.'
             ]);
             exit;
         }
@@ -688,17 +693,16 @@ class ObjetivosMetasIndicadoresController extends BaseController{
             $payload['medidas'] = sanitize_input($payload['medidas'] ?? null, 'string');
             $payload['fecha_aplicacion'] = sanitize_input($payload['fecha_aplicacion'] ?? null, 'string');
 
-            if (
-                empty($payload['fecha']) ||
-                empty($payload['capacitacion']) ||
-                empty($payload['experiencia']) ||
-                empty($payload['ventas']) ||
-                empty($payload['medidas']) ||
-                empty($payload['fecha_aplicacion'])
-            ) {
+            $camposObligatorios = ['fecha', 'capacitacion', 'experiencia', 'ventas', 'medidas', 'fecha_aplicacion'];
+            $faltanCampos = array_filter($camposObligatorios, static function ($campo) use ($payload) {
+                $valor = $payload[$campo] ?? null;
+                return !is_scalar($valor) || trim((string) $valor) === '';
+            });
+
+            if ($faltanCampos !== []) {
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Faltan campos obligatorios'
+                    'message' => 'Completa los campos obligatorios.'
                 ]);
                 return;
             }
