@@ -1326,7 +1326,21 @@ class SasisopaController extends BaseController
         $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
         $data = AnalisisRiesgo::where('id_estacion', $idEstacion)
             ->orderBy('fecha', 'desc')
-            ->get();
+            ->get()
+            ->map(static function (AnalisisRiesgo $item): array {
+                return [
+                    'id' => $item->id,
+                    'fecha' => $item->fecha?->format('Y-m-d'),
+                    'descripcion' => $item->descripcion,
+                    'documento' => $item->documento,
+                    ...SasisopaReporteArchivosService::fieldMetadata(
+                        $item->documento,
+                        'analisis-riesgo',
+                        'documento'
+                    ),
+                ];
+            })
+            ->values();
 
 
         echo json_encode([
@@ -2290,14 +2304,38 @@ class SasisopaController extends BaseController
         header('Content-Type: application/json; charset=utf-8');
 
         try {
-
-            $analisis = AnalisisRiesgo::find($id);
-
-            if (!$analisis) {
-                throw new \Exception('No encontrado');
+            $contexto = ModuleStationService::getContext('sasisopa');
+            $idEstacion = (int) ($contexto['id_estacion'] ?? 0);
+            if ($idEstacion <= 0 || !ModuloService::validaPermiso($this->modulo, 'descargar')) {
+                http_response_code(404);
+                throw new \RuntimeException('No encontrado');
             }
 
-            $anexos = AnalisisRiesgoAnexo::where('id_analisis', $id)->get();
+            $analisis = AnalisisRiesgo::where('id', $id)
+                ->where('id_estacion', $idEstacion)
+                ->first();
+
+            if (!$analisis) {
+                http_response_code(404);
+                throw new \RuntimeException('No encontrado');
+            }
+
+            $anexos = AnalisisRiesgoAnexo::where('id_analisis', $analisis->id)
+                ->get()
+                ->map(static function (AnalisisRiesgoAnexo $anexo): array {
+                    return [
+                        'id' => $anexo->id,
+                        'id_analisis' => $anexo->id_analisis,
+                        'descripcion' => $anexo->descripcion,
+                        'documento' => $anexo->documento,
+                        ...SasisopaReporteArchivosService::fieldMetadata(
+                            $anexo->documento,
+                            'analisis-riesgo',
+                            'documento'
+                        ),
+                    ];
+                })
+                ->values();
 
             echo json_encode([
                 'success' => true,
@@ -2341,10 +2379,19 @@ class SasisopaController extends BaseController
 
         if ($estacion) {
             $nombreOrganigrama = basename(str_replace('\\', '/', (string)($estacion->organigrama ?? '')));
-            $rutaOrganigrama = PUBLIC_PATH . '/assets/images/organigramas/' . $nombreOrganigrama;
+            $directoriosOrganigrama = [
+                PUBLIC_PATH . '/uploads/archivos/organigrama/',
+                PUBLIC_PATH . '/uploads/archivos/organigrama/organigramas/',
+                PUBLIC_PATH . '/assets/images/organigramas/',
+            ];
 
-            if ($nombreOrganigrama !== '' && is_file($rutaOrganigrama)) {
-                $organigrama = asset('/images/organigramas/' . rawurlencode($nombreOrganigrama));
+            foreach ($directoriosOrganigrama as $directorioOrganigrama) {
+                $rutaOrganigrama = $directorioOrganigrama . $nombreOrganigrama;
+
+                if ($nombreOrganigrama !== '' && is_file($rutaOrganigrama) && is_readable($rutaOrganigrama)) {
+                    $organigrama = '/download?tipo=organigrama&file=' . rawurlencode($nombreOrganigrama) . '&view=1';
+                    break;
+                }
             }
         }
 
@@ -2391,6 +2438,15 @@ class SasisopaController extends BaseController
             ->orderBy('fecha')
             ->get();
 
+        $directorioArchivos = PUBLIC_PATH . '/uploads/archivos/representante-tecnico/';
+        $data->each(static function ($registro) use ($directorioArchivos) {
+            $archivo = basename(str_replace('\\', '/', (string) ($registro->archivo ?? '')));
+            $registro->setAttribute(
+                'archivo_disponible',
+                $archivo !== '' && is_file($directorioArchivos . $archivo) && is_readable($directorioArchivos . $archivo)
+            );
+        });
+
         echo json_encode([
             "data" => $data,
             "permisos" => [
@@ -2422,18 +2478,26 @@ class SasisopaController extends BaseController
         $file = $_FILES['pdf'] ?? null;
         $estacionId = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? 0);
 
+        $archivoFaltante = !is_array($file)
+            || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE;
+        if ($nombre === '' || $fecha === '' || $archivoFaltante || $estacionId <= 0) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.'
+            ]);
+            exit;
+        }
+
         $fechaValidada = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha);
         $erroresFecha = \DateTimeImmutable::getLastErrors();
         if (
-            $nombre === '' ||
             $fechaValidada === false ||
             ($erroresFecha !== false && ($erroresFecha['warning_count'] > 0 || $erroresFecha['error_count'] > 0)) ||
-            $fechaValidada->format('Y-m-d') !== $fecha ||
-            $estacionId <= 0
+            $fechaValidada->format('Y-m-d') !== $fecha
         ) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Completa el nombre, la fecha válida y selecciona una estación.'
+                'message' => 'La fecha no es válida.'
             ]);
             exit;
         }

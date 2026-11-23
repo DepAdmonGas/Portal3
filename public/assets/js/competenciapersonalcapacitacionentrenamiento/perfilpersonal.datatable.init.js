@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
+                                    aria-label="Descargar PDF"
                                     href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf/${row.id}">
                                         <i class="ti ti-download"></i>Descargar
                                     </a>

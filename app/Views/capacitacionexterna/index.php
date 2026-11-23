@@ -125,8 +125,10 @@
                         <div class="row mb-2">
                             <div class="col-8">
                                 <input type="text"
+                                    inputmode="decimal"
                                     class="form-control"
-                                    x-model="duracion">
+                                    x-model="duracion"
+                                    @input="formatearCantidad($event, 'duracion')">
                             </div>
                             <div class="col-4">
                                 <select class="form-control"

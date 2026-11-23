@@ -189,13 +189,16 @@ public function perfilesPersonal(){
         $id = sanitize_input($data['id'] ?? null, 'int');
         $nombre = sanitize_input($data['nombre'] ?? null, 'string');
         $domicilio = sanitize_input($data['domicilio'] ?? null, 'string');
+        $fechaNacimiento = sanitize_input($data['fecha_nacimiento'] ?? null, 'string');
+        $estadoCivil = sanitize_input($data['estado_civil'] ?? null, 'string');
+        $seguroSocial = sanitize_input($data['seguro_social'] ?? null, 'string');
         $telefono = sanitize_input($data['telefono'] ?? null, 'string');
         $email = sanitize_input($data['email'] ?? null, 'email');
 
-        if (!$nombre || !$domicilio) {
+        if (!$nombre || !$domicilio || !$fechaNacimiento || !$estadoCivil || !$seguroSocial) {
         echo json_encode([
             'success' => false,
-            'message' => 'Campos obligatorios'
+            'message' => 'Completa los campos obligatorios.'
         ]);
         exit;
         }
@@ -214,9 +217,9 @@ public function perfilesPersonal(){
             $usuario->update([
                 'nombre'            => $nombre,
                 'domicilio'         => $domicilio,
-                'fecha_nacimiento'  => $data['fecha_nacimiento'],
-                'estado_civil'      => $data['estado_civil'],
-                'seguro_social'     => $data['seguro_social'],
+                'fecha_nacimiento'  => $fechaNacimiento,
+                'estado_civil'      => $estadoCivil,
+                'seguro_social'     => $seguroSocial,
                 'telefono'          => $telefono,
                 'email'             => $email
             ]);
@@ -298,10 +301,10 @@ public function perfilesPersonal(){
         $domicilio = sanitize_input($data['domicilio'] ?? null, 'string');
         $telefono = sanitize_input($data['telefono'] ?? null, 'string');
 
-        if (!$nombrecompleto || !$parentesco) {
+        if (!$nombrecompleto || !$parentesco || !$domicilio || !$telefono) {
         echo json_encode([
             'success' => false,
-            'message' => 'Campos obligatorios'
+            'message' => 'Completa los campos obligatorios.'
         ]);
         exit;
         }
@@ -340,6 +343,14 @@ public function perfilesPersonal(){
     public function createFormacion()
         {
             $data = json_decode(file_get_contents("php://input"), true);
+
+            if (empty(trim((string) ($data['nivel'] ?? ''))) || empty(trim((string) ($data['detalle'] ?? '')))) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Completa los campos obligatorios.'
+                ]);
+                return;
+            }
 
             try {
 
@@ -394,10 +405,10 @@ public function perfilesPersonal(){
     {
         $data = json_decode(file_get_contents("php://input"), true);
 
-        if (!$data) {
+        if (!$data || empty(trim((string) ($data['detalle'] ?? '')))) {
             echo json_encode([
                 'success' => false,
-                'message'=> 'Faltan datos requeridos'
+                'message'=> 'Completa los campos obligatorios.'
                 ]);
             return;
         }
@@ -454,6 +465,14 @@ public function perfilesPersonal(){
     {
         $data = json_decode(file_get_contents("php://input"), true);
 
+        if (empty(trim((string) ($data['razon_social'] ?? ''))) || empty(trim((string) ($data['puesto'] ?? ''))) || empty(trim((string) ($data['periodo_inicio'] ?? '')))) {
+            echo json_encode([
+                'success' => false,
+                'message'=> 'Completa los campos obligatorios.'
+            ]);
+            return;
+        }
+
         try {
 
             UsuariosExperienciaEmpresaGrupo::create([
@@ -507,6 +526,14 @@ public function perfilesPersonal(){
                 'success' => false,
                 'message'=> 'Faltan datos requeridos'
                 ]);
+            return;
+        }
+
+        if (empty(trim((string) ($data['razon_social'] ?? ''))) || empty(trim((string) ($data['puesto'] ?? ''))) || empty(trim((string) ($data['periodo_inicio'] ?? '')))) {
+            echo json_encode([
+                'success' => false,
+                'message'=> 'Completa los campos obligatorios.'
+            ]);
             return;
         }
 

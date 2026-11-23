@@ -26,7 +26,7 @@
 
                 <?=
                 !empty($permisos['descargar']) ?
-                    '<li><a class="dropdown-item pointer" href="/sasisopa/politica/pdf" target="_blank"><i class="ti ti-file-download"></i> Descargar Politica</a></li>'
+                    '<li><a class="dropdown-item pointer" href="/sasisopa/politica/pdf" target="_blank" aria-label="Descargar PDF"><i class="ti ti-file-download fs-6"></i> Descargar Politica</a></li>'
                     : ''
                 ?>
 
@@ -250,21 +250,27 @@
                     <label class="form-label">Política:</label>
                     <textarea class="form-control"
                         rows="6"
-                        x-model="politica"></textarea>
+                        x-model="politica"
+                        :class="errors.politica ? 'is-invalid' : ''"
+                        @input="errors.politica = false"></textarea>
 
 
                     <!-- Mision -->
                     <label class="form-label mt-3">Misión:</label>
                     <textarea class="form-control"
                         rows="6"
-                        x-model="mision"></textarea>
+                        x-model="mision"
+                        :class="errors.mision ? 'is-invalid' : ''"
+                        @input="errors.mision = false"></textarea>
 
 
                     <!-- Vision -->
                     <label class="form-label mt-3">Visión:</label>
                     <textarea class="form-control"
                         rows="6"
-                        x-model="vision"></textarea>
+                        x-model="vision"
+                        :class="errors.vision ? 'is-invalid' : ''"
+                        @input="errors.vision = false"></textarea>
 
                 </div>
 
@@ -363,7 +369,7 @@
                                 <tr>
                                     <td class="align-middle" x-text="label"></td>
                                     <td class="p-0 align-middle">
-                                        <select class="form-control rounded-0 border-0"
+                                        <select class="form-control rounded-0"
                                             x-model="respuestas[key]"
                                             :class="errors[key] ? 'is-invalid' : ''">
                                             <option value="">Selecciona una opción...</option>

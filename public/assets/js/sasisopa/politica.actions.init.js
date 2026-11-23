@@ -10,6 +10,11 @@ document.addEventListener('alpine:init', () => {
         mision: '',
         vision: '',
         loading: false,
+        errors: {
+            politica: false,
+            mision: false,
+            vision: false
+        },
 
         loadFromHTML() {
 
@@ -24,7 +29,15 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submit() {
-          
+            Object.keys(this.errors).forEach(key => {
+                this.errors[key] = !String(this[key] ?? '').trim();
+            });
+
+            if (Object.values(this.errors).some(Boolean)) {
+                this.notify('error', 'Completa los campos obligatorios.');
+                return;
+            }
+
             try {
 
                 const res = await this.createAction({

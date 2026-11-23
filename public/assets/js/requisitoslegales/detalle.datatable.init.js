@@ -117,26 +117,25 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 const noDescargar = permisos.descargar;
-                const tieneArchivo = row.acuse_file && row.acuse_file.trim() !== '';
+                const referenciaRegistrada = Boolean(row.acuse_file && row.acuse_file.trim() !== '');
+                const tieneArchivo = referenciaRegistrada && Boolean(row.acuse_disponible);
                 const matrixId = Number(row.matrix_id);
                 const puedeDescargar = Number.isInteger(matrixId) && matrixId > 0;
 
                
-                if (!tieneArchivo) {
+                if (!referenciaRegistrada) {
                     return `<i class="ti ti-x text-danger fs-6"></i>`;
+                }
+
+                if (!tieneArchivo) {
+                    return `<i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>`;
                 }
 
                 if (!puedeDescargar || !noDescargar) {
                     return `<i class="ti ti-download fs-6 text-muted" aria-label="Descarga no disponible"></i>`;
                 }
 
-                return `
-                <div x-data="actions()" class="d-flex gap-1 justify-content-center">
-                    <a class="pointer" @click="window.location.href='${downloadEndpoint}?matrix_id=${matrixId}&variant=acuse'">
-                        <i class="ti ti-download fs-6 text-success"></i>
-                    </a>
-                </div>
-                `;
+                return `<a class="pointer" href="${downloadEndpoint}?matrix_id=${matrixId}&variant=acuse" aria-label="Descargar PDF"><i class="ti ti-download fs-6 text-success"></i></a>`;
             }
         },
 
@@ -149,26 +148,25 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 const noDescargar = permisos.descargar;
-                const tieneArchivo = row.requisito_file && row.requisito_file.trim() !== '';
+                const referenciaRegistrada = Boolean(row.requisito_file && row.requisito_file.trim() !== '');
+                const tieneArchivo = referenciaRegistrada && Boolean(row.requisito_disponible);
                 const matrixId = Number(row.matrix_id);
                 const puedeDescargar = Number.isInteger(matrixId) && matrixId > 0;
 
                
-                if (!tieneArchivo) {
+                if (!referenciaRegistrada) {
                     return `<i class="ti ti-x text-danger fs-6"></i>`;
+                }
+
+                if (!tieneArchivo) {
+                    return `<i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>`;
                 }
 
                 if (!puedeDescargar || !noDescargar) {
                     return `<i class="ti ti-download fs-6 text-muted" aria-label="Descarga no disponible"></i>`;
                 }
                 
-                return `
-                    <div x-data="actions()">
-                    <a class="pointer" @click="window.location.href='${downloadEndpoint}?matrix_id=${matrixId}&variant=requisito'">
-                        <i class="ti ti-download fs-6 text-success"></i>
-                    </a>
-                    </div>
-                `;
+                return `<a class="pointer" href="${downloadEndpoint}?matrix_id=${matrixId}&variant=requisito" aria-label="Descargar PDF"><i class="ti ti-download fs-6 text-success"></i></a>`;
             }
         },
 
@@ -225,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <li>                            
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3"
                                      @click="window.requisitosInstance.openDetalle(${row.id})">
-                                        <i class="ti ti-eye"></i>Detalle
+                                        <i class="ti ti-eye fs-6"></i>Detalle
                                     </a>
                                 </li>
 
@@ -233,14 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noEdit ? 'disabled text-muted' : ''}"
                                     @click="window.requisitosInstance.openEditar(${row.id})">
-                                        <i class="ti ti-edit"></i>Editar
+                                        <i class="ti ti-edit fs-6"></i>Editar
                                     </a>
                                 </li>
 
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     @click='window.requisitosInstance.openHistorial(${row.id}, ${permisoNombre}, ${vigencia})'>
-                                        <i class="ti ti-history"></i>Historial
+                                        <i class="ti ti-history fs-6"></i>Historial
                                     </a>
                                 </li>
 
@@ -249,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${!noDelete ? '' : `
                                     @click='window.requisitosInstance.handleDelete(${row.id}, ${permisoNombre})'
                                     `}>
-                                        <i class="ti ti-trash"></i>Eliminar
+                                        <i class="ti ti-trash fs-6"></i>Eliminar
                                     </a>
                                 </li>
                             </ul>

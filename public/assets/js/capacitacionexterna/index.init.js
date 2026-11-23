@@ -32,6 +32,49 @@ document.addEventListener('alpine:init', () => {
             this.modalPersonal = new bootstrap.Modal(document.getElementById('modal-personal'));
         },
 
+        formatearCantidad(event, campo) {
+            const input = event.target;
+            const original = input.value;
+            const posicion = input.selectionStart ?? original.length;
+            const digitosAntes = original.slice(0, posicion).replace(/\D/g, '').length;
+            let normalizado = original.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const partes = normalizado.split('.');
+            normalizado = partes[0] + (partes.length > 1 ? '.' + partes.slice(1).join('') : '');
+
+            if (!normalizado) {
+                this[campo] = '';
+                input.value = '';
+                return;
+            }
+
+            const [entero = '', ...decimales] = normalizado.split('.');
+            const formateado = (entero.replace(/^0+(?=\d)/, '') || '0')
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                + (normalizado.includes('.') ? '.' + decimales.join('') : '');
+            this[campo] = formateado;
+            input.value = formateado;
+
+            let vistos = 0;
+            let nuevaPosicion = input.value.length;
+            for (let i = 0; i < input.value.length; i += 1) {
+                if (/\d/.test(input.value[i])) vistos += 1;
+                if (vistos >= digitosAntes && digitosAntes > 0) {
+                    nuevaPosicion = i + 1;
+                    break;
+                }
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
+        formatearCantidadExistente(valor) {
+            if (valor === null || valor === undefined || valor === '') return '';
+            const normalizado = String(valor).replace(/,/g, '').trim();
+            const numero = Number(normalizado);
+            return Number.isFinite(numero)
+                ? numero.toLocaleString('en-US', { maximumFractionDigits: 20 })
+                : String(valor);
+        },
+
          validate() {
             Object.keys(this.errors).forEach(k => this.errors[k] = false);
             let valid = true;
@@ -77,7 +120,7 @@ document.addEventListener('alpine:init', () => {
         async guardar(){
 
              if (!this.validate()) {
-                this.notify('error', 'Completa todos los campos obligatorios');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 
@@ -118,6 +161,8 @@ document.addEventListener('alpine:init', () => {
 
             this.mode = 'edit';
 
+            Object.keys(this.errors).forEach(k => this.errors[k] = false);
+
             this.id = data.id;
             this.curso = data.curso;
 
@@ -125,7 +170,7 @@ document.addEventListener('alpine:init', () => {
                 ? data.fecha_programada.split('T')[0] 
                 : '';
 
-            this.duracion = data.duracion;
+            this.duracion = this.formatearCantidadExistente(data.duracion);
             this.duraciondetalle = data.duraciondetalle;
             this.instructor = data.instructor;
 

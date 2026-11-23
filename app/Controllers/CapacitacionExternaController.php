@@ -106,7 +106,7 @@ class CapacitacionExternaController extends BaseController{
         if (empty($curso) || empty($fecha_programada)) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Completa todos los campos obligatorios'
+                'message' => 'Completa los campos obligatorios.'
             ]);
             return;
         }
@@ -266,7 +266,7 @@ class CapacitacionExternaController extends BaseController{
             if (empty($curso) || empty($fecha_programada)) {
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Completa los campos obligatorios'
+                    'message' => 'Completa los campos obligatorios.'
                 ]);
                 return;
             }

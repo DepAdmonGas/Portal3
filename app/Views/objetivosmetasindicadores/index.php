@@ -182,7 +182,7 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
   <?= 
     !empty($permisos['descargar']) ? 
     '<li>
-      <a class="dropdown-item pointer" href="/sasisopa/objetivos-metas-indicadores/pdf-objetivos-metas"><i class="ti ti-download"></i> Descargar</a>
+      <a class="dropdown-item pointer" href="/sasisopa/objetivos-metas-indicadores/pdf-objetivos-metas" aria-label="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
     </li>' 
     : '' 
   ?>   
@@ -243,7 +243,7 @@ altamente capacitado tanto en operación como en mantenimiento.</li>
   <?=
     !empty($permisos['descargar']) ? 
     '<li>
-      <a class="dropdown-item pointer" href="/sasisopa/objetivos-metas-indicadores/pdf-reporte-indicadores"><i class="ti ti-download"></i> Descargar</a>
+      <a class="dropdown-item pointer" href="/sasisopa/objetivos-metas-indicadores/pdf-reporte-indicadores" aria-label="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
     </li>' 
     : '' 
   ?>   

@@ -2,6 +2,7 @@
 
 namespace App\Models\Sasisopa;
 
+use App\Services\RequisitosLegalesStorageService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -183,6 +184,10 @@ class RequisitosLegalesCalendario extends Model
 
             $acuse = trim($matriz->acusepdf ?? '');
             $req = trim($matriz->requisitolegalpdf ?? '');
+            $acuseDisponible = $acuse !== ''
+                && RequisitosLegalesStorageService::resolveReadablePath($acuse) !== null;
+            $requisitoDisponible = $req !== ''
+                && RequisitosLegalesStorageService::resolveReadablePath($req) !== null;
 
             if ($acuse === '' && $req === '') {
                 $cumplimiento = 0;
@@ -221,7 +226,9 @@ class RequisitosLegalesCalendario extends Model
                 'fecha_emision' => $fechaEmision,
                 'fecha_vencimiento' => $fechaVencimiento,
                 'acuse_file' => $acuse,
+                'acuse_disponible' => $acuseDisponible,
                 'requisito_file' => $req,
+                'requisito_disponible' => $requisitoDisponible,
                 'renovacion' => $renovacion,
                 'cumplimiento' => $cumplimiento
             ];

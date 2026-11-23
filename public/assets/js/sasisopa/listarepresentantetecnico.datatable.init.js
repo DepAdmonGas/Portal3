@@ -68,9 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const disabled = row.estado === 0;
                     const noEdit = !permisos.editar || disabled;
                     const noDelete = !permisos.eliminar || disabled;
-                    const noDownload = !permisos.descargar || disabled;
-
-                    const archivo = row.archivo.split('/').pop();
+                    const archivoDisponible = Boolean(row.archivo_disponible);
+                    const noDownload = !permisos.descargar || disabled || !archivoDisponible;
+                    const archivo = String(row.archivo || '').replace(/\\/g, '/').split('/').pop();
+                    const iconoDescarga = archivoDisponible ? 'ti-download' : 'ti-file-off';
+                    const etiquetaDescarga = archivoDisponible ? 'Descargar' : 'Archivo no disponible';
 
                     
                     return `
@@ -81,10 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
                                  <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 pointer ${noDownload ? 'disabled' : ''}"
-                                    ${noDownload ? '' : `
-                                    @click="download('representante-tecnico','${archivo}')"
-                                    `}>
-                                        <i class="fs-4 ti ti-download"></i>Descargar
+                                    ${noDownload ? 'aria-disabled="true" tabindex="-1"' : `href="/download?tipo=representante-tecnico&amp;file=${encodeURIComponent(archivo)}" aria-label="Descargar PDF"`}>
+                                        <i class="fs-4 ti ${iconoDescarga}"></i>${etiquetaDescarga}
                                     </a>
                                 </li>
                                 <li>
