@@ -539,14 +539,25 @@ return rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 public static function getDirectoriosArchivoAceite(string $tipo): array
 {
 $raizActual = dirname(__DIR__, 2) . '/public/uploads/archivos/';
-return in_array($tipo, ['aceites-documentos', 'aceites-facturas', 'aceites-diferencias'], true)
-? [$raizActual]
-: [];
+$subdirectoriosLegado = [
+'aceites-facturas' => $raizActual . 'aceites-facturas/',
+];
+
+if (!in_array($tipo, ['aceites-documentos', 'aceites-facturas', 'aceites-diferencias'], true)) {
+return [];
+}
+
+// Las cargas nuevas se guardan en la raíz; las facturas importadas conservan
+// la subcarpeta usada por el sistema anterior: archivos/aceites-facturas/.
+return array_values(array_filter([
+$subdirectoriosLegado[$tipo] ?? null,
+$raizActual,
+], static fn ($directorio) => $directorio !== null));
 }
 
 public static function resolverArchivoAceite(string $tipo, string $nombre): ?string
 {
-$nombre = basename($nombre);
+$nombre = basename(str_replace('\\', '/', $nombre));
 foreach (self::getDirectoriosArchivoAceite($tipo) as $directorio) {
 $ruta = rtrim($directorio, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombre;
 if (is_file($ruta)) return $ruta;

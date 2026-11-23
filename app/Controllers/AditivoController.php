@@ -349,6 +349,7 @@ header('Content-Type: application/json; charset=utf-8');
 $data = json_decode(file_get_contents('php://input'), true);
 $data = is_array($data) ? $data : [];
 $data['no_factura'] = trim((string) ($data['no_factura'] ?? ''));
+$data['litros'] = str_replace(',', '', (string) ($data['litros'] ?? ''));
 
 if (!$this->ctx()->getCapacidades()['puedeCrear']) {
 echo json_encode([
@@ -381,7 +382,7 @@ $errors = validate_input($data, [
 ]);
 
 if (!empty($errors)) {
-echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios', 'errors' => $errors]);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => $errors]);
 exit;
 }
 
@@ -482,7 +483,13 @@ exit;
 
 $capacidades = $ctx->getCapacidades();
 
-$reporte = BitacoraAditivoService::getReportes($idEstacion);
+$reporte = BitacoraAditivoService::getReportes($idEstacion)->map(function ($registro) {
+    $datos = $registro->toArray();
+    $datos['documento_disponible'] = BitacoraAditivoService::resolverDocumentoReporte(
+        (string) ($registro->documento ?? '')
+    ) !== null;
+    return $datos;
+})->values();
 
 echo json_encode([
 "data" => $reporte,
@@ -517,9 +524,12 @@ $file  = $_FILES['documento'] ?? null;
 $errors = validate_input($_POST, [
 'fecha' => 'required|max:20'
 ]);
+if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+    $errors['documento'] = 'Campo requerido.';
+}
 
 if (!empty($errors)) {
-echo json_encode(['success' => false, 'errors' => $errors]);
+echo json_encode(['success' => false, 'message' => 'Completa los campos obligatorios.', 'errors' => $errors]);
 exit;
 }
 
@@ -652,8 +662,8 @@ echo json_encode([
 exit;
 }
 
-$gasolina = sanitize_input($data['gasolina'] ?? 0, 'float');
-$diesel   = sanitize_input($data['diesel'] ?? 0, 'float');
+$gasolina = sanitize_input(str_replace(',', '', (string) ($data['gasolina'] ?? 0)), 'float');
+$diesel   = sanitize_input(str_replace(',', '', (string) ($data['diesel'] ?? 0)), 'float');
 
 echo json_encode(BitacoraAditivoService::crearInventario(
 (int) $idEstacion,

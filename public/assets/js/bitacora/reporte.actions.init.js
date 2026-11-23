@@ -28,7 +28,7 @@ document.addEventListener('alpine:init', () => {
             this.errors.documento = !this.documento;
 
             if (this.errors.fecha || this.errors.documento) {
-                this.notify('error', 'Completa los campos obligatorios');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return false;
             }
 
@@ -82,6 +82,7 @@ document.addEventListener('alpine:init', () => {
         formData.append('fecha', this.fecha);
         formData.append('documento', this.documento);
         
+        this.loading = true;
         try {
         const res = await this.createAction({
             url: this.getBaseUrl() + '/create-reporte',
@@ -97,6 +98,8 @@ document.addEventListener('alpine:init', () => {
 
         } catch (error) {
                 this.notify('error', 'Error al guardar');
+        } finally {
+            this.loading = false;
             }
     }
 

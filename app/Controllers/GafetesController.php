@@ -200,7 +200,7 @@ public function createReporte()
     $errores = [];
     if ($clave === '' || mb_strlen($clave) > 50) $errores['clave'] = 'La clave es obligatoria y no debe exceder 50 caracteres.';
     if ($nombre === '' || mb_strlen($nombre) > 255) $errores['nombre_g'] = 'El nombre es obligatorio y no debe exceder 255 caracteres.';
-    if ($errores !== []) JsonResponse::validation('Verifique los campos obligatorios.', $errores);
+    if ($errores !== []) JsonResponse::validation('Completa los campos obligatorios.', $errores);
 
     $alcance = SolicitudGafetesService::alcanceActual();
     if (!$alcance['permitido']) JsonResponse::forbidden('No tienes acceso a la estación seleccionada.');
@@ -212,7 +212,7 @@ public function createReporte()
 
     $archivo = $_FILES['foto'] ?? null;
     if ($archivo === null || (int) ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-        JsonResponse::validation('Selecciona la foto del gafete.', ['foto' => 'La foto es obligatoria.']);
+        JsonResponse::validation('Completa los campos obligatorios.', ['foto' => 'La foto es obligatoria.']);
     }
     $validacion = $this->validateFileUpload($archivo);
     if (!$validacion['valid']) JsonResponse::validation($validacion['error'] ?? 'El archivo no es válido.', ['foto' => $validacion['error'] ?? 'Archivo inválido.']);
@@ -276,7 +276,7 @@ $estatus = $this->estatusSolicitud($estacion, (int) $principal->no_reporte);
 if (!SolicitudGafetesService::puedeEliminar($estatus)) {
     JsonResponse::forbidden('Solo los puestos 6 y 7 pueden eliminar solicitudes pendientes; los puestos 13 y 1 pueden eliminarlas cuando están en proceso.');
 }
-$archivos = $solicitudes->pluck('foto')->filter()->map(static fn($archivo): string => basename((string) $archivo))->unique()->all();
+$archivos = $solicitudes->pluck('foto')->filter()->map(static fn($archivo): string => basename(str_replace('\\', '/', (string) $archivo)))->unique()->all();
 
 try {
 Capsule::transaction(function () use ($principal, $estacion): void {
@@ -288,12 +288,10 @@ error_log('GafetesController::deleteReporte - ' . $error->getMessage());
 JsonResponse::serverError('No fue posible eliminar la solicitud.');
 }
 
-$directorio = SolicitudGafetesService::directorioArchivos();
 foreach ($archivos as $archivo) {
 if ($archivo !== '' && !$this->archivoReferenciado($archivo)) {
-$ruta = realpath($directorio . $archivo);
-$base = realpath($directorio);
-if ($ruta && $base && dirname($ruta) === $base && is_file($ruta)) @unlink($ruta);
+$ruta = SolicitudGafetesService::resolverArchivo($archivo);
+if ($ruta !== null) @unlink($ruta);
 }
 }
 
@@ -361,16 +359,15 @@ $estatus = $this->estatusSolicitud($estacion, (int) $noReporte);
 $puedeAgregar = SolicitudGafetesService::puedeAgregarRegistro($estatus);
 $puedeEditar = SolicitudGafetesService::puedeEditar($estatus);
 $puedeEliminar = SolicitudGafetesService::puedeEliminar($estatus);
-$directorio = SolicitudGafetesService::directorioArchivos();
 $rows = SolicitudGafetes::where('id_estacion', $estacion->nombre)->where('no_reporte', $noReporte)->orderBy('id')->get();
-$data = $rows->map(static function (SolicitudGafetes $row) use ($directorio): array {
-    $archivo = basename((string) $row->foto);
+    $data = $rows->map(static function (SolicitudGafetes $row): array {
+    $archivo = trim((string) $row->foto);
     return [
         'idGafete' => (int) $row->id,
         'clave' => (string) $row->clave,
         'nombre_completo' => (string) $row->nombre,
         'foto_gafete' => $archivo,
-        'archivo_disponible' => $archivo !== '' && is_file($directorio . $archivo),
+        'archivo_disponible' => $archivo !== '' && SolicitudGafetesService::resolverArchivo($archivo) !== null,
         'fecha_formateada' => $row->fecha ? formatearFecha((string) $row->fecha) : 'S/I',
     ];
 })->all();
@@ -387,14 +384,14 @@ $errores = [];
 if (!$idEstacion || !$noReporte) $errores['solicitud'] = 'La estación y solicitud son obligatorias.';
 if ($clave === '' || mb_strlen($clave) > 50) $errores['clave'] = 'La clave es obligatoria y no debe exceder 50 caracteres.';
 if ($nombre === '' || mb_strlen($nombre) > 255) $errores['nombre_g'] = 'El nombre es obligatorio y no debe exceder 255 caracteres.';
-if ($errores !== []) JsonResponse::validation('Verifique los campos obligatorios.', $errores);
+if ($errores !== []) JsonResponse::validation('Completa los campos obligatorios.', $errores);
 
 $estacion = $this->validarSolicitudAutorizada((int) $idEstacion, (int) $noReporte);
 $estatus = $this->estatusSolicitud($estacion, (int) $noReporte);
 if (!SolicitudGafetesService::puedeAgregarRegistro($estatus)) JsonResponse::forbidden('Solo los puestos 6 y 7 pueden agregar registros mientras la solicitud esté pendiente o en proceso.');
 $file = $_FILES['foto'] ?? null;
 if ($file === null || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-    JsonResponse::validation('Selecciona la foto del gafete.', ['foto' => 'La foto es obligatoria.']);
+    JsonResponse::validation('Completa los campos obligatorios.', ['foto' => 'La foto es obligatoria.']);
 }
 $validacion = $this->validateFileUpload($file);
 if (!$validacion['valid']) JsonResponse::validation((string) $validacion['error'], ['foto' => (string) $validacion['error']]);
@@ -432,7 +429,7 @@ public function updateReporteFormulario(): void
     if (!$id || $id < 1) $errores['id'] = 'Selecciona un registro válido.';
     if ($clave === '' || mb_strlen($clave) > 50) $errores['clave'] = 'La clave es obligatoria y no debe exceder 50 caracteres.';
     if ($nombre === '' || mb_strlen($nombre) > 255) $errores['nombre_g'] = 'El nombre es obligatorio y no debe exceder 255 caracteres.';
-    if ($errores !== []) JsonResponse::validation('Verifique los campos obligatorios.', $errores);
+    if ($errores !== []) JsonResponse::validation('Completa los campos obligatorios.', $errores);
 
     $registro = SolicitudGafetes::find($id);
     if (!$registro) JsonResponse::notFound('El registro no existe o ya fue eliminado.');
@@ -443,7 +440,7 @@ public function updateReporteFormulario(): void
     if (!SolicitudGafetesService::puedeEditar($estatus)) JsonResponse::forbidden('Solo los puestos 6 y 7 pueden editar registros mientras la solicitud esté pendiente.');
 
     $directorio = SolicitudGafetesService::directorioArchivos();
-    $archivoAnterior = basename((string) $registro->foto);
+    $archivoAnterior = basename(str_replace('\\', '/', (string) $registro->foto));
     $archivoNuevo = null;
     $file = $_FILES['foto'] ?? null;
     if ($file !== null && (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
@@ -466,9 +463,8 @@ public function updateReporteFormulario(): void
     }
 
 if ($archivoNuevo !== null && $archivoAnterior !== '' && !$this->archivoReferenciado($archivoAnterior)) {
-        $oldPath = realpath($directorio . $archivoAnterior);
-        $base = realpath($directorio);
-        if ($oldPath && $base && dirname($oldPath) === $base && is_file($oldPath)) @unlink($oldPath);
+        $oldPath = SolicitudGafetesService::resolverArchivo($archivoAnterior);
+        if ($oldPath !== null) @unlink($oldPath);
     }
     SolicitudGafetesService::notificar('editar', (int) $estacion->id, (int) $registro->no_reporte, (int) (Auth::id() ?? 0), $nombre);
     JsonResponse::success('Registro actualizado correctamente.');
@@ -485,18 +481,16 @@ if (!$estacion || !SolicitudGafetesService::estacionPermitida((int) $estacion->i
 $this->validarSolicitudAutorizada((int) $estacion->id, (int) $registro->no_reporte);
 $estatus = $this->estatusSolicitud($estacion, (int) $registro->no_reporte);
 if (!SolicitudGafetesService::puedeEliminar($estatus)) JsonResponse::forbidden('No tienes permiso para eliminar un registro en el estado actual.');
-$archivo = basename((string) $registro->foto);
+$archivo = basename(str_replace('\\', '/', (string) $registro->foto));
 try {
     $registro->delete();
 } catch (\Throwable $error) {
     error_log('GafetesController::deleteReporteFormulario - ' . $error->getMessage());
     JsonResponse::serverError('No fue posible eliminar el registro.');
 }
-$directorio = SolicitudGafetesService::directorioArchivos();
 if ($archivo !== '' && !$this->archivoReferenciado($archivo)) {
-    $ruta = realpath($directorio . $archivo);
-    $base = realpath($directorio);
-    if ($ruta && $base && dirname($ruta) === $base && is_file($ruta)) @unlink($ruta);
+    $ruta = SolicitudGafetesService::resolverArchivo($archivo);
+    if ($ruta !== null) @unlink($ruta);
 }
  $sinRegistros = !SolicitudGafetes::where('id_estacion', $estacion->nombre)->where('no_reporte', $registro->no_reporte)->exists();
 if ($sinRegistros) {

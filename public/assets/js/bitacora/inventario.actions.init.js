@@ -12,11 +12,50 @@ document.addEventListener('alpine:init', () => {
 
         gasolina: '',
         diesel: '',
+        errors: { gasolina: false, diesel: false },
+
+        formatearCantidad(event, campo) {
+            const input = event.target;
+            const original = input.value;
+            const posicion = input.selectionStart ?? original.length;
+            const digitosAntes = original.slice(0, posicion).replace(/\D/g, '').length;
+            let normalizado = original.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const partes = normalizado.split('.');
+            normalizado = partes[0] + (partes.length > 1 ? '.' + partes.slice(1).join('') : '');
+            if (!normalizado) {
+                this[campo] = '';
+                input.value = '';
+                return;
+            }
+            const [entero = '', ...decimales] = normalizado.split('.');
+            const formateado = (entero.replace(/^0+(?=\d)/, '') || '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                + (normalizado.includes('.') ? '.' + decimales.join('') : '');
+            this[campo] = formateado;
+            input.value = formateado;
+            let vistos = 0;
+            let nuevaPosicion = input.value.length;
+            for (let i = 0; i < input.value.length; i += 1) {
+                if (/\d/.test(input.value[i])) vistos += 1;
+                if (digitosAntes > 0 && vistos >= digitosAntes) {
+                    nuevaPosicion = i + 1;
+                    break;
+                }
+            }
+            input.setSelectionRange(nuevaPosicion, nuevaPosicion);
+        },
+
+        valorCantidad(valor) {
+            const numero = Number(String(valor ?? '').replace(/,/g, '').trim());
+            return Number.isFinite(numero) ? numero : 0;
+        },
 
         validate() {
-            // Retorna true si al menos uno tiene valor
-            if (!this.gasolina && !this.diesel) {
-                this.notify('error', 'Debes ingresar al menos un aditivo');
+            const hayGasolina = this.valorCantidad(this.gasolina) > 0;
+            const hayDiesel = this.valorCantidad(this.diesel) > 0;
+            this.errors.gasolina = !hayGasolina && !hayDiesel;
+            this.errors.diesel = !hayGasolina && !hayDiesel;
+            if (this.errors.gasolina || this.errors.diesel) {
+                this.notify('error', 'Completa los campos obligatorios.');
                 return false;
             }
             return true;
@@ -24,6 +63,7 @@ document.addEventListener('alpine:init', () => {
         resetForm() {
             this.gasolina = '';
             this.diesel = '';
+            this.errors = { gasolina: false, diesel: false };
         },
         resetModal(){
 
@@ -51,8 +91,8 @@ document.addEventListener('alpine:init', () => {
             if (!this.validate()) return;
 
             let payload = {
-                gasolina: this.gasolina || 0,
-                diesel: this.diesel || 0
+                gasolina: this.valorCantidad(this.gasolina),
+                diesel: this.valorCantidad(this.diesel)
             };
 
             let url = this.getBaseUrl() + '/create-inventario';
@@ -85,8 +125,8 @@ document.addEventListener('alpine:init', () => {
                 const gas = document.getElementById('inv-gasolina');
                 const die = document.getElementById('inv-diesel');
 
-                if (gas) gas.textContent = res.data.gasolina + ' galones';
-                if (die) die.textContent = res.data.diesel  + ' galones';
+                if (gas) gas.textContent = Number(res.data.gasolina || 0).toLocaleString('en-US') + ' Galones';
+                if (die) die.textContent = Number(res.data.diesel || 0).toLocaleString('en-US') + ' Galones';
 
             })
             .catch(() => {

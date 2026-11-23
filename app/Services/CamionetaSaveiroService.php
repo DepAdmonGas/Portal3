@@ -12,21 +12,32 @@ class CamionetaSaveiroService
 {
     public const UPLOAD_FOLDER = 'public/uploads/archivos/camioneta-saveiro/';
 
-    private static function archivoDisponible(string $archivo): bool
+    private static function rutaArchivoDisponible(string $archivo): ?string
     {
         $nombre = basename(str_replace('\\', '/', trim($archivo)));
         if ($nombre === '' || $nombre === '.' || $nombre === '..') {
-            return false;
+            return null;
         }
 
-        $directorio = dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER;
-        $baseReal = realpath($directorio);
-        $archivoReal = realpath($directorio . $nombre);
+        $directorios = [
+            dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER,
+            dirname(__DIR__, 2) . '/public/uploads/archivos/',
+        ];
+        foreach ($directorios as $directorio) {
+            $baseReal = realpath($directorio);
+            $archivoReal = $baseReal !== false ? realpath($baseReal . DIRECTORY_SEPARATOR . $nombre) : false;
+            if ($baseReal !== false && $archivoReal !== false && is_file($archivoReal)
+                && str_starts_with($archivoReal, $baseReal . DIRECTORY_SEPARATOR)) {
+                return $archivoReal;
+            }
+        }
 
-        return $baseReal !== false
-            && $archivoReal !== false
-            && is_file($archivoReal)
-            && str_starts_with($archivoReal, $baseReal . DIRECTORY_SEPARATOR);
+        return null;
+    }
+
+    private static function archivoDisponible(string $archivo): bool
+    {
+        return self::rutaArchivoDisponible($archivo) !== null;
     }
 
     /**
@@ -142,9 +153,8 @@ class CamionetaSaveiroService
             if (!move_uploaded_file($file['tmp_name'], $directorioDestino . $nuevoNombre)) {
                 return ['success' => false, 'message' => 'No se pudo guardar el archivo reemplazado.', 'code' => 500];
             }
-            if ($documento->archivo && file_exists($directorioDestino . $documento->archivo)) {
-                @unlink($directorioDestino . $documento->archivo);
-            }
+            $archivoAnterior = self::rutaArchivoDisponible((string) $documento->archivo);
+            if ($archivoAnterior !== null) @unlink($archivoAnterior);
             $documento->archivo = $nuevoNombre;
         }
 
@@ -169,10 +179,8 @@ class CamionetaSaveiroService
             return ['success' => false, 'message' => 'Documento no encontrado.', 'code' => 404];
         }
 
-        $directorioDestino = dirname(__DIR__, 2) . '/' . self::UPLOAD_FOLDER;
-        if ($documento->archivo && file_exists($directorioDestino . $documento->archivo)) {
-            @unlink($directorioDestino . $documento->archivo);
-        }
+        $archivoFisico = self::rutaArchivoDisponible((string) $documento->archivo);
+        if ($archivoFisico !== null) @unlink($archivoFisico);
 
         $datosNotif = [
             'tipo'        => $documento->tipo,

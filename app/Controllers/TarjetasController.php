@@ -394,7 +394,6 @@ if ($solicitudes->isEmpty()) {
 JsonResponse::notFound('La solicitud no existe.');
 }
 
-$rutaBase = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/';
 $archivosEliminar = [];
 
 Capsule::beginTransaction();
@@ -404,9 +403,8 @@ $imagenes = SolicitudTarjetasImagen::where('no_solicitud', $solicitud_principal-
 ->get();
 
 foreach ($imagenes as $img) {
-
-$rutaArchivo = $rutaBase . basename((string)$img->ruta);
-$archivosEliminar[] = $rutaArchivo;
+$rutaArchivo = SolicitudTarjetasService::resolverArchivo((string)$img->ruta);
+if ($rutaArchivo !== null) $archivosEliminar[] = $rutaArchivo;
 
 SolicitudTarjetasImagen::where('id', $img->id)->delete();
 }
@@ -670,7 +668,8 @@ if ($remaining === 0) {
     $imagenes = SolicitudTarjetasImagen::where('estacion', $nombreEstacion)
         ->where('no_solicitud', $noSolicitud)->get();
     foreach ($imagenes as $imagen) {
-        $archivosEliminar[] = dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/' . basename((string)$imagen->ruta);
+        $rutaArchivo = SolicitudTarjetasService::resolverArchivo((string)$imagen->ruta);
+        if ($rutaArchivo !== null) $archivosEliminar[] = $rutaArchivo;
         $imagen->delete();
     }
 }
@@ -868,7 +867,6 @@ $datosUsuario = Auth::user();
 $idPuesto = $datosUsuario->id_puesto;
 
 $datosEstacion = Estacion::find($idEstacion);
-ModuleStationService::setContext($this->modulo, (int) $datosEstacion->id);
 $title = 'Detalle Solicitud de Tarjetas (#' . $noSolicitud . ')';
 
 Breadcrumb::add('Home', '/home');
@@ -919,11 +917,11 @@ $archivo = SolicitudTarjetasImagen::where('estacion', $datosEstacion->nombre)
 ->where('no_solicitud', $noSolicitud)
 ->orderBy('id', 'desc')
 ->first();
-$archivoDisponible = $archivo && is_file(dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/' . basename((string)$archivo->ruta));
+$rutaArchivo = $archivo ? SolicitudTarjetasService::resolverArchivo((string)$archivo->ruta) : null;
 
 JsonResponse::custom([
 'success' => true,
-'archivo' => $archivoDisponible ? basename((string)$archivo->ruta) : null
+'archivo' => $rutaArchivo !== null ? (string)$archivo->ruta : null
 ]);
 }
 

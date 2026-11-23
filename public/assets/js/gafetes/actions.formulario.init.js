@@ -125,7 +125,7 @@ this.errors.foto
 ) {
 this.notify(
 'error',
-'Completa los campos obligatorios'
+'Completa los campos obligatorios.'
 );
 return false;
 }
@@ -176,6 +176,12 @@ url: editar ? '/solicitud-gafetes/update-reporte-formulario' : '/solicitud-gafet
 data: formData,
 table: '#table-gafetes-formulario'
 });
+
+if (res && !res.success) {
+this.errors.clave = Boolean(res.errors?.clave);
+this.errors.nombre_g = Boolean(res.errors?.nombre_g);
+this.errors.foto = Boolean(res.errors?.foto);
+}
 
 if (res && !res.success && /formatos válidos/i.test(res.message || '')) {
 this.errors.foto = true;

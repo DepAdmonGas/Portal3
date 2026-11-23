@@ -1,4 +1,7 @@
-<?php $esImportacion = ($contexto ?? '') === 'importacion'; ?>
+<?php
+$esImportacion = ($contexto ?? '') === 'importacion';
+$formatearCantidadAditivo = static fn ($valor): string => rtrim(rtrim(number_format((float) ($valor ?? 0), 2, '.', ','), '0'), '.');
+?>
 <div id="container" class="mb-4" data-module-station-key="bitacora-aditivo" data-base-url="<?= $baseUrl ?>" data-importacion="<?= $esImportacion ? '1' : '0' ?>">
 
 <?php if (!$estacionId): ?>
@@ -17,12 +20,12 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
     <div class="col-md-6 order-2 order-md-1">
         <div class="fs-3 mb-2">
         Inventario (Gasolina Hitec 6590C):
-        <span class="badge rounded-pill text-bg-info fs-1" id="inv-gasolina"><?= $inventario['gasolina'] ?> Galones </span>
+        <span class="badge rounded-pill text-bg-info fs-1" id="inv-gasolina"><?= $formatearCantidadAditivo($inventario['gasolina'] ?? 0) ?> Galones </span>
         </div>
 
         <div class="fs-3 mb-2">
         Inventario (Diesel Hitec 4133G): 
-        <span class="badge rounded-pill text-bg-info fs-1" id="inv-diesel"><?= $inventario['diesel'] ?> Galones </span>
+        <span class="badge rounded-pill text-bg-info fs-1" id="inv-diesel"><?= $formatearCantidadAditivo($inventario['diesel'] ?? 0) ?> Galones </span>
         </div>
     </div>
     <div class="col-md-6 order-1 order-md-2">
@@ -122,10 +125,12 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 
                 <!-- LITROS -->
                 <label class="form-label">* Litros:</label>
-                <input type="number"
+                <input type="text"
+                       inputmode="decimal"
                        class="form-control"
                        x-model="litros"
-                       @input="calcular(); errors.litros = false"
+                       @input="formatearCantidad($event, 'litros'); calcular(); errors.litros = false"
+                       @change="calcular()"
                        :class="errors.litros ? 'is-invalid' : ''"
                        :disabled="mode === 'edit'">
 
@@ -146,7 +151,6 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
                        required
                        @input="errors.no_factura = false"
                        :class="errors.no_factura ? 'is-invalid' : ''">
-                <div class="invalid-feedback" x-show="errors.no_factura">El No. de factura es obligatorio.</div>
 
                 <!-- PRODUCTO -->
                 <label class="form-label mt-3">* Producto:</label>
@@ -175,7 +179,8 @@ Debes de seleccionar una estación del menú superior para poder visualizar la i
 
                 <!-- GALONES -->
                 <label class="form-label mt-3">Galones:</label>
-                <input type="number"
+                <input type="text"
+                       inputmode="decimal"
                        class="form-control"
                        x-model="galones"
                        disabled>

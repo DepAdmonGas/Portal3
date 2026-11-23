@@ -97,15 +97,21 @@ Debes de seleccionar una estación del menú superior para poder visualizar el i
 
                 <!-- Galones -->
                 <label class="form-label">*  Aditivo Gasolina Hitec 6590C: <small>(Galones)</small> </label>
-                <input type="number"
+                <input type="text"
+                       inputmode="decimal"
                        class="form-control"
-                       x-model="gasolina">
+                       x-model="gasolina"
+                       @input="formatearCantidad($event, 'gasolina'); errors.gasolina = false"
+                       :class="errors.gasolina ? 'is-invalid' : ''">
 
                 <!-- FECHA -->
                 <label class="form-label mt-3">* Aditivo Diesel Hitec 4133G: <small>(Galones)</small> </label>
-                <input type="number"
+                <input type="text"
+                       inputmode="decimal"
                        class="form-control"
-                       x-model="diesel">
+                       x-model="diesel"
+                       @input="formatearCantidad($event, 'diesel'); errors.diesel = false"
+                       :class="errors.diesel ? 'is-invalid' : ''">
 
             </div>
 
