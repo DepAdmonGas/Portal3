@@ -1,5 +1,10 @@
-<?php $editMode = !empty($salidaEdit); ?>
-<section id="refacciones-salida-formulario" class="pb-4" data-salida-form data-mode="<?= $editMode ? 'pending-edit' : 'create' ?>" data-endpoint="<?= $escape($baseUrl) ?>/salidas/<?= $editMode ? 'actualizar-pendiente' : 'guardar' ?>" data-return-url="<?= $escape($baseUrl) ?>/salidas" data-origin-id="<?= (int) $salidaOriginId ?>" data-origin-name="<?= $escape($salidaOriginName) ?>">
+<?php
+$editMode = !empty($salidaEdit);
+$salidaOriginLabel = (int) ($warehouseLocationId ?? 0) === (int) $salidaOriginId
+    ? 'Almacén'
+    : $salidaOriginName . ' (Almacén)';
+?>
+<section id="refacciones-salida-formulario" class="pb-4" data-salida-form data-mode="<?= $editMode ? 'pending-edit' : 'create' ?>" data-endpoint="<?= $escape($baseUrl) ?>/salidas/<?= $editMode ? 'actualizar-pendiente' : 'guardar' ?>" data-return-url="<?= $escape($baseUrl) ?>/salidas" data-origin-id="<?= (int) $salidaOriginId ?>" data-origin-name="<?= $escape($editMode ? $salidaOriginName : $salidaOriginLabel) ?>">
 <form id="form-refacciones-salida" novalidate>
 
 <div class="d-flex justify-content-end mb-3">
@@ -39,14 +44,14 @@
 <div class="small text-danger d-none" data-salida-stock-error></div>
 </div>
 
-<div class="col-12 col-lg-6"><label class="form-label mb-0">* Estación de origen:</label><div class="form-control-plaintext pt-0"><?= $escape($salidaOriginName) ?></div></div>
+<div class="col-12 col-lg-6"><label class="form-label mb-0">* Estación de origen:</label><div class="form-control-plaintext pt-0"><?= $escape($salidaOriginLabel) ?></div></div>
 
 <div class="col-12 col-lg-6">
 <label class="form-label mb-1">* Estación de destino:</label>
 <select class="form-select" name="id_estacion_destino" data-salida-destination>
 <option value="">Selecciona una estación o departamento</option>
-<?php foreach ($locations as $locationId => $locationName): if ((int) $locationId === (int) $salidaOriginId) continue; ?>
-<option value="<?= (int) $locationId ?>"><?= $escape($locationName) ?></option>
+<?php foreach ($locations as $locationId => $locationName): if ((int) $locationId === (int) $salidaOriginId || ((int) ($warehouseLocationId ?? 0) > 0 && (int) $locationId === (int) $warehouseLocationId)) continue; ?>
+<option value="<?= (int) $locationId ?>"><?= $escape($locationName) ?> (Estación)</option>
 <?php endforeach; ?>
 </select>
 </div>

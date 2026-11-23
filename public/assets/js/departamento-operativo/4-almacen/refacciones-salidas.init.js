@@ -63,17 +63,17 @@
                 status.textContent = detailButton.dataset.estado || '';
                 status.className = `badge ${detailButton.dataset.estadoClass || 'bg-danger text-white'}`;
                 ['elabora', 'recibe'].forEach((kind) => {
-                    const signaturePath = detailButton.dataset[`firma${kind[0].toUpperCase()}${kind.slice(1)}`] || '';
+                    const signatureUrl = detailButton.dataset[`firma${kind[0].toUpperCase()}${kind.slice(1)}`] || '';
                     const image = detailModal.querySelector(`[data-salida-detail-firma-imagen="${kind}"]`);
                     const empty = detailModal.querySelector(`[data-salida-detail-firma-vacia="${kind}"]`);
                     const name = detailModal.querySelector(`[data-salida-detail-firma-nombre="${kind}"]`);
                     if (image) {
-                        image.classList.toggle('d-none', !signaturePath);
+                        image.classList.toggle('d-none', !signatureUrl);
                         image.onerror = () => { image.classList.add('d-none'); if (empty) empty.classList.remove('d-none'); };
-                        if (signaturePath) image.src = `/${signaturePath.replace(/^\/+/, '')}`;
+                        if (signatureUrl) image.src = signatureUrl;
                         else image.removeAttribute('src');
                     }
-                    empty?.classList.toggle('d-none', Boolean(signaturePath));
+                    empty?.classList.toggle('d-none', Boolean(signatureUrl));
                     if (name) name.textContent = detailButton.dataset[`nombre${kind[0].toUpperCase()}${kind.slice(1)}`] || '—';
                 });
                 detailModalInstance.show();

@@ -22,8 +22,15 @@ class FormatoDescargaMermaController extends BaseController
 
     private function isUploadedFile(?array $file): bool
     {
-        return is_array($file)
-            && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK
+        if (!is_array($file)
+            || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+            || empty($file['tmp_name'])
+            || !is_uploaded_file($file['tmp_name'])) {
+            return false;
+        }
+
+        $extension = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        return in_array($extension, FormatoDescargaMermaService::ALLOWED_EXTENSIONS, true)
             && !empty($file['tmp_name'])
             && is_uploaded_file($file['tmp_name']);
     }
@@ -205,16 +212,18 @@ class FormatoDescargaMermaController extends BaseController
         $firmaEncargado = trim((string)($input['firma_encargado'] ?? ''));
         $firmaOperador = trim((string)($input['firma_operador'] ?? ''));
 
-        if ($formData['fecha_llegada'] === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $formData['fecha_llegada'])) {
-            JsonResponse::error('La fecha de llegada es obligatoria.');
-        }
-        if ($formData['hora_llegada'] === '') {
-            JsonResponse::error('La hora de llegada es obligatoria.');
-        }
-        if ($formData['producto'] === '') {
-            JsonResponse::error('El producto es obligatorio.');
-        }
-        if ($formData['no_factura_remision'] === '' || $formData['unidad'] === '' || $formData['operador'] === '' || $formData['transportista'] === '' || $formData['litros'] <= 0 || $formData['precio_litro'] <= 0 || $formData['cuenta_litros'] <= 0) {
+        $camposInvalidos = $formData['fecha_llegada'] === ''
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $formData['fecha_llegada'])
+            || $formData['hora_llegada'] === ''
+            || $formData['producto'] === ''
+            || $formData['no_factura_remision'] === ''
+            || $formData['unidad'] === ''
+            || $formData['operador'] === ''
+            || $formData['transportista'] === ''
+            || $formData['litros'] <= 0
+            || $formData['precio_litro'] <= 0
+            || $formData['cuenta_litros'] <= 0;
+        if ($camposInvalidos) {
             JsonResponse::error('Completa los campos obligatorios.');
         }
         foreach (array_keys(FormatoDescargaMermaService::FILE_FIELDS) as $field) {
@@ -223,10 +232,10 @@ class FormatoDescargaMermaController extends BaseController
             }
         }
         if ($firmaEncargado === '') {
-            JsonResponse::error('La firma del encargado es obligatoria.');
+            JsonResponse::error('Completa los campos obligatorios.');
         }
         if ($firmaOperador === '') {
-            JsonResponse::error('La firma del operador es obligatoria.');
+            JsonResponse::error('Completa los campos obligatorios.');
         }
 
         try {
@@ -435,7 +444,7 @@ class FormatoDescargaMermaController extends BaseController
         }
         foreach (array_keys(FormatoDescargaMermaService::FILE_FIELDS) as $field) {
             $savedName = basename((string)($registro[$field] ?? ''));
-            $saved = $savedName !== '' && is_file(FormatoDescargaMermaService::getUploadPath() . $savedName);
+            $saved = $savedName !== '' && FormatoDescargaMermaService::getUploadFilePath($savedName) !== null;
             $newUpload = $this->isUploadedFile($files[$field] ?? null);
             if (!$saved && !$newUpload) {
                 JsonResponse::error('Completa los campos obligatorios.');
@@ -593,13 +602,12 @@ class FormatoDescargaMermaController extends BaseController
 
         $firmasHtml = '<div style="color:#6c757d;font-size:1.2em;margin-top:12px;margin-bottom:6px;"><b>Firmas:</b></div>';
         $firmasHtml .= '<table width="100%" cellspacing="0" cellpadding="6" style="border-collapse:collapse;margin-bottom:10px;"><tr>';
-        $firmaPath = FormatoDescargaMermaService::getFirmaPath();
         $firmas = $registro['firmas'] ?? [];
         foreach (['Encargado de estación', 'Operador'] as $tipo) {
             $firmaRegistrada = array_key_exists($tipo, $firmas);
             $archivo = $firmas[$tipo] ?? '';
-            $firmaFilePath = $archivo !== '' ? $firmaPath . basename($archivo) : '';
-            $firmaSrc = $firmaFilePath !== '' && is_file($firmaFilePath)
+            $firmaFilePath = $archivo !== '' ? FormatoDescargaMermaService::getFirmaFilePath($archivo) : null;
+            $firmaSrc = $firmaFilePath !== null
                 ? \App\Helpers\ImageHelper::base64($firmaFilePath)
                 : '';
             $nombreFirmante = $tipo === 'Encargado de estación'
@@ -631,13 +639,15 @@ class FormatoDescargaMermaController extends BaseController
         ];
 
         $adjPairs = [];
-        $uploadPath = FormatoDescargaMermaService::getUploadPath();
         foreach ($adjuntoFields as $campo => $label) {
             $valor = $registro[$campo] ?? '';
             if ($valor !== '') {
                 $ext = strtolower(pathinfo($valor, PATHINFO_EXTENSION));
+                $archivoPath = FormatoDescargaMermaService::getUploadFilePath($valor);
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
-                    $imgSrc = \App\Helpers\ImageHelper::base64($uploadPath . $valor);
+                    $imgSrc = $archivoPath !== null
+                        ? \App\Helpers\ImageHelper::base64($archivoPath)
+                        : '';
                     if ($imgSrc) {
                         $adjPairs[] = ['label' => $label, 'img' => $imgSrc];
                     }

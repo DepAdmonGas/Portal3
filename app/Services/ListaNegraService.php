@@ -18,8 +18,28 @@ class ListaNegraService
     public const MODULE_KEY = 'lista-negra';
 
     private const UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/lista-negra/';
+    private const UPLOAD_ROOT_DIR = __DIR__ . '/../../public/uploads/archivos/';
 
-    private const LEGACY_UPLOAD_DIR = __DIR__ . '/../../../departamento-operativo/archivos/documentos-personal/solicitud-baja/';
+    private static function getArchivoPath(?string $fileName): ?string
+    {
+        $safeName = basename(str_replace('\\', '/', (string)$fileName));
+        if ($safeName === '' || $safeName === '.') {
+            return null;
+        }
+
+        foreach ([self::UPLOAD_DIR, self::UPLOAD_ROOT_DIR] as $directory) {
+            $path = realpath($directory . $safeName);
+            $basePath = realpath($directory);
+            if ($path !== false
+                && $basePath !== false
+                && is_file($path)
+                && str_starts_with($path, $basePath . DIRECTORY_SEPARATOR)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
 
     public static function getPermisos(): array
     {
@@ -223,15 +243,13 @@ class ListaNegraService
 
         $data = [];
         foreach ($records as $r) {
+            $archivoPath = self::getArchivoPath($r->archivo);
             $data[] = [
                 'id'          => (int)$r->id,
                 'descripcion' => $r->descripcion ?? '-',
                 'archivo'     => $r->archivo,
-                'disponible'  => is_file(self::UPLOAD_DIR . basename((string)$r->archivo))
-                    || is_file(self::LEGACY_UPLOAD_DIR . basename((string)$r->archivo)),
-                'tipo_descarga' => is_file(self::UPLOAD_DIR . basename((string)$r->archivo))
-                    ? 'lista-negra'
-                    : 'lista-negra-legado',
+                'disponible'  => $archivoPath !== null,
+                'tipo_descarga' => 'lista-negra',
             ];
         }
 
@@ -276,8 +294,8 @@ class ListaNegraService
         $archivo = RhListaNegraArchivo::find($idArchivo);
         if (!$archivo) return false;
 
-        $ruta = self::UPLOAD_DIR . basename((string)$archivo->archivo);
-        if (is_file($ruta)) {
+        $ruta = self::getArchivoPath($archivo->archivo);
+        if ($ruta !== null) {
             @unlink($ruta);
         }
 

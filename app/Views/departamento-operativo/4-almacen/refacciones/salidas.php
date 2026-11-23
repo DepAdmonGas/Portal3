@@ -29,9 +29,15 @@ $salidaPdfUrl = $baseUrl . '/salidas-pdf/';
                         $movementId = (int) ($row['id_movimiento'] ?? 0);
                         $returnDate = $row['fecha_retorno'] ?? null;
                         $originId = (int) ($row['id_estacion_origen'] ?? 0);
-                        $originName = $originId === $warehouseLocationId ? 'Almacen' : (string) ($locations[$originId] ?? '');
-                        $originKey = mb_strtolower(trim(strtr($originName, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u'])));
-                        $originIsWarehouse = $originKey === 'almacen' || str_starts_with($originKey, 'almacen ');
+                        $destinationName = (string) ($locations[(int) ($row['id_estacion_destino'] ?? 0)] ?? '');
+                        $isMaintenanceOrder = !empty($row['es_orden_mantenimiento']);
+                        $destinationId = (int) ($row['id_estacion_destino'] ?? 0);
+                        $originLocationName = (string) ($locations[$originId] ?? '');
+                        $originIsWarehouse = $isMaintenanceOrder || $originId === $warehouseLocationId || in_array(mb_strtolower(trim($originLocationName)), ['almacen', 'almacén'], true);
+                        $originName = $originIsWarehouse
+                            ? ($isMaintenanceOrder ? $destinationName . ' (Almacén)' : 'Almacén')
+                            : $originLocationName . ' (Almacén)';
+                        $destinationLabel = $destinationId === $warehouseLocationId ? 'Almacén' : $destinationName . ' (Estación)';
                         $returnDateLabel = $originIsWarehouse ? 'No aplica' : ($returnDate ? formatearFecha($returnDate) : 'Sin asignar');
                         $returnIsComplete = mb_strtolower(trim((string) ($row['estado_salida'] ?? 'prestado'))) === 'devuelto';
                         $returnState = $originIsWarehouse ? 'No aplica' : ($returnIsComplete ? 'Devuelto a la estación de origen' : 'En préstamo');
@@ -47,7 +53,7 @@ $salidaPdfUrl = $baseUrl . '/salidas-pdf/';
                             <td class="text-center" data-order="<?= $movementId ?>"><?= $movementId ?></td>
                             <td class="text-center" data-order="<?= $escape(!empty($row['fecha']) ? date('Y-m-d H:i:s', strtotime((string) $row['fecha'])) : '') ?>"><?= !empty($row['fecha']) ? $escape(formatearFecha($row['fecha'])) : 'Sin asignar' ?></td>
                             <td><?= $escape($row['producto'] ?? '') ?></td>
-                            <td class="text-center"><?= $escape($originName) ?> <i class="ti ti-arrow-right mx-1"></i> <?= $escape($locations[(int) $row['id_estacion_destino']] ?? '') ?></td>
+                            <td class="text-center"><?= $escape($originName) ?> <i class="ti ti-arrow-right mx-1"></i> <?= $escape($destinationLabel) ?></td>
                             <td class="text-center"><?= $escape(rtrim(rtrim(number_format((float) ($row['cantidad'] ?? 0), 2, '.', ','), '0'), '.')) ?></td>
                             <td class="text-center" data-order="<?= $escape($originIsWarehouse ? '' : ($returnDate ?: '')) ?>" data-salida-return-date><?= $escape($returnDateLabel) ?></td>
                             <td class="text-center"><span class="badge <?= $escape($returnStateClass) ?>" data-salida-return-state><?= $escape($returnState) ?></span></td>
@@ -71,7 +77,7 @@ $salidaPdfUrl = $baseUrl . '/salidas-pdf/';
                                             data-fecha="<?= $escape(!empty($row['fecha']) ? formatearFecha($row['fecha']) : 'Pendiente de confirmación') ?>"
                                             data-producto="<?= $escape($row['producto'] ?? '') ?>"
                                             data-origen="<?= $escape($originName) ?>"
-                                            data-destino="<?= $escape($locations[(int) $row['id_estacion_destino']] ?? '') ?>"
+                                            data-destino="<?= $escape($destinationLabel) ?>"
                                             data-cantidad="<?= $escape(rtrim(rtrim(number_format((float) ($row['cantidad'] ?? 0), 2, '.', ','), '0'), '.')) ?>"
                                             data-retorno="<?= $escape($returnDateLabel) ?>"
                                             data-estado-retorno="<?= $escape($returnState) ?>"
@@ -80,9 +86,9 @@ $salidaPdfUrl = $baseUrl . '/salidas-pdf/';
                                             data-estado-class="<?= $escape($statusClass) ?>"
                                             data-motivo="<?= $escape($row['motivo'] ?? '') ?>"
                                             data-notas="<?= $escape(trim((string) ($row['notas'] ?? '')) !== '' ? $row['notas'] : 'Sin información') ?>"
-                                            data-firma-elabora="<?= $escape($row['firma_elabora'] ?? '') ?>"
+                                            data-firma-elabora="<?= $escape(\App\Services\RefaccionesService::urlFirmaSalida($row['firma_elabora'] ?? null) ?? '') ?>"
                                             data-nombre-elabora="<?= $escape($row['nombre_elabora'] ?? $row['nombre_entrega'] ?? '') ?>"
-                                            data-firma-recibe="<?= $escape($row['firma_recibe'] ?? '') ?>"
+                                            data-firma-recibe="<?= $escape(\App\Services\RefaccionesService::urlFirmaSalida($row['firma_recibe'] ?? null) ?? '') ?>"
                                             data-nombre-recibe="<?= $escape($row['nombre_recibe'] ?? $row['acuse_nombre_recibe'] ?? '') ?>">
                                             <i class="ti ti-eye me-1"></i>Detalle
                                         </button>

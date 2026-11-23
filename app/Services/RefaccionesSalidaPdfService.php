@@ -64,15 +64,8 @@ class RefaccionesSalidaPdfService
 
     private static function firma($relativePath, callable $escape): string
     {
-        $relativePath = (string) $relativePath;
-        if ($relativePath === '' || !preg_match('#^uploads/refacciones-firmas/[a-f0-9]{20,64}\.png$#i', $relativePath)) {
-            return '<div class="sig-empty">Firma no disponible</div>';
-        }
-        $publicRoot = realpath(dirname(__DIR__, 2) . '/public');
-        $file = realpath(dirname(__DIR__, 2) . '/public/' . $relativePath);
-        if ($publicRoot === false || $file === false || !str_starts_with($file, $publicRoot . DIRECTORY_SEPARATOR) || !is_file($file)) {
-            return '<div class="sig-empty">Firma no disponible</div>';
-        }
+        $file = RefaccionesService::rutaFirmaSalida((string) $relativePath);
+        if ($file === null) return '<div class="sig-empty">Firma no disponible</div>';
         return '<img class="sig-image" src="data:image/png;base64,' . base64_encode((string) file_get_contents($file)) . '" alt="Firma digital">';
     }
 
