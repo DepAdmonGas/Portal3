@@ -23,7 +23,8 @@
                 !empty($permisos['descargar']) 
                 ? '<li>
                     <a class="dropdown-item pointer" 
-                      @click="download(\'encuestas\', \'Formato encuestas.pdf\')">
+                      href="/download?tipo=encuestas&amp;file=Formato%20encuestas.pdf"
+                      aria-label="Descargar PDF">
                         <i class="ti ti-download"></i> Descargar
                     </a>
                   </li>' 

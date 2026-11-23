@@ -117,7 +117,7 @@ document.addEventListener('alpine:init', () => {
     async guardarProgramacion() {
 
         if (!this.validarProgramacion()){
-            this.notify('error', 'Completa los campos obligatorios');
+            this.notify('error', 'Completa los campos obligatorios.');
             return;
         }
 

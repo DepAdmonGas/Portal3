@@ -114,17 +114,23 @@ class CapacitacionInternaController extends BaseController
         $permisoCrear   = ModuloService::validaPermiso($this->modulo, 'crear');
 
         $anio = $year ?? date('Y');
+        $idEstacion = $this->estacionModulo();
 
         $usuarios = Usuario::with([
         'puesto',
-        'capacitaciones' => function ($q) use ($idTema, $anio) {
-            $q->where('id_tema', $idTema)
+        'capacitaciones' => function ($q) use ($idTema, $anio, $idEstacion) {
+            $q->where('id_estacion', $idEstacion)
+              ->where('id_tema', $idTema)
               ->whereYear('fecha_programada', $anio)
-              ->latest('fecha_programada')
-              ->limit(1);
+              ->latest('fecha_programada');
             }
         ])
-        ->where('id_gas', $this->estacionModulo())
+        ->whereHas('capacitaciones', function ($q) use ($idTema, $anio, $idEstacion) {
+            $q->where('id_estacion', $idEstacion)
+              ->where('id_tema', $idTema)
+              ->whereYear('fecha_programada', $anio);
+        })
+        ->where('id_gas', $idEstacion)
         ->where('id_puesto', '!=', 1)
         ->activo()
         ->get();
@@ -196,7 +202,7 @@ class CapacitacionInternaController extends BaseController
          if (!$fecha_programada) {
         echo json_encode([
             'success' => false,
-            'message' => 'Campos obligatorios'
+            'message' => 'Completa los campos obligatorios.'
         ]);
         exit;
         }
@@ -222,6 +228,7 @@ class CapacitacionInternaController extends BaseController
     {
         $data = CursoCalendario::where('id_personal', $idUsuario)
             ->where('id_tema', $idTema)
+            ->where('id_estacion', $this->estacionModulo())
             ->orderByDesc('fecha_programada')
             ->get();
 
@@ -259,6 +266,7 @@ class CapacitacionInternaController extends BaseController
 
         $modulos = CursoModulo::whereHas('temas.calendarios', function ($q) use ($year, $idEstacion) {
             $q->whereYear('fecha_programada', $year)
+            ->where('id_estacion', $idEstacion)
             ->whereHas('usuario', function ($q2) use ($idEstacion) {
                 $q2->where('id_gas', $idEstacion)
                     ->where('id_puesto', '<>', 1)
@@ -268,6 +276,7 @@ class CapacitacionInternaController extends BaseController
         ->with([
             'temas.calendarios' => function ($q) use ($year, $idEstacion) {
                 $q->whereYear('fecha_programada', $year)
+                ->where('id_estacion', $idEstacion)
                 ->whereHas('usuario', function ($q2) use ($idEstacion) {
                     $q2->where('id_gas', $idEstacion)
                         ->where('id_puesto', '<>', 1)
@@ -311,12 +320,12 @@ echo '<div class="row mb-3 mt-0 d-flex justify-content-between align-items-end">
             
             
             <li>
-                    <a class="dropdown-item pointer" target="_blank" href="/sasisopa/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/'.$year.'/'.$modulo->id.'">
+                    <a class="dropdown-item pointer" aria-label="Descargar PDF" title="Descargar PDF" href="/sasisopa/competencia-personal-capacitacion-entrenamiento/descargar-capacitacion-interna/'.$year.'/'.$modulo->id.'">
                     <i class="ti ti-download"></i> Programa de Capacitacion y adiestramiento
                 </a>
                 </li>
                  <li>
-                    <a class="dropdown-item pointer" target="_blank" href="/cursos/descargar/'.$year.'/'.$modulo->id.'">
+                    <a class="dropdown-item pointer" aria-label="Descargar PDF" title="Descargar PDF" href="/cursos/descargar/'.$year.'/'.$modulo->id.'">
                     <i class="ti ti-download"></i> Reconocimientos personal
                 </a>
                 </li>
@@ -427,11 +436,11 @@ public function reconocimiento($c){
 
     $r = $c->resultado;
 
-    if ($r >= 90) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-primary"></i></a>';
-    if ($r >= 80) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-primary"></i></a>';
-    if ($r >= 60) return '<a href="/cursos/descargar/'.$c->id.'" target="_blank"><i class="ti ti-download fs-6 text-primary"></i></a>';
+    if ($r >= 90) return '<a href="/cursos/descargar/'.$c->id.'" aria-label="Descargar PDF"><i class="ti ti-download fs-6 text-primary"></i></a>';
+    if ($r >= 80) return '<a href="/cursos/descargar/'.$c->id.'" aria-label="Descargar PDF"><i class="ti ti-download fs-6 text-primary"></i></a>';
+    if ($r >= 60) return '<a href="/cursos/descargar/'.$c->id.'" aria-label="Descargar PDF"><i class="ti ti-download fs-6 text-primary"></i></a>';
 
-    return '<i class="ti ti-x fs-6"></i>';
+    return '<i class="ti ti-file-off text-muted fs-6"></i>';
 
 }
 
@@ -450,17 +459,9 @@ public function descargarCapacitacionInterna(int $year, int $idModulo)
     $apoderadolegal = $registro->apoderado_legal;
 
     // ======================
-    // DATA (OPTIMIZADA)
+    // DATA (SOLO PERSONAL INSCRITO EN EL TEMA Y AÑO)
     // ======================
-    $modulo = CursoModulo::with([
-        'temas',
-    ])->findOrFail($idModulo);
-
-    $usuarios = Usuario::with('puesto')
-        ->where('id_gas', $idEstacion)
-        ->where('id_puesto', '<>', 1)
-        ->where('estatus', 0)
-        ->get();
+    $modulo = CursoModulo::with('temas')->findOrFail($idModulo);
 
     // ======================
     // HTML
@@ -524,28 +525,29 @@ public function descargarCapacitacionInterna(int $year, int $idModulo)
         <tbody>
         ';
 
+        $calendarios = CursoCalendario::with('usuario.puesto')
+            ->where('id_estacion', $idEstacion)
+            ->where('id_tema', $tema->id)
+            ->whereYear('fecha_programada', $year)
+            ->whereHas('usuario', function ($query) use ($idEstacion) {
+                $query->where('id_gas', $idEstacion)
+                    ->where('id_puesto', '<>', 1)
+                    ->where('estatus', 0);
+            })
+            ->orderByDesc('fecha_programada')
+            ->get()
+            ->unique('id_personal');
+
         $num = 1;
 
-        foreach ($usuarios as $usuario) {
+        foreach ($calendarios as $cal) {
+            $usuario = $cal->usuario;
+            if (!$usuario) continue;
 
-            // 🔥 reemplazo de FechaProgramada()
-            $cal = CursoCalendario::where('id_personal', $usuario->id)
-                ->where('id_tema', $tema->id)
-                ->whereYear('fecha_programada', $year)
-                ->orderBy('fecha_programada')
-                ->first();
-
-            if ($cal) {
-                $estado = $cal->estado;
-                $resultado = $cal->resultado;
-                $fecha = formatearFecha($cal->fecha_programada);
-                $observaciones = $cal->observaciones ?? '';
-            } else {
-                $estado = 0;
-                $resultado = null;
-                $fecha = 'S/I';
-                $observaciones = '';
-            }
+            $estado = $cal->estado;
+            $resultado = $cal->resultado;
+            $fecha = formatearFecha($cal->fecha_programada);
+            $observaciones = $cal->observaciones ?? '';
 
             // ======================
             // RESULTADO
@@ -576,6 +578,10 @@ public function descargarCapacitacionInterna(int $year, int $idModulo)
             ";
 
             $num++;
+        }
+
+        if ($num === 1) {
+            $html .= '<tr><td colspan="6" class="text-center">Sin personal inscrito en este curso durante el año seleccionado.</td></tr>';
         }
 
         $html .= '</tbody></table>';

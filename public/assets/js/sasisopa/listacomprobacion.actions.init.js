@@ -117,7 +117,7 @@ document.addEventListener('alpine:init', () => {
         async submit() {
 
             if (!this.validate()) {
-                this.notify('error', 'Completa todos los campos obligatorios');
+                this.notify('error', 'Completa los campos obligatorios.');
                 return;
             }
 

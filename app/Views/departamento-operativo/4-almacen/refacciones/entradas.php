@@ -57,13 +57,12 @@ $contextId = $context['id'] ?? null;
 <?php if (!empty($permissions['crear'])): ?>
 <div class="modal fade" id="modalRefaccionesEntrada" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <form data-entry-form data-endpoint="<?= $escape($baseUrl) ?>/movimientos/guardar" novalidate>
+        <form class="modal-content refacciones-scroll-form" data-entry-form data-endpoint="<?= $escape($baseUrl) ?>/movimientos/guardar" novalidate>
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white"><i class="ti ti-download me-1"></i>Nueva entrada</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body refacciones-scroll-body">
                     <input type="hidden" name="tipo" value="entrada">
                     <input type="hidden" name="producto_id" value="" data-entry-product-id>
                     <div class="row g-3">
@@ -143,7 +142,6 @@ $contextId = $context['id'] ?? null;
                     <button type="submit" class="btn btn-success"><i class="ti ti-check me-1"></i>Guardar entrada</button>
                 </div>
             </form>
-        </div>
     </div>
 </div>
 <?php endif; ?>

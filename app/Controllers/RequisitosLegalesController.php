@@ -399,7 +399,7 @@ class RequisitosLegalesController extends BaseController
         if (!$gobierno || !$dependencia || !$permiso || !$fundamento) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Completa todos los campos obligatorios'
+                'message' => 'Completa los campos obligatorios.'
             ]);
             return;
         }
@@ -615,7 +615,9 @@ class RequisitosLegalesController extends BaseController
                 "fecha_emision" => $fechaEmision,
                 "fecha_vencimiento" => $fechaVencimiento,
                 "acuse_file" => $row['acuse_file'],
+                "acuse_disponible" => $row['acuse_disponible'],
                 "requisito_file" => $row['requisito_file'],
+                "requisito_disponible" => $row['requisito_disponible'],
                 "renovacion" => $row['renovacion'],
                 "cumplimiento" => $row['cumplimiento'],
                 "estatus" => $estatus
@@ -707,7 +709,7 @@ class RequisitosLegalesController extends BaseController
         if (!$nivelGobierno || !$permisoId || !$vigencia || !$fechaEmision) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Completa todos los campos obligatorios'
+                'message' => 'Completa los campos obligatorios.'
             ]);
             return;
         }
@@ -950,6 +952,10 @@ class RequisitosLegalesController extends BaseController
         }
 
         $matriz = $calendario->matriz->map(function ($m) {
+            $acuseDisponible = is_string($m->acusepdf)
+                && RequisitosLegalesStorageService::resolveReadablePath($m->acusepdf) !== null;
+            $requisitoDisponible = is_string($m->requisitolegalpdf)
+                && RequisitosLegalesStorageService::resolveReadablePath($m->requisitolegalpdf) !== null;
 
             return [
                 'matrix_id' => (int) $m->id,
@@ -961,8 +967,12 @@ class RequisitosLegalesController extends BaseController
                     ? formatearFecha($m->fecha_vencimiento)
                     : 'S/I',
 
-                'acuse' => $m->acusepdf ? basename($m->acusepdf) : '',
-                'requisito' => $m->requisitolegalpdf ? basename($m->requisitolegalpdf) : ''
+                'acuse' => !empty($m->acusepdf) ? basename($m->acusepdf) : '',
+                'acuse_registrado' => !empty($m->acusepdf),
+                'acuse_disponible' => $acuseDisponible,
+                'requisito' => !empty($m->requisitolegalpdf) ? basename($m->requisitolegalpdf) : '',
+                'requisito_registrado' => !empty($m->requisitolegalpdf),
+                'requisito_disponible' => $requisitoDisponible
             ];
         });
 
@@ -986,6 +996,7 @@ class RequisitosLegalesController extends BaseController
             'success' => true,
             'detalle' => $detalle,
             'matriz'  => $matriz,
+            'puede_descargar' => ModuloService::validaPermiso($this->modulo, 'descargar'),
             'renovacion'   => $meses,
             'id_requisito_legal' => $calendario->id_requisito_legal
         ]);
@@ -1054,7 +1065,7 @@ class RequisitosLegalesController extends BaseController
         if (!$fechaEmision) {
             echo json_encode([
                 'success' => false,
-                'message' => 'La fecha de emisión es obligatoria'
+                'message' => 'Completa los campos obligatorios.'
             ]);
             exit;
         }
@@ -1139,7 +1150,7 @@ class RequisitosLegalesController extends BaseController
         if (!$fechaEmision) {
             echo json_encode([
                 'success' => false,
-                'message' => 'La fecha de emisión es obligatoria'
+                'message' => 'Completa los campos obligatorios.'
             ]);
             exit;
         }
@@ -1232,18 +1243,30 @@ class RequisitosLegalesController extends BaseController
 
     private function formatHistorialRows($calendarioId)
     {
+        $puedeDescargar = ModuloService::validaPermiso($this->modulo, 'descargar');
+
         return RequisitosLegalesMatriz::where('idcalendario', $calendarioId)
             ->orderBy('fecha_emision', 'desc')
             ->get()
-            ->map(function ($row) {
+            ->map(function ($row) use ($puedeDescargar) {
+                $acuseDisponible = is_string($row->acusepdf)
+                    && RequisitosLegalesStorageService::resolveReadablePath($row->acusepdf) !== null;
+                $requisitoDisponible = is_string($row->requisitolegalpdf)
+                    && RequisitosLegalesStorageService::resolveReadablePath($row->requisitolegalpdf) !== null;
+
                 return [
                     'id' => $row->id,
                     'fecha_emision' => $row->fecha_emision ? formatearFecha($row->fecha_emision) : 'S/I',
                     'fecha_vencimiento' => $row->fecha_vencimiento ? formatearFecha($row->fecha_vencimiento) : 'S/I',
                     'fecha_emision_raw' => $row->fecha_emision ? $row->fecha_emision->format('Y-m-d') : '',
                     'fecha_vencimiento_raw' => $row->fecha_vencimiento ? $row->fecha_vencimiento->format('Y-m-d') : '',
-                    'acusepdf' => $row->acusepdf ? basename($row->acusepdf) : '',
-                    'requisitolegalpdf' => $row->requisitolegalpdf ? basename($row->requisitolegalpdf) : ''
+                    'acusepdf' => !empty($row->acusepdf) ? basename($row->acusepdf) : '',
+                    'acusepdf_registrado' => !empty($row->acusepdf),
+                    'acusepdf_disponible' => $acuseDisponible,
+                    'requisitolegalpdf' => !empty($row->requisitolegalpdf) ? basename($row->requisitolegalpdf) : '',
+                    'requisitolegalpdf_registrado' => !empty($row->requisitolegalpdf),
+                    'requisitolegalpdf_disponible' => $requisitoDisponible,
+                    'puede_descargar' => $puedeDescargar
                 ];
             })->values();
     }

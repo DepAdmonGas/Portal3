@@ -151,7 +151,7 @@
 
                     <div class="row" x-show="mode === 'create'">
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mt-3">Fecha de emisión:</label>
+                            <label class="form-label mt-3">* Fecha de emisión:</label>
                             <input type="date" class="form-control" x-model="fechaemision"
                             @change="errors.fechaemision = false"
                             :class="errors.fechaemision ? 'is-invalid' : ''">
@@ -325,26 +325,38 @@
 
                                 <!-- ACUSE -->
                                 <td>
-                                    <template x-if="row.acuse && Number(row.matrix_id) > 0">
-                                       <button type="button" class="btn p-0 border-0 bg-transparent text-primary text-decoration-none"
-                                        @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + encodeURIComponent(row.matrix_id) + '&variant=acuse'">
+                                    <template x-if="row.acuse_registrado && row.acuse_disponible && puede_descargar && Number(row.matrix_id) > 0">
+                                       <a class="btn p-0 border-0 bg-transparent text-primary text-decoration-none"
+                                        :href="downloadUrl(row.matrix_id, 'acuse')" aria-label="Descargar PDF">
                                             <i class="ti ti-download text-primary fs-6"></i>
-                                        </button>
+                                        </a>
                                     </template>
-                                    <template x-if="!row.acuse">
+                                    <template x-if="row.acuse_registrado && row.acuse_disponible && !puede_descargar">
+                                        <i class="ti ti-download text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                    </template>
+                                    <template x-if="row.acuse_registrado && !row.acuse_disponible">
+                                        <i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>
+                                    </template>
+                                    <template x-if="!row.acuse_registrado">
                                         <i class="ti ti-x text-danger fs-6"></i>
                                     </template>
                                 </td>
 
                                 <!-- REQUISITO -->
                                 <td>
-                                    <template x-if="row.requisito && Number(row.matrix_id) > 0">
-                                        <button type="button" class="btn p-0 border-0 bg-transparent text-primary text-decoration-none"
-                                        @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + encodeURIComponent(row.matrix_id) + '&variant=requisito'">
+                                    <template x-if="row.requisito_registrado && row.requisito_disponible && puede_descargar && Number(row.matrix_id) > 0">
+                                        <a class="btn p-0 border-0 bg-transparent text-primary text-decoration-none"
+                                        :href="downloadUrl(row.matrix_id, 'requisito')" aria-label="Descargar PDF">
                                             <i class="ti ti-download text-primary fs-6"></i>
-                                        </button>
+                                        </a>
                                     </template>
-                                    <template x-if="!row.requisito">
+                                    <template x-if="row.requisito_registrado && row.requisito_disponible && !puede_descargar">
+                                        <i class="ti ti-download text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                    </template>
+                                    <template x-if="row.requisito_registrado && !row.requisito_disponible">
+                                        <i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>
+                                    </template>
+                                    <template x-if="!row.requisito_registrado">
                                         <i class="ti ti-x text-danger fs-6"></i>
                                     </template>
                                 </td>
@@ -471,24 +483,36 @@
                                         <td x-text="row.fecha_emision || 'S/I'"></td>
                                         <td x-text="row.fecha_vencimiento || 'S/I'"></td>
                                         <td>
-                                            <template x-if="row.acusepdf">
-                                                <button type="button" class="btn btn-link p-0 text-decoration-none"
-                                                    @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
+                                            <template x-if="row.acusepdf_registrado && row.acusepdf_disponible && row.puede_descargar">
+                                                <a class="btn btn-link p-0 text-decoration-none"
+                                                    :href="downloadUrl(row.id, 'acuse')" aria-label="Descargar PDF">
                                                     <i class="ti ti-download text-primary fs-6"></i>
-                                                </button>
+                                                </a>
                                             </template>
-                                            <template x-if="!row.acusepdf">
-                                                <i class="ti ti-x text-danger pointer fs-6"></i>
+                                            <template x-if="row.acusepdf_registrado && row.acusepdf_disponible && !row.puede_descargar">
+                                                <i class="ti ti-download text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                            </template>
+                                            <template x-if="row.acusepdf_registrado && !row.acusepdf_disponible">
+                                                <i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>
+                                            </template>
+                                            <template x-if="!row.acusepdf_registrado">
+                                                <i class="ti ti-x text-danger fs-6"></i>
                                             </template>
                                         </td>
                                         <td>
-                                            <template x-if="row.requisitolegalpdf">
-                                                <button type="button" class="btn btn-link p-0 text-decoration-none"
-                                                    @click="window.location.href='/sasisopa/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
+                                            <template x-if="row.requisitolegalpdf_registrado && row.requisitolegalpdf_disponible && row.puede_descargar">
+                                                <a class="btn btn-link p-0 text-decoration-none"
+                                                    :href="downloadUrl(row.id, 'requisito')" aria-label="Descargar PDF">
                                                     <i class="ti ti-download text-primary pointer fs-6"></i>
-                                                </button>
+                                                </a>
                                             </template>
-                                            <template x-if="!row.requisitolegalpdf">
+                                            <template x-if="row.requisitolegalpdf_registrado && row.requisitolegalpdf_disponible && !row.puede_descargar">
+                                                <i class="ti ti-download text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                            </template>
+                                            <template x-if="row.requisitolegalpdf_registrado && !row.requisitolegalpdf_disponible">
+                                                <i class="ti ti-file-off text-muted fs-6" aria-label="Archivo no disponible"></i>
+                                            </template>
+                                            <template x-if="!row.requisitolegalpdf_registrado">
                                                 <i class="ti ti-x text-danger fs-6"></i>
                                             </template>
                                         </td>
@@ -513,7 +537,7 @@
 
                     <div class="row">
                         <div class="col-lg-6 col-md-12">
-                            <label class="form-label mb-1">Fecha de emisión:</label>
+                            <label class="form-label mb-1">* Fecha de emisión:</label>
                             <input type="date"
                                 class="form-control"
                                 x-model="historialForm.fecha_emision"

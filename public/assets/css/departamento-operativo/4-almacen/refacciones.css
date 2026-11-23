@@ -55,3 +55,58 @@ body:has(#refacciones-module) {
 .page-wrapper:has(#refacciones-calendar) .calender-sidebar {
     padding-bottom: 2rem;
 }
+
+/* The form wraps the header, body and footer; make that wrapper a flex column
+   so the body can shrink and provide the scroll area for long forms. */
+#modalRefaccionesProducto .modal-dialog-scrollable,
+#modalRefaccionesCalcomania .modal-dialog-scrollable,
+#modalRefaccionesEvento .modal-dialog-scrollable,
+#modalRefaccionesEntrada .modal-dialog-scrollable {
+    height: calc(100vh - var(--bs-modal-margin) * 2);
+    max-height: calc(100vh - var(--bs-modal-margin) * 2);
+}
+
+#modalRefaccionesProducto .modal-dialog-scrollable > .modal-content,
+#modalRefaccionesCalcomania .modal-dialog-scrollable > .modal-content,
+#modalRefaccionesEvento .modal-dialog-scrollable > .modal-content,
+#modalRefaccionesEntrada .modal-dialog-scrollable > .modal-content {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#modalRefaccionesProducto .refacciones-scroll-form,
+#modalRefaccionesCalcomania .refacciones-scroll-form,
+#modalRefaccionesEvento .refacciones-scroll-form,
+#modalRefaccionesEntrada .refacciones-scroll-form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.refacciones-scroll-form > .modal-header,
+.refacciones-scroll-form > .modal-footer {
+    flex: 0 0 auto;
+}
+
+.refacciones-scroll-form > .refacciones-scroll-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+@supports (height: 100dvh) {
+    #modalRefaccionesProducto .modal-dialog-scrollable,
+    #modalRefaccionesCalcomania .modal-dialog-scrollable,
+    #modalRefaccionesEvento .modal-dialog-scrollable,
+    #modalRefaccionesEntrada .modal-dialog-scrollable {
+        height: calc(100dvh - var(--bs-modal-margin) * 2);
+        max-height: calc(100dvh - var(--bs-modal-margin) * 2);
+    }
+}

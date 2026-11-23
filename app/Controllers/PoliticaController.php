@@ -66,16 +66,25 @@ class PoliticaController extends BaseController
     public function updatePolitica(){
 
         header('Content-Type: application/json; charset=utf-8');
-        $data = json_decode(file_get_contents('php://input'), true);
-        $politica = $data['politica'] ?? null;
-        $mision = $data['mision'] ?? null;
-        $vision = $data['vision'] ?? null;
+        $decoded = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($decoded) ? $decoded : [];
+        $politica = trim((string) ($data['politica'] ?? ''));
+        $mision = trim((string) ($data['mision'] ?? ''));
+        $vision = trim((string) ($data['vision'] ?? ''));
 
 
         if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
             echo json_encode([
                 'success' => false,
                 'message' => 'No tienes permiso para editar'
+            ]);
+            return;
+        }
+
+        if ($politica === '' || $mision === '' || $vision === '') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.'
             ]);
             return;
         }
@@ -106,6 +115,11 @@ class PoliticaController extends BaseController
 
     public function descargarPolitica()
     {
+        if (!ModuloService::validaPermiso($this->modulo, 'descargar')) {
+            http_response_code(404);
+            exit;
+        }
+
         $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
         $registro = Estacion::find($idEstacion);
 
@@ -196,8 +210,9 @@ class PoliticaController extends BaseController
     public function createListaComprobacion(){
 
         header('Content-Type: application/json; charset=utf-8');
-        $data = json_decode(file_get_contents('php://input'), true);
-        $fecha = $data['fecha'];
+        $decoded = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($decoded) ? $decoded : [];
+        $fecha = $data['fecha'] ?? '';
 
          if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
             echo json_encode([
@@ -207,12 +222,12 @@ class PoliticaController extends BaseController
             return;
         }
 
-         if ($fecha == "") {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Campos obligatorios faltantes'
-        ]);
-        return;
+         if (!$this->camposListaComprobacionValidos($data)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.'
+            ]);
+            return;
         }
 
         Capsule::beginTransaction();
@@ -273,8 +288,9 @@ class PoliticaController extends BaseController
     public function updateListaComprobacion(){
 
          header('Content-Type: application/json; charset=utf-8');
-        $data = json_decode(file_get_contents('php://input'), true);
-        $fecha = $data['fecha'];
+        $decoded = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($decoded) ? $decoded : [];
+        $fecha = $data['fecha'] ?? '';
 
          if (!ModuloService::validaPermiso($this->modulo, 'editar')) {
             echo json_encode([
@@ -284,19 +300,21 @@ class PoliticaController extends BaseController
             return;
         }
 
-         if ($fecha == "") {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Campos obligatorios faltantes'
-        ]);
-        return;
+         if (!$this->camposListaComprobacionValidos($data) || empty($data['id'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.'
+            ]);
+            return;
         }
 
         try {
 
         Capsule::beginTransaction();
 
-        $lista = PoliticaListaComprobacion::find($data['id']);
+        $idEstacion = (int) (ModuleStationService::getContext('sasisopa')['id_estacion'] ?? 0);
+        $lista = PoliticaListaComprobacion::where('id_estacion', $idEstacion)
+            ->find($data['id']);
 
         if (!$lista) {
             throw new \Exception('Registro no encontrado');
@@ -459,11 +477,17 @@ class PoliticaController extends BaseController
 
     public function descargarListaComprobacion($id)
     {
+        if (!ModuloService::validaPermiso($this->modulo, 'descargar')) {
+            http_response_code(404);
+            exit;
+        }
+
         header('Content-Type: application/pdf');
 
         $idEstacion = ModuleStationService::getContext('sasisopa')['id_estacion'];
         $estacion = Estacion::find($idEstacion);
-        $reporte  = PoliticaListaComprobacion::find($id);
+        $reporte  = PoliticaListaComprobacion::where('id_estacion', $idEstacion)
+            ->find($id);
 
         if (!$reporte) {
             echo "No se encontró la información";
@@ -566,6 +590,21 @@ class PoliticaController extends BaseController
         $dompdf->render();
 
         $dompdf->stream("Lista-comprobacion.pdf", ["Attachment" => true]);
+    }
+
+    private function camposListaComprobacionValidos(array $data): bool
+    {
+        if (trim((string) ($data['fecha'] ?? '')) === '') {
+            return false;
+        }
+
+        foreach (['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'] as $campo) {
+            if (!in_array($data[$campo] ?? null, ['Si', 'En Parte', 'No'], true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     }
