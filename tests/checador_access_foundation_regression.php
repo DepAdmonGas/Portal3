@@ -441,37 +441,42 @@ $assert(array_column(ChecadorAccessService::authorize()['station_workplaces'], '
     && !ChecadorAccessService::authorizeScheduling(2, 'leer')['allowed'],
     'M03 direct Autolavado authorization works independently of Palo Solo and does not widen the selector ACL');
 
-// V7C12 writes remain separate from read access: an authorized Checador
-// reader cannot create an incidence until the dedicated `crear` capability
-// is granted on the incidence module itself.
-$db->table('modulos_dpto_operativo')->insert([
-    'id' => 64,
-    'clave' => ChecadorAccessService::INCIDENCE_MODULE_KEY,
-    'nombre' => 'Incidencias Checador V2',
-    'activo' => 1,
-]);
-$db->table('modulos_puestos_do')->insert([
-    ['id_modulo' => 64, 'id_puesto' => 6, 'leer' => 1, 'crear' => 0],
-    ['id_modulo' => 64, 'id_puesto' => 13, 'leer' => 1, 'crear' => 0],
-]);
+// M06 uses the existing institutional Checador capability and canonical scope;
+// no physical M06 module or per-user/per-position ACL rows are required.
 $login(1300);
 $directionRead = ChecadorAccessService::authorizeIncidenceRead(201);
 $directionCreate = ChecadorAccessService::authorizeIncidenceCreate(201);
 $assert($directionRead['allowed'] && array_column($directionRead['workplaces'], 'id') === [201],
-    'M06 Dirección with effective read grant may read its authorized locality');
+    'M06 Dirección reads its Checador-authorized locality without a physical M06 ACL row');
 $assert(!$directionCreate['allowed'] && $directionCreate['reason'] === 'incidence_create_role_denied',
-    'M06 Dirección remains read-only even when the incidence module exposes a create grant to Encargados');
+    'M06 Dirección remains read-only without a physical M06 ACL row');
 
 $login(600);
-$createDenied = ChecadorAccessService::authorizeIncidenceCreate(201);
-$assert(!$createDenied['allowed'] && $createDenied['reason'] === 'incidence_create_permission_denied',
-    'M06 Encargado without effective create grant is denied');
-$db->table('modulos_puestos_do')->where('id_modulo', 64)->where('id_puesto', 6)->update(['crear' => 1]);
+$encargadoRead = ChecadorAccessService::authorizeIncidenceRead(201);
+$encargadoRevision = ChecadorAccessService::authorizeIncidenceRevision(201);
 $createAllowed = ChecadorAccessService::authorizeIncidenceCreate(201);
 $assert($createAllowed['allowed']
-    && $createAllowed['namespace'] === ChecadorAccessService::INCIDENCE_MODULE_KEY
-    && array_column($createAllowed['workplaces'], 'id') === [201],
-    'M06 Encargado with effective create grant is authorized only for its canonical locality');
+    && ($createAllowed['capability'] ?? '') === 'M06_CREATE'
+    && $encargadoRead['allowed'] && $encargadoRevision['allowed']
+    && array_column($createAllowed['workplaces'], 'id') === [201]
+    && !\App\Models\ModuloDptoOperativo::query()->where('clave', ChecadorAccessService::INCIDENCE_MODULE_KEY)->exists(),
+    'M06 Encargado reads, creates and revises within canonical scope without a physical M06 module or ACL row');
+$foreignLocality = ChecadorAccessService::authorizeIncidenceCreate(204);
+$assert(!$foreignLocality['allowed'] && $foreignLocality['reason'] === 'requested_station_out_of_scope',
+    'M06 Encargado cannot create for a locality outside the institutional Checador scope');
+$login(300);
+$unauthorizedRead = ChecadorAccessService::authorizeIncidenceRead(201);
+$unauthorizedCreate = ChecadorAccessService::authorizeIncidenceCreate(201);
+$assert(!$unauthorizedRead['allowed'] && !$unauthorizedCreate['allowed'],
+    'M06 user without institutional Checador authorization cannot read or create');
+$login(600);
+$resolutionDenied = ChecadorAccessService::authorizeLifecycle(201, 'resolve');
+$approvalDenied = ChecadorAccessService::authorizeLifecycle(201, 'authorize');
+$evaluationDenied = ChecadorAccessService::authorizeEvaluation(201);
+$faltaDenied = ChecadorAccessService::authorizeFalta(201);
+$assert(!$resolutionDenied['allowed'] && !$approvalDenied['allowed']
+    && !$evaluationDenied['allowed'] && !$faltaDenied['allowed'],
+    'M06 lifecycle approvals, evaluations and FALTA remain denied without their separate existing capabilities');
 
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
 $diagnosticStart = strpos($controllerSource, 'private static function logM06IncidenceAccessDenial(');

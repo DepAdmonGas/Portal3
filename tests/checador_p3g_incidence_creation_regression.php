@@ -190,9 +190,15 @@ $view = file_get_contents($root . '/app/Views/departamento-operativo/2-recursos-
 $sqlWriter = file_get_contents($root . '/app/Services/ChecadorAdministrativeIncidenceSqlService.php') ?: '';
 $assert(str_contains($routes, "'/recursos-humanos/checador/incidencias/crear'")
     && str_contains($routes, "['ChecadorController', 'createIncidence']"), 'authenticated POST route is registered for creation');
+$m06ReadStart = strpos($access, 'public static function authorizeIncidenceRead(');
+$m06EvaluationStart = strpos($access, 'public static function authorizeEvaluation(');
+$m06Capabilities = $m06ReadStart !== false && $m06EvaluationStart !== false
+    ? substr($access, $m06ReadStart, $m06EvaluationStart - $m06ReadStart)
+    : '';
 $assert(str_contains($access, "INCIDENCE_MODULE_KEY = 'checador-v2-incidencias'")
-    && str_contains($access, 'empty($permissions[\'crear\'])')
-    && str_contains($access, 'empty($permissions[\'leer\'])'), 'dedicated create ACL and canonical readback ACL are required');
+    && str_contains($m06Capabilities, 'self::authorizeIncidenceCreate(')
+    && !str_contains($m06Capabilities, 'ModuloDptoOperativoService::getPermiso'),
+    'M06 read/create/revision use existing Checador authorization and canonical scope without physical incidence ACL rows');
 $assert(str_contains($controller, 'authorizeIncidenceCreate($workplaceId)')
     && str_contains($controller, 'm06AdministrativeIncidenceSqlService()->create(')
     && !str_contains($controller, 'createIncidence($user, $input'),

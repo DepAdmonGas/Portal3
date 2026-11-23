@@ -503,12 +503,23 @@ $assert($lifecycleControllerSource !== ''
     && !str_contains($lifecycleControllerSource, 'lifecycleAction('),
     'M06 revision and lifecycle controller paths use the Portal3 SQL writer without HTTP API calls');
 $access = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAccessService.php') ?: '';
-$assert(str_contains($access, 'id_puesto ?? 0), [self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID]')
-    && str_contains($access, "empty(\$permissions['leer'])"),
-    'read ACL is limited to active Encargado/Direction roles and effective read permission');
-$assert(str_contains($access, 'id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID')
-    && str_contains($access, "empty(\$permissions['crear'])"),
-    'create ACL is Encargado-only and requires the effective create permission');
+$readAuthStart = strpos($access, 'public static function authorizeIncidenceRead(');
+$revisionAuthStart = strpos($access, 'public static function authorizeIncidenceRevision(');
+$evaluationAuthStart = strpos($access, 'public static function authorizeEvaluation(');
+$readCreateSource = $readAuthStart !== false && $evaluationAuthStart !== false
+    ? substr($access, $readAuthStart, $evaluationAuthStart - $readAuthStart)
+    : '';
+$assert(str_contains($readCreateSource, '[self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID]')
+    && str_contains($readCreateSource, 'self::ENCARGADO_PUESTO_ID')
+    && !str_contains($readCreateSource, 'ModuloDptoOperativoService::getPermiso')
+    && str_contains($readCreateSource, "'capability' => 'M06_CREATE'")
+    && $revisionAuthStart !== false
+    && str_contains(substr($access, $revisionAuthStart, $evaluationAuthStart - $revisionAuthStart), 'return self::authorizeIncidenceCreate('),
+    'M06 read is Checador-scope plus active roles 6/13; create and revision are Encargado-only without physical M06 ACL rows');
+$assert(str_contains($access, 'ModuloDptoOperativoService::getPermiso((int) $user->id, $namespace)')
+    && str_contains($access, 'authorizeEvaluation(')
+    && str_contains($access, 'authorizeFalta('),
+    'resolution/approval, evaluation and FALTA retain their separate authorization checks');
 $assert(str_contains($controller, 'CsrfToken::validate($csrf)')
     && str_contains($controller, 'authorizeIncidenceCreate($workplaceId)')
     && str_contains($controller, '->create('),
