@@ -108,8 +108,6 @@ $readback = static function (Usuario $actor, string $key, int $version, int $wor
 };
 $writer = new ChecadorShiftTemplateSqlWriteService(
     static fn(Usuario $actor, int $workplaceId): bool => $actor->id === 90 && in_array($workplaceId, [1, 6, 9], true),
-    static fn(): bool => true,
-    static fn(): bool => true,
     $readback
 );
 $base = [
@@ -227,8 +225,6 @@ $assert(($esmegas['ok'] ?? false)
     'Esmegas create and persisted readback remain at canonical locality 6, separate from Palo Solo and Autolavado');
 $paloWriter = new ChecadorShiftTemplateSqlWriteService(
     static fn(Usuario $actor, int $workplaceId): bool => $actor->id === 90 && $workplaceId === 2,
-    static fn(): bool => true,
-    static fn(): bool => true,
     $readback
 );
 $paloCreate = $base;
@@ -300,53 +296,28 @@ $assert(str_contains($renderM04, '$canManageStationTemplates = $workplaceId !== 
     && substr_count($renderM04, "'templateWritesEnabled'") === 1
     && str_contains($viewSource, 'data-edit-enabled="<?= !empty($canManageStationTemplates) ? \'1\' : \'0\' ?>"')
     && str_contains($viewSource, 'data-write-enabled="<?= !empty($templateWritesEnabled) ? \'1\' : \'0\' ?>"')
-    && str_contains($viewSource, 'alert alert-warning py-2')
     && str_contains($viewSource, ':disabled="loading || !writeEnabled"')
     && str_contains($viewSource, ':disabled="editLoading || !writeEnabled"')
+    && str_contains($controllerSource, "\$templateWriteBlockMessage = \$demoMode ? 'El modo demostración es de consulta.' : ''")
+    && !str_contains($viewSource, 'las verificaciones de corte exclusivo y preflight SQL de M04')
     && str_contains($jsSource, 'this.writeBlockMessage'),
-    'authorized Encargados see M04 controls independently of SQL readiness while blocked POSTs display the exact server-provided reason');
+    'authorized Encargados can write without technical gates; only the existing demo view remains read-only');
 $authPosition = strpos($saveM04, 'authorizeStationTemplateAdministration($workplaceId)');
-$gatePosition = strpos($saveM04, 'writeGateOpen()');
-$preflightPosition = strpos($saveM04, 'isOperationallyReady()');
-$assert($authPosition !== false && $gatePosition !== false && $preflightPosition !== false
-    && $authPosition < $gatePosition && $gatePosition < $preflightPosition
-    && str_contains($saveM04, 'm04_cutover_not_ready')
-    && str_contains($saveM04, 'sql_preflight_not_ready'),
-    'M04 POST authorizes the session and locality before returning distinct fail-closed cutover and SQL-preflight errors');
-$assert(str_contains($writeServiceSource, "SHOW TABLE STATUS LIKE ' . \$connection->getPdo()->quote(\$table)")
-    && !str_contains($writeServiceSource, 'SHOW TABLE STATUS LIKE ?'),
-    'MariaDB table-status preflight quotes only fixed table names instead of binding an unsupported SHOW placeholder');
-$originalAppEnv = $_ENV['APP_ENV'] ?? null;
-$originalDemoFlag = $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] ?? null;
-$_ENV['APP_ENV'] = 'production';
-$_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
-$gateNames = ['CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED', 'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'];
-$savedGateValues = [];
-foreach ($gateNames as $gateName) {
-    $savedGateValues[$gateName] = [array_key_exists($gateName, $_ENV), $_ENV[$gateName] ?? null, getenv($gateName)];
-    unset($_ENV[$gateName]);
-    putenv($gateName);
-}
-$operationGateOpen = ChecadorShiftTemplateSqlWriteService::writeGateOpen();
-$assert(!$operationGateOpen, 'M04 remains closed when any environment cutover attestation is absent');
-foreach ($gateNames as $gateName) {
-    $_ENV[$gateName] = '1';
-    putenv($gateName . '=1');
-}
-$operationGateOpen = ChecadorShiftTemplateSqlWriteService::writeGateOpen();
-foreach ($savedGateValues as $gateName => [$hadEnv, $envValue, $processValue]) {
-    if ($hadEnv) $_ENV[$gateName] = $envValue; else unset($_ENV[$gateName]);
-    if ($processValue !== false) putenv($gateName . '=' . $processValue);
-    else putenv($gateName);
-}
-$assert($operationGateOpen, 'M04 opens in a configured target environment only when all four approved attestations are true');
-$assert(str_contains($writeServiceSource, 'CHECADOR_M04_SQL_WRITER_ENABLED')
-    && str_contains($writeServiceSource, 'CHECADOR_M04_API_WRITER_CLOSED')
-    && str_contains($writeServiceSource, 'CHECADOR_M04_SQL_GRANTS_VERIFIED')
-    && str_contains($writeServiceSource, 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'),
-    'M04 writer enforces every environment-specific attestation from the approved addendum');
-if ($originalAppEnv === null) unset($_ENV['APP_ENV']); else $_ENV['APP_ENV'] = $originalAppEnv;
-if ($originalDemoFlag === null) unset($_ENV['CHECADOR_ADVANCED_DEMO_ENABLED']); else $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = $originalDemoFlag;
-
+$assert($authPosition !== false
+    && !str_contains($saveM04, 'writeGateOpen()')
+    && !str_contains($saveM04, 'isOperationallyReady()')
+    && !str_contains($saveM04, 'CHECADOR_M04_')
+    && !str_contains($saveM04, 'm04_cutover_not_ready')
+    && !str_contains($saveM04, 'sql_preflight_not_ready'),
+    'M04 POST keeps server-side locality authorization and no longer requires environment, API-cut, or SQL-attestation gates');
+$assert(str_contains($writeServiceSource, 'Capsule::connection(self::CONNECTION_NAME)')
+    && str_contains($writeServiceSource, '$connection->transaction(')
+    && str_contains($writeServiceSource, 'findIdempotentResult(')
+    && str_contains($writeServiceSource, 'readExactWithinTransaction(')
+    && !str_contains($writeServiceSource, 'writeGateOpen')
+    && !str_contains($writeServiceSource, 'isOperationallyReady')
+    && !str_contains($writeServiceSource, 'mariadbSchemaReady')
+    && !str_contains($writeServiceSource, 'hasRequiredM04Grants'),
+    'M04 uses default SQL transactions, durable idempotency and readback; real SQL failures are handled without manual gates');
 echo "\n{$passes} PASS, {$fails} FAIL\n";
 exit($fails === 0 ? 0 : 1);

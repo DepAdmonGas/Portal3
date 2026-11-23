@@ -11,21 +11,17 @@ use DomainException;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Throwable;
 
-/** M04 SQL-only append-only writer. Access and readiness are checked in Portal3 at request time. */
+/** M04 SQL-only append-only writer. Authorization is checked in Portal3 for every operation. */
 final class ChecadorShiftTemplateSqlWriteService
 {
     public const CONNECTION_NAME = 'default';
 
     /** @var callable(Usuario,int):bool */
     private $authorizeWrite;
-    /** @var callable():bool */
-    private $gate;
-    /** @var callable():bool */
-    private $schemaPreflight;
     /** @var callable(Usuario,string,int,int,int):array|null */
     private $readback;
 
-    public function __construct(?callable $authorizeWrite = null, ?callable $gate = null, ?callable $schemaPreflight = null, ?callable $readback = null)
+    public function __construct(?callable $authorizeWrite = null, ?callable $readback = null)
     {
         $this->authorizeWrite = $authorizeWrite ?? static function (Usuario $actor, int $workplaceId): bool {
             $authenticated = Auth::user();
@@ -33,67 +29,9 @@ final class ChecadorShiftTemplateSqlWriteService
                 && (int) ($authenticated->id ?? 0) === (int) ($actor->id ?? 0)
                 && (ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false);
         };
-        $this->gate = $gate ?? static fn(): bool => self::writeGateOpen();
-        $this->schemaPreflight = $schemaPreflight ?? fn(): bool => $this->mariadbSchemaReady();
         $this->readback = $readback ?? static fn(Usuario $actor, string $key, int $version, int $workplaceId, int $id): array =>
             (new ChecadorShiftTemplateSqlReadService(null, self::CONNECTION_NAME))
                 ->getShiftTemplateVersion($actor, $key, $version, $workplaceId, $id, 'STATION', $workplaceId);
-    }
-
-    /** Fedora's owner-approved local exception is bound to the actual local bd_admongas connection. */
-    public static function writeGateOpen(): bool
-    {
-        if (ChecadorDailyReadService::demoModeEnabled()) return false;
-
-        try {
-            $connection = Capsule::connection(self::CONNECTION_NAME);
-            $identity = $connection->selectOne('SELECT DATABASE() AS database_name');
-            $config = $connection->getConfig();
-            if (self::isLocalDevelopmentTarget(
-                (string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: ''),
-                (string) ($config['driver'] ?? ''),
-                (string) ($config['host'] ?? ''),
-                (string) ($config['database'] ?? ''),
-                (string) ($identity->database_name ?? '')
-            )) {
-                return true;
-            }
-        } catch (Throwable) {
-            // If the local target cannot be positively identified, use the normal closed-by-default gate.
-        }
-
-        foreach ([
-            'CHECADOR_M04_SQL_WRITER_ENABLED',
-            'CHECADOR_M04_API_WRITER_CLOSED',
-            'CHECADOR_M04_SQL_GRANTS_VERIFIED',
-            'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
-        ] as $gate) {
-            $value = strtolower(trim((string) ($_ENV[$gate] ?? getenv($gate) ?: '')));
-            if (!in_array($value, ['1', 'true', 'yes', 'on'], true)) return false;
-        }
-
-        return true;
-    }
-
-    /** Local exception requires dev APP_ENV plus the exact local MySQL database identity. */
-    private static function isLocalDevelopmentTarget(
-        string $environment,
-        string $driver,
-        string $host,
-        string $configuredDatabase,
-        string $actualDatabase
-    ): bool {
-        return in_array(strtolower(trim($environment)), ['dev', 'development', 'local'], true)
-            && strtolower(trim($driver)) === 'mysql'
-            && in_array(strtolower(trim($host)), ['localhost', '127.0.0.1', '::1'], true)
-            && $configuredDatabase === 'bd_admongas'
-            && $actualDatabase === 'bd_admongas';
-    }
-
-    /** UI and handlers require a live schema and effective-grant preflight. */
-    public static function isOperationallyReady(): bool
-    {
-        return self::writeGateOpen() && (new self())->mariadbSchemaReady();
     }
 
     /** @return array{ok:bool,template?:array<string,mixed>,error?:string,status?:int,replayed?:bool} */
@@ -120,8 +58,7 @@ final class ChecadorShiftTemplateSqlWriteService
         }
         if ($operation === 'create' && ($input['confirm_action'] ?? '') !== '1') return self::failure('confirmation_required', 422);
         if (!($this->authorizeWrite)($actor, $workplaceId)) return self::failure('permission_denied', 403);
-        if (!($this->gate)()) return self::failure('demo_mode_read_only', 403);
-        if (!($this->schemaPreflight)()) return self::failure('m04_sql_schema_not_ready', 503);
+        if (ChecadorDailyReadService::demoModeEnabled()) return self::failure('demo_mode_read_only', 403);
 
         $fingerprint = hash('sha256', json_encode([
             'operation' => $operation, 'workplace_id' => $workplaceId, 'actor_id' => (int) $actor->id,
@@ -137,7 +74,7 @@ final class ChecadorShiftTemplateSqlWriteService
                 $connection, $actor, $workplaceId, $operation, $name, $type, $segments, $templateKey,
                 $expectedVersion, $sourceKey, $sourceVersion, $keyHash, $fingerprint
             ): array {
-                if (!($this->authorizeWrite)($actor, $workplaceId) || !($this->gate)()) {
+                if (!($this->authorizeWrite)($actor, $workplaceId)) {
                     throw new DomainException('permission_denied');
                 }
                 $workplace = $connection->table('op_rh_localidades')->where('id', $workplaceId)->lockForUpdate()->first(['id']);
@@ -341,160 +278,6 @@ final class ChecadorShiftTemplateSqlWriteService
         return $segments;
     }
 
-    private function mariadbSchemaReady(): bool
-    {
-        try {
-            $connection = Capsule::connection(self::CONNECTION_NAME);
-            if ($connection->getDriverName() !== 'mysql') return false;
-            $identity = $connection->selectOne(
-                "SELECT DATABASE() AS database_name, CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', 1)), '@', QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', -1))) AS grantee"
-            );
-            $databaseName = trim((string) ($identity->database_name ?? ''));
-            $grantee = trim((string) ($identity->grantee ?? ''));
-            $config = $connection->getConfig();
-            $localDevelopmentException = self::isLocalDevelopmentTarget(
-                (string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: ''),
-                (string) ($config['driver'] ?? ''),
-                (string) ($config['host'] ?? ''),
-                (string) ($config['database'] ?? ''),
-                $databaseName
-            );
-            $activeRole = strtoupper(trim((string) ($connection->selectOne('SELECT CURRENT_ROLE() AS role_name')->role_name ?? 'NONE')));
-            if ($databaseName === '' || $grantee === ''
-                || (!$localDevelopmentException && $activeRole !== '' && $activeRole !== 'NONE')
-                || (!$localDevelopmentException && !self::hasRequiredM04Grants($connection->select(
-                    "SELECT 'GLOBAL' AS grant_scope, NULL AS table_schema, NULL AS table_name, PRIVILEGE_TYPE AS privilege_type FROM information_schema.USER_PRIVILEGES WHERE GRANTEE = ?
-                    UNION ALL
-                    SELECT 'SCHEMA', TABLE_SCHEMA, NULL, PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ?
-                    UNION ALL
-                    SELECT 'TABLE', TABLE_SCHEMA, TABLE_NAME, PRIVILEGE_TYPE FROM information_schema.TABLE_PRIVILEGES WHERE GRANTEE = ? AND TABLE_NAME IN (?, ?, ?, ?, ?)",
-                    [$grantee, $grantee, $grantee,
-                        'op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
-                        'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log']
-                ), $databaseName, $localDevelopmentException))) return false;
-            $tables = ['op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
-                'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log'];
-            foreach ($tables as $table) {
-                $status = $connection->selectOne('SHOW TABLE STATUS LIKE ' . $connection->getPdo()->quote($table));
-                if ($status === null || strtoupper((string) ($status->Engine ?? '')) !== 'INNODB') return false;
-            }
-            $required = [
-                'op_rh_v2_turnos_plantillas' => ['id','clave','version','nombre','tipo_turno','scope','id_estacion','scope_id','es_activo','creado_por_usuario_id','creado_at','actualizado_at'],
-                'op_rh_v2_turnos_segmentos' => ['id','id_plantilla','ordinal','tipo_segmento','hora_inicio_local','hora_fin_local','dia_offset_inicio','dia_offset_fin'],
-                'op_rh_v2_shift_template_station_lineage' => ['id','id_estacion','source_global_clave','source_global_version','source_global_template_id','local_clave','local_template_id','created_by_user_id','created_at_utc'],
-                'op_rh_v2_turnos_audit_log' => ['id','entity_type','entity_id','operacion','id_usuario_actor','id_estacion','id_plantilla','version_plantilla','detalle_json','recorded_at_utc'],
-            ];
-            foreach ($required as $table => $columns) {
-                $columnRows = $connection->select('SHOW COLUMNS FROM `' . $table . '`');
-                $byName = [];
-                foreach ($columnRows as $column) $byName[(string) $column->Field] = $column;
-                if (array_diff($columns, array_keys($byName)) !== []) return false;
-                if ($table === 'op_rh_v2_turnos_plantillas'
-                    && !str_contains(strtoupper((string) ($byName['scope_id']->Extra ?? '')), 'GENERATED')) return false;
-                if ($table === 'op_rh_v2_turnos_audit_log'
-                    && !str_starts_with(strtolower((string) ($byName['detalle_json']->Type ?? '')), 'longtext')) return false;
-            }
-            foreach ([
-                'op_rh_v2_turnos_segmentos' => ['fk_v2_segmentos_plantilla'],
-                'op_rh_v2_shift_template_station_lineage' => ['fk_v2_shift_lineage_local_template', 'fk_v2_shift_lineage_source_template'],
-            ] as $table => $constraints) {
-                $create = $connection->selectOne('SHOW CREATE TABLE `' . $table . '`');
-                $definition = is_object($create) ? implode(' ', array_map('strval', array_values((array) $create))) : '';
-                foreach ($constraints as $constraint) if (!str_contains($definition, $constraint)) return false;
-            }
-            $jsonProbe = $connection->selectOne("SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"m04_probe\":\"ok\"}', '$.m04_probe')) AS probe_value");
-            if (($jsonProbe->probe_value ?? null) !== 'ok') return false;
-            foreach ([
-                'op_rh_v2_turnos_plantillas' => ['uk_v2_turnos_plantillas_scope_clave_version' => ['scope_id','clave','version']],
-                'op_rh_v2_turnos_segmentos' => ['uk_v2_segmento_plantilla_ordinal' => ['id_plantilla','ordinal']],
-                'op_rh_v2_shift_template_station_lineage' => [
-                    'uq_v2_shift_lineage_station_source' => ['id_estacion','source_global_clave'],
-                    'uq_v2_shift_lineage_station_local' => ['id_estacion','local_clave'],
-                    'uq_v2_shift_lineage_local_template' => ['local_template_id'],
-                ],
-            ] as $table => $indexes) {
-                $rows = $connection->select('SHOW INDEX FROM `' . $table . '`');
-                foreach ($indexes as $name => $columns) {
-                    $found = [];
-                    $unique = false;
-                    foreach ($rows as $row) {
-                        if ((string) $row->Key_name !== $name) continue;
-                        $found[(int) $row->Seq_in_index] = (string) $row->Column_name;
-                        $unique = (int) $row->Non_unique === 0;
-                    }
-                    ksort($found);
-                    if (!$unique || array_values($found) !== $columns) return false;
-                }
-            }
-            return true;
-        } catch (Throwable) {
-            return false;
-        }
-    }
-
-    /** Validate required effective operations; extra grants are reported as risk, not mistaken for missing access. */
-    private static function hasRequiredM04Grants(array $grantRows, string $databaseName, bool $allowBroadPrivileges = false): bool
-    {
-        $schemaMatches = static function (string $candidate) use ($databaseName): bool {
-            $normalized = '';
-            $length = strlen($candidate);
-            for ($index = 0; $index < $length; $index++) {
-                $character = $candidate[$index];
-                if ($character === '\\' && isset($candidate[$index + 1])
-                    && in_array($candidate[$index + 1], ['\\', '_', '%'], true)) {
-                    $normalized .= $candidate[++$index];
-                    continue;
-                }
-                $normalized .= $character;
-            }
-            return hash_equals($databaseName, $normalized);
-        };
-        $appliesTo = static function (object $row, string $table) use ($schemaMatches): bool {
-            $scope = strtoupper((string) ($row->grant_scope ?? ''));
-            $schema = (string) ($row->table_schema ?? '');
-            $tableName = (string) ($row->table_name ?? '');
-            return $scope === 'GLOBAL'
-                || ($scope === 'SCHEMA' && $schemaMatches($schema))
-                || ($scope === 'TABLE' && $schemaMatches($schema) && $tableName === $table);
-        };
-        $immutableTables = [
-            'op_rh_v2_turnos_plantillas',
-            'op_rh_v2_turnos_segmentos',
-            'op_rh_v2_shift_template_station_lineage',
-            'op_rh_v2_turnos_audit_log',
-        ];
-        foreach ($immutableTables as $table) {
-            foreach ($grantRows as $row) {
-                if (!$appliesTo($row, $table)) continue;
-                $privilege = strtoupper(trim((string) ($row->privilege_type ?? '')));
-                if (!$allowBroadPrivileges && in_array($privilege, ['UPDATE', 'DELETE', 'ALL', 'ALL PRIVILEGES'], true)) return false;
-            }
-        }
-
-        $has = static function (string $table, string $requiredPrivilege) use ($grantRows, $appliesTo): bool {
-            foreach ($grantRows as $row) {
-                $privilege = strtoupper(trim((string) ($row->privilege_type ?? '')));
-                if ($appliesTo($row, $table) && ($privilege === $requiredPrivilege || in_array($privilege, ['ALL', 'ALL PRIVILEGES'], true))) {
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        $required = [
-            'op_rh_localidades' => ['SELECT'],
-            'op_rh_v2_turnos_plantillas' => ['SELECT', 'INSERT'],
-            'op_rh_v2_turnos_segmentos' => ['SELECT', 'INSERT'],
-            'op_rh_v2_shift_template_station_lineage' => ['SELECT', 'INSERT'],
-            'op_rh_v2_turnos_audit_log' => ['SELECT', 'INSERT'],
-        ];
-        foreach ($required as $table => $privileges) {
-            foreach ($privileges as $privilege) {
-                if (!$has($table, $privilege)) return false;
-            }
-        }
-        return true;
-    }
 
     private function utcNow($connection): mixed
     {

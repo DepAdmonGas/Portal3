@@ -102,7 +102,7 @@
             <?php if (!empty($canManageStationTemplates) && empty($templateWritesEnabled)): ?>
                 <div class="alert alert-warning py-2" role="status">
                     <i class="ti ti-lock me-1" aria-hidden="true"></i>
-                    <?= htmlspecialchars((string) ($templateWriteBlockMessage ?? 'El guardado está bloqueado por las verificaciones de M04.'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars((string) ($templateWriteBlockMessage ?? 'El modo demostración es de consulta.'), ENT_QUOTES, 'UTF-8') ?>
                 </div>
             <?php endif; ?>
             <div class="alert alert-danger py-2 mb-3" role="alert" x-show="error" x-cloak x-text="error"></div>

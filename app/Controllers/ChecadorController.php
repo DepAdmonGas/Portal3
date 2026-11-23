@@ -2403,10 +2403,6 @@ final class ChecadorController extends BaseController
             self::scheduleTemplateFeedback('error', 'El modo demostración es de consulta y no permite escribir plantillas operativas.', $workplaceId);
             self::redirect($redirect);
         }
-        if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
-            self::scheduleTemplateFeedback('error', 'La conexión, el esquema o los permisos SQL no cumplen los requisitos para administrar horarios.', $workplaceId);
-            self::redirect($redirect);
-        }
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
             self::scheduleTemplateFeedback('error', 'No tienes permiso explícito para administrar plantillas de esta estación.', $workplaceId);
             self::redirect($redirect);
@@ -2477,13 +2473,6 @@ final class ChecadorController extends BaseController
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
             $fail('forbidden', 'No tienes permiso para administrar turnos en esta estación.', 403);
         }
-        if (!ChecadorShiftTemplateSqlWriteService::writeGateOpen()) {
-            $fail('m04_cutover_not_ready', 'El corte exclusivo y las atestaciones M04 no están confirmados; no se guardó ningún cambio.', 503);
-        }
-        if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
-            $fail('sql_preflight_not_ready', 'El preflight de estructura o privilegios SQL no confirmó condiciones compatibles; no se guardó ningún cambio.', 503);
-        }
-
         $operation = is_string($input['operation'] ?? null) ? trim($input['operation']) : '';
         $name = is_string($input['template_name'] ?? null) ? trim($input['template_name']) : '';
         $segments = self::normalizeOriginalScheduleTemplateSegments($input['segments'] ?? null);
@@ -2597,7 +2586,6 @@ final class ChecadorController extends BaseController
                 };
                 $message = match ($kind) {
                     'demo_mode_read_only' => 'El modo demostración es de consulta y no permite guardar plantillas operativas.',
-                    'm04_sql_schema_not_ready' => 'El esquema MariaDB no cumple el preflight requerido para guardar turnos.',
                     'duplicate_template_name' => 'Ya existe un turno con este nombre. Actualiza el catálogo.',
                     'version_conflict' => 'El turno cambió desde que abriste el formulario. Actualiza el catálogo antes de editarlo.',
                     'idempotency_conflict' => 'La clave de operación ya se utilizó con otros datos. Actualiza la página antes de reintentar.',
@@ -2877,19 +2865,10 @@ final class ChecadorController extends BaseController
         $templateAdminAccess = $workplaceId === null
             ? ['allowed' => false]
             : ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId);
-        // Authorization controls whether administration affordances are shown.
-        // SQL readiness independently controls whether a POST can be submitted.
+        // Keep administration controls tied to the effective server-side permission.
         $canManageStationTemplates = $workplaceId !== null && (bool) ($templateAdminAccess['allowed'] ?? false);
-        $templateWritesEnabled = $canManageStationTemplates && !$demoMode
-            && ChecadorShiftTemplateSqlWriteService::isOperationallyReady();
-        $templateWriteBlockMessage = '';
-        if ($canManageStationTemplates && !$templateWritesEnabled) {
-            $templateWriteBlockMessage = $demoMode
-                ? 'El modo de demostración es de consulta; no se guardarán cambios.'
-                : (!ChecadorShiftTemplateSqlWriteService::writeGateOpen()
-                    ? 'El guardado está bloqueado: faltan las verificaciones de corte exclusivo y preflight SQL de M04. No se guardaron cambios.'
-                    : 'El preflight SQL de M04 no confirmó estructura y privilegios compatibles. No se guardaron cambios.');
-        }
+        $templateWritesEnabled = $canManageStationTemplates && !$demoMode;
+        $templateWriteBlockMessage = $demoMode ? 'El modo demostración es de consulta.' : '';
 
         if ($invalidPage || $historyPage > 10000) {
             $historyError = 'bad_request';

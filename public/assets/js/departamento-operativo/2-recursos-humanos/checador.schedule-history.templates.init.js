@@ -109,7 +109,7 @@
             init() {
                 this.rootElement = this.$el;
                 this.writeEnabled = this.rootElement?.dataset.writeEnabled === '1';
-                this.writeBlockMessage = String(this.rootElement?.dataset.writeBlockMessage || 'El guardado de turnos está bloqueado por las verificaciones de M04. No se guardaron cambios.');
+                this.writeBlockMessage = String(this.rootElement?.dataset.writeBlockMessage || 'El modo demostración es de consulta.');
                 formatTableTimes(document.getElementById('m04-template-table'));
                 this.table = initDataTable();
 

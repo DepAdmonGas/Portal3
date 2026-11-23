@@ -1,87 +1,58 @@
-# CHECADOR V2 — M04 SQL Read/Write Unified Addendum V1.0
+# CHECADOR V2 — M04 SQL Read/Write Addendum V1.0 (Portal3 authorization)
 
-**Status:** Approved by the Portal3 owner for M04 on 2026-11-19, with a Fedora-only development amendment approved 2026-11-23. Production/Plesk activation gates remain mandatory.
-**Applies to:** Portal3 and Checador V2 API; both repositories must contain byte-identical copies.
-**Scope:** M04 station-template catalog/detail reads, segments, create, station customization, immutable versioning, audit, and readback.
-**Does not change:** Architecture Freeze V1.0, J1/J2 semantics, Lector, M03 assignments, M11, or API ingestion and calculation responsibilities.
+**Status:** Owner-approved Portal3 implementation amendment, 2026-11-23. It supersedes the prior M04 environment, grant, preflight, and API-cut gates for Portal3 writes.
+**Scope:** Portal3 M04 reads and administrative creation, station customization, immutable version append, audit, and SQL readback.
+**Connection:** Portal3's existing MariaDB connection `default` in Fedora and Plesk.
+**Does not modify:** Architecture Freeze V1.0, J1/J2 semantics, API V2 code, Lector, M03, M11, or MariaDB schema/permissions.
 
-## 1. Binding transport and ownership
+## 1. Portal3 transport and writer
 
-Portal3 reads M04 templates, exact versions, segments, lineage, and audit-relevant confirmation directly from canonical MariaDB through Portal3's existing institutional SQL connection. Portal3 does not communicate with API V2 over HTTP for any M04 read, readback, or mutation. The browser communicates only with Portal3; it never connects to MariaDB or API V2.
+Portal3 reads and administers M04 through parameterized SQL on its existing `default` connection. The browser communicates only with Portal3. Portal3 does not call API V2 over HTTP for M04 reads, writes, or readback.
 
-After the exclusive cutover in §7, Portal3 is the sole administrative writer of station-scoped M04 templates, using the existing V2 tables. API V2 retains device ingestion, persistence integrity, interpretation, and journey calculations. API V2 does not accept station-template administrative mutations after cutover. Its GET routes may remain for other consumers; Portal3 never invokes them.
+The owner authorizes the Portal3 M04 writer in Fedora and Plesk without requiring `APP_ENV`, host, database-name, SQL-principal, API-cut, or environment-attestation checks. The writer relies on the configured `default` connection; connection or SQL errors are returned as failed operations, never as successful writes.
 
-Portal3 must not duplicate API-owned calculations or rewrite original punch events. A missing or unavailable persisted projection remains unavailable; it is not a reason to call API over HTTP or synthesize a result.
+The four prior Portal3 attestations are retired for M04: `CHECADOR_M04_SQL_WRITER_ENABLED`, `CHECADOR_M04_API_WRITER_CLOSED`, `CHECADOR_M04_SQL_GRANTS_VERIFIED`, and `CHECADOR_M04_SQL_PREFLIGHT_VERIFIED`. `writeGateOpen()`, `isOperationallyReady()`, and the environment-specific schema/grant preflight are not prerequisites.
 
-## 2. Contract clauses reconciled
+This Portal3 authorization does not claim that API V2's station-template POST routes are disabled, and Portal3 no longer checks their runtime state before writing. API V2 code is not changed by this amendment. If an API runtime still accepts station-template mutations, concurrent writers can conflict; Portal3's transaction and idempotency guarantees apply to Portal3 requests and do not coordinate with an independent API writer.
 
-This addendum supersedes or supplements only M04 template behavior in these clauses:
+## 2. Scope and protected templates
 
-| Source | Clause | M04 treatment |
-|---|---|---|
-| `CHECADOR_V2_SHIFT_SCHEDULING_SERVICE_API_CONTRACT_V1.0.md` | §4.1 template catalog/detail GETs and create/version POSTs; §6.1 template ownership/versioning | For Portal3 M04, all reads and writes use the SQL boundaries in this agreement. API route definitions may remain for non-Portal3 GET consumers; station-template mutation routes reject without mutation after cutover. M03 §4.2 is unchanged. |
-| `CHECADOR_V2_M03_M04_LOCAL_TEMPLATES_AND_HABITUAL_TEMPORARY_SCHEDULE_ADDENDUM_V1.0.md` | §§2, 5, 6, 7 | Supplemented only for M04 template persistence and transport. M03 assignment ownership and permissions are unchanged. |
-| `CHECADOR_V2_M04_GLOBAL_TEMPLATE_STATION_CUSTOMIZATION_ADDENDUM_V1.0.md` | §§3–6 | The Portal3 SQL writer creates local copies and lineage; the GLOBAL source remains immutable. Existing uniqueness, provenance, and recovery requirements remain. |
-| `CHECADOR_V2_PREPRODUCTION_TARGET_DEFINITION_V1.0.md` | §5.4 | A narrow M04 station-template exception applies only after target-specific approval and cutover. All other direct Portal3 V2 writes remain governed by their own contracts. |
+GLOBAL templates and their segments remain read-only through Portal3 station administration. Portal3 may:
 
-No clause outside this list is amended. The Architecture Freeze remains byte-for-byte unchanged.
+1. Create a station template at version 1.
+2. Append a new immutable version to a station template.
+3. Create a station-local customization from an exact authorized GLOBAL version, preserving source lineage.
 
-## 3. GLOBAL templates and allowed operations
+Portal3 does not update or delete existing template versions, segments, lineage, or audit rows. It does not change assignments or rewrite historical data.
 
-GLOBAL templates and their segments are read-only in M04 station administration. M04 cannot create, edit, version, activate, or deactivate a GLOBAL template. The allowed station operations are:
+## 3. Authorization and locality
 
-1. Create a new station template at version 1.
-2. Append an immutable next version to a station template.
-3. Create a station-local customization from an exact, authorized GLOBAL version, preserving its source lineage.
+Every mutation requires an active authenticated Portal3 user, valid CSRF, effective `checador.turnos.estacion.administrar`, Encargado position 6, and server-resolved authorization for the canonical selected locality. The controller and writer recheck identity, permission, and scope; request fields alone confer no authority. Dirección remains read-only. The Palo Solo–Autolavado exception follows the existing explicit authorization and canonical locality rules; it does not grant access to other localities.
 
-No operation changes assignments or rewrites historical versions.
+The existing demonstration/read-only mode remains read-only. It is not an environment or deployment attestation; operational M04 writes otherwise depend on the authenticated Portal3 authorization and the actual SQL operation.
 
-## 4. Authorization and scope
+## 4. Transactions, versioning, audit, idempotency, and readback
 
-Every mutation requires an active authenticated Portal3 user, valid CSRF, effective `checador.turnos.estacion.administrar`, Encargado position 6, and the user's own server-resolved canonical station scope. The handler rechecks authorization and scope; client-supplied actor, station, hidden fields, or modal state confer no authority. Explicit user-level denial overrides a position grant.
+Each create, customization, or version operation runs in one transaction on `default`, including the template row, ordered segments, lineage where applicable, and mandatory audit. SQL or constraint failures roll back the transaction and return failure.
 
-Dirección remains read-only. Autolavado department 9 does not inherit Palo Solo station 2 permissions and has no write authority under this agreement. Any future Autolavado writer requires a separately approved permission and scope contract.
+The writer locks the canonical `op_rh_localidades` row for the authorized locality, validates duplicate names and expected version, and records a cryptographically random idempotency key hash plus canonical payload fingerprint in the audit JSON. Identical retries return the persisted result; reuse with different content conflicts. Version changes append a new row and preserve the prior version.
 
-## 5. Atomicity, versioning, audit, idempotency, and readback
+Success requires readback from SQL confirming template identity, locality, version, segments, and lineage. It cannot be assembled from request data or an in-memory insert list. No DDL, migration, data repair, or grant change is authorized.
 
-Writes use the existing MariaDB V2 schema; this agreement authorizes no DDL, migration, or data repair. Each create, customization, or version operation is one InnoDB transaction covering the template row, all ordered segments, lineage when applicable, and mandatory audit. Any validation, uniqueness, audit, or concurrency failure rolls back the complete operation.
+## 5. Database privileges and accepted risk
 
-The writer serializes M04 mutations by locking the canonical `op_rh_localidades` row for the authorized station. A cryptographically random idempotency key and canonical payload digest are recorded in the same audit transaction. A replay with the same key and digest returns the existing persisted result; reuse with a different digest conflicts. Existing unique keys remain the collision guard. No new writer may bypass this lock protocol. The audit table has no dedicated unique idempotency index; if the row lock, audit lookup capacity, JSON validity, or transaction behavior cannot provide the specified guarantee, M04 writes stay closed and a separately approved schema/contract revision is required.
+Portal3 uses the current effective privileges of the institutional `default` account in Fedora and Plesk. The owner expressly accepts that UPDATE/DELETE/ALL privileges mean MariaDB cannot enforce append-only history against that account or another process using the same credentials. Append-only behavior remains mandatory in the Portal3 writer, but is an application rule rather than a database-enforced guarantee.
 
-Success is returned only after SQL readback confirms template identity, station scope, version, segments, and lineage. Confirmation cannot be assembled from the request payload or an in-memory insert list. Historical versions, GLOBAL rows, and existing assignment references remain unchanged.
+The writer does not run a separate `information_schema` grant check or a manual schema/host/environment preflight. Missing tables, columns, indexes, constraints, or permissions surface as errors from the actual transactional SQL operations; they must never produce a success response. The existing readback and transaction checks remain mandatory.
 
-## 6. Database principal and preflight
+## 6. Superseded M04 conditions
 
-Before enabling writes in an environment, verify its actual runtime database and principal. Compare `SHOW CREATE TABLE`, engines, generated columns, unique indexes, foreign keys, audit JSON constraints, and lineage against the approved model. Outside the Fedora-only exception in §10, verify effective grants for that exact principal and database; the principal must have the required SELECT/INSERT and row-lock access and must not have UPDATE/DELETE capability over immutable template/history rows. A development principal's grants are not evidence for Plesk.
+For Portal3 M04 only, this owner authorization supersedes the previous requirements that Portal3:
 
-Repository DDL, isolated fixtures, and a schema-only check do not establish runtime grants, user permissions, or a successful operational write.
+- require four environment attestations;
+- verify a closed API writer before accepting its own write;
+- require Fedora/Plesk `APP_ENV`, host, document-root, database-name, or SQL-principal matches;
+- reject broad SQL grants; or
+- pass the separate structural and effective-grant preflight before attempting the transaction.
 
-## 7. Exclusive cutover and rollback
-
-All Portal3 M04 write gates default closed. Cutover order is mandatory:
-
-1. Install the identical approved addendum in both repositories and preserve its SHA-256.
-2. Verify the target DDL, engines, indices, constraints, lock behavior, grants, and audit lookup capacity with read-only checks.
-3. Deploy/prepare the Portal3 SQL code with its writer gate closed; verify every Portal3 M04 read and readback is SQL-only.
-4. Close the three API station-template mutations: create, GLOBAL-to-station customization, and immutable version append. Their responses must prove rejection without mutation. Do not affect template GETs, authorized GLOBAL administration, M03 assignments, or other modules.
-5. For Plesk and every non-Fedora target, verify the API cut, target grants/preflight, and Encargado station permission. Only then enable the four Portal3 M04 gates for that environment: `CHECADOR_M04_SQL_WRITER_ENABLED`, `CHECADOR_M04_API_WRITER_CLOSED`, `CHECADOR_M04_SQL_GRANTS_VERIFIED`, and `CHECADOR_M04_SQL_PREFLIGHT_VERIFIED`. The narrowly scoped local exception in §10 does not apply to this step.
-6. Run the acceptance checks in §8. No simultaneous writers or HTTP fallback are permitted.
-7. Rollback closes the Portal3 SQL writer first. API station writes remain closed until Portal3 is verified closed and outstanding operations are reconciled. Never delete or rewrite history as rollback.
-
-## 8. Acceptance evidence
-
-For each environment, verify authorized create, GLOBAL customization, immutable version append, exact segments, audit, idempotent replay/conflict, concurrency/version conflict, rollback on injected failure, SQL readback, F5 persistence, and denial of foreign station scope. Confirm Dirección cannot write, Encargado can write only its authorized station, GLOBAL remains unchanged, and Autolavado 9 does not inherit station 2 rights. Confirm Portal3 M04 makes no HTTP request to API and remains independent of API availability. Label isolated, local, and remote evidence separately.
-
-## 9. Approval and environment boundary
-
-The Portal3 owner approved this M04 agreement on 2026-11-19. This approval does not itself attest API runtime closure, database grants, target schema, authenticated acceptance, production deployment, or Plesk readiness. Those remain environment-specific gates. This document grants no production/Plesk access, migration, SQL grant change, or deployment authorization.
-
-## 10. Owner-approved Fedora development exception — 2026-11-23
-
-The Portal3 owner expressly authorizes a local-only exception for `APP_ENV=dev`, `development`, or `local`, and only when the existing `default` MySQL connection is configured for a loopback host and both its configured database and live `SELECT DATABASE()` identity equal `bd_admongas`. The demo/read-only mode must remain disabled. `APP_ENV` by itself is never sufficient. No new SQL user, connection, credential, grant, table, or migration is authorized.
-
-For this exact Fedora target, the four environment attestations listed in §7 are not required to open Portal3's SQL writer, and the existing broad grants on `default` are accepted. The live structural preflight remains mandatory and continues to verify the actual database identity, required tables/columns, InnoDB engines, generated `scope_id`, required indexes, foreign keys, and SQL JSON support. It also verifies required SELECT and INSERT privileges while allowing the accepted extra UPDATE/DELETE/ALL privileges. Authentication, Encargado permission, canonical locality, CSRF, confirmation, validation, transaction/row locking, idempotency, immutable-version write behavior, mandatory audit insertion, and persisted readback remain enforced by Portal3.
-
-**Risk explicitly accepted for Fedora only:** MariaDB privileges do not enforce append-only history for this principal. A user or process with the same broad credentials could update or delete template/history rows outside this writer. The Portal3 writer itself continues to append new versions and never updates prior versions, but this is an application behavior rather than a database-enforced immutability guarantee. The owner also waives the four activation attestations for this local database only; this exception must not be used as evidence that API station-template writers are closed.
-
-This exception does not apply to Plesk, preproduction, production, any remote host, any database other than `bd_admongas`, or any environment whose live database identity cannot be confirmed. Those targets remain subject to §§6–9, including the API cut, least-privilege verification, all four attestations, and target-specific approval. This amendment leaves the Architecture Freeze, J1/J2, API V2, and Lector unchanged and authorizes no deployment.
+This addendum does not amend Architecture Freeze V1.0, J1/J2, API V2 code, or Lector. It authorizes no deployment by itself. The API repository's copy was not changed in this Portal3-only task; synchronize the contractual copy separately if cross-repository publication is required.
