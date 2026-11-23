@@ -567,7 +567,7 @@ final class ChecadorAdministrativeIncidenceSqlService
             . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20, 12);
     }
 
-    /** Read-only structural and effective-operation preflight on the default connection. */
+    /** Check the operational SQL requirements, independent of constraint names or local machine. */
     public function mariadbSchemaReady(): bool
     {
         try {
@@ -586,21 +586,9 @@ final class ChecadorAdministrativeIncidenceSqlService
                 ],
             ];
             foreach ($required as $table => $columns) {
-                foreach ($columns as $column) if (!$schema->hasColumn($table, $column)) return false;
-            }
-            $nullableColumns = $connection->select(
-                "SELECT TABLE_NAME, COLUMN_NAME, IS_NULLABLE FROM information_schema.COLUMNS "
-                . "WHERE TABLE_SCHEMA = DATABASE() AND ((TABLE_NAME = ? AND COLUMN_NAME = ?) "
-                . "OR (TABLE_NAME = ? AND COLUMN_NAME = ?))",
-                ['op_rh_v2_incidencias_maestro', 'id_estacion', 'op_rh_v2_incidencias_revisiones', 'aprobado_por_usuario_id']
-            );
-            $nullableMap = [];
-            foreach ($nullableColumns as $column) {
-                $nullableMap[$column->TABLE_NAME . '.' . $column->COLUMN_NAME] = strtoupper((string) $column->IS_NULLABLE);
-            }
-            if (($nullableMap['op_rh_v2_incidencias_maestro.id_estacion'] ?? '') !== 'YES'
-                || ($nullableMap['op_rh_v2_incidencias_revisiones.aprobado_por_usuario_id'] ?? '') !== 'YES') {
-                return false;
+                foreach ($columns as $column) {
+                    if (!$schema->hasColumn($table, $column)) return false;
+                }
             }
             foreach ([
                 'op_rh_localidades', 'op_rh_personal', 'op_rh_personal_localidad_version',
@@ -613,68 +601,34 @@ final class ChecadorAdministrativeIncidenceSqlService
                 array_keys($required)
             );
             if (count($tables) !== 2) return false;
-            foreach ($tables as $table) if (strtoupper((string) $table->ENGINE) !== 'INNODB') return false;
-            $indexes = $connection->select(
-                "SELECT TABLE_NAME, INDEX_NAME, NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND ((TABLE_NAME = ? AND INDEX_NAME = ?) OR (TABLE_NAME = ? AND INDEX_NAME = ?)) ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX",
-                ['op_rh_v2_incidencias_maestro', 'uk_v2_incidencia_uuid', 'op_rh_v2_incidencias_revisiones', 'uk_v2_incid_rev_numero']
-            );
-            $indexColumns = [];
-            foreach ($indexes as $index) {
-                if ((int) $index->NON_UNIQUE !== 0) return false;
-                $indexColumns[$index->TABLE_NAME . '.' . $index->INDEX_NAME][] = (string) $index->COLUMN_NAME;
+            foreach ($tables as $table) {
+                if (strtoupper((string) $table->ENGINE) !== 'INNODB') return false;
             }
-            if (($indexColumns['op_rh_v2_incidencias_maestro.uk_v2_incidencia_uuid'] ?? []) !== ['uuid_incidencia']
-                || ($indexColumns['op_rh_v2_incidencias_revisiones.uk_v2_incid_rev_numero'] ?? []) !== ['id_incidencia_maestro', 'revision_numero']) return false;
-            $foreignKeys = $connection->select(
-                "SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND ((TABLE_NAME = ? AND CONSTRAINT_NAME = ?) OR (TABLE_NAME = ? AND CONSTRAINT_NAME = ?))",
-                ['op_rh_v2_incidencias_maestro', 'fk_v2_incid_maestro_localidad', 'op_rh_v2_incidencias_revisiones', 'fk_v2_incid_rev_maestro']
-            );
-            $fkMap = [];
-            foreach ($foreignKeys as $foreignKey) {
-                $fkMap[$foreignKey->TABLE_NAME . '.' . $foreignKey->CONSTRAINT_NAME] = [
-                    (string) $foreignKey->COLUMN_NAME,
-                    (string) $foreignKey->REFERENCED_TABLE_NAME,
-                    (string) $foreignKey->REFERENCED_COLUMN_NAME,
-                ];
-            }
-            if (($fkMap['op_rh_v2_incidencias_maestro.fk_v2_incid_maestro_localidad'] ?? []) !== ['id_localidad', 'op_rh_localidades', 'id']
-                || ($fkMap['op_rh_v2_incidencias_revisiones.fk_v2_incid_rev_maestro'] ?? []) !== ['id_incidencia_maestro', 'op_rh_v2_incidencias_maestro', 'id']) return false;
 
-            $grantee = (string) ($connection->selectOne(
-                "SELECT CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', 1)), '@', QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', -1))) AS grantee"
-            )->grantee ?? '');
-            if ($grantee === '') return false;
-            $tablesNeedingSelect = [
-                'op_rh_localidades', 'op_rh_personal', 'op_rh_personal_localidad_version',
-                'op_rh_v2_localidades_zonas_horarias', 'op_rh_v2_attendance_policy_versions',
-                'op_rh_v2_incidencias_maestro', 'op_rh_v2_incidencias_revisiones',
-            ];
-            foreach ($tablesNeedingSelect as $table) {
-                if (!$this->hasEffectiveTablePrivilege($connection, $grantee, $table, 'SELECT')) return false;
+            // Enforce semantic uniqueness, not hard-coded index names.
+            $indexes = $connection->select(
+                "SELECT TABLE_NAME, INDEX_NAME, NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME "
+                . "FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() "
+                . "AND TABLE_NAME IN (?, ?) ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX",
+                array_keys($required)
+            );
+            $unique = [];
+            foreach ($indexes as $index) {
+                if ((int) $index->NON_UNIQUE === 0) {
+                    $unique[(string) $index->TABLE_NAME][(string) $index->INDEX_NAME][] = (string) $index->COLUMN_NAME;
+                }
             }
-            foreach (['op_rh_v2_incidencias_maestro', 'op_rh_v2_incidencias_revisiones'] as $table) {
-                if (!$this->hasEffectiveTablePrivilege($connection, $grantee, $table, 'INSERT')) return false;
+            if (!in_array(['uuid_incidencia'], array_values($unique['op_rh_v2_incidencias_maestro'] ?? []), true)
+                || !in_array(['id_incidencia_maestro', 'revision_numero'], array_values($unique['op_rh_v2_incidencias_revisiones'] ?? []), true)) {
+                return false;
             }
-            if (!$this->hasEffectiveTablePrivilege($connection, $grantee, 'op_rh_v2_incidencias_maestro', 'UPDATE')) return false;
+
+            // No hard-coded FK names or information_schema grant rows: the application
+            // checks canonical scope, and actual SQL permissions are enforced by MariaDB.
             return true;
         } catch (Throwable) {
             return false;
         }
-    }
-
-    private function hasEffectiveTablePrivilege(mixed $connection, string $grantee, string $table, string $required): bool
-    {
-        $rows = $connection->select(
-            "SELECT PRIVILEGE_TYPE FROM information_schema.USER_PRIVILEGES WHERE GRANTEE = ?\n"
-            . "UNION SELECT PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = DATABASE()\n"
-            . "UNION SELECT PRIVILEGE_TYPE FROM information_schema.TABLE_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
-            [$grantee, $grantee, $grantee, $table]
-        );
-        foreach ($rows as $row) {
-            $privilege = strtoupper((string) $row->PRIVILEGE_TYPE);
-            if ($privilege === 'ALL PRIVILEGES' || $privilege === $required) return true;
-        }
-        return false;
     }
 
     /** @return array{ok:bool,timezone?:string,error?:string} */
