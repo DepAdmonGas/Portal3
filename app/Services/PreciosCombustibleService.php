@@ -461,7 +461,7 @@ class PreciosCombustibleService
     private static function buildTablaTransporte(array $transporte, string $modo, bool $editable): string
     {
         $html = '';
-        $html .= '<table class="table table-striped table-bordered mb-3 text-nowrap align-middle">';
+        $html .= '<table class="table table-striped table-bordered mt-3 mb-3 text-nowrap align-middle">';
         $html .= '<thead>';
         $html .= '<tr>'
             . '<th class="align-middle text-center" colspan="6">Precio del transporte</th>'

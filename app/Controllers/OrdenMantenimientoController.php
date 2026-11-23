@@ -373,8 +373,19 @@ final class OrdenMantenimientoController extends BaseController
         $imageDataUri = static function (string $filename) use ($projectRoot): ?string {
             $filename = basename($filename);
             if ($filename === '') return null;
-            $path = $projectRoot.'/public/uploads/archivos/'.$filename;
-            if (!is_file($path)) return null;
+            $path = null;
+            foreach ([
+                '/public/uploads/archivos/',
+                '/public/uploads/firmas/orden-mantenimiento/',
+                '/public/uploads/firmas/firma-tuxpan/',
+                '/public/uploads/firmas/',
+                '/public/imgs/firma/',
+                '/imgs/firma/',
+            ] as $directory) {
+                $candidate = $projectRoot.$directory.basename($filename);
+                if (is_file($candidate)) { $path = $candidate; break; }
+            }
+            if ($path === null) return null;
             $mime = function_exists('mime_content_type') ? (string)mime_content_type($path) : '';
             if (!in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true)) return null;
             $contents = file_get_contents($path);

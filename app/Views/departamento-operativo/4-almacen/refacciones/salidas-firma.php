@@ -47,8 +47,8 @@
             <div class="card h-100">
                 <div class="card-header text-bg-primary py-3 border-0"><div class="d-flex align-items-center gap-2"><i class="ti ti-signature fs-5"></i><h5 class="mb-0 text-white">FIRMA DE QUIEN ELABORA</h5></div></div>
                 <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                    <?php if (!empty($salida['firma_elabora'])): ?>
-                        <img src="/<?= $escape($salida['firma_elabora']) ?>" alt="Firma de quien elabora" class="img-fluid" style="max-height:150px;object-fit:contain">
+                    <?php if (($firmaElaboraUrl = \App\Services\RefaccionesService::urlFirmaSalida($salida['firma_elabora'] ?? null)) !== null): ?>
+                        <img src="<?= $escape($firmaElaboraUrl) ?>" alt="Firma de quien elabora" class="img-fluid" style="max-height:150px;object-fit:contain">
                     <?php else: ?>
                         <i class="ti ti-signature-off text-muted mb-3" style="font-size:70px"></i><div class="text-muted">Sin firma registrada</div>
                     <?php endif; ?>
@@ -78,7 +78,7 @@
                 <div class="card h-100">
                     <div class="card-header text-bg-primary py-3 border-0"><div class="d-flex align-items-center gap-2"><i class="ti ti-user-check fs-5"></i><h5 class="mb-0 text-white">NOMBRE Y FIRMA POR LA ESTACIÓN</h5></div></div>
                     <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                        <?php if (!empty($salida['firma_recibe'])): ?><img src="/<?= $escape($salida['firma_recibe']) ?>" alt="Firma de recepción" class="img-fluid" style="max-height:150px;object-fit:contain"><?php else: ?><i class="ti ti-signature-off text-muted mb-3" style="font-size:70px"></i><div class="text-muted">Pendiente de firma de recepción</div><?php endif; ?>
+                        <?php if (($firmaRecibeUrl = \App\Services\RefaccionesService::urlFirmaSalida($salida['firma_recibe'] ?? null)) !== null): ?><img src="<?= $escape($firmaRecibeUrl) ?>" alt="Firma de recepción" class="img-fluid" style="max-height:150px;object-fit:contain"><?php else: ?><i class="ti ti-signature-off text-muted mb-3" style="font-size:70px"></i><div class="text-muted">Pendiente de firma de recepción</div><?php endif; ?>
                     </div>
                     <div class="card-footer bg-light text-center"><div class="fw-semibold"><?= $escape($salida['nombre_recibe'] ?? $salida['acuse_nombre_recibe'] ?? '—') ?></div></div>
                 </div>

@@ -700,10 +700,36 @@ if (trim($filename) === '') return false;
 $filename = basename(str_replace('\\', '/', trim($filename)));
 if ($filename === '' || $filename === '.' || $filename === '..') return false;
 $relativeFolder = $folder === '' ? '' : $folder . '/';
-$publicPath = self::getUploadDir() . $relativeFolder . $filename;
-$importedRootPath = dirname(__DIR__, 2) . '/public/uploads/archivos/' . $filename;
+$publicFile = self::resolvePersonalDocumentUpload($filename, $folder);
 $privatePath = dirname(__DIR__, 2) . '/storage/private/documentos-personal/' . $relativeFolder . $filename;
-return is_file($publicPath) || is_file($importedRootPath) || is_file($privatePath);
+return $publicFile !== null || is_file($privatePath);
+}
+
+/** Busca documentos en las ubicaciones actuales y de migración conocidas. */
+public static function resolvePersonalDocumentUpload(string $filename, string $folder, ?string $uploadRoot = null): ?array
+{
+    $filename = basename(str_replace('\\', '/', trim($filename)));
+    if ($filename === '' || $filename === '.' || $filename === '..') return null;
+
+    $root = $uploadRoot ?? dirname(__DIR__, 2) . '/public/uploads/archivos';
+    $realRoot = realpath($root);
+    if ($realRoot === false || !is_dir($realRoot)) return null;
+
+    $relativeFolder = $folder === '' ? '' : $folder . DIRECTORY_SEPARATOR;
+    $candidates = [
+        $realRoot . DIRECTORY_SEPARATOR . 'documentos-personal' . DIRECTORY_SEPARATOR . $relativeFolder . $filename,
+        $realRoot . DIRECTORY_SEPARATOR . 'documentos-personal' . DIRECTORY_SEPARATOR . $filename,
+        $realRoot . DIRECTORY_SEPARATOR . $relativeFolder . $filename,
+        $realRoot . DIRECTORY_SEPARATOR . $filename,
+    ];
+    foreach ($candidates as $candidate) {
+        $realFile = realpath($candidate);
+        if ($realFile !== false && is_file($realFile) && str_starts_with($realFile, $realRoot . DIRECTORY_SEPARATOR)) {
+            return ['path' => $realFile, 'base' => dirname($realFile) . DIRECTORY_SEPARATOR];
+        }
+    }
+
+    return null;
 }
 
 private static function deletePersonalDocumentFile(string $filename, string $folder): void

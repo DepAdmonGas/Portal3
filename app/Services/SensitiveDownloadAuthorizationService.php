@@ -67,22 +67,25 @@ class SensitiveDownloadAuthorizationService
         if (!Auth::check() || !isset(self::PERSONAL_DOCUMENTS[$tipo])) return null;
 
         [$column, $folder] = self::PERSONAL_DOCUMENTS[$tipo];
+        $filename = basename(str_replace('\\', '/', $file));
         $resource = RhPersonal::where($column, $file)->first();
+        if (!$resource && $filename !== '' && $filename !== '.' && $filename !== '..') {
+            $resource = RhPersonal::whereRaw(
+                "SUBSTRING_INDEX(REPLACE(`{$column}`, CHAR(92), '/'), '/', -1) = ?",
+                [$filename]
+            )->first();
+        }
         if (!$resource || !self::isAuthorizedForPersonal((int) $resource->id_estacion)) return null;
 
-        $relativeFolder = '/documentos-personal/' . ($folder === '' ? '' : $folder . '/');
-        $filename = basename($file);
         $publicRoot = rtrim(self::uploadRoot(), '/\\');
         $privateRoot = rtrim(self::privateUploadRoot(), '/\\');
-        $bases = [
-            $publicRoot . $relativeFolder,
-            $publicRoot . DIRECTORY_SEPARATOR,
-            $privateRoot . $relativeFolder,
-        ];
-        foreach ($bases as $base) {
-            if (is_file($base . $filename)) {
-                return ['path' => $base . $filename, 'base' => $base];
-            }
+        $publicFile = ControlDocumentosPersonalService::resolvePersonalDocumentUpload($filename, $folder, $publicRoot);
+        if ($publicFile !== null) return $publicFile;
+
+        $privateFolder = $privateRoot . '/documentos-personal/' . ($folder === '' ? '' : $folder . '/');
+        $privatePath = $privateFolder . $filename;
+        if (is_file($privatePath)) {
+            return ['path' => $privatePath, 'base' => $privateFolder];
         }
         return null;
     }

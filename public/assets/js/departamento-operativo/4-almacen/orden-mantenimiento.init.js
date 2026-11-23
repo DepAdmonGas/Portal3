@@ -21,6 +21,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const serviceSaveTimers = {};
     const confirmedServiceValues = {};
     const formatQuantity = value => new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(Number(value || 0));
+    const parseFormattedNumber = value => {
+        const normalized = String(value ?? '').replace(/,/g, '').trim();
+        return normalized === '' ? NaN : Number(normalized);
+    };
+    const inlineSaveTimers = new WeakMap();
+    const showInlineSaveState = (control, state) => {
+        const groupStateId = {
+            'orden-tipo-radio': 'orden-tipo-estado',
+            'orden-trabajo-radio': 'orden-trabajo-estado',
+            'orden-riesgo-radio': 'orden-riesgo-estado'
+        };
+        let indicator = control.id ? document.getElementById(control.id + '-estado') : null;
+        let light = false;
+        if (control.matches('.js-orden-choice')) {
+            indicator = document.getElementById(groupStateId[control.name]);
+            light = true;
+        }
+        if (!indicator) {
+            const host = control.closest('tr')?.querySelector('td:first-child') || control.parentElement;
+            if (!host) return;
+            host.classList.add('position-relative', 'pe-4');
+            indicator = host.querySelector(':scope > .js-orden-inline-state');
+            if (!indicator) {
+                indicator = document.createElement('span');
+                indicator.className = 'js-orden-inline-state position-absolute top-50 end-0 translate-middle-y me-2';
+                indicator.setAttribute('aria-live', 'polite');
+                host.appendChild(indicator);
+            }
+        }
+        if (!indicator) return;
+        const icons = {
+            saving: ['ti ti-loader-2 ti-spin', light ? 'text-white' : 'text-primary', 'Guardando'],
+            saved: ['ti ti-check', light ? 'text-white' : 'text-success', 'Actualizado'],
+            error: ['ti ti-alert-circle', 'text-danger', 'No se pudo actualizar']
+        };
+        const [iconClass, colorClass, label] = icons[state];
+        indicator.innerHTML = '<i class="' + iconClass + ' ' + colorClass + ' fs-6" title="' + label + '" aria-label="' + label + '"></i>';
+        const timer = inlineSaveTimers.get(indicator);
+        if (timer) window.clearTimeout(timer);
+        if (state !== 'saving') {
+            inlineSaveTimers.set(indicator, window.setTimeout(() => { indicator.innerHTML = ''; }, state === 'saved' ? 1800 : 3000));
+        }
+    };
+    document.querySelectorAll('.js-formatted-number').forEach(input => input.addEventListener('input', () => {
+        const value = input.value.replace(/[^\d.]/g, '');
+        const [integer = '', ...decimalParts] = value.split('.');
+        const decimal = decimalParts.join('').slice(0, 2);
+        const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        input.value = value.includes('.') ? formattedInteger + '.' + decimal : formattedInteger;
+        input.classList.remove('is-invalid');
+    }));
+    document.querySelectorAll('.js-orden-choice').forEach(input => input.addEventListener('change', () => {
+        const table = input.closest('.card')?.querySelector('.js-required-choice-table');
+        table?.classList.remove('border', 'border-danger', 'border-2', 'rounded');
+        table?.style.removeProperty('border');
+    }));
 
     const openAreaOptions = areaId => {
         const area = (record?.areas || []).find(item => Number(item.id) === Number(areaId));
@@ -363,9 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const installationList = document.getElementById('orden-lista-instalacion');
             installationList.hidden = installationFiles.length === 0;
             installationList.innerHTML = installationFiles.length
-                ? '<ul class="list-group list-group-flush">' + installationFiles.map(file => '<li class="list-group-item d-flex justify-content-between align-items-center px-0"><span><i class="ti ti-file me-1"></i>' + esc(file.archivo) + '</span><a class="btn btn-sm btn-outline-primary" href="' + esc(file.url) + '"><i class="ti ti-download"></i> Descargar</a></li>').join('') + '</ul>'
+                ? '<ul class="list-group list-group-flush">' + installationFiles.map(file => '<li class="list-group-item d-flex justify-content-between align-items-center px-0"><span><i class="ti ti-file me-1"></i>' + esc(file.archivo) + '</span>' + (file.url ? '<a class="btn btn-sm btn-outline-primary" href="' + esc(file.url) + '"><i class="ti ti-download"></i> Descargar</a>' : '<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible" aria-label="Archivo no disponible"></i>') + '</li>').join('') + '</ul>'
                 : '';
-            document.getElementById('orden-lista-evidencias').innerHTML = '<table class="table table-striped table-bordered align-middle text-center w-100 mb-0"><thead><tr><th class="text-center align-middle" width="96px" style="width:96px;min-width:96px;max-width:96px">#</th><th class="text-center align-middle">Área</th><th class="text-center align-middle">Motivo</th><th class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><i class="ti ti-download fs-6 text-primary" title="Descargar" aria-label="Descargar"></i></th><th class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><i class="ti ti-trash fs-6 text-danger" title="Eliminar" aria-label="Eliminar"></i></th></tr></thead><tbody>' + ((files.evidencias || []).map(file => '<tr><td class="text-center align-middle" width="96px" style="width:96px;min-width:96px;max-width:96px">' + Number(file.id) + '</td><td class="text-center align-middle">' + esc(file.area) + '</td><td class="text-center align-middle">' + esc(file.motivo) + '</td><td class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><a class="btn btn-link p-0 text-decoration-none" href="' + esc(file.url) + '"><i class="ti ti-download fs-6 text-primary"></i></a></td><td class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><button class="btn btn-link p-0 text-decoration-none js-evidence-delete" data-id="' + Number(file.id) + '" data-name="#' + Number(file.id) + '" ' + (!canEdit ? 'disabled' : '') + '><i class="ti ti-trash fs-6 text-danger"></i></button></td></tr>').join('') || '<tr><td colspan="5" class="text-center text-primary">No se encontró información</td></tr>') + '</tbody></table>';
+            document.getElementById('orden-lista-evidencias').innerHTML = '<table class="table table-striped table-bordered align-middle text-center w-100 mb-0"><thead><tr><th class="text-center align-middle" width="96px" style="width:96px;min-width:96px;max-width:96px">#</th><th class="text-center align-middle">Área</th><th class="text-center align-middle">Motivo</th><th class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><i class="ti ti-download fs-6 text-primary" title="Descargar" aria-label="Descargar"></i></th><th class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><i class="ti ti-trash fs-6 text-danger" title="Eliminar" aria-label="Eliminar"></i></th></tr></thead><tbody>' + ((files.evidencias || []).map(file => '<tr><td class="text-center align-middle" width="96px" style="width:96px;min-width:96px;max-width:96px">' + Number(file.id) + '</td><td class="text-center align-middle">' + esc(file.area) + '</td><td class="text-center align-middle">' + esc(file.motivo) + '</td><td class="text-center align-middle" width="48px" style="width:48px;min-width:48px">' + (file.url ? '<a class="btn btn-link p-0 text-decoration-none" href="' + esc(file.url) + '"><i class="ti ti-download fs-6 text-primary"></i></a>' : '<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible" aria-label="Archivo no disponible"></i>') + '</td><td class="text-center align-middle" width="48px" style="width:48px;min-width:48px"><button class="btn btn-link p-0 text-decoration-none js-evidence-delete" data-id="' + Number(file.id) + '" data-name="#' + Number(file.id) + '" ' + (!canEdit ? 'disabled' : '') + '><i class="ti ti-trash fs-6 text-danger"></i></button></td></tr>').join('') || '<tr><td colspan="5" class="text-center text-primary">No se encontró información</td></tr>') + '</tbody></table>';
         } catch (error) {
             ['orden-lista-instalacion', 'orden-lista-evidencias'].forEach(id => {
                 const element = document.getElementById(id);
@@ -387,18 +443,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const extension = String(file.archivo || '').split('.').pop().toLowerCase();
             const isPdf = extension === 'pdf';
             const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
-            const previewUrl = esc(file.preview_url || file.url);
+            const rawPreviewUrl = file.preview_url || file.url;
+            const previewUrl = rawPreviewUrl ? esc(rawPreviewUrl) : '';
             const iconClass = isPdf ? 'ti ti-file-type-pdf text-danger' : (isImage ? 'ti ti-photo text-primary' : 'ti ti-file-description text-primary');
-            let preview = '<div class="text-center p-4 bg-white d-flex align-items-center justify-content-center h-100 w-100"><i class="' + iconClass + ' display-4"></i></div>';
-            if (isImage) {
+            let preview = '<div class="text-center p-4 bg-white d-flex align-items-center justify-content-center h-100 w-100"><i class="' + (rawPreviewUrl ? iconClass : 'ti ti-file-off text-muted') + ' display-4"></i></div>';
+            if (isImage && rawPreviewUrl) {
                 preview = '<img src="' + previewUrl + '" class="w-100 h-100" style="object-fit:cover" alt="Vista previa de evidencia">';
             }
             const fileName = esc(file.archivo || 'Evidencia');
             return '<div class="col-md-6 mt-4"><div class="card h-100 shadow-sm border bg-light position-relative">' +
                 '<div class="position-absolute top-0 end-0 p-2" style="z-index:2"><span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width:32px;height:32px"><i class="' + iconClass + ' fs-6"></i></span></div>' +
-                '<a href="' + previewUrl + '" target="_blank" rel="noopener" class="text-decoration-none overflow-hidden d-block position-relative" style="height:140px">' + preview + '</a>' +
-                '<div class="card-body border-top pb-2 bg-white"><a href="' + previewUrl + '" target="_blank" rel="noopener" class="text-dark text-decoration-none"><p class="small fw-bold text-truncate mb-0" title="' + fileName + '">' + fileName + '</p></a></div>' +
-                '<div class="card-footer bg-white"><div class="d-flex align-items-center gap-2"><a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" href="' + esc(file.url) + '" title="Descargar"><i class="ti ti-download"></i><span>Descargar</span></a>' +
+                (previewUrl ? '<a href="' + previewUrl + '" target="_blank" rel="noopener" class="text-decoration-none overflow-hidden d-block position-relative" style="height:140px">' + preview + '</a>' : '<div class="overflow-hidden d-block position-relative" style="height:140px">' + preview + '</div>') +
+                '<div class="card-body border-top pb-2 bg-white"><p class="small fw-bold text-truncate mb-0" title="' + fileName + '">' + fileName + '</p></div>' +
+                '<div class="card-footer bg-white"><div class="d-flex align-items-center gap-2">' + (file.url ? '<a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" href="' + esc(file.url) + '" title="Descargar"><i class="ti ti-download"></i><span>Descargar</span></a>' : '<span class="text-muted text-center w-100"><i class="ti ti-file-off fs-6" title="Archivo no disponible" aria-label="Archivo no disponible"></i></span>') +
                 (canEdit ? '<button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1 js-orden-evidence-delete" data-id="' + Number(file.id) + '" data-name="' + fileName + '" title="Eliminar" ' + (evidenceBusy ? 'disabled' : '') + '><i class="ti ti-trash"></i><span>Eliminar</span></button>' : '') + '</div></div></div></div>';
         }).join('') : '<div class="col-12"><div class="d-flex flex-column align-items-center justify-content-center text-center border rounded p-4 text-muted"><i class="ti ti-photo-off mb-2" style="font-size:48px"></i><div>No se encontró información</div></div></div>';
     };
@@ -480,7 +537,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const queueServiceSave = (field, value) => {
         if (!record || !canEdit || ![0, 1].includes(Number(record.estatus))) return Promise.reject(new Error('La orden ya no permite cambios.'));
         const request = serviceSaveQueue.catch(() => undefined).then(async () => {
-            const { data } = await axios.post(base + '/editar', { id: record.id, [field]: value, autosave: 1 });
+            const { data } = await axios.post(base + '/editar', { id: record.id, [field]: value, autosave: 1 }, {
+                headers: { 'X-Portal3-Skip-Action-Loader': '1' }
+            });
             if (!data.success) throw new Error(data.message || 'No se pudo guardar el cambio.');
             confirmedServiceValues[field] = String(value);
             return true;
@@ -494,7 +553,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const persist = () => {
             const value = input.value;
             if (String(value) === String(confirmedServiceValues[field] ?? '')) return;
-            queueServiceSave(field, value).catch(error => {
+            showInlineSaveState(input, 'saving');
+            queueServiceSave(field, value).then(() => {
+                showInlineSaveState(input, 'saved');
+            }).catch(error => {
+                showInlineSaveState(input, 'error');
                 Notify.error(error.response?.data?.message || error.message || 'No se pudo guardar el cambio.');
             });
         };
@@ -519,9 +582,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const group = [...document.querySelectorAll('input[name="' + input.name + '"]')];
         const value = String(input.value);
         document.getElementById(selectId).value = value;
+        showInlineSaveState(input, 'saving');
         try {
             await queueServiceSave(field, value);
+            showInlineSaveState(input, 'saved');
         } catch (error) {
+            showInlineSaveState(input, 'error');
             const currentSelection = group.find(item => item.checked)?.value;
             if (currentSelection === value) {
                 const previous = String(confirmedServiceValues[field] ?? '0');
@@ -705,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 : tableSection('Refacciones', ['Refacción', 'Cantidad', 'Estatus'], materialRows, 3);
 
             const evidenceRows = asList(detail.evidencias).map(file =>
-                '<tr><td class="text-center align-middle"><a class="text-primary" href="' + esc(file.url) + '" title="Descargar evidencia"><i class="ti ti-file-download fs-5"></i></a></td><td class="text-center align-middle">' + value(file.area) + '</td><td class="align-middle text-break">' + value(file.motivo) + '</td></tr>'
+                '<tr><td class="text-center align-middle">' + (file.url ? '<a class="text-primary" href="' + esc(file.url) + '" title="Descargar evidencia"><i class="ti ti-file-download fs-5"></i></a>' : '<i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible" aria-label="Archivo no disponible"></i>') + '</td><td class="text-center align-middle">' + value(file.area) + '</td><td class="align-middle text-break">' + value(file.motivo) + '</td></tr>'
             );
             html += tableSection('Evidencia', ['Archivo', 'Área', 'Motivo'], evidenceRows, 3);
             html += tableSection('Comentarios', [], [
@@ -800,6 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const subarea = event.target.closest('.js-subarea-status');
         if (subarea && record) {
             subarea.disabled = true;
+            showInlineSaveState(subarea, 'saving');
             try {
                 const { data } = await axios.post(base + '/areas/subareas/actualizar', {
                     id_subarea: subarea.dataset.id,
@@ -810,6 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'X-Portal3-Skip-Action-Loader': '1' }
                 });
                 if (!data.success) throw new Error(data.message || 'No se pudo actualizar la subárea.');
+                showInlineSaveState(subarea, 'saved');
                 const parent = (record.areas || []).find(area => Number(area.id) === Number(subarea.dataset.parentAreaId));
                 const option = (parent?.subareas_disponibles || []).find(item =>
                     Number(subarea.dataset.id) > 0
@@ -830,6 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     summary.hidden = selectedNames.length === 0;
                 }
             } catch (error) {
+                showInlineSaveState(subarea, 'error');
                 subarea.checked = !subarea.checked;
                 Notify.error(error.response?.data?.message || error.message || 'No se pudo actualizar la subárea.');
             } finally { subarea.disabled = false; }
@@ -838,11 +907,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = event.target.closest('.js-area-status');
         if (!input || !record) return;
         input.disabled = true;
+        showInlineSaveState(input, 'saving');
         try {
             const { data } = await axios.post(base + '/areas/actualizar', { id_area: input.dataset.id, estatus: input.checked ? 1 : 0 }, {
                 headers: { 'X-Portal3-Skip-Action-Loader': '1' }
             });
             if (!data.success) throw new Error(data.message || 'No se pudo actualizar el área.');
+            showInlineSaveState(input, 'saved');
             const area = (record.areas || []).find(item => Number(item.id) === Number(input.dataset.id));
             if (area) area.estatus = input.checked ? 1 : 0;
             const areaCell = input.closest('tr')?.querySelector('td:first-child');
@@ -873,6 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (input.checked) openAreaOptions(input.dataset.id);
         } catch (error) {
+            showInlineSaveState(input, 'error');
             input.checked = !input.checked;
             Notify.error(error.response?.data?.message || error.message || 'No se pudo actualizar el área.');
         } finally { input.disabled = false; }
@@ -890,7 +962,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = event.currentTarget;
         const field = document.getElementById('orden-nombre-area');
         const name = field.value.trim();
-        if (!name) return Notify.error('Escribe el nombre del área.');
+        field.classList.toggle('is-invalid', !name);
+        if (!name) return Notify.error('Completa los campos obligatorios.');
         button.disabled = true;
         try {
             const { data } = await axios.post(base + '/areas/agregar', { id: record.id, area: name });
@@ -901,8 +974,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { Notify.error(error.response?.data?.message || error.message || 'No se pudo agregar el área.'); }
         finally { button.disabled = false; }
     });
+    document.getElementById('orden-nombre-area')?.addEventListener('input', event => event.currentTarget.classList.remove('is-invalid'));
     document.getElementById('orden-agregar-area')?.addEventListener('click', () => {
         document.getElementById('orden-nombre-area').value = '';
+        document.getElementById('orden-nombre-area').classList.remove('is-invalid');
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-area-orden')).show();
         window.setTimeout(() => document.getElementById('orden-nombre-area').focus(), 150);
     });
@@ -918,8 +993,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const help = document.getElementById('orden-refaccion-ayuda');
             const quantityInput = document.getElementById('orden-cantidad-refaccion');
             otherField.hidden = catalogMode;
-            help.textContent = catalogMode ? 'Existencias disponibles en Almacen.' : 'Selecciona una refacción del catálogo o captura otra.';
-            select.innerHTML = '<option value="">' + (catalogMode ? 'Selecciona una refacción de Almacen...' : 'Otra...') + '</option>' + (data.data || []).map(item => {
+            help.textContent = catalogMode ? 'Refacciones y existencias disponibles en esta estación.' : 'Selecciona una refacción del catálogo o captura otra.';
+            select.innerHTML = '<option value="">' + (catalogMode ? 'Selecciona una refacción registrada para esta estación...' : 'Otra...') + '</option>' + (data.data || []).map(item => {
                 const nombreCompleto = item.nombre_completo || [item.nombre, item.medida, item.modelo, item.marca].filter(Boolean).join(' ');
                 const text = catalogMode ? item.sku + ' — ' + nombreCompleto + ' (Disponible: ' + formatQuantity(item.existencia) + ' ' + item.unidad_medida + ')' : item.nombre + ' (' + item.estado + ')';
                 return '<option value="' + item.id + '" data-stock="' + Number(item.existencia || 0) + '">' + esc(text) + '</option>';
@@ -987,23 +1062,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const catalogMode = Boolean(record.usa_refacciones_catalogo);
         const selectedStock = Number(refaccionSelect.selectedOptions?.[0]?.dataset?.stock || 0);
         const hasCustomMaterial = !catalogMode && !hasCatalogMaterial && Boolean(otraRefaccionInput.value.trim());
-        const quantity = Number(quantityInput.value);
+        const quantity = parseFormattedNumber(quantityInput.value);
         if (!hasCatalogMaterial && !hasCustomMaterial) {
             refaccionSelectWrapper?.classList.add('is-invalid');
             otraRefaccionInput.classList.add('is-invalid');
-            Notify.error('Selecciona una refacción del catálogo o escribe otra.');
+            Notify.error('Completa los campos obligatorios.');
             return;
         }
         refaccionSelectWrapper?.classList.remove('is-invalid');
         otraRefaccionInput.classList.remove('is-invalid');
         if (!Number.isFinite(quantity) || quantity < 1) {
             quantityInput.classList.add('is-invalid');
-            Notify.error('La cantidad debe ser de al menos 1.');
+            Notify.error('Completa los campos obligatorios.');
             return;
         }
         if (catalogMode && quantity > selectedStock) {
             quantityInput.classList.add('is-invalid');
-            Notify.error('La cantidad excede la existencia disponible en Almacen (' + formatQuantity(selectedStock) + ').');
+            Notify.error('La cantidad excede la existencia disponible en esta estación (' + formatQuantity(selectedStock) + ').');
             return;
         }
         button.disabled = true;
@@ -1013,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 refaccion: refaccionSelect.value,
                 id_refaccion: catalogMode ? refaccionSelect.value : undefined,
                 otro: catalogMode ? '' : otraRefaccionInput.value,
-                cantidad: quantityInput.value
+                cantidad: String(quantity)
             });
             if (!data.success) throw new Error(data.message || 'No se pudo agregar la refacción.');
             bootstrap.Modal.getInstance(document.getElementById('modal-refaccion-orden')).hide();
@@ -1036,10 +1111,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data.success) throw new Error(data.message || 'No se pudo guardar el archivo.');
         await loadFiles();
     };
+    document.getElementById('orden-modal-evidencia-archivo')?.addEventListener('change', event => event.currentTarget.classList.remove('is-invalid'));
+    document.getElementById('orden-archivo-instalacion')?.addEventListener('change', event => event.currentTarget.classList.remove('is-invalid'));
+    document.getElementById('orden-archivo-evidencia')?.addEventListener('change', event => event.currentTarget.classList.remove('is-invalid'));
     document.getElementById('orden-modal-evidencia-agregar')?.addEventListener('click', async event => {
         const button = event.currentTarget;
-        const file = document.getElementById('orden-modal-evidencia-archivo').files[0];
-        if (!activeEvidenceId || !file) return Notify.error('Selecciona el archivo de evidencia.');
+        const fileInput = document.getElementById('orden-modal-evidencia-archivo');
+        const file = fileInput.files[0];
+        fileInput.classList.toggle('is-invalid', !file);
+        if (!activeEvidenceId || !file) return Notify.error('Completa los campos obligatorios.');
         const form = new FormData();
         form.append('id', activeEvidenceId);
         form.append('archivo', file);
@@ -1057,8 +1137,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     document.getElementById('orden-guardar-instalacion')?.addEventListener('click', async event => {
-        const file = document.getElementById('orden-archivo-instalacion').files[0];
-        if (!file || !record) return Notify.error('Selecciona el archivo de instalación.');
+        const fileInput = document.getElementById('orden-archivo-instalacion');
+        const file = fileInput.files[0];
+        fileInput.classList.toggle('is-invalid', !file);
+        if (!file || !record) return Notify.error('Completa los campos obligatorios.');
         const form = new FormData(); form.append('id', record.id); form.append('archivo', file);
         event.currentTarget.disabled = true;
         try { await postUpload(base + '/instalacion/agregar', form); Notify.success('Evidencia guardada.'); }
@@ -1076,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileField.classList.toggle('is-invalid', !file);
         areaField.classList.toggle('is-invalid', !area);
         motivoField.classList.toggle('is-invalid', !motivo);
-        if (!file || !area || !motivo || !record) return Notify.error('Completa archivo, área y motivo.');
+        if (!file || !area || !motivo || !record) return Notify.error('Completa los campos obligatorios.');
         const form = new FormData(); form.append('id', record.id); form.append('archivo', file); form.append('area', area); form.append('motivo', motivo);
         button.disabled = true;
         const original = button.innerHTML;
@@ -1108,13 +1190,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const locality = localityField.value.trim();
         descriptionField.classList.toggle('is-invalid', !description);
         localityField.classList.toggle('is-invalid', !locality);
-        if (!description || !locality) return Notify.error('Completa la descripción de la causa y dónde se queda la refacción.');
+        if (!description || !locality) return Notify.error('Completa los campos obligatorios.');
         if (!activeCauseId) return Notify.error('No se pudo identificar la orden de mantenimiento.');
         const form = new FormData();
         form.append('id', activeCauseId);
         form.append('descripcion', description);
         form.append('refaccion', locality);
-        form.append('precio', priceField.value);
+        form.append('precio', priceField.value.replace(/,/g, ''));
         const pdf = document.getElementById('orden-pdf-causa').files[0];
         if (pdf) form.append('factura_pdf', pdf);
         try {
@@ -1193,7 +1275,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const canvas = document.getElementById('orden-canvas-firma');
     const signaturePad = canvas && typeof SignaturePad !== 'undefined'
-        ? new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)', penColor: '#202124' })
+        ? new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)', penColor: '#202124', onBegin: () => {
+            const pad = document.getElementById('orden-firma-pad');
+            pad?.classList.remove('border-danger');
+            pad?.style.removeProperty('border-color');
+            pad?.style.removeProperty('border');
+        } })
         : null;
     const resizeSignatureCanvas = () => {
         if (!canvas || !signaturePad) return;
@@ -1212,29 +1299,69 @@ document.addEventListener('DOMContentLoaded', () => {
         const fieldId = input.name === 'orden-tipo-radio' ? 'orden-tipo' : (input.name === 'orden-trabajo-radio' ? 'orden-trabajo' : 'orden-riesgo');
         document.getElementById(fieldId).value = input.value;
     }));
+    document.getElementById('orden-afectacion')?.addEventListener('input', event => {
+        event.currentTarget.classList.remove('is-invalid');
+        event.currentTarget.style.removeProperty('border');
+    });
     document.getElementById('orden-limpiar-firma')?.addEventListener('click', () => signaturePad?.clear());
     document.getElementById('orden-finalizar')?.addEventListener('click', async event => {
         const button = event.currentTarget;
         const afectacion = document.getElementById('orden-afectacion').value.trim();
-        if (!afectacion) {
-            const field = document.getElementById('orden-afectacion');
-            field.classList.add('is-invalid');
-            field.focus();
-            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return Notify.error('Completa el campo de afectación antes de finalizar.');
-        }
         const requiredGroups = [
             { name: 'orden-tipo-radio', label: 'Tipo de servicio' },
             { name: 'orden-trabajo-radio', label: 'Atención interna' },
             { name: 'orden-riesgo-radio', label: 'Orden de alto riesgo' }
         ];
-        const missingGroup = requiredGroups.find(group => !document.querySelector('input[name="' + group.name + '"]:checked'));
-        if (missingGroup) {
-            const firstOption = document.querySelector('input[name="' + missingGroup.name + '"]');
-            firstOption?.closest('table')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return Notify.error('Selecciona una opción en cada tabla. Falta: ' + missingGroup.label + '.');
+        const issues = [];
+        const affectationField = document.getElementById('orden-afectacion');
+        affectationField.classList.toggle('is-invalid', !afectacion);
+        if (!afectacion) {
+            affectationField.style.setProperty('border', '1px solid var(--bs-danger)', 'important');
+            issues.push({ element: affectationField, message: 'Completa los campos obligatorios.' });
+        } else affectationField.style.removeProperty('border');
+
+        requiredGroups.forEach(group => {
+            const firstOption = document.querySelector('input[name="' + group.name + '"]');
+            const table = firstOption?.closest('.card')?.querySelector('.js-required-choice-table');
+            const missing = !document.querySelector('input[name="' + group.name + '"]:checked');
+            table?.classList.toggle('border', missing);
+            table?.classList.toggle('border-danger', missing);
+            table?.classList.toggle('border-2', missing);
+            table?.classList.toggle('rounded', missing);
+            if (missing) {
+                table?.style.setProperty('border', '2px solid var(--bs-danger)', 'important');
+                issues.push({ element: table, message: 'Completa los campos obligatorios.' });
+            } else table?.style.removeProperty('border');
+        });
+
+        const materials = document.getElementById('orden-materiales');
+        const materialsCard = materials?.closest('.card');
+        const missingMaterial = !Array.isArray(record?.materiales) || record.materiales.length === 0;
+        if (materialsCard) {
+            materialsCard.classList.toggle('border', missingMaterial);
+            materialsCard.classList.toggle('border-danger', missingMaterial);
+            if (missingMaterial) materialsCard.style.setProperty('border', '2px solid var(--bs-danger)', 'important');
+            else materialsCard.style.removeProperty('border');
         }
-        if (!record || !signaturePad || signaturePad.isEmpty()) return Notify.error('Agrega tu firma para finalizar.');
+        if (missingMaterial) issues.push({ element: materials, message: 'Agrega al menos una refacción antes de finalizar la orden.' });
+
+        const signaturePadElement = document.getElementById('orden-firma-pad');
+        const missingSignature = !record || !signaturePad || signaturePad.isEmpty();
+        signaturePadElement?.classList.toggle('border-danger', missingSignature);
+        if (missingSignature) {
+            signaturePadElement?.style.setProperty('border', '2px solid var(--bs-danger)', 'important');
+            issues.push({ element: signaturePadElement, message: 'Completa los campos obligatorios.' });
+        } else signaturePadElement?.style.removeProperty('border');
+
+        if (issues.length) {
+            const firstIssue = issues[0];
+            firstIssue.element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (firstIssue.element === affectationField) affectationField.focus({ preventScroll: true });
+            return Notify.error(firstIssue.message);
+        }
+        signaturePadElement?.classList.remove('border-danger');
+        signaturePadElement?.style.removeProperty('border-color');
+        signaturePadElement?.style.removeProperty('border');
         button.disabled = true;
         try {
             ['afectacion', 'comentarios'].forEach(field => window.clearTimeout(serviceSaveTimers[field]));

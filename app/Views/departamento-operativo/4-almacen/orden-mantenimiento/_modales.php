@@ -30,7 +30,7 @@
                 <div id="orden-causa-form" class="row g-3 mb-3">
                     <div class="col-12"><label for="orden-descripcion-causa" class="form-label mb-1">* Descripción de la causa:</label><textarea id="orden-descripcion-causa" class="form-control" rows="2" maxlength="2000"></textarea></div>
                     <div class="col-12 col-md-6"><label for="orden-refaccion-causa" class="form-label mb-1">* La refacción se queda en:</label><select id="orden-refaccion-causa" class="form-select"><option value="">Selecciona una opción...</option><option value="Estación">Estación</option><option value="Almacen">Almacen</option></select></div>
-                    <div class="col-12 col-md-6"><label for="orden-precio-causa" class="form-label mb-1">Precio:</label><input id="orden-precio-causa" class="form-control" type="number" min="0" step="0.01"></div>
+                    <div class="col-12 col-md-6"><label for="orden-precio-causa" class="form-label mb-1">Precio:</label><input id="orden-precio-causa" class="form-control js-formatted-number" type="text" inputmode="decimal" autocomplete="off"></div>
                     <div class="col-12"><label for="orden-pdf-causa" class="form-label mb-1">Factura PDF:</label><div class="input-group"><input id="orden-pdf-causa" class="form-control" type="file" accept=".pdf"><button id="orden-guardar-causa" class="btn btn-success" type="button"><i class="ti ti-check me-1"></i> Guardar</button></div></div>
                 </div>
                 <div id="orden-modal-causa-lista" class="table-responsive"></div>
@@ -71,7 +71,7 @@
             <div class="modal-body">
                 <div class="mb-3 select2-modal-field"><label for="orden-refaccion" class="form-label mb-1">* Refacción:</label><select id="orden-refaccion" class="form-select" aria-describedby="orden-refaccion-ayuda"><option value="">Selecciona una refacción...</option></select><div id="orden-refaccion-ayuda" class="form-text">Selecciona una refacción del catálogo o captura otra.</div></div>
                 <div class="mb-3"><label for="orden-otra-refaccion" class="form-label mb-1">Otra refacción:</label><input id="orden-otra-refaccion" class="form-control" maxlength="250" autocomplete="off"></div>
-                <div><label for="orden-cantidad-refaccion" class="form-label mb-1">* Cantidad (mínimo 1):</label><input id="orden-cantidad-refaccion" class="form-control" type="number" min="1" step="0.01" inputmode="decimal"></div>
+                <div><label for="orden-cantidad-refaccion" class="form-label mb-1">* Cantidad (mínimo 1):</label><input id="orden-cantidad-refaccion" class="form-control js-formatted-number" type="text" inputmode="decimal" autocomplete="off"></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1"></i> Cancelar</button><button id="orden-guardar-refaccion" type="button" class="btn btn-success"><i class="ti ti-check me-1"></i> Guardar</button></div>
         </div></div>

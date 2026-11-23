@@ -382,19 +382,23 @@ class RefaccionesService
             })->all();
     }
 
-    /** Catálogo disponible en el almacén central para órdenes aún no autorizadas. */
-    public static function getProductosAlmacenParaOrden(): array
+    /** Refacciones y saldo del inventario de la estación de la orden. */
+    public static function getProductosAlmacenParaOrden(int $idDestino): array
     {
-        $warehouseId = self::getWarehouseLocationId();
-        if ($warehouseId === null) return [];
+        if ($idDestino <= 0 || !isset(self::getUbicacionesDisponibles()[$idDestino])) return [];
+
+        $saldos = DB::table('op_refacciones_existencias_lotes')
+            ->where('id_estacion', $idDestino)
+            ->where('existencia', '>', 0)
+            ->groupBy('id_refaccion')
+            ->selectRaw('id_refaccion, SUM(existencia) as existencia');
 
         return DB::table('op_refacciones_catalogo as c')
-            ->join('op_refacciones_existencias as e', function ($join) use ($warehouseId): void {
-                $join->on('e.id_refaccion', '=', 'c.id')->where('e.id_estacion', '=', $warehouseId);
-            })
-            ->where('c.activo', 1)->where('c.tipo_articulo', 'refaccion')->where('e.existencia', '>', 0)
+            ->joinSub($saldos, 'existencia', static fn ($join) => $join->on('existencia.id_refaccion', '=', 'c.id'))
+            ->where('c.activo', 1)->where('c.tipo_articulo', 'refaccion')
+            ->where('existencia.existencia', '>', 0)
             ->orderBy('c.nombre')
-            ->get(['c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.unidad_medida', 'e.existencia'])
+            ->get(['c.id', 'c.sku', 'c.nombre', 'c.medida', 'c.modelo', 'c.marca', 'c.unidad_medida', 'existencia.existencia'])
             ->map(static fn ($row): array => [
                 'id' => (int)$row->id, 'sku' => (string)$row->sku,
                 'nombre' => (string)$row->nombre, 'unidad_medida' => (string)$row->unidad_medida,
@@ -461,13 +465,17 @@ class RefaccionesService
     {
         if (!isset(self::getUbicacionesDisponibles()[$idEstacion])) return [];
 
+        $saldos = DB::table('op_refacciones_existencias_lotes')
+            ->where('id_estacion', $idEstacion)
+            ->where('existencia', '>', 0)
+            ->groupBy('id_refaccion')
+            ->selectRaw('id_refaccion, SUM(existencia) as existencia');
+
         return DB::table('op_refacciones_catalogo as c')
-            ->leftJoin('op_refacciones_existencias as e', function ($join) use ($idEstacion): void {
-                $join->on('e.id_refaccion', '=', 'c.id')->where('e.id_estacion', '=', $idEstacion);
-            })
+            ->leftJoinSub($saldos, 'saldo_lotes', static fn ($join) => $join->on('saldo_lotes.id_refaccion', '=', 'c.id'))
             ->where('c.activo', 1)->where('c.tipo_articulo', 'refaccion')
             ->orderBy('c.nombre')
-            ->get(['c.id', 'c.sku', 'c.nombre', 'c.unidad_medida', 'c.costo_unitario', DB::raw('COALESCE(e.existencia, 0) as existencia')])
+            ->get(['c.id', 'c.sku', 'c.nombre', 'c.unidad_medida', 'c.costo_unitario', DB::raw('COALESCE(saldo_lotes.existencia, 0) as existencia')])
             ->map(static fn ($row): array => (array) $row)->all();
     }
 
@@ -508,17 +516,24 @@ class RefaccionesService
         $row = (array) $row;
         $originId = (int)$row['id_estacion_origen'];
         $warehouseId = self::getWarehouseLocationId();
-        $fromWarehouseOrder = $warehouseId !== null && $originId === $warehouseId && DB::table('op_pedido_materiales_refacciones')
+        $isMaintenanceOrder = DB::table('op_pedido_materiales_refacciones')
             ->where('id_movimiento_salida', $id)->exists();
-        if ((!isset($ubicaciones[$originId]) && !$fromWarehouseOrder) || !isset($ubicaciones[(int) $row['id_estacion_destino']])) return null;
+        $fromLegacyWarehouseOrder = $isMaintenanceOrder && $warehouseId !== null && $originId === $warehouseId;
+        if ((!isset($ubicaciones[$originId]) && !$fromLegacyWarehouseOrder) || !isset($ubicaciones[(int) $row['id_estacion_destino']])) return null;
         if ($requierePendienteRecepcion && ((int) $row['estatus'] !== 1 || empty($row['firma_elabora']))) return null;
         $context = self::getContexto()['id'];
         if ($context !== null && (int)$context !== (int)$row['id_estacion_destino']
-            && ($fromWarehouseOrder || (int)$context !== $originId)) return null;
+            && ($isMaintenanceOrder || (int)$context !== $originId)) return null;
 
-        $row['origen'] = $fromWarehouseOrder ? 'Almacen' : $ubicaciones[$originId];
-        $row['destino'] = $ubicaciones[(int) $row['id_estacion_destino']];
-        $row['es_orden_mantenimiento'] = $fromWarehouseOrder;
+        $destinationId = (int) $row['id_estacion_destino'];
+        $destinationName = $ubicaciones[$destinationId];
+        $warehouseDestination = $warehouseId !== null && $destinationId === $warehouseId;
+        $warehouseOrigin = $warehouseId !== null && $originId === $warehouseId;
+        $originName = ($fromLegacyWarehouseOrder || $warehouseOrigin) ? 'Almacén' : (string) ($ubicaciones[$originId] ?? '');
+        if ($isMaintenanceOrder) $originName = $destinationName;
+        $row['origen'] = $originName === 'Almacén' ? $originName : $originName . ' (Almacén)';
+        $row['destino'] = $warehouseDestination ? 'Almacén' : $destinationName . ' (Estación)';
+        $row['es_orden_mantenimiento'] = $isMaintenanceOrder;
         return $row;
     }
 
@@ -549,11 +564,6 @@ class RefaccionesService
         if (!$salida || (int) ($salida['estatus'] ?? -1) !== 0 || empty($salida['es_orden_mantenimiento'])) {
             return self::respuesta(false, 'La salida ya no está pendiente o no pertenece a tus ubicaciones autorizadas.', 404);
         }
-        $warehouseId = self::getWarehouseLocationId();
-        if ($warehouseId === null || (int) $salida['id_estacion_origen'] !== $warehouseId) {
-            return self::respuesta(false, 'El origen de la salida de mantenimiento no es válido.', 422);
-        }
-
         $signaturePath = null;
         try {
             $user = Auth::user();
@@ -561,19 +571,21 @@ class RefaccionesService
             if ($userId <= 0) return self::respuesta(false, 'No se pudo identificar al usuario que elabora la salida.', 401);
             $userName = trim((string) ($user->nombre ?? $user->name ?? '')) ?: 'Usuario ' . $userId;
             $signaturePath = self::guardarFirmaSalida($signature);
-            DB::transaction(static function () use ($id, $date, $reason, $signaturePath, $userName, $warehouseId): void {
+            DB::transaction(static function () use ($id, $date, $reason, $signaturePath, $userName): void {
                 $row = DB::table('op_refacciones_salidas as s')
                     ->join('op_refacciones_movimientos as m', 'm.id', '=', 's.id_movimiento')
                     ->where('m.id', (int) $id)->where('m.tipo', 'traspaso')->lockForUpdate()
                     ->first(['s.id as salida_id', 's.estatus', 'm.id_estacion_origen', 'm.id_estacion_destino']);
                 $isMaintenanceRequest = DB::table('op_pedido_materiales_refacciones')->where('id_movimiento_salida', (int) $id)->exists();
                 $locations = self::getUbicacionesDisponibles();
+                $warehouseId = self::getWarehouseLocationId();
                 if (!$row || (int) $row->estatus !== 0 || !$isMaintenanceRequest
-                    || (int) $row->id_estacion_origen !== $warehouseId
+                    || (!isset($locations[(int) $row->id_estacion_origen]) && !($warehouseId !== null && (int) $row->id_estacion_origen === $warehouseId))
                     || !isset($locations[(int) $row->id_estacion_destino])) {
                     throw new InvalidArgumentException('La salida ya no está pendiente o no pertenece a tus ubicaciones autorizadas.');
                 }
                 $now = date('Y-m-d H:i:s');
+                self::descontarExistenciaSalidaEnOrigen((int) $id, (int) $row->id_estacion_origen);
                 DB::table('op_refacciones_movimientos')->where('id', (int) $id)->update([
                     'fecha' => $date . ' ' . date('H:i:s'), 'motivo' => $reason,
                 ]);
@@ -603,7 +615,7 @@ class RefaccionesService
         }
     }
 
-    /** Registra la salida firmada por quien entrega; el inventario cambia al finalizar la recepción. */
+    /** Registra la salida; la recepción confirma la entrega sin volver a mover inventario. */
     public static function crearSalida(array $data): array
     {
         if (!self::getPermisos()['crear']) return self::respuesta(false, 'No tienes permiso para registrar salidas.', 403);
@@ -644,7 +656,9 @@ class RefaccionesService
                 $product = DB::table('op_refacciones_catalogo')->where('id', (int) $productId)->where('tipo_articulo', 'refaccion')->where('activo', 1)->lockForUpdate()->first();
                 if (!$product) throw new InvalidArgumentException('La refacción seleccionada ya no está disponible.');
                 $stock = DB::table('op_refacciones_existencias')->where('id_refaccion', (int) $productId)->where('id_estacion', (int) $origin)->lockForUpdate()->first();
-                $available = (float) ($stock->existencia ?? 0);
+                $available = (float) DB::table('op_refacciones_existencias_lotes')
+                    ->where('id_refaccion', (int) $productId)->where('id_estacion', (int) $origin)
+                    ->where('existencia', '>', 0)->sum('existencia');
                 $quantity = round((float) $quantity, 2);
                 if ($quantity > $available) throw new InvalidArgumentException('La cantidad excede el stock disponible en la estación de origen (' . rtrim(rtrim(number_format($available, 2, '.', ''), '0'), '.') . ').');
                 if (!$stock) throw new InvalidArgumentException('La refacción no tiene existencia disponible en la estación de origen.');
@@ -665,6 +679,7 @@ class RefaccionesService
                     'fecha_firma_elabora' => date('Y-m-d H:i:s'), 'stock_origen_aplicado' => 0,
                     'creado_en' => date('Y-m-d H:i:s'),
                 ]);
+                self::descontarExistenciaSalidaEnOrigen($movementId, (int) $origin);
                 DB::table('op_refacciones_salidas')->where('id', $salidaId)->update(['estatus' => 1]);
                 DB::table('op_refacciones_acuses')->insert([
                     'id_movimiento' => $movementId, 'nombre_entrega' => mb_substr($userName, 0, 160),
@@ -684,7 +699,7 @@ class RefaccionesService
         }
     }
 
-    /** Crea como pendiente la salida asociada a una OM autorizada, sin mover stock. */
+    /** Registra la salida de una OM autorizada desde el inventario de su estación. */
     public static function crearSalidaDesdeOrdenMantenimiento(
         int $idPedido,
         int $idDestino,
@@ -695,8 +710,7 @@ class RefaccionesService
         string $fechaFirmaElabora
     ): int {
         $destinos = self::getUbicacionesDisponibles();
-        $warehouseId = self::getWarehouseLocationId();
-        if ($idPedido <= 0 || $warehouseId === null || !isset($destinos[$idDestino]) || $idDestino === $warehouseId || $idRefaccion <= 0 || $cantidad <= 0) {
+        if ($idPedido <= 0 || !isset($destinos[$idDestino]) || $idRefaccion <= 0 || $cantidad <= 0) {
             throw new InvalidArgumentException('La orden no contiene una ubicación, refacción o cantidad válida para generar la salida.');
         }
         if (DB::table('op_pedido_materiales_refacciones')->where('id_pedido', $idPedido)->whereNotNull('id_movimiento_salida')->exists()) {
@@ -707,17 +721,19 @@ class RefaccionesService
             ->where('tipo_articulo', 'refaccion')->where('activo', 1)->lockForUpdate()->first();
         if (!$product) throw new InvalidArgumentException('La refacción autorizada ya no está disponible en el catálogo.');
         $stock = DB::table('op_refacciones_existencias')->where('id_refaccion', $idRefaccion)
-            ->where('id_estacion', $warehouseId)->lockForUpdate()->first();
-        $available = (float)($stock->existencia ?? 0);
+            ->where('id_estacion', $idDestino)->lockForUpdate()->first();
+        $available = (float) DB::table('op_refacciones_existencias_lotes')
+            ->where('id_refaccion', $idRefaccion)->where('id_estacion', $idDestino)
+            ->where('existencia', '>', 0)->sum('existencia');
             $quantity = round($cantidad, 2);
         if (!$stock || $quantity > $available) {
-            throw new InvalidArgumentException('La existencia actual de Almacén ya no cubre la cantidad autorizada.');
+            throw new InvalidArgumentException('La existencia actual de la estación ya no cubre la cantidad autorizada.');
         }
 
         $now = date('Y-m-d H:i:s');
         $movementId = (int)DB::table('op_refacciones_movimientos')->insertGetId([
             'folio' => self::nuevoFolio('SAL'), 'tipo' => 'traspaso', 'fecha' => null,
-            'id_estacion_origen' => $warehouseId, 'id_estacion_destino' => $idDestino,
+            'id_estacion_origen' => $idDestino, 'id_estacion_destino' => $idDestino,
             'id_usuario' => (int)(Auth::user()->id ?? 0), 'motivo' => 'Orden de Mantenimiento #'.str_pad((string)$idPedido, 3, '0', STR_PAD_LEFT),
             'estado' => 'confirmado', 'creado_en' => $now,
         ]);
@@ -730,10 +746,30 @@ class RefaccionesService
             'estatus' => 0, 'firma_elabora' => null, 'nombre_elabora' => null,
             'fecha_firma_elabora' => null, 'stock_origen_aplicado' => 0, 'creado_en' => $now,
         ]);
+        self::descontarExistenciaSalidaEnOrigen($movementId, $idDestino);
         return $movementId;
     }
 
-    /** Finaliza la salida: descuenta el origen y abona el destino al guardar la recepción. */
+    /** Descuenta una salida una sola vez en su origen; el destino sólo identifica el sitio que la recibe. */
+    private static function descontarExistenciaSalidaEnOrigen(int $movementId, int $originId): void
+    {
+        $salida = DB::table('op_refacciones_salidas as s')
+            ->join('op_refacciones_movimientos as m', 'm.id', '=', 's.id_movimiento')
+            ->where('m.id', $movementId)->where('m.tipo', 'traspaso')->lockForUpdate()
+            ->first(['s.id as salida_id', 's.stock_origen_aplicado']);
+        if (!$salida) throw new InvalidArgumentException('La salida no está disponible para descontar inventario.');
+        if ((bool) $salida->stock_origen_aplicado) return;
+
+        $detail = DB::table('op_refacciones_movimientos_detalle')->where('id_movimiento', $movementId)->lockForUpdate()->first();
+        if (!$detail) throw new InvalidArgumentException('La salida no tiene una refacción asociada.');
+        $layers = self::cambiarExistencia((int) $detail->id_refaccion, $originId, -(float) $detail->cantidad);
+        self::guardarCapasConsumidas((int) $detail->id, $layers);
+        $cost = self::costoPromedioCapas($layers, (float) $detail->cantidad);
+        DB::table('op_refacciones_movimientos_detalle')->where('id', (int) $detail->id)->update(['costo_unitario' => $cost]);
+        DB::table('op_refacciones_salidas')->where('id', (int) $salida->salida_id)->update(['stock_origen_aplicado' => 1]);
+    }
+
+    /** Finaliza la recepción de la salida sin aumentar el inventario del destino. */
     public static function firmarSalida(array $data): array
     {
         if (!self::getPermisos()['editar']) return self::respuesta(false, 'No tienes permiso para confirmar la recepción.', 403);
@@ -757,12 +793,15 @@ class RefaccionesService
                         ->where('m.id', (int) $id)->where('m.tipo', 'traspaso')->lockForUpdate()
                         ->first(['s.id as salida_id', 's.estatus', 'm.id_estacion_origen', 'm.id_estacion_destino']);
                     $isMaintenanceRequest = DB::table('op_pedido_materiales_refacciones')->where('id_movimiento_salida', (int) $id)->exists();
+                    $locations = self::getUbicacionesDisponibles();
                     $warehouseId = self::getWarehouseLocationId();
-                    if (!$row || (int) $row->estatus !== 0 || !$isMaintenanceRequest || $warehouseId === null || (int) $row->id_estacion_origen !== $warehouseId) {
+                    $validOrigin = $row && (isset($locations[(int) $row->id_estacion_origen])
+                        || ($warehouseId !== null && (int) $row->id_estacion_origen === $warehouseId));
+                    if (!$row || (int) $row->estatus !== 0 || !$isMaintenanceRequest || !$validOrigin
+                        || !isset($locations[(int) $row->id_estacion_destino])) {
                         throw new InvalidArgumentException('Esta salida no está pendiente de la firma de quien elabora.');
                     }
-                    $locations = self::getUbicacionesDisponibles();
-                    if (!isset($locations[(int) $row->id_estacion_destino])) throw new InvalidArgumentException('No tienes acceso a la estación destino.');
+                    self::descontarExistenciaSalidaEnOrigen((int) $id, (int) $row->id_estacion_origen);
                     $now = date('Y-m-d H:i:s');
                     DB::table('op_refacciones_salidas')->where('id', (int) $row->salida_id)->update([
                         'estatus' => 1, 'firma_elabora' => $signaturePath, 'nombre_elabora' => $userName, 'fecha_firma_elabora' => $now,
@@ -801,18 +840,7 @@ class RefaccionesService
 
                 $detail = DB::table('op_refacciones_movimientos_detalle')->where('id_movimiento', (int) $id)->lockForUpdate()->first();
                 if (!$detail) throw new InvalidArgumentException('La salida no tiene una refacción asociada.');
-                // Las salidas anteriores a este cambio ya pudieron descontar el origen
-                // al crearse; la marca evita descontarlas dos veces al finalizar.
-                if (!(bool) $row->stock_origen_aplicado) {
-                    $costLayers = self::cambiarExistencia((int) $detail->id_refaccion, (int) $row->id_estacion_origen, -(float) $detail->cantidad);
-                    self::guardarCapasConsumidas((int) $detail->id, $costLayers);
-                    $costoSalida = self::costoPromedioCapas($costLayers, (float) $detail->cantidad);
-                    DB::table('op_refacciones_movimientos_detalle')->where('id', (int) $detail->id)->update(['costo_unitario' => $costoSalida]);
-                    $detail->costo_unitario = $costoSalida;
-                } else {
-                    $costLayers = [];
-                }
-                self::cambiarExistencia((int) $detail->id_refaccion, (int) $row->id_estacion_destino, (float) $detail->cantidad, (float) $detail->costo_unitario, $costLayers ?: null);
+                self::descontarExistenciaSalidaEnOrigen((int) $id, (int) $row->id_estacion_origen);
                 $now = date('Y-m-d H:i:s');
                 DB::table('op_refacciones_movimientos')->where('id', (int) $id)->update(['fecha' => $now]);
                 DB::table('op_refacciones_salidas')->where('id', (int) $row->salida_id)->update([
@@ -866,6 +894,9 @@ class RefaccionesService
                     ->where('m.id', (int) $id)->where('m.tipo', 'traspaso')->lockForUpdate()
                     ->first(['s.id as salida_id', 's.estatus', 's.estado_salida', 'm.id_estacion_origen', 'm.id_estacion_destino']);
                 if (!$row) throw new InvalidArgumentException('La salida ya no está disponible.');
+                if (DB::table('op_pedido_materiales_refacciones')->where('id_movimiento_salida', (int) $id)->exists()) {
+                    throw new InvalidArgumentException('Las salidas de órdenes de mantenimiento no tienen retorno.');
+                }
                 if ((int) $row->id_estacion_origen === self::getWarehouseLocationId()) throw new InvalidArgumentException('Las salidas provenientes de Almacen no tienen retorno.');
                 if (mb_strtolower(trim((string) $row->estado_salida)) === 'devuelto') {
                     throw new InvalidArgumentException('El retorno ya fue procesado y no se puede editar.');
@@ -917,6 +948,10 @@ class RefaccionesService
 
         $dueIds = DB::table('op_refacciones_salidas as s')
             ->join('op_refacciones_movimientos as m', 'm.id', '=', 's.id_movimiento')
+            ->whereNotExists(static function ($query): void {
+                $query->select(DB::raw('1'))->from('op_pedido_materiales_refacciones as pr')
+                    ->whereColumn('pr.id_movimiento_salida', 'm.id');
+            })
             ->where('m.tipo', 'traspaso')->where('m.estado', 'confirmado')
             ->where('m.id_estacion_origen', '>', 0)
             ->where('m.id_estacion_origen', '<>', $warehouseId)
@@ -941,7 +976,7 @@ class RefaccionesService
         ]);
     }
 
-    /** Registra la entrada y mueve el inventario cuando el retorno ya es exigible. */
+    /** Registra el retorno como reposición del origen, sin sumar existencia al destino. */
     private static function procesarRetornoEnTransaccion(int $movementId, string $today): bool
     {
         $warehouseId = self::getWarehouseLocationId();
@@ -980,8 +1015,7 @@ class RefaccionesService
                 'cantidad' => (float) $detail->cantidad,
                 'costo_unitario' => (float) $detail->costo_unitario,
             ]);
-            $costLayers = self::cambiarExistencia((int) $detail->id_refaccion, (int) $row->id_estacion_destino, -(float) $detail->cantidad);
-            self::cambiarExistencia((int) $detail->id_refaccion, (int) $row->id_estacion_origen, (float) $detail->cantidad, (float) $detail->costo_unitario, $costLayers);
+            self::cambiarExistencia((int) $detail->id_refaccion, (int) $row->id_estacion_origen, (float) $detail->cantidad, (float) $detail->costo_unitario);
         }
         DB::table('op_refacciones_salidas')->where('id', (int) $row->salida_id)->update(['estado_salida' => 'Devuelto']);
         return true;
@@ -1042,19 +1076,50 @@ class RefaccionesService
     {
         if (!self::validarImagenFirma($dataUrl)) throw new InvalidArgumentException('La firma no tiene un formato válido.');
         $binary = base64_decode(substr($dataUrl, strpos($dataUrl, ',') + 1), true);
-        $relative = 'uploads/refacciones-firmas/' . bin2hex(random_bytes(18)) . '.png';
-        $directory = PUBLIC_PATH . '/uploads/refacciones-firmas';
+        $relative = 'uploads/archivos/refacciones-firmas/' . bin2hex(random_bytes(18)) . '.png';
+        $directory = PUBLIC_PATH . '/uploads/archivos/refacciones-firmas';
         if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) throw new \RuntimeException('No se pudo preparar el almacenamiento de firmas.');
         if (file_put_contents(PUBLIC_PATH . '/' . $relative, $binary, LOCK_EX) === false) throw new \RuntimeException('No se pudo guardar la firma.');
         return $relative;
     }
 
+    /** Ruta física de una firma conocida, en las carpetas actuales o en la ubicación anterior del módulo. */
+    public static function rutaFirmaSalida(?string $storedPath): ?string
+    {
+        $normalized = str_replace('\\', '/', trim((string) $storedPath));
+        $filename = basename($normalized);
+        if ($filename === '' || !preg_match('/^[A-Za-z0-9._-]+\.png$/i', $filename)) return null;
+
+        $publicRoot = realpath(PUBLIC_PATH);
+        if ($publicRoot === false) return null;
+        foreach (['uploads/archivos/refacciones-firmas', 'uploads/refacciones-firmas'] as $relativeDirectory) {
+            $base = realpath($publicRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeDirectory));
+            $file = $base !== false ? realpath($base . DIRECTORY_SEPARATOR . $filename) : false;
+            if ($base !== false && $file !== false && is_file($file)
+                && str_starts_with($file, $base . DIRECTORY_SEPARATOR)
+                && str_starts_with($file, $publicRoot . DIRECTORY_SEPARATOR)) {
+                return $file;
+            }
+        }
+        return null;
+    }
+
+    /** URL autenticada de visualización inline para el modal y la pantalla de firmas. */
+    public static function urlFirmaSalida(?string $storedPath): ?string
+    {
+        $file = self::rutaFirmaSalida($storedPath);
+        if ($file === null) return null;
+        return '/download?' . http_build_query([
+            'tipo' => 'refacciones-firmas',
+            'file' => basename($file),
+            'view' => '1',
+        ]);
+    }
+
     private static function eliminarArchivoFirmaSalida(string $relative): void
     {
-        if (str_starts_with($relative, 'uploads/refacciones-firmas/')) {
-            $path = PUBLIC_PATH . '/' . $relative;
-            if (is_file($path)) @unlink($path);
-        }
+        $path = self::rutaFirmaSalida($relative);
+        if ($path !== null) @unlink($path);
     }
 
     public static function getCalendario(?string $inicio = null, ?string $fin = null): array
@@ -1092,6 +1157,23 @@ class RefaccionesService
         $query = DB::table('op_refacciones_calendario')->where('estado', 'pendiente');
         self::filtrarCalendarioPorUbicaciones($query, $ubicaciones);
         return (int) $query->count();
+    }
+
+    /** Salidas sin finalizar dentro del mismo alcance que ve el usuario en el listado. */
+    public static function contarSalidasNoFinalizadasSidebar(): int
+    {
+        $ubicaciones = self::ubicacionesConsulta();
+        if ($ubicaciones === []) return 0;
+
+        return (int) DB::table('op_refacciones_salidas as s')
+            ->join('op_refacciones_movimientos as m', 'm.id', '=', 's.id_movimiento')
+            ->where('m.tipo', 'traspaso')->where('m.estado', 'confirmado')
+            ->whereIn('s.estatus', [0, 1])
+            ->where(static function ($query) use ($ubicaciones): void {
+                $query->whereIn('m.id_estacion_origen', $ubicaciones)
+                    ->orWhereIn('m.id_estacion_destino', $ubicaciones);
+            })
+            ->count();
     }
 
     /** Eventos del día visibles dentro del alcance del módulo. */
@@ -1283,7 +1365,7 @@ class RefaccionesService
         if ($sku === '' || mb_strlen($sku) > 60 || $nombre === '' || mb_strlen($nombre) > 250
             || $dimension === '' || mb_strlen($dimension) > 100 || $colores === '' || mb_strlen($colores) > 250
             || !in_array($acabado, ['Mate', 'Brillante', 'Reflejante'], true)
-            || !in_array($reproduccion, ['Estireno', 'Acrílico', 'Trovisel', 'Imán'], true)) {
+            || !in_array($reproduccion, ['Estireno', 'Acrílico', 'Trovisel', 'Imán', 'Calcomanía'], true)) {
             return self::respuesta(false, 'Completa los datos de la calcomanía y selecciona un acabado y reproducción válidos.', 422);
         }
 
@@ -1365,7 +1447,7 @@ class RefaccionesService
         if ($sku === '' || mb_strlen($sku) > 60 || $nombre === '' || mb_strlen($nombre) > 250
             || $dimension === '' || mb_strlen($dimension) > 100 || $colores === '' || mb_strlen($colores) > 250
             || !in_array($acabado, ['Mate', 'Brillante', 'Reflejante'], true)
-            || !in_array($reproduccion, ['Estireno', 'Acrílico', 'Trovisel', 'Imán'], true)) {
+            || !in_array($reproduccion, ['Estireno', 'Acrílico', 'Trovisel', 'Imán', 'Calcomanía'], true)) {
             return self::respuesta(false, 'Completa los datos de la calcomanía y selecciona un acabado y reproducción válidos.', 422);
         }
 
@@ -2148,17 +2230,17 @@ class RefaccionesService
     {
         $stock = DB::table('op_refacciones_existencias')->where('id_refaccion', $idRefaccion)
             ->where('id_estacion', $idEstacion)->lockForUpdate()->first();
-        $existenciaAnterior = (float) ($stock->existencia ?? 0);
+        $capasDisponibles = DB::table('op_refacciones_existencias_lotes')->where('id_refaccion', $idRefaccion)
+            ->where('id_estacion', $idEstacion)->where('existencia', '>', 0)
+            ->orderBy('id')->lockForUpdate()->get();
+        $existenciaAnterior = round((float) $capasDisponibles->sum(static fn ($layer): float => (float) $layer->existencia), 2);
         $nuevoSaldo = round($existenciaAnterior + $delta, 2);
         if ($nuevoSaldo < 0) throw new InvalidArgumentException('La cantidad supera la existencia disponible.');
 
         $consumidos = [];
         if ($delta < 0) {
             $restante = round(abs($delta), 2);
-            $layers = DB::table('op_refacciones_existencias_lotes')->where('id_refaccion', $idRefaccion)
-                ->where('id_estacion', $idEstacion)->where('existencia', '>', 0)
-                ->orderBy('id')->lockForUpdate()->get();
-            foreach ($layers as $layer) {
+            foreach ($capasDisponibles as $layer) {
                 if ($restante <= 0.000001) break;
                 $tomado = min($restante, (float) $layer->existencia);
                 $saldoLote = round((float) $layer->existencia - $tomado, 2);
