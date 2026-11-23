@@ -3,6 +3,14 @@ const { estacion, solicitud, puesto } = document.getElementById('container').dat
 cargarTimeline(estacion, solicitud, Number(puesto));
 });
 
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+}[char]));
+
 const pasos = {
 1: 'La solicitud pasó a En proceso',
 2: 'La solicitud quedó Finalizada',
@@ -44,6 +52,8 @@ contenedor.innerHTML = '';
 if (!archivo) return;
 
 const nombre = archivo.split('/').pop();
+const archivoSeguro = escapeHtml(archivo);
+const nombreSeguro = escapeHtml(nombre);
 
 contenedor.innerHTML = `
 <div class="files-chat mb-4">
@@ -53,7 +63,8 @@ Descargar archivo:
 
 <a 
 class="hstack gap-3 file-chat-hover justify-content-between text-nowrap mb-2 pointer"
-@click="download('solicitud-tarjetas','${archivo}')">
+data-archivo="${archivoSeguro}"
+@click="download('solicitud-tarjetas',$el.dataset.archivo)">
 
 <div class="d-flex align-items-center gap-3">
 <div class="rounded-1 text-bg-light p-2">
@@ -62,7 +73,7 @@ class="hstack gap-3 file-chat-hover justify-content-between text-nowrap mb-2 poi
 
 <div>
 <h6 class="fw-semibold mb-0">
-${nombre}
+${nombreSeguro}
 </h6>
 </div>
 </div>

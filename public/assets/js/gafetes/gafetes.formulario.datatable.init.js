@@ -74,7 +74,7 @@ return `
 <a 
 class="dropdown-item pointer d-flex align-items-center gap-2 ${noDesc ? disabled : ''}"
 ${noDesc ? '' : `data-archivo="${archivo}" @click="download('solicitud-gafetes',$el.dataset.archivo)"`}>
-<i class="ti ti-file-download fs-5"></i> Descargar
+<i class="ti ${noDesc ? 'ti-file-off' : 'ti-file-download'} fs-5"></i> Descargar
 </a>
 </li>
 

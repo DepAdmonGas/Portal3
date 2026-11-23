@@ -38,7 +38,7 @@ this.errors.foto = !this.foto;
 if (this.errors.foto) this.errorFoto = 'Selecciona un archivo. Formatos válidos: JPG, JPEG, PNG, GIF y PDF (máximo 5 MB).';
 
 if (this.errors.clave || this.errors.nombre_g || this.errors.foto) {
-this.notify('error', 'Completa los campos obligatorios');
+this.notify('error', 'Completa los campos obligatorios.');
 return false;
 }
 
@@ -82,6 +82,12 @@ url: '/solicitud-gafetes/create-reporte',
 data: formData,
 table: '#table-gafetes'
 });
+
+if (res && !res.success) {
+this.errors.clave = Boolean(res.errors?.clave);
+this.errors.nombre_g = Boolean(res.errors?.nombre_g);
+this.errors.foto = Boolean(res.errors?.foto);
+}
 
 if (res && !res.success && /formatos válidos/i.test(res.message || '')) {
 this.errors.foto = true;

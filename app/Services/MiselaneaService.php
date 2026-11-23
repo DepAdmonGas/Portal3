@@ -60,6 +60,9 @@ class MiselaneaService
     /** Carpeta de archivos (relativa a la raíz del proyecto). */
     public const UPLOAD_DIR = 'public/uploads/archivos/miselanea/';
 
+    /** Carpeta común de destino para archivos importados del sistema anterior. */
+    private const MIGRATED_UPLOAD_DIR = __DIR__ . '/../../public/uploads/archivos/';
+
     /** Tipo de descarga en el DownloadController. */
     public const TIPO_DESCARGA = 'miselanea';
 
@@ -593,6 +596,7 @@ class MiselaneaService
         }
 
         $archivo = (string)$registro->archivo;
+        $rutaArchivo = self::resolverRutaArchivo($archivo);
 
         try {
             $registro->delete();
@@ -601,8 +605,8 @@ class MiselaneaService
         }
 
         // El módulo anterior dejaba huérfanos; aquí se limpia el físico.
-        if ($archivo !== '') {
-            @unlink(self::getUploadDir() . $archivo);
+        if ($rutaArchivo !== null) {
+            @unlink($rutaArchivo);
         }
 
         return ['success' => true, 'message' => 'Archivo eliminado exitosamente.'];
@@ -619,7 +623,25 @@ class MiselaneaService
 
     private static function existeArchivo(string $archivo): bool
     {
-        return $archivo !== '' && is_file(self::getUploadDir() . $archivo);
+        return self::resolverRutaArchivo($archivo) !== null;
+    }
+
+    /** Busca archivos nuevos y archivos importados en la carpeta común. */
+    private static function resolverRutaArchivo(string $archivo): ?string
+    {
+        $nombre = basename(str_replace('\\', '/', trim($archivo)));
+        if ($nombre === '' || $nombre === '.') {
+            return null;
+        }
+
+        foreach ([self::getUploadDir(), self::MIGRATED_UPLOAD_DIR] as $directorio) {
+            $ruta = $directorio . $nombre;
+            if (is_file($ruta) && is_readable($ruta)) {
+                return $ruta;
+            }
+        }
+
+        return null;
     }
 
     /**

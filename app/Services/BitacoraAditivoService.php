@@ -92,6 +92,32 @@ class BitacoraAditivoService
         return BitacoraReporte::where('id_estacion', $idEstacion)->get();
     }
 
+    /** Busca reportes nuevos y adjuntos importados en la carpeta común heredada. */
+    public static function resolverDocumentoReporte(?string $documento): ?string
+    {
+        $documento = trim(str_replace('\\', '/', (string) $documento));
+        if ($documento === '' || str_contains($documento, "\0")) return null;
+
+        $nombre = basename($documento);
+        if ($nombre === '' || $nombre === '.' || $nombre === '..') return null;
+
+        $directorios = [
+            self::directorioReportes(),
+            dirname(__DIR__, 2) . '/public/uploads/archivos/',
+        ];
+
+        foreach ($directorios as $directorio) {
+            $baseReal = realpath($directorio);
+            $archivoReal = realpath(rtrim($directorio, '/\\') . DIRECTORY_SEPARATOR . $nombre);
+            if ($baseReal && $archivoReal && is_file($archivoReal)
+                && str_starts_with($archivoReal, rtrim($baseReal, '/\\') . DIRECTORY_SEPARATOR)) {
+                return $archivoReal;
+            }
+        }
+
+        return null;
+    }
+
     public static function getInventarioHist(int $idEstacion): Collection
     {
         return InventarioAditivoHist::where('id_estacion', $idEstacion)->get();
@@ -240,6 +266,16 @@ class BitacoraAditivoService
             return ['success' => false, 'message' => 'La fecha es obligatoria'];
         }
 
+        if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return ['success' => false, 'message' => 'El documento es obligatorio'];
+        }
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+            || empty($file['tmp_name'])
+            || !is_uploaded_file((string) $file['tmp_name'])
+            || (int) ($file['size'] ?? 0) < 1) {
+            return ['success' => false, 'message' => 'El documento no se recibió correctamente'];
+        }
+
         $carpeta = self::directorioReportes();
 
         if (!is_dir($carpeta)) {
@@ -280,9 +316,6 @@ class BitacoraAditivoService
 
     public static function eliminarReporte(int $id): array
     {
-        $rutaBase = self::directorioReportes();
-        $rutaLegada = dirname(__DIR__, 2) . '/public/uploads/archivos/';
-
         Capsule::beginTransaction();
 
         try {
@@ -292,12 +325,9 @@ class BitacoraAditivoService
                 throw new \Exception('Registro no encontrado');
             }
 
-            $rutaArchivo = $rutaBase . basename((string) $reporte->documento);
-            if ($reporte->documento && !is_file($rutaArchivo)) {
-                $rutaArchivo = $rutaLegada . basename((string) $reporte->documento);
-            }
+            $rutaArchivo = self::resolverDocumentoReporte((string) $reporte->documento);
 
-            if ($reporte->documento && file_exists($rutaArchivo)) {
+            if ($rutaArchivo !== null && is_file($rutaArchivo)) {
                 unlink($rutaArchivo);
             }
 

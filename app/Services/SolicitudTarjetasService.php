@@ -63,6 +63,64 @@ final class SolicitudTarjetasService
         return (self::esCaptura() || self::esFinalizacion()) && self::moduloPermite('descargar');
     }
 
+    public static function directorioArchivos(): string
+    {
+        return dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR
+            . 'uploads' . DIRECTORY_SEPARATOR . 'archivos' . DIRECTORY_SEPARATOR
+            . 'solicitud-tarjetas' . DIRECTORY_SEPARATOR;
+    }
+
+    /** @return array<int, string> */
+    public static function directoriosArchivos(): array
+    {
+        $raiz = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR
+            . 'uploads' . DIRECTORY_SEPARATOR . 'archivos' . DIRECTORY_SEPARATOR;
+
+        return [
+            self::directorioArchivos(),
+            $raiz . 'servicios' . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR,
+            $raiz,
+        ];
+    }
+
+    public static function resolverArchivo(string $nombre): ?string
+    {
+        $nombre = trim(str_replace('\\', '/', $nombre));
+        $nombreRelativo = ltrim($nombre, '/');
+        if ($nombreRelativo === ''
+            || str_contains($nombreRelativo, "\0")
+            || preg_match('#(^|/)\.{1,2}(/|$)#', $nombreRelativo) === 1) {
+            return null;
+        }
+
+        $raiz = realpath(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR
+            . 'uploads' . DIRECTORY_SEPARATOR . 'archivos');
+        if ($raiz === false) {
+            return null;
+        }
+
+        $candidatos = [
+            $raiz . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $nombreRelativo),
+        ];
+        $archivo = basename($nombreRelativo);
+        foreach (self::directoriosArchivos() as $directorio) {
+            $base = realpath($directorio);
+            if ($base !== false) {
+                $candidatos[] = $base . DIRECTORY_SEPARATOR . $archivo;
+            }
+        }
+
+        $prefijoRaiz = rtrim($raiz, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        foreach ($candidatos as $candidato) {
+            $ruta = realpath($candidato);
+            if ($ruta !== false && is_file($ruta) && str_starts_with($ruta, $prefijoRaiz)) {
+                return $ruta;
+            }
+        }
+
+        return null;
+    }
+
     public static function contarPendientesPorEstacion(): array
     {
         $stations = ModuleStationService::getAvailableStations('solicitud-tarjetas');

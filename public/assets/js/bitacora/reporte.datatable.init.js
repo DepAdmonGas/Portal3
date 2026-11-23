@@ -91,14 +91,21 @@ searchable: false,
 className: 'text-center align-middle',
 render: function (data, type, row) {
 const disabled = row.estado === 0;
-const noDesc = !permisos.descargar || disabled;
+const documentoDisponible = Boolean(row.documento) && row.documento_disponible === true;
+const noDesc = !permisos.descargar || disabled || !documentoDisponible;
+const iconoDescarga = documentoDisponible ? 'ti-file-download' : 'ti-file-off';
+const textoDescarga = documentoDisponible ? 'Descargar' : 'Documento no disponible';
+const archivoAtributo = String(row.documento || '').replace(/[&"<>]/g, (caracter) => ({
+    '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;'
+}[caracter]));
+const accionDescarga = noDesc ? '' : ' @click="download(\'bitacora-aditivo\', $el.dataset.file)"';
 if (esImportacion()) {
 return [
 '<div x-data="actions()" class="d-flex gap-1 justify-content-center">',
 '<div class="dropdown dropstart">',
 '<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
 '<ul class="dropdown-menu">',
-'<li><a class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
+'<li><a class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '" data-file="' + archivoAtributo + '"' + accionDescarga + '><i class="ti ' + iconoDescarga + ' fs-6"></i> ' + textoDescarga + '</a></li>',
 '</ul></div></div>'
 ].join('');
 }
@@ -108,7 +115,7 @@ return [
 '<div class="dropdown dropstart">',
 '<a class="pointer" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical fs-6"></i></a>',
 '<ul class="dropdown-menu">',
-'<li><a class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '"' + (noDesc ? '' : ' @click="download(\'bitacora-aditivo\',\'' + row.documento + '\')"') + '><i class="ti ti-file-download"></i> Descargar</a></li>',
+'<li><a class="dropdown-item pointer ' + (noDesc ? 'disabled' : '') + '" data-file="' + archivoAtributo + '"' + accionDescarga + '><i class="ti ' + iconoDescarga + ' fs-6"></i> ' + textoDescarga + '</a></li>',
 '<li><a class="dropdown-item pointer ' + (noDelete ? 'disabled' : '') + '"' + (noDelete ? '' : ' @click=\'async () => { const res = await deleteAction({ url: "' + getBaseUrl() + '/delete-reporte", id: ' + row.id + ', name: "' + row.id + '", table: "#table-aditivo-reporte" }); }\'') + '><i class="ti ti-trash"></i> Eliminar</a></li>',
 '</ul></div></div>'
 ].join('');

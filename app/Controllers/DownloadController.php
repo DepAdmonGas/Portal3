@@ -33,8 +33,8 @@ class DownloadController
             'pedido-articulos-limpieza'             => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'bitacora-aditivo'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/bitacora-aditivo/',
             'analisis-riesgo'                      => dirname(__DIR__, 2) . '/public/uploads/archivos/analisis-riesgo/',
-            'solicitud-gafetes'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-gafetes/',
-            'solicitud-tarjetas'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/',
+            'solicitud-gafetes'                    => [ dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-gafetes/', dirname(__DIR__, 2) . '/public/uploads/archivos/gafetes-solicitados/', dirname(__DIR__, 2) . '/public/uploads/archivos/servicios/imagenes-gafetes/', dirname(__DIR__, 2) . '/public/uploads/archivos/Imagen/', dirname(__DIR__, 2) . '/public/uploads/archivos/', ],
+            'solicitud-tarjetas'                   => [ dirname(__DIR__, 2) . '/public/uploads/archivos/solicitud-tarjetas/', dirname(__DIR__, 2) . '/public/uploads/archivos/servicios/imagenes/', dirname(__DIR__, 2) . '/public/uploads/archivos/', ],
             'procedimientos-actividades-tecnicas'  => dirname(__DIR__, 2) . '/public/uploads/archivos/actividades-tecnicas/',
             'procedimientos-visita-estacion'       => dirname(__DIR__, 2) . '/public/uploads/archivos/visita-estacion/',
             'empresa'                              => dirname(__DIR__, 2) . '/public/uploads/archivos/empresa/',
@@ -52,7 +52,7 @@ class DownloadController
             'ventas-firmas-public-imgs-legado'       => dirname(__DIR__, 2) . '/public/imgs/firma/',
             'control-volumetrico'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'aceites-documentos'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/',
-            'aceites-facturas'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/',
+            'aceites-facturas'                     => [ dirname(__DIR__, 2) . '/public/uploads/archivos/aceites-facturas/', dirname(__DIR__, 2) . '/public/uploads/archivos/', ],
             'aceites-diferencias'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'monedero-documentos'                  => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'monedero-lista-documentos'            => dirname(__DIR__, 2) . '/public/uploads/archivos/resumen-monederos-documentos/',
@@ -121,7 +121,7 @@ class DownloadController
             'inventarios-diarios'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'analisis-compra'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'proveedores'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/proveedores/',
-            'camioneta-saveiro'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/camioneta-saveiro/',
+            'camioneta-saveiro'                    => [ dirname(__DIR__, 2) . '/public/uploads/archivos/camioneta-saveiro/', dirname(__DIR__, 2) . '/public/uploads/archivos/', ],
             'pedido-aditivo'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/',
             'recibos-nomina'                       => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/acuses/',
             'recibos-nomina-firma'                 => dirname(__DIR__, 2) . '/public/uploads/archivos/recibos-nomina-v2/firmados/',
@@ -145,7 +145,7 @@ class DownloadController
             'constancia-fiscal'                     => dirname(__DIR__, 2) . '/public/uploads/archivos/constancia-situacion-es/',
             'incidencias'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/incidencias/',
             'comunicados'                           => dirname(__DIR__, 2) . '/public/uploads/archivos/comunicados/',
-            'miselanea'                             => dirname(__DIR__, 2) . '/public/uploads/archivos/miselanea/',
+            'miselanea'                             => [ dirname(__DIR__, 2) . '/public/uploads/archivos/miselanea/', dirname(__DIR__, 2) . '/public/uploads/archivos/', ],
             'soporte-actividades'                   => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/actividades/',
             'soporte-evidencias'                    => dirname(__DIR__, 2) . '/public/uploads/archivos/soporte/evidencias/',
             'procedimientos-modulos'                => dirname(__DIR__, 2) . '/public/uploads/archivos/procedimientos-modulos/',
@@ -201,9 +201,40 @@ class DownloadController
         $realPath = realpath($rutaCompleta);
         $basePath = realpath($baseDirectorio);
 
-        if (!$realPath || !$basePath || strpos($realPath, $basePath) !== 0) {
+        $basePathPrefix = $basePath ? rtrim($basePath, '/\\') . DIRECTORY_SEPARATOR : '';
+        if (!$realPath || !$basePath || !is_file($realPath) || !is_readable($realPath)
+            || $basePathPrefix === '' || !str_starts_with($realPath, $basePathPrefix)) {
             header("Location: /404");
             exit;
+        }
+
+        // Los archivos Saveiro de la versión anterior se guardaban sin extensión.
+        // Inferirla desde el contenido físico para que el archivo descargado abra correctamente.
+        $mimeDetectado = null;
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if ($tipo === 'camioneta-saveiro' && $extension === '') {
+            $mimeDetectado = (new \finfo(FILEINFO_MIME_TYPE))->file($realPath) ?: null;
+            if ($mimeDetectado === 'application/octet-stream') {
+                $handle = @fopen($realPath, 'rb');
+                $firma = $handle !== false ? fread($handle, 5) : '';
+                if ($handle !== false) fclose($handle);
+                if ($firma === '%PDF-') $mimeDetectado = 'application/pdf';
+            }
+            $extensionInferida = [
+                'application/pdf' => 'pdf',
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+                'image/webp' => 'webp',
+                'application/msword' => 'doc',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                'application/vnd.ms-excel' => 'xls',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                'application/vnd.ms-powerpoint' => 'ppt',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+                'application/zip' => 'zip',
+            ][$mimeDetectado] ?? '';
+            if ($extensionInferida !== '') $file .= '.' . $extensionInferida;
         }
 
         // Sanitizar nombre de archivo para Content-Disposition
@@ -222,8 +253,9 @@ class DownloadController
                 'gif'  => 'image/gif',
                 'webp' => 'image/webp',
             ];
-            if (isset($contentTypes[$ext])) {
-                header('Content-Type: ' . $contentTypes[$ext]);
+            $contentType = $contentTypes[$ext] ?? ($tipo === 'camioneta-saveiro' ? $mimeDetectado : null);
+            if ($contentType !== null) {
+                header('Content-Type: ' . $contentType);
                 header('Content-Disposition: inline; filename="' . $safeFilename . '"');
             } else {
                 header('Content-Type: application/octet-stream');
@@ -232,7 +264,7 @@ class DownloadController
         } else {
             // FORZAR DESCARGA
             header('Content-Description: File Transfer');
-            header('Content-Type: application/octet-stream');
+            header('Content-Type: ' . ($tipo === 'camioneta-saveiro' && $mimeDetectado !== null ? $mimeDetectado : 'application/octet-stream'));
             header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
             header('Pragma: public');
         }
