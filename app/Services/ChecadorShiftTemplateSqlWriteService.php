@@ -40,12 +40,54 @@ final class ChecadorShiftTemplateSqlWriteService
                 ->getShiftTemplateVersion($actor, $key, $version, $workplaceId, $id, 'STATION', $workplaceId);
     }
 
-    /** Keep M04 writes in local development until target cutover/preflight is independently approved. */
+    /** Fedora's owner-approved local exception is bound to the actual local bd_admongas connection. */
     public static function writeGateOpen(): bool
     {
-        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
-        return in_array($environment, ['dev', 'development', 'local'], true)
-            && !ChecadorDailyReadService::demoModeEnabled();
+        if (ChecadorDailyReadService::demoModeEnabled()) return false;
+
+        try {
+            $connection = Capsule::connection(self::CONNECTION_NAME);
+            $identity = $connection->selectOne('SELECT DATABASE() AS database_name');
+            $config = $connection->getConfig();
+            if (self::isLocalDevelopmentTarget(
+                (string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: ''),
+                (string) ($config['driver'] ?? ''),
+                (string) ($config['host'] ?? ''),
+                (string) ($config['database'] ?? ''),
+                (string) ($identity->database_name ?? '')
+            )) {
+                return true;
+            }
+        } catch (Throwable) {
+            // If the local target cannot be positively identified, use the normal closed-by-default gate.
+        }
+
+        foreach ([
+            'CHECADOR_M04_SQL_WRITER_ENABLED',
+            'CHECADOR_M04_API_WRITER_CLOSED',
+            'CHECADOR_M04_SQL_GRANTS_VERIFIED',
+            'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
+        ] as $gate) {
+            $value = strtolower(trim((string) ($_ENV[$gate] ?? getenv($gate) ?: '')));
+            if (!in_array($value, ['1', 'true', 'yes', 'on'], true)) return false;
+        }
+
+        return true;
+    }
+
+    /** Local exception requires dev APP_ENV plus the exact local MySQL database identity. */
+    private static function isLocalDevelopmentTarget(
+        string $environment,
+        string $driver,
+        string $host,
+        string $configuredDatabase,
+        string $actualDatabase
+    ): bool {
+        return in_array(strtolower(trim($environment)), ['dev', 'development', 'local'], true)
+            && strtolower(trim($driver)) === 'mysql'
+            && in_array(strtolower(trim($host)), ['localhost', '127.0.0.1', '::1'], true)
+            && $configuredDatabase === 'bd_admongas'
+            && $actualDatabase === 'bd_admongas';
     }
 
     /** UI and handlers require a live schema and effective-grant preflight. */
@@ -309,10 +351,18 @@ final class ChecadorShiftTemplateSqlWriteService
             );
             $databaseName = trim((string) ($identity->database_name ?? ''));
             $grantee = trim((string) ($identity->grantee ?? ''));
+            $config = $connection->getConfig();
+            $localDevelopmentException = self::isLocalDevelopmentTarget(
+                (string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: ''),
+                (string) ($config['driver'] ?? ''),
+                (string) ($config['host'] ?? ''),
+                (string) ($config['database'] ?? ''),
+                $databaseName
+            );
             $activeRole = strtoupper(trim((string) ($connection->selectOne('SELECT CURRENT_ROLE() AS role_name')->role_name ?? 'NONE')));
             if ($databaseName === '' || $grantee === ''
-                || ($activeRole !== '' && $activeRole !== 'NONE')
-                || !self::hasRequiredM04Grants($connection->select(
+                || (!$localDevelopmentException && $activeRole !== '' && $activeRole !== 'NONE')
+                || (!$localDevelopmentException && !self::hasRequiredM04Grants($connection->select(
                     "SELECT 'GLOBAL' AS grant_scope, NULL AS table_schema, NULL AS table_name, PRIVILEGE_TYPE AS privilege_type FROM information_schema.USER_PRIVILEGES WHERE GRANTEE = ?
                     UNION ALL
                     SELECT 'SCHEMA', TABLE_SCHEMA, NULL, PRIVILEGE_TYPE FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ?
@@ -321,7 +371,7 @@ final class ChecadorShiftTemplateSqlWriteService
                     [$grantee, $grantee, $grantee,
                         'op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
                         'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log']
-                ), $databaseName)) return false;
+                ), $databaseName, $localDevelopmentException))) return false;
             $tables = ['op_rh_localidades', 'op_rh_v2_turnos_plantillas', 'op_rh_v2_turnos_segmentos',
                 'op_rh_v2_shift_template_station_lineage', 'op_rh_v2_turnos_audit_log'];
             foreach ($tables as $table) {
@@ -383,7 +433,7 @@ final class ChecadorShiftTemplateSqlWriteService
     }
 
     /** Validate required effective operations; extra grants are reported as risk, not mistaken for missing access. */
-    private static function hasRequiredM04Grants(array $grantRows, string $databaseName): bool
+    private static function hasRequiredM04Grants(array $grantRows, string $databaseName, bool $allowBroadPrivileges = false): bool
     {
         $schemaMatches = static function (string $candidate) use ($databaseName): bool {
             $normalized = '';
@@ -399,16 +449,32 @@ final class ChecadorShiftTemplateSqlWriteService
             }
             return hash_equals($databaseName, $normalized);
         };
-        $has = static function (string $table, string $requiredPrivilege) use ($grantRows, $schemaMatches): bool {
+        $appliesTo = static function (object $row, string $table) use ($schemaMatches): bool {
+            $scope = strtoupper((string) ($row->grant_scope ?? ''));
+            $schema = (string) ($row->table_schema ?? '');
+            $tableName = (string) ($row->table_name ?? '');
+            return $scope === 'GLOBAL'
+                || ($scope === 'SCHEMA' && $schemaMatches($schema))
+                || ($scope === 'TABLE' && $schemaMatches($schema) && $tableName === $table);
+        };
+        $immutableTables = [
+            'op_rh_v2_turnos_plantillas',
+            'op_rh_v2_turnos_segmentos',
+            'op_rh_v2_shift_template_station_lineage',
+            'op_rh_v2_turnos_audit_log',
+        ];
+        foreach ($immutableTables as $table) {
             foreach ($grantRows as $row) {
-                $scope = strtoupper((string) ($row->grant_scope ?? ''));
-                $schema = (string) ($row->table_schema ?? '');
-                $tableName = (string) ($row->table_name ?? '');
+                if (!$appliesTo($row, $table)) continue;
                 $privilege = strtoupper(trim((string) ($row->privilege_type ?? '')));
-                $applies = $scope === 'GLOBAL'
-                    || ($scope === 'SCHEMA' && $schemaMatches($schema))
-                    || ($scope === 'TABLE' && $schemaMatches($schema) && $tableName === $table);
-                if ($applies && ($privilege === $requiredPrivilege || in_array($privilege, ['ALL', 'ALL PRIVILEGES'], true))) {
+                if (!$allowBroadPrivileges && in_array($privilege, ['UPDATE', 'DELETE', 'ALL', 'ALL PRIVILEGES'], true)) return false;
+            }
+        }
+
+        $has = static function (string $table, string $requiredPrivilege) use ($grantRows, $appliesTo): bool {
+            foreach ($grantRows as $row) {
+                $privilege = strtoupper(trim((string) ($row->privilege_type ?? '')));
+                if ($appliesTo($row, $table) && ($privilege === $requiredPrivilege || in_array($privilege, ['ALL', 'ALL PRIVILEGES'], true))) {
                     return true;
                 }
             }

@@ -262,10 +262,16 @@ $assert(!($rollback['ok'] ?? false) && $before === $after,
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
 $controllerM04 = substr($controllerSource, strpos($controllerSource, 'public function saveConfigurationScheduleTemplate'),
     strpos($controllerSource, 'private static function normalizeOriginalScheduleTemplateSegments') - strpos($controllerSource, 'public function saveConfigurationScheduleTemplate'));
+$saveMethodStart = strpos($controllerSource, 'private function saveScheduleTemplateJson(');
+$saveMethodEnd = strpos($controllerSource, 'private function ', ($saveMethodStart ?: 0) + 1);
+$saveM04 = $saveMethodStart === false ? '' : substr($controllerSource, $saveMethodStart, $saveMethodEnd === false ? null : $saveMethodEnd - $saveMethodStart);
 $readServiceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlReadService.php') ?: '';
 $writeServiceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlWriteService.php') ?: '';
 $jsSource = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js') ?: '';
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php') ?: '';
+$renderMethodStart = strpos($controllerSource, 'private function renderScheduleHistory(');
+$renderMethodEnd = strpos($controllerSource, 'private function ', ($renderMethodStart ?: 0) + 1);
+$renderM04 = $renderMethodStart === false ? '' : substr($controllerSource, $renderMethodStart, $renderMethodEnd === false ? null : $renderMethodEnd - $renderMethodStart);
 $assert(str_contains($controllerM04, 'ChecadorShiftTemplateSqlWriteService')
     && str_contains($controllerM04, 'ChecadorShiftTemplateSqlReadService')
     && str_contains($controllerM04, 'CsrfToken::validate($formCsrf)')
@@ -289,12 +295,30 @@ $assert(str_contains($writeServiceSource, 'Auth::user()')
     && str_contains($writeServiceSource, 'authorizeStationTemplateAdministration($workplaceId)')
     && str_contains($writeServiceSource, 'if (!($this->authorizeWrite)($actor, $workplaceId))'),
     'M04 writer rechecks authenticated identity and effective station permission server-side');
+$assert(str_contains($renderM04, '$canManageStationTemplates = $workplaceId !== null && (bool) ($templateAdminAccess[\'allowed\'] ?? false)')
+    && str_contains($renderM04, '$templateWritesEnabled = $canManageStationTemplates && !$demoMode')
+    && substr_count($renderM04, "'templateWritesEnabled'") === 1
+    && str_contains($viewSource, 'data-edit-enabled="<?= !empty($canManageStationTemplates) ? \'1\' : \'0\' ?>"')
+    && str_contains($viewSource, 'data-write-enabled="<?= !empty($templateWritesEnabled) ? \'1\' : \'0\' ?>"')
+    && str_contains($viewSource, 'alert alert-warning py-2')
+    && str_contains($viewSource, ':disabled="loading || !writeEnabled"')
+    && str_contains($viewSource, ':disabled="editLoading || !writeEnabled"')
+    && str_contains($jsSource, 'this.writeBlockMessage'),
+    'authorized Encargados see M04 controls independently of SQL readiness while blocked POSTs display the exact server-provided reason');
+$authPosition = strpos($saveM04, 'authorizeStationTemplateAdministration($workplaceId)');
+$gatePosition = strpos($saveM04, 'writeGateOpen()');
+$preflightPosition = strpos($saveM04, 'isOperationallyReady()');
+$assert($authPosition !== false && $gatePosition !== false && $preflightPosition !== false
+    && $authPosition < $gatePosition && $gatePosition < $preflightPosition
+    && str_contains($saveM04, 'm04_cutover_not_ready')
+    && str_contains($saveM04, 'sql_preflight_not_ready'),
+    'M04 POST authorizes the session and locality before returning distinct fail-closed cutover and SQL-preflight errors');
 $assert(str_contains($writeServiceSource, "SHOW TABLE STATUS LIKE ' . \$connection->getPdo()->quote(\$table)")
     && !str_contains($writeServiceSource, 'SHOW TABLE STATUS LIKE ?'),
     'MariaDB table-status preflight quotes only fixed table names instead of binding an unsupported SHOW placeholder');
 $originalAppEnv = $_ENV['APP_ENV'] ?? null;
 $originalDemoFlag = $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] ?? null;
-$_ENV['APP_ENV'] = 'dev';
+$_ENV['APP_ENV'] = 'production';
 $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
 $gateNames = ['CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED', 'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'];
 $savedGateValues = [];
@@ -304,21 +328,23 @@ foreach ($gateNames as $gateName) {
     putenv($gateName);
 }
 $operationGateOpen = ChecadorShiftTemplateSqlWriteService::writeGateOpen();
-foreach ($savedGateValues as $gateName => [$hadEnv, $envValue, $processValue]) {
-    if ($hadEnv) $_ENV[$gateName] = $envValue;
-    if ($processValue !== false) putenv($gateName . '=' . $processValue);
+$assert(!$operationGateOpen, 'M04 remains closed when any environment cutover attestation is absent');
+foreach ($gateNames as $gateName) {
+    $_ENV[$gateName] = '1';
+    putenv($gateName . '=1');
 }
-$assert($operationGateOpen, 'M04 SQL writer has no environment activation flags outside demo mode');
-$assert(!str_contains($writeServiceSource, 'CHECADOR_M04_SQL_WRITER_ENABLED')
-    && !str_contains($writeServiceSource, 'CHECADOR_M04_API_WRITER_CLOSED')
-    && !str_contains($writeServiceSource, 'CHECADOR_M04_SQL_GRANTS_VERIFIED')
-    && !str_contains($writeServiceSource, 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'),
-    'M04 SQL writer contains no legacy environment flag dependencies');
-$assert((static function (): bool {
-    $_ENV['APP_ENV'] = 'production';
-    $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
-    return ChecadorShiftTemplateSqlWriteService::writeGateOpen() === false;
-})(), 'M04 writes remain closed outside local development pending target cutover approval');
+$operationGateOpen = ChecadorShiftTemplateSqlWriteService::writeGateOpen();
+foreach ($savedGateValues as $gateName => [$hadEnv, $envValue, $processValue]) {
+    if ($hadEnv) $_ENV[$gateName] = $envValue; else unset($_ENV[$gateName]);
+    if ($processValue !== false) putenv($gateName . '=' . $processValue);
+    else putenv($gateName);
+}
+$assert($operationGateOpen, 'M04 opens in a configured target environment only when all four approved attestations are true');
+$assert(str_contains($writeServiceSource, 'CHECADOR_M04_SQL_WRITER_ENABLED')
+    && str_contains($writeServiceSource, 'CHECADOR_M04_API_WRITER_CLOSED')
+    && str_contains($writeServiceSource, 'CHECADOR_M04_SQL_GRANTS_VERIFIED')
+    && str_contains($writeServiceSource, 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED'),
+    'M04 writer enforces every environment-specific attestation from the approved addendum');
 if ($originalAppEnv === null) unset($_ENV['APP_ENV']); else $_ENV['APP_ENV'] = $originalAppEnv;
 if ($originalDemoFlag === null) unset($_ENV['CHECADOR_ADVANCED_DEMO_ENABLED']); else $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = $originalDemoFlag;
 

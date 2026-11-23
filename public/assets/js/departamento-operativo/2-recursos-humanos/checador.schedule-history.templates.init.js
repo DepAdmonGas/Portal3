@@ -74,6 +74,8 @@
             rootElement: null,
             loading: false,
             editLoading: false,
+            writeEnabled: false,
+            writeBlockMessage: '',
             editRowNode: null,
             name: '',
             startTime: '',
@@ -106,6 +108,8 @@
 
             init() {
                 this.rootElement = this.$el;
+                this.writeEnabled = this.rootElement?.dataset.writeEnabled === '1';
+                this.writeBlockMessage = String(this.rootElement?.dataset.writeBlockMessage || 'El guardado de turnos está bloqueado por las verificaciones de M04. No se guardaron cambios.');
                 formatTableTimes(document.getElementById('m04-template-table'));
                 this.table = initDataTable();
 
@@ -489,6 +493,10 @@
 
             async saveEdit() {
                 if (this.editLoading) return;
+                if (!this.writeEnabled) {
+                    this.editError = this.writeBlockMessage;
+                    return;
+                }
                 this.editFieldErrors = { name: '', startTime: '', endTime: '', break: '' };
                 this.editError = '';
                 const name = String(this.editName || '').trim();
@@ -547,6 +555,10 @@
 
             async save() {
                 if (this.loading) return;
+                if (!this.writeEnabled) {
+                    this.error = this.writeBlockMessage;
+                    return;
+                }
                 this.fieldErrors = { name: '', startTime: '', endTime: '', break: '' };
                 this.error = '';
                 this.refreshWarning = '';

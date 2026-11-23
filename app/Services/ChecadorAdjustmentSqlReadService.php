@@ -115,6 +115,96 @@ final class ChecadorAdjustmentSqlReadService
         }
     }
 
+    /** Read already-persisted administrative evaluations for one authorized worker and bounded period. */
+    public function evaluationsForWorkerPeriod(Usuario $actor, int $workplaceId, int $workerId, string $startDate, string $endDate): array
+    {
+        if ($workplaceId < 1 || $workerId < 1 || !self::isCivilDate($startDate) || !self::isCivilDate($endDate)
+            || $endDate < $startDate
+            || (int) (new DateTimeImmutable($startDate, new DateTimeZone('UTC'))
+                ->diff(new DateTimeImmutable($endDate, new DateTimeZone('UTC')))->format('%a')) + 1 > self::MAX_RANGE_DAYS) {
+            return self::failure('invalid_filter');
+        }
+        if (!(($this->authorizeRead)($actor, $workplaceId))) return self::failure('permission_denied');
+
+        try {
+            $connection = Capsule::connection('default');
+            return $connection->transaction(function () use ($connection, $actor, $workplaceId, $workerId, $startDate, $endDate): array {
+                $recordedAsOf = ($this->clock)()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s.u');
+                $rows = $connection->table('op_rh_v2_evaluaciones_administrativas as e')
+                    ->join('op_rh_v2_jornadas_programadas as j', 'j.id', '=', 'e.id_jornada_programada')
+                    ->join('op_rh_v2_calculos_jornada as c', 'c.id', '=', 'e.id_calculo_jornada')
+                    ->join('op_rh_personal as p', 'p.id', '=', 'e.id_personal')
+                    ->join('op_rh_localidades as l', 'l.id', '=', 'e.id_estacion')
+                    ->where('e.id_estacion', $workplaceId)
+                    ->where('e.id_personal', $workerId)
+                    ->whereBetween('e.fecha_jornada_local', [$startDate, $endDate])
+                    ->orderBy('e.fecha_jornada_local')->orderBy('e.revision_numero')->orderBy('e.id')
+                    ->limit(self::MAX_SCAN_ROWS + 1)
+                    ->get([
+                        'e.id', 'e.id_jornada_programada', 'e.id_calculo_jornada', 'e.id_personal', 'e.id_estacion',
+                        'e.fecha_jornada_local', 'e.revision_numero', 'e.version_algoritmo_admin', 'e.version_politica',
+                        'e.estado_evaluacion', 'e.estado_revision_humana', 'e.creado_at_utc',
+                        'j.id as joined_journey_id', 'j.id_personal as journey_worker_id', 'j.id_estacion as journey_workplace_id',
+                        'j.fecha_jornada_local as journey_work_date', 'j.timezone_local',
+                        'c.id as joined_calculation_id', 'c.id_jornada_programada as calculation_journey_id',
+                        'c.id_personal as calculation_worker_id', 'c.id_estacion as calculation_workplace_id',
+                        'c.fecha_jornada_local as calculation_work_date', 'p.id as joined_worker_id', 'l.id as joined_workplace_id',
+                    ]);
+                if ($rows->count() > self::MAX_SCAN_ROWS) return self::failure('result_limit_exceeded');
+
+                $items = [];
+                $excluded = 0;
+                foreach ($rows as $row) {
+                    if ((int) $row->id_personal !== $workerId || (int) $row->id_estacion !== $workplaceId
+                        || (int) $row->joined_worker_id !== $workerId || (int) $row->joined_workplace_id !== $workplaceId
+                        || (int) $row->joined_journey_id !== (int) $row->id_jornada_programada
+                        || (int) $row->journey_worker_id !== $workerId || (int) $row->journey_workplace_id !== $workplaceId
+                        || (string) $row->journey_work_date !== (string) $row->fecha_jornada_local
+                        || (int) $row->joined_calculation_id !== (int) $row->id_calculo_jornada
+                        || (int) $row->calculation_journey_id !== (int) $row->id_jornada_programada
+                        || (int) $row->calculation_worker_id !== $workerId
+                        || (int) $row->calculation_workplace_id !== $workplaceId
+                        || (string) $row->calculation_work_date !== (string) $row->fecha_jornada_local) {
+                        $excluded++;
+                        continue;
+                    }
+                    $effectiveAt = self::localDayStartUtc((string) $row->fecha_jornada_local, (string) $row->timezone_local);
+                    if ($effectiveAt === null) {
+                        $excluded++;
+                        continue;
+                    }
+                    $membership = ($this->resolveMembership)($workerId, $effectiveAt, $recordedAsOf);
+                    if (!self::membershipMatches($membership, $workplaceId)) {
+                        $excluded++;
+                        continue;
+                    }
+                    $items[] = [
+                        'evaluation_id' => (int) $row->id,
+                        'journey_id' => (int) $row->id_jornada_programada,
+                        'calculation_id' => (int) $row->id_calculo_jornada,
+                        'worker_id' => $workerId,
+                        'workplace_id' => $workplaceId,
+                        'work_date' => (string) $row->fecha_jornada_local,
+                        'revision' => (int) $row->revision_numero,
+                        'algorithm_version' => (string) $row->version_algoritmo_admin,
+                        'policy_version' => (string) $row->version_politica,
+                        'status' => (string) $row->estado_evaluacion,
+                        'human_review_status' => (string) $row->estado_revision_humana,
+                        'created_at_utc' => (string) $row->creado_at_utc,
+                    ];
+                }
+                return ['ok' => true, 'data' => [
+                    'items' => $items,
+                    'recorded_as_of_utc' => $recordedAsOf,
+                    'excluded_unverified_count' => $excluded,
+                ]];
+            }, 1);
+        } catch (Throwable $exception) {
+            $sqlState = (string) $exception->getCode();
+            return self::failure(in_array($sqlState, ['42S02', '42S22'], true) ? 'schema_unavailable' : 'sql_read_failed');
+        }
+    }
+
     /** Validate an aggregate's immutable predecessor chain and all canonical scope links. */
     public function projectLogicalGroup(array $rows, int $workplaceId, string $recordedAsOfUtc, array $evaluationLinks = []): ?array
     {

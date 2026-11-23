@@ -56,22 +56,38 @@ $assert(!ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
 
 $_ENV['APP_ENV'] = 'dev';
 $_ENV['CHECADOR_ADVANCED_DEMO_ENABLED'] = 'false';
-$assert(ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
-    'M04 local development gate opens without manual M04 deployment flags');
+$assert(!ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
+    'APP_ENV alone cannot open the local exception when the configured default connection is not the local bd_admongas database');
 
-foreach ([
+$localTargetCheck = new ReflectionMethod(ChecadorShiftTemplateSqlWriteService::class, 'isLocalDevelopmentTarget');
+$localTargetCheck->setAccessible(true);
+$assert($localTargetCheck->invoke(null, 'dev', 'mysql', '127.0.0.1', 'bd_admongas', 'bd_admongas'),
+    'the Fedora exception requires dev mode and matching local MySQL configuration and runtime database');
+$assert($localTargetCheck->invoke(null, 'development', 'mysql', 'localhost', 'bd_admongas', 'bd_admongas'),
+    'the Fedora exception accepts the explicitly authorized development environment aliases on loopback');
+$assert(!$localTargetCheck->invoke(null, 'production', 'mysql', '127.0.0.1', 'bd_admongas', 'bd_admongas')
+    && !$localTargetCheck->invoke(null, 'dev', 'mysql', 'db.example.test', 'bd_admongas', 'bd_admongas')
+    && !$localTargetCheck->invoke(null, 'dev', 'mysql', '127.0.0.1', 'bd_admongas_v2_preprod', 'bd_admongas_v2_preprod')
+    && !$localTargetCheck->invoke(null, 'dev', 'mysql', '127.0.0.1', 'bd_admongas', 'other_database'),
+    'production, remote hosts, and mismatched or preproduction databases cannot use the Fedora exception');
+
+$gateNames = [
     'CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED',
     'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
-] as $flag) {
+];
+foreach ($gateNames as $flag) {
+    $_ENV[$flag] = '1';
+    putenv($flag . '=1');
+}
+$assert(ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
+    'M04 gate opens only when all four approved environment attestations are explicitly true');
+foreach ($gateNames as $flag) {
     $_ENV[$flag] = '0';
     putenv($flag . '=0');
 }
-$assert(ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
-    'M04 operation gate ignores all four legacy deployment flags');
-foreach ([
-    'CHECADOR_M04_SQL_WRITER_ENABLED', 'CHECADOR_M04_API_WRITER_CLOSED',
-    'CHECADOR_M04_SQL_GRANTS_VERIFIED', 'CHECADOR_M04_SQL_PREFLIGHT_VERIFIED',
-] as $flag) {
+$assert(!ChecadorShiftTemplateSqlWriteService::writeGateOpen(),
+    'any disabled M04 attestation keeps the write gate closed');
+foreach ($gateNames as $flag) {
     unset($_ENV[$flag]);
     putenv($flag);
 }
@@ -92,8 +108,10 @@ $assert($grantCheck->invoke(null, $leastPrivilegeRows, 'checador'),
 $broadGrants = [...$leastPrivilegeRows,
     (object) ['grant_scope' => 'SCHEMA', 'table_schema' => 'checador', 'table_name' => null, 'privilege_type' => 'ALL PRIVILEGES'],
 ];
-$assert($grantCheck->invoke(null, $broadGrants, 'checador'),
-    'local grant preflight does not reject sufficient privileges solely because additional grants exist');
+$assert(!$grantCheck->invoke(null, $broadGrants, 'checador'),
+    'grant preflight rejects broad privileges that permit mutation of immutable M04 history');
+$assert($grantCheck->invoke(null, $broadGrants, 'checador', true),
+    'Fedora exception accepts broad grants while still requiring the necessary SELECT and INSERT privileges');
 $missingInsert = array_values(array_filter($leastPrivilegeRows,
     static fn(object $row): bool => !($row->grant_scope === 'TABLE' && $row->privilege_type === 'INSERT')));
 $assert(!$grantCheck->invoke(null, $missingInsert, 'checador'),
@@ -104,16 +122,26 @@ $escapedSchemaGrants = array_map(static function (object $row) use ($escapedSche
     $copy = clone $row;
     if ($copy->grant_scope !== 'GLOBAL') $copy->table_schema = $escapedSchema;
     return $copy;
-}, $broadGrants);
+}, $leastPrivilegeRows);
 $assert($grantCheck->invoke(null, $escapedSchemaGrants, $pleskDatabase),
     'grant preflight recognizes MariaDB escaped underscores using exact schema-name normalization');
 $wrongSchemaGrants = array_map(static function (object $row): object {
     $copy = clone $row;
     if ($copy->grant_scope !== 'GLOBAL') $copy->table_schema = 'bdXadmongasXv2Xpreprod';
     return $copy;
-}, $broadGrants);
+}, $leastPrivilegeRows);
 $assert(!$grantCheck->invoke(null, $wrongSchemaGrants, $pleskDatabase),
     'grant preflight rejects a different schema instead of treating underscores as wildcards');
+$forbiddenUpdate = [...$leastPrivilegeRows,
+    (object) ['grant_scope' => 'TABLE', 'table_schema' => 'checador', 'table_name' => 'op_rh_v2_turnos_audit_log', 'privilege_type' => 'UPDATE'],
+];
+$assert(!$grantCheck->invoke(null, $forbiddenUpdate, 'checador'),
+    'grant preflight rejects UPDATE on immutable M04 audit history');
+$forbiddenDelete = [...$leastPrivilegeRows,
+    (object) ['grant_scope' => 'TABLE', 'table_schema' => 'checador', 'table_name' => 'op_rh_v2_turnos_plantillas', 'privilege_type' => 'DELETE'],
+];
+$assert(!$grantCheck->invoke(null, $forbiddenDelete, 'checador'),
+    'grant preflight rejects DELETE on immutable M04 templates');
 $writerSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlWriteService.php') ?: '';
 $assert(!str_contains($writerSource, 'TABLE_SCHEMA = ?')
     && str_contains($writerSource, 'SCHEMA_PRIVILEGES WHERE GRANTEE = ?')

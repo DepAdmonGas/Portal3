@@ -2474,11 +2474,14 @@ final class ChecadorController extends BaseController
             $fail('forbidden', 'La estación solicitada no coincide con tu alcance autorizado.', 403);
         }
         if (ChecadorDailyReadService::demoModeEnabled()) $fail('demo_mode', 'La demostración es de consulta.', 403);
-        if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
-            $fail('sql_preflight_not_ready', 'La conexión, el esquema o los permisos SQL no cumplen los requisitos para administrar horarios.', 503);
-        }
         if (!(ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false)) {
             $fail('forbidden', 'No tienes permiso para administrar turnos en esta estación.', 403);
+        }
+        if (!ChecadorShiftTemplateSqlWriteService::writeGateOpen()) {
+            $fail('m04_cutover_not_ready', 'El corte exclusivo y las atestaciones M04 no están confirmados; no se guardó ningún cambio.', 503);
+        }
+        if (!ChecadorShiftTemplateSqlWriteService::isOperationallyReady()) {
+            $fail('sql_preflight_not_ready', 'El preflight de estructura o privilegios SQL no confirmó condiciones compatibles; no se guardó ningún cambio.', 503);
         }
 
         $operation = is_string($input['operation'] ?? null) ? trim($input['operation']) : '';
@@ -2871,9 +2874,22 @@ final class ChecadorController extends BaseController
         $m04AutolavadoAdmin = ChecadorAccessService::authorizeStationTemplateAdministration(
             ChecadorAccessService::AUTOLAVADO_LOCALITY_ID
         );
-        $canManageStationTemplates = $workplaceId !== null && !$demoMode
-            && ChecadorShiftTemplateSqlWriteService::isOperationallyReady()
-            && (ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId)['allowed'] ?? false);
+        $templateAdminAccess = $workplaceId === null
+            ? ['allowed' => false]
+            : ChecadorAccessService::authorizeStationTemplateAdministration($workplaceId);
+        // Authorization controls whether administration affordances are shown.
+        // SQL readiness independently controls whether a POST can be submitted.
+        $canManageStationTemplates = $workplaceId !== null && (bool) ($templateAdminAccess['allowed'] ?? false);
+        $templateWritesEnabled = $canManageStationTemplates && !$demoMode
+            && ChecadorShiftTemplateSqlWriteService::isOperationallyReady();
+        $templateWriteBlockMessage = '';
+        if ($canManageStationTemplates && !$templateWritesEnabled) {
+            $templateWriteBlockMessage = $demoMode
+                ? 'El modo de demostración es de consulta; no se guardarán cambios.'
+                : (!ChecadorShiftTemplateSqlWriteService::writeGateOpen()
+                    ? 'El guardado está bloqueado: faltan las verificaciones de corte exclusivo y preflight SQL de M04. No se guardaron cambios.'
+                    : 'El preflight SQL de M04 no confirmó estructura y privilegios compatibles. No se guardaron cambios.');
+        }
 
         if ($invalidPage || $historyPage > 10000) {
             $historyError = 'bad_request';
@@ -3036,9 +3052,10 @@ final class ChecadorController extends BaseController
                     'status' => $templateCatalogStatus === 'received' ? 'ready' : $templateCatalogStatus,
                     'items' => $scheduleTemplates,
                 ],
-                'templateWritesEnabled' => ChecadorShiftTemplateSqlWriteService::isOperationallyReady() && !$demoMode,
                 'templateAdminFeedback' => $templateFeedback,
                 'canManageStationTemplates' => $canManageStationTemplates,
+                'templateWritesEnabled' => $templateWritesEnabled,
+                'templateWriteBlockMessage' => $templateWriteBlockMessage,
                 'demoMode' => $demoMode,
                 'demoScenario' => $demoScenario,
                 'links' => [
@@ -4042,25 +4059,36 @@ final class ChecadorController extends BaseController
             return;
         }
 
-        $filterNames = ['worker_id', 'year', 'period_type', 'period_number'];
-        $hasComparisonFilters = false;
-        foreach ($filterNames as $filterName) {
-            $filterValue = $query[$filterName] ?? null;
-            if (is_array($filterValue) || is_object($filterValue)
-                || (is_string($filterValue) && trim($filterValue) !== '')
-                || is_int($filterValue)) {
-                $hasComparisonFilters = true;
-                break;
-            }
-        }
+        $periodType = $workplaceId !== null && RecibosNominaService::esSemanal($workplaceId) ? 'week' : 'fortnight';
+        $yearFilter = is_string($query['year'] ?? null) && preg_match('/\\A20[0-9]{2}\\z/', $query['year'])
+            ? (int) $query['year'] : null;
+        $numberFilter = self::positiveInteger($query['period_number'] ?? null);
+        $rosterPeriod = $workplaceId !== null && $yearFilter !== null && $numberFilter !== null
+            ? ChecadorPayrollComparisonReadService::resolvePeriod($workplaceId, $yearFilter, $periodType, $numberFilter)
+            : null;
+        $rosterOptions = $workplaceId === null
+            ? ['status' => 'unavailable', 'workers' => [], 'message' => 'Selecciona una localidad autorizada.']
+            : $comparisonReader->workerOptions(
+                $workplaceId,
+                $rosterPeriod['start_date'] ?? null,
+                $rosterPeriod['end_date'] ?? null
+            );
 
         $result = null;
         $errorMessage = '';
-        if ($hasComparisonFilters) {
+        if (($query['load_roster'] ?? null) === '1') {
+            if ($yearFilter === null || $numberFilter === null) {
+                $errorMessage = 'Indica año y periodo para cargar el padrón histórico correspondiente.';
+            } elseif ($rosterPeriod === null) {
+                $errorMessage = 'El año o periodo no corresponde a la regla semanal o quincenal de esta localidad.';
+            }
+        }
+        $hasCompareRequest = ($query['compare'] ?? null) === '1';
+        if ($hasCompareRequest) {
             $result = $comparisonReader->compare(array_merge($query, ['workplace_id' => $workplaceId]));
             if (empty($result['ok'])) {
                 $errorMessage = match ((string) ($result['error']['kind'] ?? '')) {
-                    'filters_required' => 'Completa trabajador, año y periodo para consultar.',
+                    'filters_required' => 'Selecciona trabajador, año y periodo para consultar.',
                     'invalid_period' => 'El periodo no corresponde al tipo configurado para la localidad o está fuera de rango.',
                     'worker_not_available' => 'El trabajador no está disponible en la localidad autorizada.',
                     'forbidden' => 'No se pudo autorizar la consulta simultáneamente para Checador y Nómina.',
@@ -4075,7 +4103,6 @@ final class ChecadorController extends BaseController
             $workplaceMap[(int) $workplace['id']] = (string) $workplace['nombre'];
         }
         $selectedWorkplaceName = $workplaceId !== null ? ($workplaceMap[$workplaceId] ?? '') : '';
-        $periodType = $workplaceId !== null && RecibosNominaService::esSemanal($workplaceId) ? 'week' : 'fortnight';
 
         View::render(
             'departamento-operativo/2-recursos-humanos/checador/payroll-comparison',
@@ -4086,6 +4113,10 @@ final class ChecadorController extends BaseController
                 'selectedWorkplaceId' => $workplaceId,
                 'selectedWorkplaceName' => $selectedWorkplaceName,
                 'periodType' => $periodType,
+                'workerOptions' => $rosterOptions['workers'] ?? [],
+                'workerOptionsStatus' => $rosterOptions['status'] ?? 'unavailable',
+                'workerOptionsMessage' => $rosterOptions['message'] ?? '',
+                'rosterOnly' => ($query['load_roster'] ?? null) === '1',
                 'filters' => [
                     'worker_id' => is_string($query['worker_id'] ?? null) ? trim($query['worker_id']) : '',
                     'year' => is_string($query['year'] ?? null) ? trim($query['year']) : (string) date('Y'),
@@ -4094,8 +4125,20 @@ final class ChecadorController extends BaseController
                 'comparison' => is_array($result['data'] ?? null) ? $result['data'] : null,
                 'errorMessage' => $errorMessage,
                 'demoMode' => ChecadorDailyReadService::demoModeEnabled(),
-                'links' => [],
-                'scripts' => [],
+                'links' => [
+                    '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+                    '/assets/libs/select2/dist/css/select2.min.css',
+                    '/assets/css/select2-modal.css',
+                ],
+                'scripts' => [
+                    '/assets/js/vendor.min.js',
+                    '/assets/js/core/module-station-selector.js',
+                    '/assets/libs/select2/dist/js/select2.full.min.js',
+                    '/assets/libs/select2/dist/js/i18n/es.js',
+                    '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261120-payroll-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.payroll-comparison.init.js?v=20261120-1',
+                ],
             ],
             'departamento-operativo'
         );

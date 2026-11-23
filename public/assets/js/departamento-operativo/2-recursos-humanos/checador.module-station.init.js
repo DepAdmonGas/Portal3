@@ -5,6 +5,7 @@
     var dailyPath = checadorPath + '/asistencia';
     var reportPath = checadorPath + '/reporte';
     var journeysPath = checadorPath + '/jornadas';
+    var payrollComparisonPath = checadorPath + '/comparacion-nomina';
 
     function isCivilDate(value) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
@@ -25,7 +26,8 @@
         var isDaily = pathname === dailyPath;
         var isReport = pathname === reportPath;
         var isJourneys = pathname === journeysPath;
-        if (!isDaily && !isReport && !isJourneys) return url.toString();
+        var isPayrollComparison = pathname === payrollComparisonPath;
+        if (!isDaily && !isReport && !isJourneys && !isPayrollComparison) return url.toString();
 
         var nextStationId = selectedLocalityId(selectorValue);
         if (nextStationId === null) {
@@ -49,6 +51,15 @@
             url.searchParams.set('workplace_id', nextStationId);
             if (stationChanged) {
                 ['start_date', 'end_date', 'worker_id', 'page']
+                    .forEach(function (key) { url.searchParams.delete(key); });
+            }
+            return url.toString();
+        }
+
+        if (isPayrollComparison) {
+            url.searchParams.set('workplace_id', nextStationId);
+            if (stationChanged) {
+                ['worker_id', 'year', 'period_type', 'period_number', 'compare', 'load_roster']
                     .forEach(function (key) { url.searchParams.delete(key); });
             }
             return url.toString();
@@ -96,7 +107,7 @@
         ? ModuleStationSelector
         : window.ModuleStationSelector;
     var currentPath = window.location.pathname.replace(/\/$/, '');
-    if (!selectorApi || (currentPath !== dailyPath && currentPath !== reportPath && currentPath !== journeysPath)) return;
+    if (!selectorApi || (currentPath !== dailyPath && currentPath !== reportPath && currentPath !== journeysPath && currentPath !== payrollComparisonPath)) return;
 
     // Persist the server-authorized context first, then replace the URL so its
     // explicit workplace_id cannot override that context on the next request.

@@ -8,8 +8,9 @@ use App\Core\Auth;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use App\Models\ModuloDptoOperativo;
 use App\Models\Operativo\OpReciboNominaV2;
-use App\Models\Operativo\RhPersonal;
 use App\Models\Usuario;
+use DateTimeImmutable;
+use DateTimeZone;
 use Throwable;
 
 /**
@@ -147,23 +148,14 @@ final class ChecadorPayrollComparisonReadService
             return self::failure('invalid_period');
         }
 
-        try {
-            // Canonical identity is op_rh_personal.id. Locality equality is
-            // checked before any payroll or attendance details are returned.
-            $worker = RhPersonal::query()
-                ->select(['id', 'id_estacion', 'nombre_completo', 'no_colaborador'])
-                ->where('id', $workerId)
-                ->where('id_estacion', $localityId)
-                ->first();
-            if (!$worker || !self::workerIdentityMatches(
-                $workerId,
-                (int) $worker->id,
-                $localityId,
-                (int) $worker->id_estacion
-            )) {
-                return self::failure('worker_not_available');
-            }
+        $roster = $this->workerOptions($localityId, $period['start_date'], $period['end_date']);
+        $worker = $roster['workers'][$workerId] ?? null;
+        if (($roster['status'] ?? '') === 'unavailable' || !is_array($worker)
+            || !self::workerIdentityMatches($workerId, (int) ($worker['worker_id'] ?? 0), $localityId, (int) ($roster['workplace_id'] ?? 0))) {
+            return self::failure('worker_not_available');
+        }
 
+        try {
             $payroll = $this->readPayrollReference($localityId, $workerId, $period);
         } catch (Throwable) {
             $payroll = ['status' => 'unavailable', 'references' => []];
@@ -172,26 +164,24 @@ final class ChecadorPayrollComparisonReadService
         $workplace = $authorization['workplaces'][0] ?? ['id' => $localityId, 'nombre' => 'Localidad autorizada'];
         $data = [
             'worker' => [
-                'id' => (int) $worker->id,
-                'employee_number' => $worker->no_colaborador === null ? null : (int) $worker->no_colaborador,
-                'name' => (string) ($worker->nombre_completo ?? ''),
-                'workplace_id' => (int) $worker->id_estacion,
+                'id' => (int) $worker['worker_id'],
+                'employee_number' => $worker['employee_number'] ?? null,
+                'name' => (string) $worker['full_name'],
+                'workplace_id' => $localityId,
             ],
             'workplace' => $workplace,
             'period' => $period,
             'payroll' => $payroll,
-            'attendance' => self::unavailableAttendance('not_queried'),
-            'workplace_timezones' => ['status' => 'not_queried', 'days' => []],
-            'schedules' => ['status' => 'not_queried', 'days' => []],
-            'journeys' => [
-                'status' => 'not_queried_read_only_contract',
-                'message' => 'La consulta disponible de Jornada es una operación POST de evaluación. No se ejecutó para mantener este flujo estrictamente de solo lectura.',
-            ],
-            'incidences' => ['status' => 'not_queried', 'items' => []],
-            'evaluations' => ['status' => 'not_queried', 'days' => []],
-            'adjustments' => ['status' => 'not_queried', 'items' => []],
+            'attendance' => self::unavailableAttendance('contract_pending'),
+            'workplace_timezones' => ['status' => 'contract_pending', 'days' => []],
+            'schedules' => ['status' => 'contract_pending', 'days' => []],
+            'journeys' => ['status' => 'unavailable', 'journeys' => [], 'message' => 'La lectura persistida de jornadas no está disponible para este periodo.'],
+            'incidences' => ['status' => 'contract_pending', 'items' => []],
+            'evaluations' => ['status' => 'contract_pending', 'days' => []],
+            'adjustments' => ['status' => 'contract_pending', 'items' => []],
             'comparison_limit' => 'La consulta es informativa. No prueba cobertura completa, no crea un periodo común y no produce conclusiones de asistencia o nómina.',
         ];
+        $data['attendance']['message'] = 'La consulta muestra eventos observados; no clasifica marcaciones ni determina cobertura del periodo.';
 
         // Do not mix synthetic API fixtures with real local SQL or payroll
         // records. The mode remains untouched; this page fails closed while it
@@ -200,104 +190,202 @@ final class ChecadorPayrollComparisonReadService
             $data['attendance'] = self::unavailableAttendance('demo_mode_active');
             $data['workplace_timezones']['status'] = 'demo_mode_active';
             $data['schedules']['status'] = 'demo_mode_active';
+            $data['journeys']['status'] = 'demo_mode_active';
             $data['incidences']['status'] = 'demo_mode_active';
             $data['evaluations']['status'] = 'demo_mode_active';
             $data['adjustments']['status'] = 'demo_mode_active';
             return ['ok' => true, 'data' => $data];
         }
 
-        try {
-            $user = Usuario::query()->where('id', (int) Auth::user()->id)->where('estatus', 0)->first();
-            if (!$user) {
-                return self::failure('unauthenticated');
-            }
-            $reader = new ChecadorDailyReadService();
-        } catch (Throwable) {
-            $data['attendance'] = self::unavailableAttendance('service_unavailable');
-            $data['workplace_timezones']['status'] = 'service_unavailable';
-            $data['schedules']['status'] = 'service_unavailable';
-            $data['incidences']['status'] = 'service_unavailable';
-            $data['evaluations']['status'] = 'service_unavailable';
-            $data['adjustments']['status'] = 'service_unavailable';
-            return ['ok' => true, 'data' => $data];
-        }
-
-        [$dates, $rawAttendance, $timezoneByDate] = $this->readObservedPeriod(
-            $reader,
-            $user,
-            $localityId,
-            $workerId,
-            $period
-        );
-        $data['attendance'] = $rawAttendance;
-        $data['workplace_timezones'] = [
-            'status' => count($timezoneByDate) === count($dates) ? 'available' : ($timezoneByDate === [] ? 'unavailable' : 'partial'),
-            'days' => array_map(
-                static fn(array $context): array => [
-                    'date' => (string) ($context['local_date'] ?? ''),
-                    'timezone' => (string) ($context['timezone'] ?? ''),
-                ],
-                array_values($timezoneByDate)
-            ),
-        ];
-
-        $scheduleDays = [];
-        $evaluationDays = [];
-        $adjustments = [];
-        $scheduleErrors = 0;
-        $evaluationErrors = 0;
-        foreach ($dates as $date) {
-            $schedule = $reader->getEffectiveSchedule($user, $workerId, $localityId, $date);
-            if (!empty($schedule['ok'])) {
-                $scheduleDays[] = self::scheduleProjection($date, $schedule['data']);
-            } else {
-                $scheduleErrors++;
-                $scheduleDays[] = ['date' => $date, 'status' => 'unavailable'];
-            }
-
-            $evaluation = $reader->readAdministrativeEvaluation($user, $workerId, $localityId, $date);
-            if (!empty($evaluation['ok'])) {
-                $projected = self::evaluationProjection($date, $evaluation['data']);
-                $evaluationDays[] = $projected;
-                foreach ($projected['adjustments'] as $adjustment) {
-                    $adjustments[$adjustment['uuid']] = $adjustment;
-                }
-            } else {
-                $evaluationErrors++;
-                $evaluationDays[] = ['date' => $date, 'status' => 'unavailable', 'adjustments' => []];
-            }
-        }
-
-        $data['schedules'] = [
-            'status' => $scheduleErrors === 0 ? 'available' : ($scheduleErrors === count($dates) ? 'unavailable' : 'partial'),
-            'days' => $scheduleDays,
-        ];
-        $data['evaluations'] = [
-            'status' => $evaluationErrors === 0 ? 'available' : ($evaluationErrors === count($dates) ? 'unavailable' : 'partial'),
-            'days' => $evaluationDays,
-        ];
-        $data['adjustments'] = [
-            'status' => $evaluationErrors === 0 ? 'available' : ($adjustments !== [] ? 'partial' : 'unavailable'),
-            'items' => array_values($adjustments),
-        ];
-
-        $incidences = $reader->readApplicableIncidences(
-            $user,
-            $workerId,
+        // C01 already approves this bounded, read-only SQL projection of
+        // persisted P1/P2 results. It never evaluates or recalculates journeys.
+        $journeyResult = (new ChecadorJourneySqlReadService())->read(
             $localityId,
             $period['start_date'],
-            $period['end_date']
+            $period['end_date'],
+            $workerId,
+            1,
+            100
         );
-        if (!empty($incidences['ok'])) {
-            $data['incidences'] = [
-                'status' => 'available',
-                'items' => array_map([self::class, 'incidenceProjection'], $incidences['data']['incidences']),
+        if (!empty($journeyResult['ok'])) {
+            $journeys = array_values($journeyResult['data']['journeys'] ?? []);
+            $journeysByDate = [];
+            foreach ($journeys as $journey) {
+                if (!is_array($journey)) continue;
+                $date = (string) ($journey['context']['fecha_local'] ?? '');
+                if ($date !== '') $journeysByDate[$date] = $journey;
+            }
+            $periodDates = self::dateRange($period['start_date'], $period['end_date']);
+            $timezoneDays = [];
+            $scheduleDays = [];
+            foreach ($periodDates as $date) {
+                $journey = $journeysByDate[$date] ?? null;
+                $context = is_array($journey['context'] ?? null) ? $journey['context'] : [];
+                $schedule = is_array($journey['schedule'] ?? null) ? $journey['schedule'] : [];
+                $timezone = trim((string) ($context['timezone'] ?? ''));
+                if ($journey !== null && $timezone !== '') {
+                    $timezoneDays[] = ['date' => $date, 'timezone' => $timezone];
+                }
+                $scheduleDays[] = [
+                    'date' => $date,
+                    'status' => $journey === null ? 'no_persisted_journey_snapshot' : 'persisted_journey_snapshot',
+                    'timezone' => $timezone,
+                    'segments_snapshot_json' => $schedule['payload_segmentos_json'] ?? null,
+                ];
+            }
+            $snapshotCount = count($timezoneDays);
+            $snapshotStatus = $journeys === []
+                ? 'no_persisted_journeys'
+                : ($snapshotCount === count($periodDates) ? 'persisted_journey_snapshot' : 'partial_persisted_journey_snapshots');
+            $data['journeys'] = [
+                'status' => $journeys === [] ? 'no_persisted_journeys' : 'available',
+                'journeys' => $journeys,
+                'message' => $journeys === [] ? 'No existen jornadas procesadas persistidas para este trabajador y periodo.' : '',
+                'pagination' => $journeyResult['data']['pagination'] ?? [],
+            ];
+            $data['workplace_timezones'] = [
+                'status' => $snapshotStatus,
+                'days' => $timezoneDays,
+            ];
+            $data['schedules'] = [
+                'status' => $snapshotStatus,
+                'days' => $scheduleDays,
             ];
         } else {
-            $data['incidences'] = ['status' => 'unavailable', 'items' => []];
+            $journeyError = (string) ($journeyResult['error'] ?? 'sql_unavailable');
+            $data['workplace_timezones'] = ['status' => $journeyError, 'days' => []];
+            $data['schedules'] = ['status' => $journeyError, 'days' => []];
+            $data['journeys'] = [
+                'status' => $journeyError,
+                'journeys' => [],
+                'message' => 'No fue posible consultar las jornadas persistidas. No se ejecutó una evaluación nueva.',
+            ];
+        }
+
+        $dates = self::dateRange($period['start_date'], $period['end_date']);
+        $timezoneData = $this->readHistoricalTimezones($localityId, $dates);
+        $data['workplace_timezones'] = [
+            'status' => $timezoneData['status'],
+            'source' => 'op_rh_v2_localidades_zonas_horarias',
+            'days' => $timezoneData['days'],
+        ];
+        $recordedAsOf = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s.u');
+        $data['attendance'] = $this->readObservedPunches(
+            $localityId, $workerId, $dates, $timezoneData['zones'], $recordedAsOf
+        );
+
+        $actor = Auth::user();
+        if (!$actor instanceof Usuario) {
+            $data['incidences'] = ['status' => 'permission_denied', 'items' => [], 'excluded_unverified_count' => 0];
+            $data['evaluations'] = ['status' => 'permission_denied', 'days' => [], 'excluded_unverified_count' => 0];
+            $data['adjustments'] = ['status' => 'permission_denied', 'items' => []];
+        } else {
+            $data['incidences'] = $this->readAuthorizedIncidences(
+                $actor, $localityId, $workerId, $period, $timezoneData['zones'], $recordedAsOf
+            );
+            $evaluationReader = new ChecadorAdjustmentSqlReadService();
+            $evaluationResult = $evaluationReader->evaluationsForWorkerPeriod(
+                $actor, $localityId, $workerId, $period['start_date'], $period['end_date']
+            );
+            if (!empty($evaluationResult['ok'])) {
+                $evaluationItems = $evaluationResult['data']['items'] ?? [];
+                $data['evaluations'] = [
+                    'status' => !empty($evaluationResult['data']['excluded_unverified_count']) ? 'partial' : 'available',
+                    'source' => 'op_rh_v2_evaluaciones_administrativas',
+                    'days' => $evaluationItems,
+                    'excluded_unverified_count' => (int) ($evaluationResult['data']['excluded_unverified_count'] ?? 0),
+                ];
+            } else {
+                $data['evaluations'] = ['status' => (string) ($evaluationResult['error'] ?? 'sql_read_failed'), 'days' => [], 'excluded_unverified_count' => 0];
+            }
+            $data['adjustments'] = $this->readLinkedAdjustments(
+                $evaluationReader, $actor, $localityId, $workerId, $period
+            );
         }
 
         return ['ok' => true, 'data' => $data];
+    }
+
+    /**
+     * Real worker options from the canonical roster, independent of journey rows.
+     * Historical periods include only workers with confirmed membership on at
+     * least one queried day. No physical-station ID is compared to locality ID.
+     *
+     * @return array{status:string,workplace_id:int,workers:array<int,array{worker_id:int,full_name:string,employee_number:?string}>,message:string}
+     */
+    public function workerOptions(int $localityId, ?string $startDate = null, ?string $endDate = null): array
+    {
+        $empty = static fn(string $status, string $message): array => [
+            'status' => $status, 'workplace_id' => $localityId, 'workers' => [], 'message' => $message,
+        ];
+        if (empty($this->authorization($localityId)['allowed'])) {
+            return $empty('forbidden', 'No se pudo autorizar el padrón solicitado.');
+        }
+
+        $dates = [];
+        if ($startDate !== null || $endDate !== null) {
+            $start = $startDate === null ? null : self::civilDate($startDate);
+            $end = $endDate === null ? null : self::civilDate($endDate);
+            if ($start === null || $end === null || $end < $start
+                || (int) $start->diff($end)->format('%a') + 1 > self::MAX_PERIOD_DAYS) {
+                return $empty('invalid_period', 'No se pudo resolver el periodo para validar adscripciones históricas.');
+            }
+            for ($day = $start; $day <= $end; $day = $day->modify('+1 day')) $dates[] = $day->format('Y-m-d');
+        } else {
+            $nowUtc = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+            $timezone = (new ChecadorWeeklyScheduleSqlReadService())->timezoneForDate($localityId, $nowUtc->format('Y-m-d'));
+            if ($timezone === null || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
+                return $empty('unavailable', 'No se pudo validar la zona horaria para cargar el padrón autorizado.');
+            }
+            $dates[] = $nowUtc->setTimezone(new \DateTimeZone($timezone))->format('Y-m-d');
+        }
+
+        $timezoneReader = new ChecadorWeeklyScheduleSqlReadService();
+        $rosterReader = new ChecadorAttendanceRosterService();
+        $workers = [];
+        $incomplete = false;
+        $usableDates = 0;
+        $nowUtc = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        foreach ($dates as $date) {
+            $timezone = $timezoneReader->timezoneForDate($localityId, $date);
+            if ($timezone === null || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) {
+                $incomplete = true;
+                continue;
+            }
+            $roster = $rosterReader->workersForAttendanceFilter($localityId, $date, $timezone, false);
+            $coverage = (string) ($roster['coverage'] ?? 'unknown');
+            $currentDay = ChecadorOperationalPeriod::currentLocalDate($timezone, $nowUtc) === $date;
+            $coverageUsable = in_array($coverage, ['historical_versioned_membership', 'incomplete'], true)
+                || ($coverage === 'current_active_roster' && $currentDay);
+            if (!in_array((string) ($roster['status'] ?? ''), ['ready', 'partial'], true) || !$coverageUsable) {
+                $incomplete = true;
+                continue;
+            }
+            $usableDates++;
+            foreach ($roster['workers'] ?? [] as $worker) {
+                if (!is_array($worker)) continue;
+                $workerId = (int) ($worker['worker_id'] ?? 0);
+                $name = trim((string) ($worker['full_name'] ?? ''));
+                if ($workerId < 1 || $name === '' || $name === 'Nombre no disponible') continue;
+                $number = trim((string) ($worker['employee_number'] ?? ''));
+                $workers[$workerId] = [
+                    'worker_id' => $workerId,
+                    'full_name' => $name,
+                    'employee_number' => $number !== '' && $number !== '0' ? $number : null,
+                ];
+            }
+            if (($roster['status'] ?? '') !== 'ready') $incomplete = true;
+        }
+        uasort($workers, static fn(array $a, array $b): int =>
+            strcasecmp($a['full_name'], $b['full_name']) ?: ($a['worker_id'] <=> $b['worker_id'])
+        );
+        $status = $usableDates === 0 ? 'unavailable' : ($incomplete ? 'partial' : 'ready');
+        $message = $status === 'unavailable'
+            ? 'No se confirmó el contexto local del periodo; no se cargó el padrón.'
+            : ($incomplete
+                ? 'El padrón puede estar incompleto; sólo se incluyen adscripciones verificadas.'
+                : ($workers === [] ? 'No se encontraron trabajadores con adscripción canónica confirmada.' : 'Trabajadores autorizados para el contexto seleccionado.'));
+        return ['status' => $status, 'workplace_id' => $localityId, 'workers' => $workers, 'message' => $message];
     }
 
     /** @return array{type:string,label:string,number:int,month:int,start_date:string,end_date:string,year:int} */
@@ -449,140 +537,224 @@ final class ChecadorPayrollComparisonReadService
         }
     }
 
-    /** @return array{0:array<int,string>,1:array<string,mixed>,2:array<string,array<string,mixed>>} */
-    private function readObservedPeriod(
-        ChecadorDailyReadService $reader,
-        Usuario $user,
-        int $localityId,
-        int $workerId,
-        array $period
-    ): array {
-        $dates = self::dateRange($period['start_date'], $period['end_date']);
-        $events = [];
-        $timezoneByDate = [];
-        $status = 'available';
-        $message = '';
+    /** @return array{status:string,days:array,zones:array<string,string>} */
+    private function readHistoricalTimezones(int $localityId, array $dates): array
+    {
+        $reader = new ChecadorWeeklyScheduleSqlReadService();
+        $days = [];
+        $zones = [];
         foreach ($dates as $date) {
-            $timezone = $reader->resolveWorkplaceLocalDay($user, $localityId, $date);
-            if (empty($timezone['ok'])) {
-                $status = $events === [] ? 'unavailable' : 'partial';
-                $message = 'No se pudo establecer la ventana de zona horaria laboral para todas las fechas.';
-                break;
-            }
-            $timezoneByDate[$date] = $timezone['data'];
+            $timezone = $reader->timezoneForDate($localityId, $date);
+            $valid = is_string($timezone) && ChecadorOperationalPeriod::isIanaTimezone($timezone);
+            $days[] = ['date' => $date, 'timezone' => $valid ? $timezone : null, 'status' => $valid ? 'available' : 'unavailable'];
+            if ($valid) $zones[$date] = $timezone;
+        }
+        return [
+            'status' => $zones === [] ? 'unavailable' : (count($zones) === count($dates) ? 'available' : 'partial'),
+            'days' => $days,
+            'zones' => $zones,
+        ];
+    }
 
-            $page = 1;
-            $totalPages = 1;
-            do {
-                $result = (new ChecadorRawPunchReadService())->readPage(
-                    $localityId,
-                    (string) $timezone['data']['from_utc'],
-                    (string) $timezone['data']['to_utc'],
-                    $workerId,
-                    $page,
-                    200,
-                    'desc'
+    /** Read raw observed events as events only; never classify or aggregate them into work time. */
+    private function readObservedPunches(int $localityId, int $workerId, array $dates, array $zones, string $recordedAsOf): array
+    {
+        $events = [];
+        $failed = false;
+        $successfulDays = 0;
+        $skippedDays = count($dates) - count($zones);
+        $unverifiedMembershipDays = 0;
+        $reader = new ChecadorRawPunchReadService();
+        $windows = [];
+        $totalRecords = 0;
+        foreach ($dates as $date) {
+            $timezoneName = $zones[$date] ?? null;
+            if (!is_string($timezoneName)) continue;
+            try {
+                $timezone = new DateTimeZone($timezoneName);
+                $localStart = new DateTimeImmutable($date . ' 00:00:00', $timezone);
+                $localEnd = $localStart->modify('+1 day');
+                $fromUtc = $localStart->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+                $toUtc = $localEnd->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+            } catch (Throwable) {
+                $failed = true;
+                continue;
+            }
+
+            if (!$this->membershipMatchesLocalDate($workerId, $localityId, $date, $timezoneName, $recordedAsOf)) {
+                $unverifiedMembershipDays++;
+                continue;
+            }
+
+            $first = $reader->readPage($localityId, $fromUtc, $toUtc, $workerId, 1, ChecadorRawPunchReadService::MAX_PAGE_SIZE);
+            if (empty($first['ok'])) {
+                $failed = true;
+                continue;
+            }
+            $pagination = $first['pagination'] ?? [];
+            $total = (int) ($pagination['total_records'] ?? 0);
+            $pages = (int) ($pagination['total_pages'] ?? 0);
+            if ($total < 0 || $pages < 0) {
+                $failed = true;
+                continue;
+            }
+            $successfulDays++;
+            $totalRecords += $total;
+            if ($totalRecords > self::MAX_EVENTS) {
+                return [
+                    'status' => 'result_limit_exceeded',
+                    'events' => [],
+                    'message' => 'La consulta de eventos observados supera el límite permitido; no se muestran resultados parciales.',
+                    'consistency' => 'LIVE_NON_SNAPSHOT',
+                    'excluded_unresolved_timezone_days' => $skippedDays,
+                ];
+            }
+            $windows[] = ['date' => $date, 'from_utc' => $fromUtc, 'to_utc' => $toUtc, 'first' => $first, 'pages' => $pages];
+        }
+
+        foreach ($windows as $window) {
+            $date = $window['date'];
+            $pageCount = (int) $window['pages'];
+            for ($page = 1; $page <= $pageCount; $page++) {
+                $result = $page === 1 ? $window['first'] : $reader->readPage(
+                    $localityId, $window['from_utc'], $window['to_utc'], $workerId, $page, ChecadorRawPunchReadService::MAX_PAGE_SIZE
                 );
                 if (empty($result['ok'])) {
-                    $status = $events === [] ? 'unavailable' : 'partial';
-                    $message = 'La lectura de marcaciones observadas no está disponible para todas las fechas.';
-                    break 2;
+                    $failed = true;
+                    break;
                 }
-                foreach ($result['events'] as $event) {
-                    $eventId = (int) ($event['id'] ?? 0);
-                    if ($eventId > 0) {
-                        $events[$eventId] = $event;
-                    }
-                    if (count($events) > self::MAX_EVENTS) {
-                        $status = 'partial';
-                        $message = 'Se alcanzó el límite seguro de presentación; el conjunto observado no se considera completo.';
-                        break 3;
-                    }
+                foreach ($result['events'] ?? [] as $event) {
+                    $eventId = (string) ($event['event_uuid'] ?? '');
+                    if ($eventId === '') continue;
+                    $events[$eventId] = [
+                        'query_date_local' => $date,
+                        'event_uuid' => $eventId,
+                        'id_dispositivo' => isset($event['id_dispositivo']) ? (int) $event['id_dispositivo'] : null,
+                        'ocurrido_at_utc' => $event['ocurrido_at_utc'] === null ? null : (string) $event['ocurrido_at_utc'],
+                        'recibido_at_utc' => (string) ($event['recibido_at_utc'] ?? ''),
+                        'metodo_captura' => (string) ($event['metodo_captura'] ?? ''),
+                        'processing_status' => (string) ($event['processing_status'] ?? ''),
+                        'occurrence_status' => (string) ($event['occurrence_status'] ?? 'NOT_AVAILABLE'),
+                        'integrity_status' => 'NOT_VERIFIED_BY_PORTAL3',
+                        'source' => 'op_rh_v2_marcaciones_crudas',
+                    ];
                 }
-                $totalPages = max(1, (int) ($result['pagination']['total_pages'] ?? 1));
-                $page++;
-            } while ($page <= $totalPages);
+            }
         }
-
-        $items = array_values($events);
-        usort($items, static function (array $left, array $right): int {
-            $leftTime = (string) ($left['ocurrido_at_utc'] ?? $left['recibido_at_utc'] ?? '');
-            $rightTime = (string) ($right['ocurrido_at_utc'] ?? $right['recibido_at_utc'] ?? '');
-            return [$rightTime, (int) ($right['id'] ?? 0)] <=> [$leftTime, (int) ($left['id'] ?? 0)];
-        });
-
-        return [$dates, [
+        $status = $failed || $skippedDays > 0 || $unverifiedMembershipDays > 0
+            ? ($successfulDays === 0 ? 'unavailable' : 'partial')
+            : 'available';
+        return [
             'status' => $status,
-            'events' => $items,
-            'integrity' => 'NOT_VERIFIED_BY_PORTAL3',
-            'snapshot' => 'LIVE_NON_SNAPSHOT',
-            'completeness' => 'NOT_ESTABLISHED',
-            'message' => $message,
-        ], $timezoneByDate];
-    }
-
-    private static function scheduleProjection(string $date, array $data): array
-    {
-        $segments = [];
-        foreach (($data['horario_local']['segmentos'] ?? []) as $segment) {
-            $segments[] = [
-                'ordinal' => (int) ($segment['ordinal'] ?? 0),
-                'type' => (string) ($segment['tipo'] ?? ''),
-                'start_local' => (string) ($segment['hora_inicio_local'] ?? ''),
-                'end_local' => (string) ($segment['hora_fin_local'] ?? ''),
-                'end_day_offset' => (int) ($segment['dia_offset_fin'] ?? 0),
-            ];
-        }
-        return [
-            'date' => $date,
-            'status' => (string) ($data['estado_jornada'] ?? 'UNKNOWN'),
-            'timezone' => (string) ($data['horario_local']['timezone'] ?? ''),
-            'segments' => $segments,
+            'events' => array_values($events),
+            'message' => $status === 'available' ? '' : 'La consulta de eventos observados quedó incompleta o no disponible; no se infiere asistencia.',
+            'consistency' => 'LIVE_NON_SNAPSHOT',
+            'excluded_unresolved_timezone_days' => $skippedDays,
+            'excluded_unverified_membership_days' => $unverifiedMembershipDays,
         ];
     }
 
-    private static function evaluationProjection(string $date, array $data): array
+    /** @return array{status:string,items:array,excluded_unverified_count:int} */
+    private function readAuthorizedIncidences(Usuario $actor, int $localityId, int $workerId, array $period, array $zones, string $recordedAsOf): array
     {
-        if (empty($data['evaluation_exists'])) {
-            return ['date' => $date, 'status' => 'no_existing_evaluation', 'adjustments' => []];
-        }
-        $evaluation = $data['evaluation'] ?? [];
-        $adjustments = [];
-        foreach (($evaluation['linked_adjustments'] ?? []) as $item) {
-            if (!is_array($item)) {
-                continue;
+        $reader = new ChecadorAdministrativeIncidenceSqlService();
+        $filters = ['worker_id' => $workerId, 'start_date' => $period['start_date'], 'end_date' => $period['end_date']];
+        $items = [];
+        $excluded = 0;
+        $first = $reader->listForWorkplace($actor, $localityId, $filters, 1, 100);
+        if (empty($first['ok'])) return ['status' => (string) ($first['error'] ?? 'sql_read_failed'), 'items' => [], 'excluded_unverified_count' => 0];
+        $pagination = $first['data']['pagination'] ?? [];
+        $total = (int) ($pagination['total_records'] ?? 0);
+        $pages = (int) ($pagination['total_pages'] ?? 0);
+        if ($total > self::MAX_EVENTS) return ['status' => 'result_limit_exceeded', 'items' => [], 'excluded_unverified_count' => 0];
+        for ($page = 1; $page <= max(1, $pages); $page++) {
+            $result = $page === 1 ? $first : $reader->listForWorkplace($actor, $localityId, $filters, $page, 100);
+            if (empty($result['ok'])) return ['status' => (string) ($result['error'] ?? 'sql_read_failed'), 'items' => [], 'excluded_unverified_count' => $excluded];
+            foreach ($result['data']['items'] ?? [] as $item) {
+                if ((int) ($item['worker_id'] ?? 0) !== $workerId || (int) ($item['workplace_id'] ?? 0) !== $localityId) {
+                    $excluded++;
+                    continue;
+                }
+                $from = max((string) ($item['start_date'] ?? ''), $period['start_date']);
+                $to = min((string) ($item['end_date'] ?? ''), $period['end_date']);
+                $fromDate = self::civilDate($from);
+                $toDate = self::civilDate($to);
+                $valid = $fromDate !== null && $toDate !== null && $toDate >= $fromDate;
+                for ($date = $fromDate; $valid && $date !== null && $date <= $toDate; $date = $date->modify('+1 day')) {
+                    $localDate = $date->format('Y-m-d');
+                    $timezone = $zones[$localDate] ?? null;
+                    if (!is_string($timezone) || !$this->membershipMatchesLocalDate($workerId, $localityId, $localDate, $timezone, $recordedAsOf)) {
+                        $valid = false;
+                    }
+                }
+                if (!$valid) { $excluded++; continue; }
+                $items[] = $item;
             }
-            $uuid = (string) ($item['uuid_ajuste'] ?? '');
-            if ($uuid === '') {
-                continue;
-            }
-            $adjustments[] = [
-                'uuid' => $uuid,
-                'type' => (string) ($item['adjustment_type'] ?? ''),
-                'status' => (string) ($item['adjustment_status'] ?? ''),
-            ];
         }
         return [
-            'date' => $date,
-            'status' => 'existing_evaluation',
-            'revision' => (int) ($evaluation['revision_number'] ?? 0),
-            'administrative_status' => (string) ($evaluation['administrative_status'] ?? ''),
-            'human_review_status' => (string) ($evaluation['human_review_status'] ?? ''),
-            'created_at_utc' => (string) ($evaluation['created_at_utc'] ?? ''),
-            'adjustments' => $adjustments,
+            'status' => $excluded > 0 ? 'partial' : 'available',
+            'items' => $items,
+            'excluded_unverified_count' => $excluded,
+            'source' => ['op_rh_v2_incidencias_maestro', 'op_rh_v2_incidencias_revisiones'],
         ];
     }
 
-    private static function incidenceProjection(array $incidence): array
+    /** @return array{status:string,items:array,excluded_unverified_count:int} */
+    private function readLinkedAdjustments(ChecadorAdjustmentSqlReadService $reader, Usuario $actor, int $localityId, int $workerId, array $period): array
     {
-        return [
-            'uuid' => (string) ($incidence['uuid_incidencia'] ?? ''),
-            'category' => (string) ($incidence['category'] ?? ''),
-            'start_date' => (string) ($incidence['date_range']['start_date'] ?? ''),
-            'end_date' => (string) ($incidence['date_range']['end_date'] ?? ''),
-            'status' => (string) ($incidence['current_status'] ?? ''),
-            'revision' => (int) ($incidence['current_revision'] ?? 0),
-        ];
+        $filters = ['worker_id' => $workerId, 'start_date' => $period['start_date'], 'end_date' => $period['end_date']];
+        $result = $reader->listForWorkplace($actor, $localityId, $filters, 1, 100);
+        if (empty($result['ok'])) return ['status' => (string) ($result['error'] ?? 'sql_read_failed'), 'items' => []];
+        $pagination = $result['data']['pagination'] ?? [];
+        $total = (int) ($pagination['total_records'] ?? 0);
+        $pages = (int) ($pagination['total_pages'] ?? 0);
+        if ($total > self::MAX_EVENTS) return ['status' => 'result_limit_exceeded', 'items' => []];
+        $linked = [];
+        for ($page = 1; $page <= max(1, $pages); $page++) {
+            $pageResult = $page === 1 ? $result : $reader->listForWorkplace($actor, $localityId, $filters, $page, 100);
+            if (empty($pageResult['ok'])) return ['status' => (string) ($pageResult['error'] ?? 'sql_read_failed'), 'items' => []];
+            foreach ($pageResult['data']['items'] ?? [] as $group) {
+                foreach ($group['revisions'] ?? [] as $revision) {
+                    $evaluationIds = array_values(array_unique(array_map(
+                        static fn(array $link): int => (int) ($link['evaluation_id'] ?? 0),
+                        array_filter($revision['evaluation_links'] ?? [], 'is_array')
+                    )));
+                    $evaluationIds = array_values(array_filter($evaluationIds, static fn(int $id): bool => $id > 0));
+                    if ($evaluationIds === []) continue;
+                    $uuid = (string) ($revision['uuid'] ?? '');
+                    if ($uuid === '') continue;
+                    $linked[$uuid] = [
+                        'uuid' => $uuid,
+                        'type' => (string) ($revision['type'] ?? ''),
+                        'status' => (string) ($revision['status'] ?? ''),
+                        'revision' => (int) ($revision['revision'] ?? 0),
+                        'work_date' => (string) ($group['current']['work_date'] ?? ''),
+                        'evaluation_ids' => $evaluationIds,
+                        'source' => ['op_rh_v2_ajustes_administrativos', 'op_rh_v2_evaluaciones_ajustes'],
+                    ];
+                }
+            }
+        }
+        return ['status' => 'available', 'items' => array_values($linked)];
+    }
+
+    private function membershipMatchesLocalDate(int $workerId, int $localityId, string $date, string $timezone, string $recordedAsOf): bool
+    {
+        $effectiveAt = self::localDayStartUtc($date, $timezone);
+        if ($effectiveAt === null) return false;
+        $membership = (new WorkerWorkplaceAssignmentResolver())->resolveAssignments($workerId, $effectiveAt, $recordedAsOf);
+        $assignments = $membership['assignments'] ?? [];
+        return ($membership['status'] ?? '') === 'RESOLVED_SINGLE' && count($assignments) === 1
+            && (int) ($assignments[0]['workplace_id'] ?? 0) === $localityId;
+    }
+
+    private static function localDayStartUtc(string $date, string $timezone): ?string
+    {
+        if (!self::civilDate($date) || !ChecadorOperationalPeriod::isIanaTimezone($timezone)) return null;
+        try {
+            return (new DateTimeImmutable($date . ' 00:00:00', new DateTimeZone($timezone)))
+                ->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+        } catch (Throwable) { return null; }
     }
 
     private static function unavailableAttendance(string $status): array
@@ -591,7 +763,7 @@ final class ChecadorPayrollComparisonReadService
             'status' => $status,
             'events' => [],
             'integrity' => 'NOT_VERIFIED_BY_PORTAL3',
-            'snapshot' => 'LIVE_NON_SNAPSHOT',
+            'snapshot' => 'NOT_QUERIED',
             'completeness' => 'NOT_ESTABLISHED',
             'message' => '',
         ];

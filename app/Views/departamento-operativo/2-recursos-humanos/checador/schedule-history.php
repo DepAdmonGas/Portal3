@@ -81,6 +81,8 @@
         data-customize-url="/departamento-operativo/recursos-humanos/checador/horarios-turnos/plantillas"
         data-edit-url="/departamento-operativo/recursos-humanos/checador/horarios-turnos/plantillas"
         data-edit-enabled="<?= !empty($canManageStationTemplates) ? '1' : '0' ?>"
+        data-write-enabled="<?= !empty($templateWritesEnabled) ? '1' : '0' ?>"
+        data-write-block-message="<?= htmlspecialchars((string) ($templateWriteBlockMessage ?? ''), ENT_QUOTES, 'UTF-8') ?>"
         data-workplace-id="<?= (int) ($selectedWorkplaceId ?? 0) ?>"
         data-workplace-name="<?= htmlspecialchars((string) ($selectedWorkplaceName ?? ''), ENT_QUOTES, 'UTF-8') ?>"
         data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
@@ -97,6 +99,12 @@
             <?php endif; ?>
         </div>
         <div class="card-body">
+            <?php if (!empty($canManageStationTemplates) && empty($templateWritesEnabled)): ?>
+                <div class="alert alert-warning py-2" role="status">
+                    <i class="ti ti-lock me-1" aria-hidden="true"></i>
+                    <?= htmlspecialchars((string) ($templateWriteBlockMessage ?? 'El guardado está bloqueado por las verificaciones de M04.'), ENT_QUOTES, 'UTF-8') ?>
+                </div>
+            <?php endif; ?>
             <div class="alert alert-danger py-2 mb-3" role="alert" x-show="error" x-cloak x-text="error"></div>
             <div class="alert alert-warning py-2 mb-3" role="status" x-show="refreshWarning" x-cloak x-text="refreshWarning"></div>
             <div class="alert alert-success py-2 mb-3" role="status" x-show="success" x-cloak x-text="success"></div>
@@ -270,7 +278,7 @@
                                 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="loading">
                                     <i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar
                                 </button>
-                                <button type="submit" class="btn btn-primary" :disabled="loading">
+                                <button type="submit" class="btn btn-primary" :disabled="loading || !writeEnabled">
                                     <i class="ti ti-check me-1" aria-hidden="true"></i><span x-text="loading ? 'Guardando…' : 'Guardar turno'"></span>
                                 </button>
                             </div>
@@ -312,7 +320,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" :disabled="editLoading"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button>
-                                <button type="submit" class="btn btn-primary" :disabled="editLoading"><i class="ti ti-check me-1" aria-hidden="true"></i><span x-text="editLoading ? 'Guardando…' : 'Guardar cambios'"></span></button>
+                                <button type="submit" class="btn btn-primary" :disabled="editLoading || !writeEnabled"><i class="ti ti-check me-1" aria-hidden="true"></i><span x-text="editLoading ? 'Guardando…' : 'Guardar cambios'"></span></button>
                             </div>
                         </form>
                     </div>

@@ -1,6 +1,6 @@
 # CHECADOR V2 — M04 SQL Read/Write Unified Addendum V1.0
 
-**Status:** Approved by the Portal3 owner for M04 on 2026-11-19; environment activation gates remain mandatory.
+**Status:** Approved by the Portal3 owner for M04 on 2026-11-19, with a Fedora-only development amendment approved 2026-11-23. Production/Plesk activation gates remain mandatory.
 **Applies to:** Portal3 and Checador V2 API; both repositories must contain byte-identical copies.
 **Scope:** M04 station-template catalog/detail reads, segments, create, station customization, immutable versioning, audit, and readback.
 **Does not change:** Architecture Freeze V1.0, J1/J2 semantics, Lector, M03 assignments, M11, or API ingestion and calculation responsibilities.
@@ -52,7 +52,7 @@ Success is returned only after SQL readback confirms template identity, station 
 
 ## 6. Database principal and preflight
 
-Before enabling writes in an environment, verify its actual runtime database and principal. Compare `SHOW CREATE TABLE`, engines, generated columns, unique indexes, foreign keys, audit JSON constraints, and lineage against the approved model. Verify effective grants for that exact principal and database; the principal must have the required SELECT/INSERT and row-lock access and must not have UPDATE/DELETE capability over immutable template/history rows. A development principal's grants are not evidence for Plesk.
+Before enabling writes in an environment, verify its actual runtime database and principal. Compare `SHOW CREATE TABLE`, engines, generated columns, unique indexes, foreign keys, audit JSON constraints, and lineage against the approved model. Outside the Fedora-only exception in §10, verify effective grants for that exact principal and database; the principal must have the required SELECT/INSERT and row-lock access and must not have UPDATE/DELETE capability over immutable template/history rows. A development principal's grants are not evidence for Plesk.
 
 Repository DDL, isolated fixtures, and a schema-only check do not establish runtime grants, user permissions, or a successful operational write.
 
@@ -64,7 +64,7 @@ All Portal3 M04 write gates default closed. Cutover order is mandatory:
 2. Verify the target DDL, engines, indices, constraints, lock behavior, grants, and audit lookup capacity with read-only checks.
 3. Deploy/prepare the Portal3 SQL code with its writer gate closed; verify every Portal3 M04 read and readback is SQL-only.
 4. Close the three API station-template mutations: create, GLOBAL-to-station customization, and immutable version append. Their responses must prove rejection without mutation. Do not affect template GETs, authorized GLOBAL administration, M03 assignments, or other modules.
-5. Verify the API cut, target grants/preflight, and Encargado station permission. Only then enable the four Portal3 M04 gates for that environment: `CHECADOR_M04_SQL_WRITER_ENABLED`, `CHECADOR_M04_API_WRITER_CLOSED`, `CHECADOR_M04_SQL_GRANTS_VERIFIED`, and `CHECADOR_M04_SQL_PREFLIGHT_VERIFIED`.
+5. For Plesk and every non-Fedora target, verify the API cut, target grants/preflight, and Encargado station permission. Only then enable the four Portal3 M04 gates for that environment: `CHECADOR_M04_SQL_WRITER_ENABLED`, `CHECADOR_M04_API_WRITER_CLOSED`, `CHECADOR_M04_SQL_GRANTS_VERIFIED`, and `CHECADOR_M04_SQL_PREFLIGHT_VERIFIED`. The narrowly scoped local exception in §10 does not apply to this step.
 6. Run the acceptance checks in §8. No simultaneous writers or HTTP fallback are permitted.
 7. Rollback closes the Portal3 SQL writer first. API station writes remain closed until Portal3 is verified closed and outstanding operations are reconciled. Never delete or rewrite history as rollback.
 
@@ -75,3 +75,13 @@ For each environment, verify authorized create, GLOBAL customization, immutable 
 ## 9. Approval and environment boundary
 
 The Portal3 owner approved this M04 agreement on 2026-11-19. This approval does not itself attest API runtime closure, database grants, target schema, authenticated acceptance, production deployment, or Plesk readiness. Those remain environment-specific gates. This document grants no production/Plesk access, migration, SQL grant change, or deployment authorization.
+
+## 10. Owner-approved Fedora development exception — 2026-11-23
+
+The Portal3 owner expressly authorizes a local-only exception for `APP_ENV=dev`, `development`, or `local`, and only when the existing `default` MySQL connection is configured for a loopback host and both its configured database and live `SELECT DATABASE()` identity equal `bd_admongas`. The demo/read-only mode must remain disabled. `APP_ENV` by itself is never sufficient. No new SQL user, connection, credential, grant, table, or migration is authorized.
+
+For this exact Fedora target, the four environment attestations listed in §7 are not required to open Portal3's SQL writer, and the existing broad grants on `default` are accepted. The live structural preflight remains mandatory and continues to verify the actual database identity, required tables/columns, InnoDB engines, generated `scope_id`, required indexes, foreign keys, and SQL JSON support. It also verifies required SELECT and INSERT privileges while allowing the accepted extra UPDATE/DELETE/ALL privileges. Authentication, Encargado permission, canonical locality, CSRF, confirmation, validation, transaction/row locking, idempotency, immutable-version write behavior, mandatory audit insertion, and persisted readback remain enforced by Portal3.
+
+**Risk explicitly accepted for Fedora only:** MariaDB privileges do not enforce append-only history for this principal. A user or process with the same broad credentials could update or delete template/history rows outside this writer. The Portal3 writer itself continues to append new versions and never updates prior versions, but this is an application behavior rather than a database-enforced immutability guarantee. The owner also waives the four activation attestations for this local database only; this exception must not be used as evidence that API station-template writers are closed.
+
+This exception does not apply to Plesk, preproduction, production, any remote host, any database other than `bd_admongas`, or any environment whose live database identity cannot be confirmed. Those targets remain subject to §§6–9, including the API cut, least-privilege verification, all four attestations, and target-specific approval. This amendment leaves the Architecture Freeze, J1/J2, API V2, and Lector unchanged and authorizes no deployment.
