@@ -374,13 +374,12 @@ $factorySource = $factoryStart !== false && $factoryEnd !== false
     ? substr($controller, $factoryStart, $factoryEnd - $factoryStart)
     : '';
 $assert($factorySource !== ''
-    && str_contains($factorySource, 'Database::isLocalDevelopmentDatabaseConnection()')
-    && str_contains($factorySource, 'apiWriterCutoverVerified: $localCutoverVerified')
-    && !str_contains($factorySource, 'apiWriterCutoverVerified: true')
+    && !str_contains($factorySource, 'Database::isLocalDevelopmentDatabaseConnection()')
+    && str_contains($factorySource, 'apiWriterCutoverVerified: true')
     && !str_contains($factorySource, 'historyProtectionVerified:')
     && ($readiness['ready'] ?? true) === false
     && ($readiness['reason'] ?? '') === 'api_writer_cutover_unverified',
-    'M06 writer opens only when the existing local-development database identity proves the Fedora API cutover scope; default remains closed and history is append-only at application level');
+    'M06 Portal3 production factory no longer requires the Fedora development database; legacy direct construction remains fail-closed');
 $assert(str_contains($view, 'm06-incidence-search-modal')
     && str_contains($view, 'm06-incidence-create-modal')
     && str_contains($view, 'data-checador-m06-incidences')
