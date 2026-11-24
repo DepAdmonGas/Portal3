@@ -936,7 +936,7 @@ final class ChecadorAccessService
         }
     }
 
-    /** M06 read is server-authorized by role, effective read ACL, and canonical locality scope. */
+    /** M06 read uses the existing institutional Checador ACL and canonical locality scope. */
     public static function authorizeIncidenceRead(?int $requestedLocalityId): array
     {
         $scope = self::authorize($requestedLocalityId);
@@ -948,15 +948,13 @@ final class ChecadorAccessService
             if (!$user || !in_array((int) ($user->id_puesto ?? 0), [self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID], true)) {
                 return ['allowed' => false, 'reason' => 'incidence_read_role_denied', 'workplaces' => []];
             }
-            $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::INCIDENCE_MODULE_KEY);
-            if (empty($permissions['leer'])) return ['allowed' => false, 'reason' => 'incidence_read_permission_denied', 'workplaces' => []];
-            return ['allowed' => true, 'reason' => 'authorized', 'workplaces' => $scope['workplaces'], 'namespace' => self::INCIDENCE_MODULE_KEY];
+            return ['allowed' => true, 'reason' => 'authorized', 'workplaces' => $scope['workplaces']];
         } catch (Throwable) {
             return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
         }
     }
 
-    /** M06 creation is Encargado-only and requires effective create and read grants. */
+    /** M06 creation is Encargado-only and requires the institutional Checador ACL and locality scope. */
     public static function authorizeIncidenceCreate(?int $requestedLocalityId): array
     {
         $scope = self::authorizeIncidenceRead($requestedLocalityId);
@@ -973,50 +971,22 @@ final class ChecadorAccessService
             if (!$user || (int) ($user->id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID) {
                 return ['allowed' => false, 'reason' => 'incidence_create_role_denied', 'workplaces' => []];
             }
-            $permissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::INCIDENCE_MODULE_KEY);
-            if (empty($permissions['crear'])) {
-                return ['allowed' => false, 'reason' => 'incidence_create_permission_denied', 'workplaces' => []];
-            }
 
             return [
                 'allowed' => true,
                 'reason' => 'authorized',
                 'workplaces' => $scope['workplaces'],
-                'namespace' => self::INCIDENCE_MODULE_KEY,
+                'capability' => 'M06_CREATE',
             ];
         } catch (Throwable) {
             return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
         }
     }
 
-    /** M06 content revisions are Encargado-only; Dirección remains read-only. */
+    /** M06 content revisions use the already-authorized Encargado create capability. */
     public static function authorizeIncidenceRevision(?int $requestedLocalityId): array
     {
-        $scope = self::authorizeIncidenceRead($requestedLocalityId);
-        if (!($scope['allowed'] ?? false)) return $scope;
-        try {
-            $authenticated = Auth::user();
-            if (!$authenticated || !Auth::check()) {
-                return ['allowed' => false, 'reason' => 'unauthenticated', 'workplaces' => []];
-            }
-            $user = Usuario::query()->where('id', (int) $authenticated->id)->where('estatus', 0)->first();
-            if (!$user || (int) ($user->id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID) {
-                return ['allowed' => false, 'reason' => 'incidence_revision_role_denied', 'workplaces' => []];
-            }
-            $createPermissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::INCIDENCE_MODULE_KEY);
-            $resolutionPermissions = ModuloDptoOperativoService::getPermiso((int) $user->id, self::RESOLUTION_MODULE_KEY);
-            if (empty($createPermissions['crear']) && empty($resolutionPermissions['editar'])) {
-                return ['allowed' => false, 'reason' => 'incidence_revision_permission_denied', 'workplaces' => []];
-            }
-            return [
-                'allowed' => true,
-                'reason' => 'authorized',
-                'workplaces' => $scope['workplaces'],
-                'namespace' => self::INCIDENCE_MODULE_KEY,
-            ];
-        } catch (Throwable) {
-            return ['allowed' => false, 'reason' => 'authorization_lookup_failed', 'workplaces' => []];
-        }
+        return self::authorizeIncidenceCreate($requestedLocalityId);
     }
 
     /**

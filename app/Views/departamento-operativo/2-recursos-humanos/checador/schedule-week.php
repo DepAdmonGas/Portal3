@@ -285,7 +285,7 @@
                         <div class="alert alert-danger mt-3 mb-0" role="alert" x-show="error" x-text="error"></div>
                         <div class="alert alert-success mt-3 mb-0" role="status" x-show="status" x-text="status"></div>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary" :disabled="loading"><span x-show="loading" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Guardar días seleccionados</button></div>
+                    <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary" :disabled="loading || completed || effectiveDatesComplete"><span x-show="loading" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Guardar días seleccionados</button></div>
                 </form>
             </div></div>
         </div>

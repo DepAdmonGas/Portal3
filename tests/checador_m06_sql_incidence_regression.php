@@ -93,7 +93,6 @@ $service = new ChecadorAdministrativeIncidenceSqlService(
     workerCoversPeriod: static fn(int $worker, int $workplace, string $start, string $end, string $timezone): bool => $worker === 23 && $workplace === 1,
     readPolicy: $policy,
     schemaPreflight: static fn(): bool => true,
-    apiWriterCutoverVerified: true,
     clock: $clock,
     authorizeRevision: static fn(Usuario $user, int $workplace): bool => (int) $user->id === 7 && $workplace === 1,
     authorizeLifecycle: static fn(Usuario $user, int $workplace, string $action): bool => (int) $user->id === 7 && $workplace === 1
@@ -103,14 +102,13 @@ $service = new ChecadorAdministrativeIncidenceSqlService(
 $assert($service->writeReadiness()['ready'] === true, 'isolated test writer can exercise the reviewed preflight path');
 $closedByDefault = (new ChecadorAdministrativeIncidenceSqlService())->writeReadiness();
 $assert(($closedByDefault['ready'] ?? true) === false
-    && ($closedByDefault['reason'] ?? '') === 'api_writer_cutover_unverified',
-    'operational writer is closed by default until API cutover is independently verified');
+    && ($closedByDefault['reason'] ?? '') === 'schema_preflight_failed',
+    'writer readiness depends on the real SQL schema preflight, not a separate API or environment flag');
 $schemaFailure = new ChecadorAdministrativeIncidenceSqlService(
-    schemaPreflight: static fn(): bool => false,
-    apiWriterCutoverVerified: true
+    schemaPreflight: static fn(): bool => false
 );
 $assert(($schemaFailure->writeReadiness()['reason'] ?? '') === 'schema_preflight_failed',
-    'required schema and effective SQL-operation preflight still blocks an incomplete destination');
+    'required schema preflight still blocks an incomplete destination');
 
 $uuid = ChecadorAdministrativeIncidenceSqlService::uuidV5ForIdempotencyKey('m06-test-retry-01');
 $assert($uuid === ChecadorAdministrativeIncidenceSqlService::uuidV5ForIdempotencyKey('m06-test-retry-01')
@@ -293,7 +291,6 @@ $assert(($invalidTransition['error'] ?? '') === 'invalid_lifecycle_transition'
     'a lifecycle transition from CANCELLED is rejected without adding a revision');
 $noRevisionPermission = new ChecadorAdministrativeIncidenceSqlService(
     authorizeRead: static fn(Usuario $user, int $workplace): bool => true,
-    apiWriterCutoverVerified: true,
     schemaPreflight: static fn(): bool => true,
     clock: $clock,
     authorizeRevision: static fn(Usuario $user, int $workplace): bool => false
@@ -304,12 +301,12 @@ $assert(($deniedRevision['error'] ?? '') === 'permission_denied'
     'revision ACL denial blocks before persistence');
 $closedLifecycle = new ChecadorAdministrativeIncidenceSqlService(
     authorizeLifecycle: static fn(Usuario $user, int $workplace, string $action): bool => true,
-    schemaPreflight: static fn(): bool => true
+    schemaPreflight: static fn(): bool => false
 );
 $closedAction = $closedLifecycle->transition($actor, 1, $uuid, 'revoke', 6, 'Corte API aún no acreditado');
-$assert(($closedAction['error'] ?? '') === 'api_writer_cutover_unverified'
+$assert(($closedAction['error'] ?? '') === 'schema_preflight_failed'
     && Capsule::table('op_rh_v2_incidencias_revisiones')->count() === $beforeInvalidTransition,
-    'all operational SQL lifecycle writes remain fail-closed until the API writer cut is verified');
+    'an incomplete SQL schema still blocks the lifecycle operation without mutating history');
 $pdo->exec('DROP TRIGGER m06_revision_no_update');
 $pdo->exec('DROP TRIGGER m06_revision_no_delete');
 
@@ -368,19 +365,37 @@ $closedUntilVerified = new ChecadorAdministrativeIncidenceSqlService(
     schemaPreflight: static fn(): bool => true
 );
 $readiness = $closedUntilVerified->writeReadiness();
+$serviceSource = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAdministrativeIncidenceSqlService.php') ?: '';
+$cutoverReady = new ChecadorAdministrativeIncidenceSqlService(
+    schemaPreflight: static fn(): bool => true
+);
+$cutoverReadiness = $cutoverReady->writeReadiness();
 $factoryStart = strpos($controller, 'private static function m06AdministrativeIncidenceSqlService');
 $factoryEnd = $factoryStart === false ? false : strpos($controller, 'private static function loadSnapshotState', $factoryStart);
 $factorySource = $factoryStart !== false && $factoryEnd !== false
     ? substr($controller, $factoryStart, $factoryEnd - $factoryStart)
     : '';
 $assert($factorySource !== ''
-    && str_contains($factorySource, 'Database::isLocalDevelopmentDatabaseConnection()')
-    && str_contains($factorySource, 'apiWriterCutoverVerified: $localCutoverVerified')
-    && !str_contains($factorySource, 'apiWriterCutoverVerified: true')
+    && !str_contains($factorySource, 'Database::isLocalDevelopmentDatabaseConnection()')
+    && !str_contains($factorySource, 'apiWriterCutoverVerified')
     && !str_contains($factorySource, 'historyProtectionVerified:')
-    && ($readiness['ready'] ?? true) === false
-    && ($readiness['reason'] ?? '') === 'api_writer_cutover_unverified',
-    'M06 writer opens only when the existing local-development database identity proves the Fedora API cutover scope; default remains closed and history is append-only at application level');
+    && ($closedByDefault['ready'] ?? true) === false
+    && ($closedByDefault['reason'] ?? '') === 'schema_preflight_failed',
+    'M06 factory uses the existing SQL writer without Fedora or API cutover gates');
+$preflightStart = strpos($serviceSource, 'public function mariadbSchemaReady(');
+$preflightEnd = strpos($serviceSource, 'private function policyForPeriod(', $preflightStart ?: 0);
+$preflightSource = $preflightStart !== false && $preflightEnd !== false
+    ? substr($serviceSource, $preflightStart, $preflightEnd - $preflightStart)
+    : '';
+$assert(($cutoverReadiness['ready'] ?? false) === true
+    && $preflightSource !== ''
+    && str_contains($preflightSource, 'information_schema.STATISTICS')
+    && str_contains($preflightSource, 'SUB_PART')
+    && !str_contains($preflightSource, 'information_schema.KEY_COLUMN_USAGE')
+    && !str_contains($preflightSource, 'uk_v2_incidencia_uuid')
+    && !str_contains($preflightSource, 'fk_v2_incid_maestro_localidad')
+    && !str_contains($preflightSource, 'hasEffectiveTablePrivilege'),
+    'M06 writer validates unique keys without requiring physical FK metadata or Fedora/API cutover gates');
 $assert(str_contains($view, 'm06-incidence-search-modal')
     && str_contains($view, 'm06-incidence-create-modal')
     && str_contains($view, 'data-checador-m06-incidences')
@@ -394,7 +409,7 @@ $assert(str_contains($moduleJs, "lifecycle('revision'")
     && str_contains($moduleJs, "lifecycle('revoke'")
     && str_contains($renderedIncidenceView, 'id="m06-incidence-action-modal"')
     && str_contains($renderedIncidenceView, 'data-m06-writer-ready="0"'),
-    'existing M06 UI exposes ACL-controlled revision/lifecycle forms while keeping submit disabled behind the API cutoff');
+    'existing M06 UI exposes ACL-controlled revision/lifecycle forms and keeps submit disabled when server readiness is false');
 $assert(str_contains($view, '<i class="ti ti-search me-1"')
     && str_contains($view, '<i class="ti ti-plus me-1"')
     && str_contains($view, '<i class="ti ti-eye me-1"')
@@ -503,17 +518,39 @@ $assert($lifecycleControllerSource !== ''
     && !str_contains($lifecycleControllerSource, 'lifecycleAction('),
     'M06 revision and lifecycle controller paths use the Portal3 SQL writer without HTTP API calls');
 $access = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAccessService.php') ?: '';
-$assert(str_contains($access, 'id_puesto ?? 0), [self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID]')
-    && str_contains($access, "empty(\$permissions['leer'])"),
-    'read ACL is limited to active Encargado/Direction roles and effective read permission');
-$assert(str_contains($access, 'id_puesto ?? 0) !== self::ENCARGADO_PUESTO_ID')
-    && str_contains($access, "empty(\$permissions['crear'])"),
-    'create ACL is Encargado-only and requires the effective create permission');
+$readAuthStart = strpos($access, 'public static function authorizeIncidenceRead(');
+$revisionAuthStart = strpos($access, 'public static function authorizeIncidenceRevision(');
+$evaluationAuthStart = strpos($access, 'public static function authorizeEvaluation(');
+$readCreateSource = $readAuthStart !== false && $evaluationAuthStart !== false
+    ? substr($access, $readAuthStart, $evaluationAuthStart - $readAuthStart)
+    : '';
+$assert(str_contains($readCreateSource, '[self::ENCARGADO_PUESTO_ID, self::DIRECCION_OPERACIONES_PUESTO_ID]')
+    && str_contains($readCreateSource, 'self::ENCARGADO_PUESTO_ID')
+    && !str_contains($readCreateSource, 'ModuloDptoOperativoService::getPermiso')
+    && str_contains($readCreateSource, "'capability' => 'M06_CREATE'")
+    && $revisionAuthStart !== false
+    && str_contains(substr($access, $revisionAuthStart, $evaluationAuthStart - $revisionAuthStart), 'return self::authorizeIncidenceCreate('),
+    'M06 read is Checador-scope plus active roles 6/13; create and revision are Encargado-only without physical M06 ACL rows');
+$assert(str_contains($access, 'ModuloDptoOperativoService::getPermiso((int) $user->id, $namespace)')
+    && str_contains($access, 'authorizeEvaluation(')
+    && str_contains($access, 'authorizeFalta('),
+    'resolution/approval, evaluation and FALTA retain their separate authorization checks');
 $assert(str_contains($controller, 'CsrfToken::validate($csrf)')
     && str_contains($controller, 'authorizeIncidenceCreate($workplaceId)')
     && str_contains($controller, '->create('),
     'POST validates CSRF, rechecks locality permission, then delegates to the SQL writer');
-$serviceSource = file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAdministrativeIncidenceSqlService.php') ?: '';
+$listReadStart = strpos($serviceSource, 'public function listForWorkplace(');
+$detailReadStart = strpos($serviceSource, 'public function detail(', $listReadStart ?: 0);
+$listReadSource = $listReadStart !== false && $detailReadStart !== false
+    ? substr($serviceSource, $listReadStart, $detailReadStart - $listReadStart)
+    : '';
+$assert(str_contains($listReadSource, "'exception_class' => \$exception::class")
+    && str_contains($listReadSource, "'sqlstate' => \$sqlState")
+    && str_contains($listReadSource, "'stage' => \$readStage")
+    && str_contains($listReadSource, "Logger::error('M06 incidence SQL list read failed'")
+    && !str_contains($listReadSource, 'getSql()')
+    && !str_contains($listReadSource, 'toSql()'),
+    'M06 list SQL failure logs exception class, SQLSTATE and fixed query stage without SQL or bindings');
 $assert(str_contains($serviceSource, "connection('default')")
     && str_contains($serviceSource, '->transaction(')
     && str_contains($serviceSource, "'id_localidad' => \$workplaceId")

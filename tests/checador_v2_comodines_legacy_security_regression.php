@@ -43,7 +43,7 @@ $checadorRoutesIsolated = str_contains($routes, "'/recursos-humanos/checador/rol
     && str_contains($routes, "'/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'requestCoverage'])")
     && str_contains($checadorController, 'public function coverageList(): void')
     && str_contains($checadorController, 'public function requestCoverage(): void')
-    && str_contains($checadorService, 'public const AUTHORIZED_COVERAGE_WORKER_IDS');
+    && str_contains($checadorService, 'public const COVERAGE_WORKER_POSITION_ID = 14');
 $assert($checadorRoutesIsolated, 'new Checador Comodines operations use their own controller and service boundary');
 
 $scopeSafe = str_contains($routes, "'/recursos-humanos/checador/rol-comodines', Route::auth(['ChecadorController', 'rolComodines'])")

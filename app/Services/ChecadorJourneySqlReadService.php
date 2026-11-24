@@ -380,6 +380,7 @@ final class ChecadorJourneySqlReadService
                 $selectedP1['segments'] = [];
                 foreach ($pairingSegments[$selectedP1['id']] ?? [] as $segment) {
                     $selectedP1['segments'][] = [
+                        'id' => (int) $segment['id'],
                         'ordinal' => (int) $segment['ordinal_segmento'],
                         'status' => (string) $segment['estado_segmento'],
                         'created_at_utc' => (string) $segment['creado_at_utc'],
@@ -420,18 +421,30 @@ final class ChecadorJourneySqlReadService
         $calculation = $detail['calculation'];
         if (is_array($calculation)) {
             foreach (['segundos_programados_totales', 'segundos_trabajados_totales', 'segundos_candidatos_fuera_horario'] as $secondsColumn) {
-                if ($calculation[$secondsColumn] !== null && is_numeric($calculation[$secondsColumn])) {
+                if (($calculation[$secondsColumn] ?? null) !== null && is_numeric($calculation[$secondsColumn])) {
                     $calculation[$secondsColumn] = (int) $calculation[$secondsColumn];
                 }
             }
         }
+        $segmentOrdinalById = [];
+        foreach ($pairing['segments'] ?? [] as $segment) {
+            if (!is_array($segment)) continue;
+            $segmentId = (int) ($segment['id'] ?? 0);
+            $ordinal = (int) ($segment['ordinal'] ?? 0);
+            if ($segmentId > 0 && $ordinal > 0) $segmentOrdinalById[$segmentId] = $ordinal;
+        }
         $associatedEvents = [];
         foreach ($pairing['associated_events'] ?? [] as $association) {
             if (!is_array($association) || !is_array($association['event'] ?? null)) continue;
-            $associatedEvents[] = [
+            $segmentId = (int) ($association['id_pareo_segmento'] ?? 0);
+            $associatedEvent = [
                 'pairing_role' => (string) ($association['rol_marcacion'] ?? ''),
                 ...$association['event'],
             ];
+            if ($segmentId > 0 && isset($segmentOrdinalById[$segmentId])) {
+                $associatedEvent['segment_ordinal'] = $segmentOrdinalById[$segmentId];
+            }
+            $associatedEvents[] = $associatedEvent;
         }
         $persistedStatus = $calculation['estado_calculo'] ?? $pairing['estado_pareo'] ?? null;
         return [
@@ -473,6 +486,8 @@ final class ChecadorJourneySqlReadService
                 'level2_status' => $pairing['estado_completitud_l2'] ?? null,
                 'level2_verification' => 'not_independently_verifiable',
             ],
+            // Associations are a persisted P1 subset, not a complete evaluated-event snapshot.
+            'persisted_pairing_events' => $associatedEvents,
             'evaluated_raw_events' => $associatedEvents,
         ];
     }

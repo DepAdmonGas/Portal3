@@ -44,11 +44,13 @@ $entry = $event('EVENT-ENTRY-1', '2026-10-23T14:00:00Z', 'ENTRY', 1);
 $exit = $event('EVENT-EXIT-1', '2026-10-23T18:00:00Z', 'EXIT', 1);
 $surplus = $event('EVENT-SURPLUS', '2026-10-23T19:00:00Z', 'SURPLUS', 1);
 $unmatched = $event('EVENT-UNMATCHED', '2026-10-23T20:00:00Z', 'UNMATCHED', null, 'PENDING_MATCH');
+$surplus['local_time'] = ['date' => '2026-10-23', 'time' => '19:06', 'utc' => $surplus['ocurrido_at_utc']];
+$unmatched['local_time'] = ['date' => '2026-10-23', 'time' => '20:11', 'utc' => $unmatched['ocurrido_at_utc']];
 $row = [
     'worker_id' => 900001,
     'full_name' => 'Ana García',
     'employee_number' => 'EMP-009',
-    'status' => 'incomplete',
+    'status' => 'classification_pending',
     'schedule' => [
         'estado_jornada' => 'SCHEDULED',
         'horario_local' => ['segmentos' => [[
@@ -126,6 +128,9 @@ $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP
     && str_contains($mainTable, '08:00') && str_contains($mainTable, '1.ª entrada')
     && str_contains($mainTable, '1.ª salida') && str_contains($mainTable, '2.ª entrada') && str_contains($mainTable, '2.ª salida')
     && str_contains($mainTable, 'Horario efectivo') && str_contains($mainTable, 'Estado'), 'main row retains the prior column layout with current schedule and status labels');
+$assert(str_contains($mainTable, 'Pendiente de clasificación')
+    && str_contains($mainTable, 'Marcaciones observadas: 19:06, 20:11'),
+    'additional observed times appear beside the neutral status without filling entry or exit slots');
 $assert(str_contains($html, 'table-responsive overflow-x-auto overflow-y-hidden pb-4')
     && str_contains($mainTable, 'dropdown-menu dropdown-menu-end')
     && str_contains($mainTable, 'data-worker-id="900001"')
@@ -199,6 +204,7 @@ $assert(str_contains($mainTable, 'Ver detalle')
     && str_contains($html, 'Marcaciones originales y trazabilidad')
     && str_contains($html, '2026-10-23T14:00:00Z')
     && str_contains($html, 'Registro adicional') && str_contains($html, 'Registro sin emparejar')
+    && str_contains($html, '2026-10-23 19:06') && str_contains($html, '2026-10-23 20:11')
     && str_contains($html, 'Integridad no verificada por Portal3'), 'detail modal preserves local/UTC event provenance and additional/unmatched events');
 $assert(str_contains($html, '<div class="datatables">')
     && str_contains($controllerSource, "\$workspace === 'daily-attendance'")

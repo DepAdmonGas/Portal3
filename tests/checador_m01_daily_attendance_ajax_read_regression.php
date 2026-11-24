@@ -17,11 +17,11 @@ $dailyHandler = $handlerStart !== false && $handlerEnd !== false ? substr($contr
 $dashboardStart = strpos($controller, 'function renderDashboardWorkspace(');
 $dashboard = $dashboardStart === false ? '' : substr($controller, $dashboardStart);
 $dailyRosterLookup = strpos($dashboard, '->workersForAttendanceFilter(');
-$dailyReaderInitialization = strpos($dashboard, '$reader = new ChecadorDailyReadService()');
+$dailyReaderInitialization = strpos($dashboard, '$rawAttendance = self::readDailySqlAttendance(');
 $fallbackPolicyStart = strpos($controller, 'private static function canDisplayAttendanceRosterFallback');
 $fallbackPolicyEnd = $fallbackPolicyStart === false
     ? false
-    : strpos($controller, 'private static function readDailyRawAttendance', $fallbackPolicyStart);
+    : strpos($controller, 'private static function readDailySqlAttendance', $fallbackPolicyStart);
 $fallbackPolicy = $fallbackPolicyStart !== false && $fallbackPolicyEnd !== false
     ? substr($controller, $fallbackPolicyStart, $fallbackPolicyEnd - $fallbackPolicyStart)
     : '';
@@ -74,7 +74,7 @@ $checks = [
         && str_contains($accessService, "'localidades'")
         && str_contains($accessService, 'positiveIdList($moduleConfig->departamentos_soportados)')
         && str_contains($accessService, 'RhLocalidad::query()->whereKey($localityId)->exists()'),
-    'a successful empty API snapshot still renders the active authorized roster, while failed reads remain errors' =>
+    'a successful empty SQL event read still renders the active authorized roster, while failed reads remain errors' =>
         str_contains($dashboard, "if (!\$readResult['ok'])")
         && str_contains($dashboard, "\$state = 'success';")
         && strpos($dashboard, "\$state = 'success';") < strpos($dashboard, 'ChecadorAttendanceRosterService())->currentRoster(')
@@ -84,12 +84,12 @@ $checks = [
         && str_contains($view, 'if ($viewRows === [])')
         && str_contains($view, 'No hay colaboradores atribuibles dentro de la información disponible')
         && str_contains($view, 'El padrón no está disponible y no se muestran personas sin una membresía autorizada verificable.'),
-    'verified roster is read before API initialization and can survive a read-client configuration failure' =>
+    'verified roster and M01 SQL reader are independent from the shared API read client' =>
         $dailyRosterLookup !== false
         && $dailyReaderInitialization !== false
         && $dailyRosterLookup < $dailyReaderInitialization
-        && str_contains($dashboard, '$reader = null;')
-        && str_contains($controller, '?ChecadorDailyReadService $reader')
+        && str_contains($dashboard, 'self::readDailySqlAttendance(')
+        && !str_contains($controller, 'private static function readDailyRawAttendance(')
         && str_contains($view, '$attendanceRosterFallbackAllowed')
         && str_contains($fallbackPolicy, 'current_active_roster')
         && str_contains($fallbackPolicy, "in_array(\$status, ['current_roster_only', 'ready'], true)")
@@ -98,7 +98,7 @@ $checks = [
     'unexpected daily-read exceptions are logged safely and preserve only the verified roster reference' =>
         str_contains($dashboard, 'catch (\\Throwable $exception)')
         && str_contains($dashboard, "Logger::error('Checador dashboard workspace read failed'")
-        && str_contains($dashboard, 'self::readDailyRawAttendance(')
+        && str_contains($dashboard, 'self::readDailySqlAttendance(')
         && str_contains($dashboard, "Logger::error('Checador attendance roster fallback failed'")
         && str_contains($dashboard, '$attendanceRosterFallbackAllowed = true;')
         && str_contains($view, 'no confirma pertenencia histórica, asistencia ni horario'),

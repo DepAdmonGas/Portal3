@@ -59,6 +59,10 @@ $assert(str_contains($moduleStationJsSource, "var journeysPath = checadorPath + 
 $assert(str_contains($serviceSource, "where('j.id_estacion', \$workplaceId)")
     && str_contains($serviceSource, 'WorkerWorkplaceAssignmentResolver')
     && str_contains($serviceSource, 'sourceAssignmentMatches'), 'SQL scope and historical membership/source assignment checks are present');
+$assert(str_contains($serviceSource, "'persisted_pairing_events' => \$associatedEvents")
+    && str_contains($serviceSource, "'id' => (int) \$segment['id']")
+    && str_contains($serviceSource, "\$associatedEvent['segment_ordinal'] = \$segmentOrdinalById[\$segmentId]"),
+    'C01 exposes only persisted P1 role-to-segment ordinal associations for M01 slot projection');
 $assert(str_contains($viewSource, 'name="start_date"') && str_contains($viewSource, 'name="end_date"')
     && str_contains($viewSource, 'name="worker_id"') && str_contains($viewSource, 'journeyPagination'), 'server filters and SQL pagination are wired into the existing view');
 $assert(str_contains($serviceSource, "where('j.id_personal', \$workerId)")
@@ -180,6 +184,43 @@ $denied = (new ChecadorJourneySqlReadService(static fn(int $id): bool => false))
 $assert(($denied['error'] ?? '') === 'permission_denied', 'service rejects an unauthorized locality before querying');
 $invalidRange = (new ChecadorJourneySqlReadService(static fn(int $id): bool => true))->read(1, '2026-11-20', '2026-11-01');
 $assert(($invalidRange['error'] ?? '') === 'invalid_date_range', 'invalid and reversed ranges fail closed');
+
+$projectMethod = new ReflectionMethod(ChecadorJourneySqlReadService::class, 'projectJourney');
+$projectMethod->setAccessible(true);
+$projectedFixture = $projectMethod->invoke(new ChecadorJourneySqlReadService(static fn(int $id): bool => true), [
+    'journey_id' => 701, 'worker_id' => 558, 'worker_name' => 'Fixture C01/M01', 'workplace_id' => 1,
+    'work_date' => '2026-11-25',
+    'row' => (object) [
+        'tipo_jornada' => 'SCHEDULED', 'payload_segmentos_json' => '[{"ordinal":1,"hora_inicio_local":"06:00:00","hora_fin_local":"14:00:00"}]',
+        'scheduled_start_utc' => '2026-11-25 12:00:00', 'scheduled_end_utc' => '2026-11-25 20:00:00',
+        'timezone_local' => 'America/Mexico_City', 'creado_at_utc' => '2026-11-25 12:00:00', 'actualizado_at_utc' => '2026-11-25 12:00:00',
+    ],
+], [
+    'pairing_status' => 'ready',
+    'pairing' => [
+        'id' => 801, 'revision_numero' => 1, 'estado_pareo' => 'PARTIAL_MISSING_OUT',
+        'segments' => [['id' => 3001, 'ordinal' => 1, 'status' => 'PARTIAL_MISSING_OUT']],
+        'associated_events' => [
+            ['id_pareo_segmento' => 3001, 'rol_marcacion' => 'ENTRY', 'event' => ['event_uuid' => 'c01-entry', 'ocurrido_at_utc' => '2026-11-25 12:05:00']],
+            ['id_pareo_segmento' => null, 'rol_marcacion' => 'SURPLUS', 'event' => ['event_uuid' => 'c01-extra', 'ocurrido_at_utc' => '2026-11-25 20:30:00']],
+        ],
+    ],
+    'calculation' => ['id' => 901, 'revision_numero' => 1, 'estado_calculo' => 'PARTIAL_DATA', 'segundos_trabajados_totales' => null],
+    'pairing_history' => [], 'calculation_history' => [],
+]);
+$assert(is_array($projectedFixture)
+    && ($projectedFixture['persisted_pairing_events'][0]['pairing_role'] ?? '') === 'ENTRY'
+    && ($projectedFixture['persisted_pairing_events'][0]['segment_ordinal'] ?? 0) === 1
+    && !array_key_exists('segment_ordinal', $projectedFixture['persisted_pairing_events'][1] ?? [])
+    && ($projectedFixture['calculation']['estado_calculo'] ?? '') === 'PARTIAL_DATA',
+    'isolated C01 projection maps persisted segment identity to ordinal and leaves unsegmented surplus unclassified');
+$projectedM01Fixture = App\Services\ChecadorAttendanceProjection::workerRow(
+    ['worker_id' => 558, 'full_name' => 'Fixture C01/M01'], [], $projectedFixture, 'America/Mexico_City'
+);
+$assert(($projectedM01Fixture['slots']['ENTRY:1']['event']['event_uuid'] ?? '') === 'c01-entry'
+    && $projectedM01Fixture['slots']['EXIT:1']['event'] === null
+    && ($projectedM01Fixture['additional_events'][0]['event_uuid'] ?? '') === 'c01-extra',
+    'M01 consumes C01 persisted P1 role/ordinal only and retains additional association events');
 
 Dotenv::createImmutable($base)->safeLoad();
 Database::initialize();

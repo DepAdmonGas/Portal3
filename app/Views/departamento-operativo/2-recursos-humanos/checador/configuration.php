@@ -62,6 +62,10 @@ $m11HistoryPagination = is_array($m11AuditRead['pagination'] ?? null) ? $m11Audi
 $readerProfiles = is_array($config['reader_profiles'] ?? null) ? $config['reader_profiles'] : [];
 $positions = is_array($config['positions'] ?? null) ? $config['positions'] : [];
 $deviceAuth = is_array($config['device_auth'] ?? null) ? $config['device_auth'] : [];
+$deviceLinkRead = is_array($deviceLink ?? null) ? $deviceLink : ['status' => 'unavailable', 'items' => [], 'can_manage' => false];
+$deviceLinkItems = is_array($deviceLinkRead['items'] ?? null) ? $deviceLinkRead['items'] : [];
+$canReadDeviceLink = ($deviceLinkRead['ok'] ?? false) === true;
+$canManageDeviceLink = $canReadDeviceLink && ($deviceLinkRead['can_manage'] ?? false) === true && ($demoMode ?? false) !== true;
 $attendancePolicyFormDefaults = is_array($attendancePolicyDefaults ?? null) ? $attendancePolicyDefaults : $attendancePolicyFormDefaults;
 $attendancePolicyFeedback = is_array($attendancePolicyFeedback ?? null) ? $attendancePolicyFeedback : null;
 $attendancePolicyFormValues = array_merge($attendancePolicyFormDefaults, is_array($attendancePolicyFeedback['form_values'] ?? null) ? $attendancePolicyFeedback['form_values'] : []);
@@ -477,6 +481,78 @@ $readerProfileItemsJson = htmlspecialchars(
                 <p class="small mb-0">Estado: <?= $esc($labelForStatus((string) ($readerProfiles['status'] ?? 'unavailable'))) ?>.</p>
             <?php endif; ?>
 
+            <div class="border rounded p-3 mt-4" id="m11-reader-link"
+                x-data="m11DeviceLink()"
+                data-devices="<?= $policyJson($deviceLinkItems) ?>"
+                data-generate-url="/departamento-operativo/recursos-humanos/checador/configuracion/vinculacion-lector/generar"
+                data-revoke-url="/departamento-operativo/recursos-humanos/checador/configuracion/vinculacion-lector/revocar"
+                data-workplace-id="<?= (int) ($selectedWorkplaceId ?? 0) ?>"
+                data-csrf-token="<?= $esc(\App\Core\CsrfToken::token()) ?>">
+                <h3 class="h6 mb-1"><i class="ti ti-link me-1" aria-hidden="true"></i>Vinculación del Lector</h3>
+                <p class="small text-muted mb-3">El token se muestra una sola vez. Estado y vigencia se consultan desde la base compartida.</p>
+                <?php if ($canManageDeviceLink): ?><p class="small text-muted">Revocar la vinculación cancela tokens y permisos y desactiva las credenciales del dispositivo. Las marcaciones pendientes se conservan en el Lector hasta volver a vincularlo.</p><?php endif; ?>
+                <div class="alert alert-danger py-2 mb-3" role="alert" x-show="error" x-cloak x-text="error"></div>
+                <div class="alert alert-success py-2 mb-3" role="status" x-show="success" x-cloak x-text="success"></div>
+                <?php if (($deviceLinkRead['status'] ?? '') === 'ready' && $deviceLinkItems !== []): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle mb-0">
+                            <thead><tr><th scope="col">Dispositivo</th><th scope="col">Estación asignada</th><th scope="col">Estado</th><th scope="col">Última vinculación</th><th scope="col">Vigencia pendiente</th><?php if ($canManageDeviceLink): ?><th scope="col">Acciones</th><?php endif; ?></tr></thead>
+                            <tbody>
+                                <?php foreach ($deviceLinkItems as $linkItem): ?>
+                                    <?php
+                                    $linkDevice = is_array($linkItem['device'] ?? null) ? $linkItem['device'] : [];
+                                    $linkStation = is_array($linkItem['station'] ?? null) ? $linkItem['station'] : [];
+                                    $linkStatus = (string) ($linkItem['link_status'] ?? 'UNKNOWN');
+                                    $linkStatusLabel = match ($linkStatus) {
+                                        'LINKED' => 'Vinculado', 'TOKEN_PENDING' => 'Token pendiente', 'CONFLICT' => 'Revisión requerida',
+                                        default => 'Sin vincular',
+                                    };
+                                    ?>
+                                    <tr data-device-id="<?= (int) ($linkDevice['id'] ?? 0) ?>">
+                                        <td><span class="fw-semibold"><?= $esc($linkDevice['name'] ?? 'Dispositivo') ?></span><span class="small text-muted d-block">ID <?= (int) ($linkDevice['id'] ?? 0) ?></span></td>
+                                        <td><?= $esc($linkStation['name'] ?? '') ?> · <?= (int) ($linkStation['id'] ?? 0) ?></td>
+                                        <td><span class="badge <?= $linkStatus === 'LINKED' ? 'text-bg-success' : ($linkStatus === 'CONFLICT' ? 'text-bg-warning' : 'text-bg-secondary') ?>"><?= $esc($linkStatusLabel) ?></span><span class="small text-muted d-block">Dispositivo: <?= ($linkDevice['persisted_status'] ?? '') === 'ACTIVE' ? 'activo' : 'inactivo' ?></span><span class="small text-muted d-block">Biometría: <?= ($linkItem['biometric_grant_status'] ?? '') === 'AUTHORIZED' ? 'autorizada' : 'no autorizada' ?></span></td>
+                                        <td><?= $esc($linkItem['last_linked_at_utc'] ?? 'Sin vinculación confirmada') ?><?= !empty($linkItem['last_linked_at_utc']) ? ' UTC' : '' ?></td>
+                                        <td><span data-pending-expiry><?= $esc($linkItem['pending_token_expires_at_utc'] ?? 'Sin token pendiente') ?></span><?= !empty($linkItem['pending_token_expires_at_utc']) ? ' UTC' : '' ?></td>
+                                        <?php if ($canManageDeviceLink): ?>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <button type="button" class="btn btn-primary btn-sm" @click="issue(<?= (int) ($linkDevice['id'] ?? 0) ?>)" :disabled="loadingDevice === <?= (int) ($linkDevice['id'] ?? 0) ?>">
+                                                        <i class="ti ti-link me-1" aria-hidden="true"></i><span x-text="loadingDevice === <?= (int) ($linkDevice['id'] ?? 0) ?> ? 'Generando…' : '<?= $linkStatus === 'LINKED' ? 'Renovar vinculación' : (!empty($linkItem['pending_token_expires_at_utc']) ? 'Renovar token' : 'Generar token') ?>'"></span>
+                                                    </button>
+                                                    <?php if ($linkStatus === 'LINKED' || ($linkItem['biometric_grant_status'] ?? '') === 'AUTHORIZED' || !empty($linkItem['pending_token_expires_at_utc'])): ?>
+                                                        <button type="button" class="btn bg-danger-subtle text-danger btn-sm" @click="revoke(<?= (int) ($linkDevice['id'] ?? 0) ?>)" :disabled="loadingDevice === <?= (int) ($linkDevice['id'] ?? 0) ?>"><i class="ti ti-ban me-1" aria-hidden="true"></i>Revocar dispositivo</button>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <template x-if="tokens[<?= (int) ($linkDevice['id'] ?? 0) ?>]">
+                                                    <div class="mt-2" role="status">
+                                                        <label class="form-label small mb-1" for="m11-link-token-<?= (int) ($linkDevice['id'] ?? 0) ?>">Token de un solo uso</label>
+                                                        <div class="input-group input-group-sm">
+                                                            <input class="form-control font-monospace" id="m11-link-token-<?= (int) ($linkDevice['id'] ?? 0) ?>" type="text" readonly :value="tokens[<?= (int) ($linkDevice['id'] ?? 0) ?>]?.value" autocomplete="off" spellcheck="false">
+                                                            <button type="button" class="btn btn-outline-primary" @click="copy(<?= (int) ($linkDevice['id'] ?? 0) ?>)" :disabled="copyingDevice === <?= (int) ($linkDevice['id'] ?? 0) ?>"><i class="ti ti-copy me-1" aria-hidden="true"></i><span x-text="copyingDevice === <?= (int) ($linkDevice['id'] ?? 0) ?> ? 'Copiando…' : 'Copiar token'"></span></button>
+                                                        </div>
+                                                        <span class="small text-muted d-block mt-1">Expira (UTC): <span x-text="tokens[<?= (int) ($linkDevice['id'] ?? 0) ?>]?.expiresAt"></span></span>
+                                                    </div>
+                                                </template>
+                                            </td>
+                                        <?php endif; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php elseif (($deviceLinkRead['status'] ?? '') === 'ready'): ?>
+                    <p class="small mb-0">No hay dispositivos asignados a esta estación.</p>
+                <?php elseif (($deviceLinkRead['status'] ?? '') === 'permission_denied'): ?>
+                    <p class="small mb-0">No tienes permiso para consultar la vinculación de esta estación.</p>
+                <?php elseif (($deviceLinkRead['status'] ?? '') === 'not_read_in_demo'): ?>
+                    <p class="small mb-0">La vinculación persistida no se consulta en modo demostración.</p>
+                <?php else: ?>
+                    <p class="small mb-0">No fue posible verificar el dispositivo y la vinculación en la base compartida.</p>
+                <?php endif; ?>
+                <?php if ($canReadDeviceLink && !$canManageDeviceLink): ?><p class="small text-muted mt-2 mb-0">Acceso de consulta; la administración está reservada al Encargado autorizado de la estación.</p><?php endif; ?>
+            </div>
+
             <?php if (!empty($canEditReaderProfiles) && !empty($m11ConfigurationPostEnabled) && ($demoMode ?? false) !== true): ?>
                 <div class="modal fade" id="m11-reader-profile-modal" tabindex="-1" aria-labelledby="m11-reader-profile-title" aria-hidden="true">
                     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
@@ -560,7 +636,7 @@ $readerProfileItemsJson = htmlspecialchars(
                                     <td><?= $esc($deviceItem['workplace']['name'] ?? $selectedWorkplaceName) ?> · <?= (int) ($deviceItem['workplace']['id'] ?? $selectedWorkplaceId ?? 0) ?></td>
                                     <td><?= $esc($deviceItem['assignment']['status'] ?? 'UNKNOWN') ?></td>
                                     <td><?= $esc($deviceItem['device']['persisted_status'] ?? '') ?></td>
-                                    <td><?= $esc($deviceItem['last_communication']['last_server_received_at_utc'] ?? 'Sin recepción registrada') ?></td>
+                                    <td><?= $esc($deviceItem['last_communication']['last_server_received_at_utc'] ?? 'No disponible en esta lectura SQL') ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
