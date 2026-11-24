@@ -14,6 +14,46 @@ document.addEventListener('alpine:init', () => {
         audit_readback_failed: 'No se pudo confirmar la auditoría del cambio; no se declara guardado.',
     };
     const assignmentErrorMessage = (code) => assignmentErrorMessages[String(code || '')] || '';
+    const scheduleModalSelectors = [
+        '#habitual-schedule-assignment-modal',
+        '#habitual-schedule-replacement-modal',
+        '#temporary-schedule-assignment-modal',
+    ];
+    let activeScheduleModal = null;
+    let queuedScheduleModal = null;
+    document.addEventListener('show.bs.modal', (event) => {
+        const target = event.target;
+        if (!target?.matches?.(scheduleModalSelectors.join(',')) || event.defaultPrevented) return;
+
+        if (!activeScheduleModal) {
+            activeScheduleModal = scheduleModalSelectors
+                .map((selector) => document.querySelector(selector))
+                .find((modal) => modal && modal !== target && modal.classList.contains('show')) || null;
+        }
+        if (activeScheduleModal && activeScheduleModal !== target) {
+            event.preventDefault();
+            queuedScheduleModal = { element: target, relatedTarget: event.relatedTarget || null };
+            const activeInstance = window.bootstrap?.Modal?.getInstance(activeScheduleModal)
+                || window.bootstrap?.Modal?.getOrCreateInstance(activeScheduleModal);
+            activeInstance?.hide();
+            return;
+        }
+        activeScheduleModal = target;
+    });
+    document.addEventListener('shown.bs.modal', (event) => {
+        if (activeScheduleModal !== event.target || !queuedScheduleModal) return;
+        // Bootstrap ignores hide() while the opening transition is still running.
+        const activeInstance = window.bootstrap?.Modal?.getInstance(event.target);
+        activeInstance?.hide();
+    });
+    document.addEventListener('hidden.bs.modal', (event) => {
+        if (!event.target?.matches?.(scheduleModalSelectors.join(','))) return;
+        if (activeScheduleModal === event.target) activeScheduleModal = null;
+        const queued = queuedScheduleModal;
+        if (!queued || !queued.element?.isConnected) return;
+        queuedScheduleModal = null;
+        window.bootstrap?.Modal?.getOrCreateInstance(queued.element)?.show(queued.relatedTarget || undefined);
+    });
     const scheduleSelect2Targets = [
         ['#habitual-schedule-assignment-modal', 'select[name^="schedule["]'],
         ['#habitual-schedule-replacement-modal', '#habitual-replacement-source, #habitual-replacement-template'],
@@ -284,6 +324,7 @@ document.addEventListener('alpine:init', () => {
         verifiedDates: [],
         loading: false,
         completed: false,
+        effectiveDatesComplete: false,
         error: '',
         status: '',
         effectiveStartMessage: 'El patrón semanal se aplicará desde la fecha elegida; los días anteriores no generan asignaciones.',
@@ -325,6 +366,7 @@ document.addEventListener('alpine:init', () => {
             this.dateScopedReadback = false;
             this.verifiedDates = [];
             this.completed = false;
+            this.effectiveDatesComplete = false;
             this.error = '';
             this.status = 'Confirmando el historial de asignaciones…';
             const form = document.querySelector('#habitual-schedule-assignment-modal form');
@@ -345,6 +387,11 @@ document.addEventListener('alpine:init', () => {
             if (!this.workerId || !effectiveStart || !readUrl) return;
             const sequence = ++this.readbackSequence;
             this.loading = true;
+            this.existingDays = {};
+            this.existingDaysByDate = {};
+            this.dateScopedReadback = false;
+            this.verifiedDates = [];
+            this.effectiveDatesComplete = false;
             this.error = '';
             this.status = `Consultando las siete ocurrencias desde ${effectiveStart}…`;
             try {
@@ -364,7 +411,8 @@ document.addEventListener('alpine:init', () => {
                     || data?.history_complete !== false || data?.effective_start_date !== effectiveStart
                     || !Array.isArray(data?.target_dates) || data.target_dates.length !== 7
                     || !Array.isArray(data?.verified_dates)
-                    || !data?.existing_days_by_date || typeof data.existing_days_by_date !== 'object') {
+                    || !data?.existing_days_by_date || typeof data.existing_days_by_date !== 'object'
+                    || typeof data?.habitual_complete !== 'boolean') {
                     throw new Error(response.data?.message || 'No se confirmaron las siete fechas y adscripciones efectivas.');
                 }
                 this.existingDays = data.existing_days && typeof data.existing_days === 'object' ? data.existing_days : {};
@@ -378,32 +426,23 @@ document.addEventListener('alpine:init', () => {
                     return expected !== '' && expected === actual;
                 });
                 if (!targetDatesMatch) throw new Error('Las fechas calculadas no coinciden con el readback SQL; no se habilitó el formulario.');
+                const effectiveDates = data.target_dates.map((item) => item?.date || '');
+                const uniqueEffectiveDates = new Set(effectiveDates);
+                if (uniqueEffectiveDates.size !== 7 || effectiveDates.some((date) => !/^\d{4}-\d{2}-\d{2}$/.test(date))) {
+                    throw new Error('El readback no contiene siete fechas efectivas distintas; no se habilitó el formulario.');
+                }
+                const verifiedDates = new Set(data.verified_dates);
+                const effectiveDatesComplete = effectiveDates.every((date) => verifiedDates.has(date)
+                    && Object.prototype.hasOwnProperty.call(data.existing_days_by_date, date));
+                if (data.habitual_complete !== effectiveDatesComplete) {
+                    throw new Error('La cobertura visible y las siete fechas efectivas no coinciden con el readback SQL; no se habilitó el formulario.');
+                }
+                this.effectiveDatesComplete = effectiveDatesComplete;
                 this.error = '';
                 this.status = '';
 
-                if (data.habitual_complete === true) {
-                    const sources = Array.isArray(data.replacement_sources) ? data.replacement_sources : [];
-                    if (sources.length !== 7) {
-                        this.error = 'El patrón ya está completo, pero no se pudieron confirmar sus siete asignaciones para cambiarlo.';
-                        return;
-                    }
-                    const replacementWorkerId = this.workerId;
-                    const replacementWorkerName = this.workerName;
-                    this.modal?.hide();
-                    this.$nextTick(() => {
-                        const replacementTrigger = document.createElement('button');
-                        replacementTrigger.type = 'button';
-                        replacementTrigger.dataset.bsToggle = 'modal';
-                        replacementTrigger.dataset.bsTarget = '#habitual-schedule-replacement-modal';
-                        replacementTrigger.dataset.habitualReplacementWorkerId = replacementWorkerId;
-                        replacementTrigger.dataset.habitualReplacementWorkerName = replacementWorkerName;
-                        replacementTrigger.dataset.habitualReplacementSources = JSON.stringify(sources);
-                        replacementTrigger.hidden = true;
-                        document.body.append(replacementTrigger);
-                        replacementTrigger.click();
-                        replacementTrigger.remove();
-                    });
-                    return;
+                if (effectiveDatesComplete) {
+                    this.status = 'Las siete fechas efectivas desde el inicio seleccionado ya tienen asignación. No hay días pendientes ni se enviará un duplicado. Para cambiar un horario, selecciona expresamente «Cambiar horario habitual».';
                 }
             } catch (requestError) {
                 if (sequence !== this.readbackSequence) return;
@@ -441,7 +480,7 @@ document.addEventListener('alpine:init', () => {
 
         async submit(event) {
             const form = event.currentTarget;
-            if (this.loading || this.completed) return;
+            if (this.loading || this.completed || this.effectiveDatesComplete) return;
             this.error = '';
             this.status = '';
             if (!form.checkValidity()) {
@@ -552,6 +591,7 @@ document.addEventListener('alpine:init', () => {
             this.error = '';
             this.status = '';
             this.loading = false;
+            this.effectiveDatesComplete = false;
             this.readbackSequence++;
             this.completed = false;
             this.effectiveStartMessage = 'El patrón semanal se aplicará desde la fecha elegida; los días anteriores no generan asignaciones.';
