@@ -2307,6 +2307,10 @@ final class ChecadorController extends BaseController
             }
         }
 
+        $deviceLink = is_array($configuration['device_link'] ?? null)
+            ? $configuration['device_link']
+            : ['ok' => false, 'status' => $demoMode ? 'not_read_in_demo' : 'unavailable', 'items' => [], 'can_manage' => false];
+
         $workplaceName = '';
         foreach ($workplaces as $option) {
             if ((int) ($option['id'] ?? 0) === (int) ($workplaceId ?? 0)) {
@@ -2334,6 +2338,7 @@ final class ChecadorController extends BaseController
                 'selectedWorkplaceId' => $workplaceId,
                 'selectedWorkplaceName' => $workplaceName,
                 'configuration' => $configuration,
+                'deviceLink' => $deviceLink,
                 'demoMode' => $demoMode,
                 'configurationFeedback' => Session::pull('checador_configuration_feedback', null),
                 'attendancePolicyWritesEnabled' => !$demoMode && !empty($configuration['permissions']['policy_edit']),
@@ -2356,6 +2361,7 @@ final class ChecadorController extends BaseController
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js?v=20261118-1',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-positions.init.js?v=20261103-4',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-reader-profile.init.js?v=20261103-2',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-device-link.init.js?v=20261124-1',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.configuration.datatable.init.js?v=20261117-2',
                 ],
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
@@ -2363,6 +2369,93 @@ final class ChecadorController extends BaseController
             ],
             'departamento-operativo'
         );
+    }
+
+    /** Issue a one-time Windows Reader link token through Portal3 SQL only. */
+    public function generateReaderLinkToken(): void
+    {
+        $this->handleM11DeviceLinkWrite('generate');
+    }
+
+    /** Revoke the complete device link, credentials, pending tokens and biometric permission. */
+    public function revokeReaderDevice(): void
+    {
+        $this->handleM11DeviceLinkWrite('revoke');
+    }
+
+    public function revokeReaderPendingTokens(): void
+    {
+        $this->handleM11DeviceLinkWrite('revoke_token');
+    }
+
+    public function revokeReaderBiometricAccess(): void
+    {
+        $this->handleM11DeviceLinkWrite('revoke_biometric');
+    }
+
+    private function handleM11DeviceLinkWrite(string $operation): void
+    {
+        $input = Request::all();
+        $wantsJson = str_contains(strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json');
+        $send = static function (array $body, int $status): never {
+            JsonResponse::send($body, $status, [
+                'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Vary' => 'Accept',
+            ]);
+        };
+        if (!$wantsJson) $send(['ok' => false, 'message' => 'La solicitud debe enviarse como JSON.'], 406);
+        $actor = Auth::user();
+        if (!$actor || !Auth::check()) $send(['ok' => false, 'message' => 'La sesión ya no es válida. Inicia sesión nuevamente.'], 401);
+        if (!Request::isSecure()) $send(['ok' => false, 'message' => 'La vinculación sólo puede transmitirse mediante una conexión HTTPS.'], 426);
+        $csrf = trim((string) ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? $input['_csrf_token'] ?? ''));
+        if (!\App\Core\CsrfToken::validate($csrf)) $send(['ok' => false, 'message' => 'Actualiza la página antes de continuar.'], 419);
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        $deviceId = self::positiveInteger($input['device_id'] ?? null);
+        if ($workplaceId === null || $deviceId === null) $send(['ok' => false, 'message' => 'La estación o el dispositivo no son válidos.'], 422);
+        if (ChecadorDailyReadService::demoModeEnabled()) $send(['ok' => false, 'message' => 'La vinculación no está disponible en modo demostración.'], 403);
+
+        $service = new \App\Services\ChecadorDeviceLinkSqlService();
+        $result = match ($operation) {
+            'generate' => $service->issueToken($actor, $workplaceId, $deviceId),
+            'revoke_token' => $service->revokePendingTokens($actor, $workplaceId, $deviceId),
+            'revoke_biometric' => $service->revokeBiometricAccess($actor, $workplaceId, $deviceId),
+            'revoke' => $service->revokeDevice($actor, $workplaceId, $deviceId),
+            default => ['ok' => false, 'error' => 'invalid_input'],
+        };
+        if (!($result['ok'] ?? false)) {
+            $error = (string) ($result['error'] ?? 'device_link_write_failed');
+            [$status, $message] = match ($error) {
+                'permission_denied' => [403, 'No tienes permiso para administrar la vinculación en esta estación.'],
+                'station_mapping_unresolved', 'station_not_active' => [409, 'No se pudo confirmar la relación vigente de la estación física.'],
+                'device_not_found' => [404, 'El dispositivo no pertenece a la estación seleccionada.'],
+                'device_inactive' => [409, 'El dispositivo está inactivo y no puede vincularse.'],
+                'multiple_active_biometric_grants' => [409, 'Hay más de un permiso biométrico vigente; debe revisarse antes de continuar.'],
+                'biometric_grant_not_yet_valid' => [409, 'Existe un permiso biométrico futuro; no se puede crear otro que se traslape.'],
+                'multiple_active_device_credentials' => [409, 'Hay más de una credencial activa; debe revisarse antes de continuar.'],
+                'existing_credential_requires_review' => [409, 'Hay una credencial activa sin permiso biométrico vigente. Revísala antes de crear un permiso nuevo.'],
+                'invalid_input' => [422, 'La solicitud no es válida.'],
+                default => [503, 'No fue posible guardar y confirmar la operación. Inténtalo más tarde.'],
+            };
+            $send(['ok' => false, 'message' => $message], $status);
+        }
+
+        if ($operation === 'generate') {
+            $item = $result['item'] ?? [];
+            $send([
+                'ok' => true,
+                'message' => 'Token generado. Cópialo ahora; no volverá a mostrarse.',
+                'token' => (string) ($result['token'] ?? ''),
+                'device_id' => (int) ($item['device_id'] ?? 0),
+                'expires_at_utc' => (string) ($item['expires_at_utc'] ?? ''),
+            ], 200);
+        }
+        $message = match ($operation) {
+            'revoke_token' => 'Se revocaron los tokens pendientes.',
+            'revoke_biometric' => 'Se revocaron el acceso biométrico y los tokens pendientes.',
+            default => 'Se revocaron la vinculación, la credencial, los tokens pendientes y el permiso biométrico del dispositivo.',
+        };
+        $send(['ok' => true, 'message' => $message], 200);
     }
 
     /** Save the Dirección-only institutional position catalog under the M11 gate. */

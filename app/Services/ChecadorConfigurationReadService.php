@@ -67,6 +67,7 @@ final class ChecadorConfigurationReadService
             ? ['status' => 'not_read_in_demo', 'items' => []]
             : self::readPositions((bool) ($positionRead['allowed'] ?? false));
         $result['device_auth'] = ['status' => $demoMode ? 'not_read_in_demo' : 'permission_denied', 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
+        $result['device_link'] = ['ok' => false, 'status' => $demoMode ? 'not_read_in_demo' : 'permission_denied', 'items' => [], 'can_manage' => false];
 
         if ($demoMode) {
             $result['status'] = 'demo_isolated';
@@ -106,12 +107,33 @@ final class ChecadorConfigurationReadService
 
         if ($deviceRead['allowed'] ?? false) {
             try {
-                $deviceResult = (new ChecadorDailyReadService())->readAdministrativeDevices($user, $workplaceId);
-                $result['device_auth'] = ($deviceResult['ok'] ?? false)
-                    ? array_merge(['status' => 'ready'], $deviceResult['data'])
-                    : ['status' => (string) ($deviceResult['error']['kind'] ?? 'unavailable'), 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
+                $deviceResult = (new ChecadorDeviceLinkSqlService())->readForWorkplace($user, $workplaceId);
+                $result['device_link'] = $deviceResult;
+                if ($deviceResult['ok'] ?? false) {
+                    $workplaceName = (string) (($scope['workplaces'][0]['nombre'] ?? '') ?: 'Localidad autorizada');
+                    $items = [];
+                    foreach ($deviceResult['items'] ?? [] as $entry) {
+                        $device = is_array($entry['device'] ?? null) ? $entry['device'] : [];
+                        $station = is_array($entry['station'] ?? null) ? $entry['station'] : [];
+                        $items[] = [
+                            'device' => ['id' => (int) ($device['id'] ?? 0), 'uuid' => (string) ($device['uuid'] ?? ''),
+                                'name' => (string) ($device['name'] ?? ''), 'persisted_status' => (string) ($device['persisted_status'] ?? 'UNKNOWN')],
+                            'physical_station' => ['id' => (int) ($station['id'] ?? 0), 'name' => (string) ($station['name'] ?? ''), 'numlista' => null],
+                            'workplace' => ['id' => $workplaceId, 'name' => $workplaceName, 'mapping_status' => 'VERIFIED'],
+                            'assignment' => ['status' => 'ASSIGNED', 'valid_from_utc' => null, 'valid_to_utc' => null, 'source' => 'op_rh_v2_dispositivos.id_estacion'],
+                            'last_communication' => ['last_server_received_at_utc' => null],
+                        ];
+                    }
+                    $result['device_auth'] = [
+                        'status' => 'ready', 'completeness' => 'UNKNOWN', 'read_at_utc' => (string) ($deviceResult['read_at_utc'] ?? ''),
+                        'items' => $items, 'partial_reasons' => ['last_communication_not_in_link_read_scope'],
+                    ];
+                } else {
+                    $result['device_auth'] = ['status' => (string) ($deviceResult['status'] ?? 'unavailable'), 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
+                }
             } catch (Throwable) {
                 $result['device_auth'] = ['status' => 'unavailable', 'completeness' => 'UNKNOWN', 'items' => [], 'partial_reasons' => []];
+                $result['device_link'] = ['ok' => false, 'status' => 'unavailable', 'items' => [], 'can_manage' => false];
             }
         }
 
@@ -365,6 +387,7 @@ final class ChecadorConfigurationReadService
             'legacy_profiles' => ['status' => 'not_used_as_v2_source', 'active_count' => null],
             'reader_profiles' => ['status' => 'not_integrated', 'items' => []],
             'positions' => ['status' => 'not_requested', 'items' => []],
-            'device_auth' => ['status' => 'not_integrated', 'message' => 'La lectura de autenticación de dispositivos no está integrada en esta vista.']];
+            'device_auth' => ['status' => 'not_integrated', 'message' => 'La lectura de autenticación de dispositivos no está integrada en esta vista.'],
+            'device_link' => ['ok' => false, 'status' => 'not_integrated', 'items' => [], 'can_manage' => false]];
     }
 }

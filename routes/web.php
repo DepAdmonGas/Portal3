@@ -643,6 +643,10 @@ $r->addRoute('GET', '/recursos-humanos/checador/configuracion', Route::auth(['Ch
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/plantillas', Route::auth(['ChecadorController', 'saveConfigurationScheduleTemplate']));
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/puestos', Route::auth(['ChecadorController', 'saveConfigurationPosition']));
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/perfiles-lector', Route::auth(['ChecadorController', 'updateConfigurationReaderProfile']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/vinculacion-lector/generar', Route::auth(['ChecadorController', 'generateReaderLinkToken']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/vinculacion-lector/revocar', Route::auth(['ChecadorController', 'revokeReaderDevice']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/vinculacion-lector/revocar-token', Route::auth(['ChecadorController', 'revokeReaderPendingTokens']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/vinculacion-lector/revocar-biometria', Route::auth(['ChecadorController', 'revokeReaderBiometricAccess']));
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/politica-asistencia', Route::auth(['ChecadorController', 'saveAttendancePolicy']));
 $r->addRoute('GET', '/recursos-humanos/checador/asignaciones/readback', Route::auth(['ChecadorController', 'habitualAssignmentReadback']));
 $r->addRoute('GET', '/recursos-humanos/checador/programacion-semanal/asignaciones/readback', Route::auth(['ChecadorController', 'habitualAssignmentReadback']));
