@@ -290,7 +290,7 @@
 
                             <span
                                 class="badge bg-primary ms-2"
-                                x-text="detalle.evidencias.length">
+                                x-text="detalle.evidencias?.length ?? 0">
                             </span>
 
                         </div>
@@ -298,7 +298,7 @@
                         <!-- SIN EVIDENCIAS -->
                         <div
                             class="text-center py-5 border rounded"
-                            x-show="detalle.evidencias.length <= 0">
+                            x-show="(detalle.evidencias?.length ?? 0) <= 0">
 
                             <i class="ti ti-photo-off fs-7 text-muted"></i>
 
@@ -311,10 +311,10 @@
                         <!-- EVIDENCIAS -->
                         <div
                             class="row"
-                            x-show="detalle.evidencias.length > 0">
+                            x-show="(detalle.evidencias?.length ?? 0) > 0">
 
                             <template
-                                x-for="item in detalle.evidencias"
+                                x-for="item in (detalle.evidencias ?? [])"
                                 :key="item.id">
 
                                 <div class="col-12 col-md-6 mb-3">
@@ -331,7 +331,7 @@
                                             <p class="small fw-bold text-truncate mb-0" :title="item.nombre" x-text="item.nombre || 'Evidencia de mantenimiento'"></p>
                                         </div>
                                         <div class="card-footer bg-white">
-                                            <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.nombre" title="Descargar evidencia">
+                                            <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" data-download-loader data-download-button-loader :href="item.download_url" :download="item.nombre" title="Descargar evidencia">
                                                 <i class="ti ti-download"></i><span>Descargar</span>
                                             </a>
                                         </div>
@@ -567,7 +567,7 @@
                                         </div>
                                         <div class="card-footer bg-white">
                                             <div class="d-flex align-items-center gap-2">
-                                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.nombre" title="Descargar">
+                                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" data-download-loader data-download-button-loader :href="item.download_url" :download="item.nombre" title="Descargar">
                                                     <i class="ti ti-download"></i><span>Descargar</span>
                                                 </a>
                                                 <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="eliminarEvidencia(item.id,index)" title="Eliminar">

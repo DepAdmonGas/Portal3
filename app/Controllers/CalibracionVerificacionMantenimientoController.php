@@ -47,6 +47,7 @@ class CalibracionVerificacionMantenimientoController extends BaseController{
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/calibracionverificacionmantenimiento.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => false
         ];

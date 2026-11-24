@@ -93,22 +93,22 @@
                                                                 <td class="text-center">
 
                                                                     <template
-                                                                        x-if="obtenerArchivo(mes,etapa,producto)">
+                                                                        x-if="obtenerArchivo(mes,etapa,producto) && mes.archivos_disponibles?.[etapa.prefijo+'_'+producto.campo]">
 
                                                                         <a
-                                                                            :href="'/uploads/'+obtenerArchivo(mes,etapa,producto)"
-                                                                            target="_blank">
+                                                                            data-download-loader
+                                                                            :href="'/download?tipo=sasisopa-reporte-diario-facturas&file='+encodeURIComponent(obtenerArchivo(mes,etapa,producto).split(/[\\/]/).pop())">
 
-                                                                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
+                                                                            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
 
                                                                         </a>
 
                                                                     </template>
 
                                                                     <template
-                                                                        x-if="!obtenerArchivo(mes,etapa,producto)">
+                                                                        x-if="!obtenerArchivo(mes,etapa,producto) || !mes.archivos_disponibles?.[etapa.prefijo+'_'+producto.campo]">
 
-                                                                        <i class="ti ti-x text-secondary fs-7"></i>
+                                                                        <i class="ti ti-file-off text-secondary fs-6"></i>
 
                                                                     </template>
 

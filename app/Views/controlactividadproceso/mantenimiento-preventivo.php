@@ -167,9 +167,7 @@
 
                         <select
                             class="form-select mb-2"
-                            x-model="filtro.mes"
-                            :class="errors.mes ? 'is-invalid' : ''"
-                            @input="errors.mes = false">
+                            x-model="filtro.mes">
 
                             <option value="">
                                 Todos
@@ -357,7 +355,7 @@
                                             <p class="small fw-bold text-truncate mb-0" :title="item.nombre" x-text="item.nombre"></p>
                                         </div>
                                         <div class="card-footer bg-white">
-                                            <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.nombre" title="Descargar evidencia">
+                                            <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" data-download-loader data-download-button-loader :href="item.download_url" :download="item.nombre" title="Descargar evidencia">
                                                 <i class="ti ti-download"></i><span>Descargar</span>
                                             </a>
                                         </div>
@@ -491,7 +489,7 @@
                                         </div>
                                         <div class="card-footer bg-white">
                                             <div class="d-flex align-items-center gap-2">
-                                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.nombre" title="Descargar">
+                                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" data-download-loader data-download-button-loader :href="item.download_url" :download="item.nombre" title="Descargar">
                                                     <i class="ti ti-download"></i><span>Descargar</span>
                                                 </a>
                                                 <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="eliminarEvidencia(item.id,index)" title="Eliminar">

@@ -55,7 +55,8 @@ x-data="calibracionVerificacion()">
     <div class="row g-0 ms-auto w-100 justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
                                    <a class="btn bg-primary-subtle text-primary float-end"
-   href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion">
+   href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-equipos-calibracion"
+   data-download-loader>
     <i class="ti ti-download"></i> Descargar
 </a>
     
@@ -173,7 +174,8 @@ x-data="calibracionVerificacion()">
             <div class="row g-0 ms-auto w-100 justify-content-end">
                     <div class="col-12 col-md-auto d-grid">
                       <a class="btn bg-primary-subtle text-primary float-end"
-   href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion">
+   href="/sasisopa/monitoreo-verificacion-evaluacion/calibracion-verificacion-mantenimiento-equipos/pdf-calendario-calibracion"
+   data-download-loader>
     <i class="ti ti-download"></i> Descargar
 </a>
                     </div>

@@ -58,12 +58,14 @@ class IncidentesAccidentesController extends BaseController
             'estacionId' => $this->estacionModulo(),
             'moduleStationKey' => 'sasisopa',
              'links' =>[
-                
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/incidentesaccidentes/index.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];

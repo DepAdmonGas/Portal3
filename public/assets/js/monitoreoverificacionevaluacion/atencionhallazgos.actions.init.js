@@ -1,34 +1,15 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('atencionHallazgos', () => ({
 
-         registros: [],
-        loading: false,
-
         init(){
-            this.buscar();
+            window.atencionHallazgos = this;
         },
 
         async buscar() {
 
-            this.loading = true;
+            if (!window.tableAtencionHallazgos) return;
 
-            try {
-
-                const { data } = await axios.get(
-                    '/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/datatable'
-                );
-
-                this.registros = data.data;
-
-
-            } catch (error) {
-
-                console.error(error);
-
-            } finally {
-
-                this.loading = false;
-            }
+            await new Promise(resolve => window.tableAtencionHallazgos.ajax.reload(resolve, false));
         },
 
         async nuevo(){

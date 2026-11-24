@@ -43,8 +43,9 @@
         </div>
 
 
-        <div class="table-responsive">
-            <table class="table table-striped mb-0 table-bordered text-nowrap align-middle">
+        <div class="datatables">
+        <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+            <table id="table-atencion-hallazgos" class="table table-striped table-bordered text-nowrap align-middle">
                 <thead>
                     <tr>
                         <th class="text-center align-middle" width="96px">#</th>
@@ -56,95 +57,10 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody>
-                    <template
-                        x-for="registro in registros"
-                        :key="registro.id">
-
-                        <tr>
-
-                            <td
-                                class="text-center fw-bold"
-                                x-text="registro.numero">
-                            </td>
-
-                            <td
-                                class="text-center"
-                                x-text="registro.fecha_larga">
-                            </td>
-
-                            <td
-                                class="text-center"
-                                x-text="registro.no_control">
-                            </td>
-
-                            <td
-                                class="text-center"
-                                x-text="registro.tipo_auditoria">
-                            </td>
-
-                            <td class="text-center">
-
-                                <div x-data="actions()" class="d-flex gap-1 justify-content-center">
-
-
-                                    <div class="dropdown dropstart">
-                                        <a class="pointer" data-bs-toggle="dropdown">
-                                            <i class="ti ti-dots-vertical fs-6"></i>
-                                        </a>
-                                        <ul class="dropdown-menu">
-
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-
-                                                    @click="editar(registro.id)">
-                                                    <i class="ti ti-edit"></i> Editar
-                                                </a>
-                                            </li>
-
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                    :href="`/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/pdf/${registro.id}`" target="_blank">
-                                                    <i class="ti ti-download"></i> Descargar
-                                                </a>
-                                            </li>
-
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-
-                                                    @click="eliminar(registro.id)">
-                                                    <i class="ti ti-trash"></i> Eliminar
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    </template>
-
-                    <tr
-                        x-show="!loading && registros.length === 0">
-
-                        <td
-                            colspan="5"
-                            class="text-center">
-
-                            <small>
-                                No se encontró información para mostrar
-                            </small>
-
-                        </td>
-
-                    </tr>
-                </tbody>
+                <tbody></tbody>
             </table>
 
+        </div>
         </div>
     <?php endif; ?>
 

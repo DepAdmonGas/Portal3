@@ -580,6 +580,50 @@ async openModalDetalle(id) {
     }
 },
 
+    async descargarConLoader(event) {
+        event.preventDefault();
+
+        const link = event.currentTarget;
+        const url = link?.href;
+        if (!url || link.dataset.downloadBusy === '1') return;
+
+        link.dataset.downloadBusy = '1';
+        link.setAttribute('aria-busy', 'true');
+        link.classList.add('disabled');
+        window.loader?.show();
+
+        try {
+            const response = await fetch(url, { credentials: 'same-origin' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const blob = await response.blob();
+            const disposition = response.headers.get('Content-Disposition') || '';
+            const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+            const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+            let filename = link.getAttribute('download') || plainName || 'descarga';
+            if (encodedName) {
+                try { filename = decodeURIComponent(encodedName); } catch (_) { filename = encodedName; }
+            }
+
+            const objectUrl = URL.createObjectURL(blob);
+            const download = document.createElement('a');
+            download.href = objectUrl;
+            download.download = filename;
+            document.body.appendChild(download);
+            download.click();
+            download.remove();
+            window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        } catch (error) {
+            console.error('Error al descargar archivo de comunicación:', error);
+            this.notify('error', 'No se pudo descargar el archivo. Intenta nuevamente.');
+        } finally {
+            link.dataset.downloadBusy = '0';
+            link.removeAttribute('aria-busy');
+            link.classList.remove('disabled');
+            window.loader?.hide();
+        }
+    },
+
     //---------------- Filtro anual
 
         actualizarPdfUrl() {

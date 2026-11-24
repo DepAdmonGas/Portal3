@@ -38,7 +38,7 @@
               <?= 
               !empty($permisos['descargar']) ? 
               '<li>
-                <a class="dropdown-item pointer" href="/sasisopa/mejores-practicas-estandares/pdf-diseno-construccion"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/mejores-practicas-estandares/pdf-diseno-construccion" aria-label="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
               </li>
               <li>' 
               : '' 
@@ -103,7 +103,7 @@
               <?= 
               !empty($permisos['descargar']) ? 
               '<li>
-                <a class="dropdown-item pointer" href="/sasisopa/mejores-practicas-estandares/pdf-operacion-mantenimiento"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item pointer" href="/sasisopa/mejores-practicas-estandares/pdf-operacion-mantenimiento" aria-label="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
               </li>
               <li>' 
               : '' 

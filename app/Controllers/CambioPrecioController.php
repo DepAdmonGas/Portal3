@@ -105,7 +105,7 @@ class CambioPrecioController extends BaseController{
             $data[] = [
 
                 "id" => $row->id,
-                "fecha" => $row->fecha->format('Y-m-d'),
+                "fecha" => formatearFecha($row->fecha->format('Y-m-d')),
                 "hora" => $row->hora,
                 "gsuper" => $row->gsuper,
                 "gpremium" => $row->gpremium,
@@ -145,6 +145,43 @@ public function create(): void
 
         $data = json_decode(file_get_contents('php://input'), true);
 
+        if (!is_array($data)) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.'
+            ]);
+            return;
+        }
+
+        $fecha = trim((string) ($data['fecha'] ?? ''));
+        $hora = trim((string) ($data['hora'] ?? ''));
+        $fechaValida = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha);
+        $erroresFecha = \DateTimeImmutable::getLastErrors();
+        $horaValida = \DateTimeImmutable::createFromFormat('!H:i', $hora);
+        $erroresHora = \DateTimeImmutable::getLastErrors();
+
+        if (
+            $fecha === '' || $hora === '' ||
+            !$fechaValida || $fechaValida->format('Y-m-d') !== $fecha ||
+            !$horaValida || $horaValida->format('H:i') !== $hora ||
+            ($erroresFecha !== false && ($erroresFecha['warning_count'] || $erroresFecha['error_count'])) ||
+            ($erroresHora !== false && ($erroresHora['warning_count'] || $erroresHora['error_count']))
+        ) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Completa los campos obligatorios.'
+            ]);
+            return;
+        }
+
+        $precios = [
+            'gsuper' => $this->normalizarPrecio($data['gsuper'] ?? ''),
+            'gpremium' => $this->normalizarPrecio($data['gpremium'] ?? ''),
+            'gdiesel' => $this->normalizarPrecio($data['gdiesel'] ?? '')
+        ];
+
 
         $idEstacion = $this->estacionModulo();
         $idUsuario  = $this->userId();
@@ -159,13 +196,15 @@ public function create(): void
             exit;
         }
 
-        Capsule::transaction(function () use ($data, $idEstacion, $idUsuario) {
+        $cambioPrecio = null;
+
+        Capsule::transaction(function () use ($fecha, $hora, $precios, $idEstacion, $idUsuario, &$cambioPrecio) {
 
             $productos = $this->validarProductos(
                 $idEstacion,
-                (float)$data['gsuper'],
-                (float)$data['gpremium'],
-                (float)$data['gdiesel']
+                $precios['gsuper'],
+                $precios['gpremium'],
+                $precios['gdiesel']
             );
 
             /*
@@ -178,11 +217,11 @@ public function create(): void
 
                 $this->crearBitacoraCambioPrecio(
                     $idEstacion,
-                    $data['fecha'],
-                    $data['hora'],
+                    $fecha,
+                    $hora,
                     'G SUPER',
                     $idUsuario,
-                    $data['gsuper']
+                    number_format($precios['gsuper'], 2, '.', '')
                 );
 
             }
@@ -191,11 +230,11 @@ public function create(): void
 
                 $this->crearBitacoraCambioPrecio(
                     $idEstacion,
-                    $data['fecha'],
-                    $data['hora'],
+                    $fecha,
+                    $hora,
                     'G PREMIUM',
                     $idUsuario,
-                    $data['gpremium']
+                    number_format($precios['gpremium'], 2, '.', '')
                 );
 
             }
@@ -204,11 +243,11 @@ public function create(): void
 
                 $this->crearBitacoraCambioPrecio(
                     $idEstacion,
-                    $data['fecha'],
-                    $data['hora'],
+                    $fecha,
+                    $hora,
                     'G DIESEL',
                     $idUsuario,
-                    $data['gdiesel']
+                    number_format($precios['gdiesel'], 2, '.', '')
                 );
 
             }
@@ -219,19 +258,19 @@ public function create(): void
             |--------------------------------------------------------------------------
             */
 
-            CambioPrecio::create([
+            $cambioPrecio = CambioPrecio::create([
 
                 'id_estacion' => $idEstacion,
 
-                'fecha' => $data['fecha'],
+                'fecha' => $fecha,
 
-                'hora' => $data['hora'],
+                'hora' => $hora,
 
-                'gsuper' => $data['gsuper'],
+                'gsuper' => $precios['gsuper'],
 
-                'gpremium' => $data['gpremium'],
+                'gpremium' => $precios['gpremium'],
 
-                'gdiesel' => $data['gdiesel'],
+                'gdiesel' => $precios['gdiesel'],
 
                 'estado' => 0
 
@@ -241,7 +280,8 @@ public function create(): void
 
         echo json_encode([
             'success' => true,
-            'message' => 'Cambio de precio agregado correctamente.'
+            'message' => 'Cambio de precio agregado correctamente.',
+            'id' => $cambioPrecio?->id
         ]);
 
     } catch (\Throwable $e) {
@@ -254,6 +294,126 @@ public function create(): void
     }
 
     exit;
+}
+
+private function normalizarPrecio($value): float
+{
+    $value = trim(str_replace(',', '', (string) $value));
+    if ($value === '') {
+        return 0.0;
+    }
+
+    if (!preg_match('/^\d+(?:\.\d{1,2})?$/', $value)) {
+        throw new \InvalidArgumentException('Captura un precio válido.');
+    }
+
+    return round((float) $value, 2);
+}
+
+public function syncWeb(): void
+{
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $idReporte = filter_var($data['id'] ?? null, FILTER_VALIDATE_INT);
+        $idEstacion = $this->estacionModulo();
+
+        if (!$idReporte || !$idEstacion) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se encontró el cambio de precio para sincronizar.'
+            ]);
+            return;
+        }
+
+        $cambio = CambioPrecio::query()
+            ->where('id', $idReporte)
+            ->where('id_estacion', $idEstacion)
+            ->first();
+
+        if (!$cambio) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se encontró el cambio de precio para sincronizar.'
+            ]);
+            return;
+        }
+
+        [$sincronizado, $mensaje] = $this->sincronizarCambioPrecioPaginaWeb($cambio);
+        if (!$sincronizado) {
+            http_response_code(502);
+            echo json_encode(['success' => false, 'message' => $mensaje]);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => $mensaje
+        ]);
+    } catch (\Throwable $e) {
+        http_response_code(502);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+
+private function sincronizarCambioPrecioPaginaWeb(CambioPrecio $cambio): array
+{
+    if (!function_exists('curl_init')) {
+        return [false, 'El servidor no tiene habilitada la conexión cURL requerida.'];
+    }
+
+    // Replica el endpoint/token del módulo legado desde el servidor para evitar CSP.
+    $params = http_build_query([
+        'idEstacion' => $cambio->id_estacion,
+        'idReporte' => $cambio->id,
+        'GSUPER' => number_format((float) $cambio->gsuper, 2, '.', ''),
+        'GPREMIUM' => number_format((float) $cambio->gpremium, 2, '.', ''),
+        'GDIESEL' => number_format((float) $cambio->gdiesel, 2, '.', ''),
+        'Fecha' => $cambio->fecha->format('Y-m-d'),
+        'Hora' => substr((string) $cambio->hora, 0, 5),
+        'TOKEN' => '28102020'
+    ]);
+
+    $curl = curl_init('https://www.admongas.com.mx/app/api/postCambioPrecio.php?' . $params);
+    curl_setopt_array($curl, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 15,
+        // fetch del módulo anterior seguía redirecciones automáticamente.
+        // Mantener esa compatibilidad, limitando los saltos a HTTPS.
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 3,
+        CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => ['Accept: application/json']
+    ]);
+
+    $body = curl_exec($curl);
+    $curlError = curl_error($curl);
+    $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    curl_close($curl);
+
+    if ($body === false || $status < 200 || $status >= 300) {
+        return [false, $curlError !== ''
+            ? 'No fue posible conectar con el servicio de precios.'
+            : 'El servicio de precios respondió con un error HTTP.'];
+    }
+
+    $respuesta = json_decode($body, true);
+    if (!is_array($respuesta) || ($respuesta['status'] ?? null) !== 'success') {
+        return [false, 'El servicio de precios no confirmó la actualización.'];
+    }
+
+    return [true, 'Cambio de precio actualizado en la Página Web.'];
 }
 
 private function validarProductos(
@@ -406,13 +566,29 @@ public function delete(): void
 
     try {
 
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No tienes permiso para eliminar cambios de precio.'
+            ]);
+            return;
+        }
+
         $data = json_decode(file_get_contents('php://input'), true);
 
         $id = (int)($data['id'] ?? 0);
+        $idEstacion = $this->estacionModulo();
 
-        $cambio = CambioPrecio::find($id);
+        $cambio = $id > 0 && $idEstacion
+            ? CambioPrecio::query()
+                ->where('id', $id)
+                ->where('id_estacion', $idEstacion)
+                ->first()
+            : null;
 
         if (!$cambio) {
+            http_response_code(404);
 
             echo json_encode([
                 'success' => false,
@@ -435,9 +611,41 @@ public function delete(): void
 
         });
 
+        [$eliminadoRemoto, $mensajeEliminarRemoto] = $this->eliminarCambioPrecioPaginaWeb($id);
+        $cambioAnterior = CambioPrecio::query()
+            ->where('id_estacion', $idEstacion)
+            ->where('id', '<', $id)
+            ->orderByDesc('id')
+            ->first();
+
+        $precioRestaurado = true;
+        $mensajeRestauracion = '';
+        if ($cambioAnterior) {
+            [$precioRestaurado, $mensajeRestauracion] = $this->sincronizarCambioPrecioPaginaWeb($cambioAnterior);
+        }
+
+        $sincronizado = $eliminadoRemoto && $precioRestaurado;
+        if ($cambioAnterior && $eliminadoRemoto && $precioRestaurado) {
+            $mensajeRemoto = 'Se eliminó el registro y se aplicó el cambio de precio a $0.00 en la Página Web.';
+        } elseif ($cambioAnterior && !$eliminadoRemoto && !$precioRestaurado) {
+            $mensajeRemoto = 'Se eliminó en Portal3, pero la Página Web no confirmó la eliminación ni la restauración del último precio.';
+        } elseif ($cambioAnterior && !$eliminadoRemoto) {
+            $mensajeRemoto = 'Se aplicó el último precio en la Página Web, pero no se pudo retirar el cambio eliminado.';
+        } elseif ($cambioAnterior) {
+            $mensajeRemoto = 'Se eliminó en Portal3 y en la Página Web, pero no se pudo aplicar el último precio existente.';
+        } elseif ($eliminadoRemoto) {
+            $mensajeRemoto = 'El registro también fue eliminado en la Página Web; no hay otro cambio para restaurar.';
+        } else {
+            $mensajeRemoto = 'Se eliminó en Portal3, pero la Página Web no confirmó la eliminación.';
+        }
+
         echo json_encode([
             'success' => true,
-            'message' => 'Cambio de precio eliminado correctamente.'
+            'message' => 'Cambio de precio eliminado correctamente.',
+            'web_sync' => $sincronizado,
+            'web_message' => $mensajeRemoto,
+            'web_delete_message' => $mensajeEliminarRemoto,
+            'web_restore_message' => $mensajeRestauracion
         ]);
 
     } catch (\Throwable $e) {
@@ -450,6 +658,46 @@ public function delete(): void
     }
 
     exit;
+}
+
+private function eliminarCambioPrecioPaginaWeb(int $idReporte): array
+{
+    if (!function_exists('curl_init')) {
+        return [false, 'El cambio se eliminó en Portal3, pero el servidor no tiene habilitada la conexión cURL.'];
+    }
+
+    $curl = curl_init('https://www.admongas.com.mx/app/api/postEliminarCambioPrecio.php');
+    curl_setopt_array($curl, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode(['idReporte' => $idReporte]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 3,
+        CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/json',
+            'Content-Type: application/json'
+        ]
+    ]);
+
+    $body = curl_exec($curl);
+    $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    curl_close($curl);
+
+    if ($body === false || $status < 200 || $status >= 300) {
+        return [false, 'El cambio se eliminó en Portal3, pero no fue posible conectar con la Página Web.'];
+    }
+
+    $respuesta = json_decode($body, true);
+    if (!is_array($respuesta) || empty($respuesta['success'])) {
+        return [false, 'El cambio se eliminó en Portal3, pero la Página Web no confirmó la eliminación.'];
+    }
+
+    return [true, 'El cambio también fue eliminado en la Página Web.'];
 }
 
 private function eliminarBitacoraCambioPrecio(

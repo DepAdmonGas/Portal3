@@ -114,7 +114,7 @@ const year = new Date().getFullYear();
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3
                                     ${bloqueado ? 'disabled text-muted' : ''}"
-                                    ${bloqueado ? '' : `href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo/pdf?id=${row.id}"`}>
+                                    ${bloqueado ? '' : `href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo/pdf?id=${row.id}" download="Mantenimiento-preventivo-${Number(row.id)}.pdf" data-download-loader data-download-button-loader aria-label="Descargar PDF" title="Descargar PDF"`}>
                                         <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>

@@ -24,7 +24,7 @@ x-data="{ ...actions(), ...reporteMes(<?= $mes ?>, <?= $year ?>) }">
                     <a class="dropdown-item pointer" @click="nuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                 </li>
                  <li>
-                    <a class="dropdown-item pointer" :href="pdfUrl" target="_blank"><i class="ti ti-download"></i> Descargar</a>
+                    <a class="dropdown-item pointer" :href="pdfUrl" download="Reporte-Estadistico-Diario.pdf" aria-label="Descargar PDF" data-download-loader><i class="ti ti-download"></i> Descargar</a>
                 </li>
             </ul>
         </div>

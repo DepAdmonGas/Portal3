@@ -2,8 +2,34 @@
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '', ENT_QUOTES, 'UTF-8') ?>"
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
 
-<?php 
-const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
+<?php
+$archivoControlEditable = static function (
+    string $nombre,
+    string $icono,
+    string $carpeta = 'Fo.ADMONGAS',
+    string $tipo = 'sasisopa-control-documentos-registros',
+    bool $visualizar = false
+): string {
+    $nombre = basename($nombre);
+    $carpeta = basename($carpeta);
+    $rutaFisica = PUBLIC_PATH . '/uploads/archivos/' . $carpeta . '/' . $nombre;
+
+    if (!is_file($rutaFisica)) {
+        return '<i class="ti ti-file-off fs-6 text-muted" aria-label="Archivo no disponible"></i>';
+    }
+
+    $url = '/download?tipo=' . rawurlencode($tipo) . '&file=' . rawurlencode($nombre)
+        . ($visualizar ? '&view=1' : '');
+    $url = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+    $icono = htmlspecialchars($icono, ENT_QUOTES, 'UTF-8');
+
+    $atributosDescarga = $visualizar
+        ? 'data-download-mode="inline" target="_blank"'
+        : 'download';
+
+    return '<a href="' . $url . '" data-download-loader ' . $atributosDescarga . '>'
+        . '<i class="ti ' . $icono . ' fs-6 text-primary" aria-label="Descargar"></i></a>';
+};
 ?>
 
 <?php if (empty($estacionId)): ?>
@@ -17,7 +43,7 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
 
 <div class="row g-0 w-100 justify-content-end">
   <div class="col-12 col-md-auto d-grid mt-3 mb-3">
-   <a type="button" class="btn bg-primary-subtle text-primary" 
+   <a type="button" class="btn bg-primary-subtle text-primary" data-download-loader
           href="/sasisopa/control-documentos-registros/pdf-sistema-administracion">
             <i class="ti ti-download"></i>
             Descargar
@@ -30,7 +56,7 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
     
 <div class="mt-3">
   <div class="table-responsive">
-  <table class="table table-bordered mb-0  align-middle">
+  <table class="table table-bordered mb-0  align-middle" data-portal-table-selection="false">
   <thead>
   <tr>
     <th class="align-middle">Elemento del Sistema de Administración </th>
@@ -45,7 +71,7 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
       <td class="align-middle bg-light">1. POLÍTICA</td>
       <td class="align-middle bg-light">Fo.ADMONGAS.001</td>
       <td class="align-middle bg-light">Formato de Revisión de la política del SA</td>
-      <td class="text-center align-middle bg-light"><a href="<?= rutaArchivo."Fo.ADMONGAS.001.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></a></td> 
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable('Fo.ADMONGAS.001.xlsx', 'ti-file-excel') ?></td>
     </tr>
 
      <tr>
@@ -58,13 +84,13 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
 
       <td class="align-middle">Fo.ADMONGAS.002</td>
       <td class="align-middle">Identificación y evaluación de Aspectos e Impactos Ambientales.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.002.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.002.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
 
       <td class="align-middle">Fo.ADMONGAS.003</td>
       <td class="align-middle">Identificación y evaluación de Riesgos y Peligros</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.003.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.003.xlsx", "ti-file-excel") ?></td>
     </tr>
 
 
@@ -72,24 +98,24 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
       <td class="align-middle bg-light">3. REQUISITOS LEGALES</td>
       <td class="align-middle bg-light">Fo.ADMONGAS.004</td>
       <td class="align-middle bg-light">Calendario Anual de renovación de Requisitos legales</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.004.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.004.xlsx", "ti-file-excel") ?></td>
     </tr>
     
      <tr>
       <td class="align-middle" rowspan="3">4. OBJETIVOS, METAS E INDICADORES</td>
       <td class="align-middle">Fo.ADMONGAS.005</td>
       <td class="align-middle">Reporte Estadístico Diario</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.005.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.005.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.006</td>
       <td class="align-middle">Seguimiento de objetivos y metas</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.006.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.006.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.007</td>
       <td class="align-middle">Seguimiento y reporte de indicadores</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.007.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.007.xlsx", "ti-file-excel") ?></td>
     </tr>
 
     <tr>
@@ -103,24 +129,24 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
       <td class="align-middle" rowspan="2">6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO</td>
       <td class="align-middle">Fo.ADMONGAS.008</td>
       <td class="align-middle">Fichas de personal</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.008.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.008.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">FO.ADMONGAS.009</td>
       <td class="align-middle">Registros de la implementación del programa de Capacitación. </td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.009.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.009.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">7. COMUNICACIÓN, PARTICIPACIÓN Y CONSULTA</td>
       <td class="align-middle bg-light">Fo.ADMONGAS.010</td>
       <td class="align-middle bg-light">Bitácoras con el registro de la atención y el seguimiento a la comunicación interna y externa.</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.010.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.010.xlsx", "ti-file-excel") ?></td>
     </tr>
      <tr>
       <td class="align-middle" rowspan="4">10. CONTROL DE ACTIVIDADES Y PROCESOS</td>
       <td class="align-middle">DLES.ADMONGAS.001</td>
       <td class="align-middle">Procedimientos de operación, seguridad y mantenimiento</td>
-      <td class="text-center align-middle"><a target="_blabk" href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf"><i class="ti ti-pdf fs-7 text-primary"></i></a></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable('DLES.ADMONGAS.001.pdf', 'ti-pdf', 'procedimientos', 'sasisopa-control-documentos-procedimientos', true) ?></td>
     </tr>
     <tr>
 
@@ -136,13 +162,13 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
     <tr>
       <td class="align-middle">Fo.ADMONGAS.011</td>
       <td class="align-middle">Programa anual de mantenimiento</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.0011.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.0011.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light" rowspan="3">11. INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD</td>
       <td class="align-middle bg-light">DLES.ADMONGAS.001</td>
       <td class="align-middle bg-light">Procedimientos de operación, seguridad y mantenimiento</td>
-      <td class="text-center align-middle bg-light"><a target="_blabk" href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf"><i class="ti ti-pdf fs-7 text-primary"></i></a></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable('DLES.ADMONGAS.001.pdf', 'ti-pdf', 'procedimientos', 'sasisopa-control-documentos-procedimientos', true) ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">DLES.ADMONGAS.002</td>
@@ -152,33 +178,33 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
     <tr>
       <td class="align-middle bg-light">Fo.ADMONGAS.011</td>
       <td class="align-middle bg-light">Programa anual de mantenimiento</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.0011.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.0011.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle" rowspan="5">12. SEGURIDAD DE CONTRATISTAS</td>
       <td class="align-middle">DLES.ADMONGAS.001</td>
       <td class="align-middle">Procedimientos de operación, seguridad y mantenimiento </td>
-      <td class="text-center align-middle"><a target="_blabk" href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf"><i class="ti ti-pdf fs-7 text-primary"></i></a></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable('DLES.ADMONGAS.001.pdf', 'ti-pdf', 'procedimientos', 'sasisopa-control-documentos-procedimientos', true) ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.012</td>
       <td class="align-middle">Autorización para realizar trabajos peligrosos</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.012.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.012.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.013</td>
       <td class="align-middle">Formato para requisición de obra o servicio.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.013.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.013.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">FO.ADMONGAS.014</td>
       <td class="align-middle">Formato para entrega de información al contratista.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.014.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.014.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.015</td>
       <td class="align-middle">Listas de verificación.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.015.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.015.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light" rowspan="3">13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS</td>
@@ -190,28 +216,28 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
     <tr>
       <td class="align-middle bg-light">Fo.ADMONGAS.016</td>
       <td class="align-middle bg-light">Programa anual de simulacros</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.016.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.016.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">Fo.ADMONGAS.16ª</td>
       <td class="align-middle bg-light">Evaluación de simulacros</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.016a.doc";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.016a.doc", "ti-file-word") ?></td>
     </tr>
     <tr>
       <td class="align-middle" rowspan="7">14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN</td>
       <td class="align-middle">Fo.ADMONGAS.017</td>
       <td class="align-middle">Programa de implementación del Sistema de administración </td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.017.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.017.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.019</td>
       <td class="align-middle">Relación de equipos sometidos a calibración </td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.019.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.019.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.020</td>
       <td class="align-middle">Calendario de calibraciones</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.20.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.20.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">DLES.ADMONGAS.002</td>
@@ -221,56 +247,56 @@ const rutaArchivo = "/uploads/archivos/Fo.ADMONGAS/";
     <tr>
       <td class="align-middle">Fo.ADMONGAS.021</td>
       <td class="align-middle">Matriz de evaluación del cumplimiento legal.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.021.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.021.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.022</td>
       <td class="align-middle">Informe de Resultados de la evaluación del cumplimiento de requisitos legales y otros aplicables al Proyecto.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.022.docx";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.022.docx", "ti-file-word") ?></td>
     </tr>
     <tr>
       <td class="align-middle">Fo.ADMONGAS.018 </td>
       <td class="align-middle">Programa de Atención de Hallazgos (acciones preventivas y correctivas)</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.018.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.018.xlsx", "ti-file-excel") ?></td>
     </tr>
      <tr>
       <td class="align-middle bg-light" rowspan="3">15. AUDITORÍAS</td>
       <td class="align-middle bg-light">Fo.ADMONGAS.023</td>
       <td class="align-middle bg-light">Programa Anual de Auditorías (Auditorías internas y, en su caso, la Auditoría Externa).</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.023.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.023.xlsx", "ti-file-excel") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">Fo.ADMONGAS.024</td>
       <td class="align-middle bg-light">El informe de Auditoría</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.024.doc";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.024.doc", "ti-file-word") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">Fo.ADMONGAS.025</td>
       <td class="align-middle bg-light">Plan de atención de hallazgos </td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.025.docx";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.025.docx", "ti-file-word") ?></td>
     </tr>
     <tr>
       <td class="align-middle">16. INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES</td>
       <td class="align-middle">Fo.ADMONGAS.026</td>
       <td class="align-middle">Informe detallado de la Investigación de Causa Raíz de los Eventos tipo 1 </td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.026.docx";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.026.docx", "ti-file-word") ?></td>
     </tr>
     <tr>
       <td class="align-middle bg-light">17. REVISIÓN DE RESULTADOS</td>
       <td class="align-middle bg-light">FO.ADMONGAS.027</td>
       <td class="align-middle bg-light">Informe de revisión de resultados emitido por la alta dirección, bajo el FO.ADMONGAS.027</td>
-      <td class="text-center align-middle bg-light"><a href="<?=rutaArchivo."Fo.ADMONGAS.027.docx";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle bg-light"><?= $archivoControlEditable("Fo.ADMONGAS.027.docx", "ti-file-word") ?></td>
     </tr>
      <tr>
       <td class="align-middle" rowspan="2">18. INFORMES DE DESEMPEÑO</td>
       <td class="align-middle">Fo.ADMONGAS.028</td>
       <td class="align-middle">IED. Mientras la agencia no emita un formato para este apartado se utilizara provisionalmente</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.028.docx";?>" download><i class="ti ti-file-word fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.028.docx", "ti-file-word") ?></td>
     </tr>
      <tr>
       <td class="align-middle">Fo.ADMONGAS.029 </td>
       <td class="align-middle">Bitácoras de las visitas de control de la implementación de los procedimientos técnicos y administrativos especificados en las DACG SASISOPA Expendio al Público.</td>
-      <td class="text-center align-middle"><a href="<?=rutaArchivo."Fo.ADMONGAS.029.xlsx";?>" download><i class="ti ti-file-excel fs-7 text-primary"></i></td>
+      <td class="text-center align-middle"><?= $archivoControlEditable("Fo.ADMONGAS.029.xlsx", "ti-file-excel") ?></td>
     </tr> 
 
   </tbody> 

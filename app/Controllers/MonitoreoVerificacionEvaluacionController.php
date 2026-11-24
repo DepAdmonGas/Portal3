@@ -63,6 +63,7 @@ class MonitoreoVerificacionEvaluacionController extends BaseController{
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/monitoreoverificacionevaluacion/index.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];

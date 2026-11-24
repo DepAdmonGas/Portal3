@@ -42,6 +42,7 @@ protected string $modulo = 'sasisopa';
                     '/js/vendor.min.js',
                     '/js/core/module-station-selector.js?v=' . time(),
                     '/libs/datatables.net/js/jquery.dataTables.min.js',
+                    '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
                     '/js/integridadmecanica/equipocritico.datatable.init.js?v=' . time(),
                     '/js/integridadmecanica/equipocritico.action.init.js?v=' . time(),
                 ],
@@ -54,7 +55,19 @@ protected string $modulo = 'sasisopa';
     public function datatableEquipoCritico(){
         $data = EquipoCritico::where('id_estacion',$this->estacionModulo())
         ->where('estado',1)
-        ->get();
+        ->get()
+        ->map(function ($equipo) {
+            $archivo = preg_replace(
+                '/[^A-Za-z0-9._-]/',
+                '',
+                basename(str_replace('\\', '/', (string) ($equipo->manual ?? '')))
+            );
+            $equipo->manual_archivo = $archivo;
+            $equipo->manual_disponible = $archivo !== ''
+                && is_file(PUBLIC_PATH . '/uploads/archivos/manuales/' . $archivo);
+
+            return $equipo;
+        });
 
          echo json_encode([
             "data" => $data,

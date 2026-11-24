@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
             '/sasisopa/control-actividades-procesos/mantenimiento-correctivo/datatable',
             type: 'GET',
             dataSrc: function (json) {
-                console.log(json.data);
             permisos = json.permisos;
             return json.data;
             }

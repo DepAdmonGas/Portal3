@@ -55,8 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
             searchable: false,
             render: function (data, type, row) {
                 return `
-                    <a class="pointer"
-                    onclick="cambioprecio.eliminar(${row.id})">
+                    <a class="pointer js-cambio-precio-eliminar"
+                    href="#"
+                    data-id="${Number(row.id)}"
+                    aria-label="Eliminar cambio de precio">
                     <i class="ti ti-trash fs-6 text-danger"></i>
                     </a>
                     `;
@@ -74,6 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
     
         ]
+    });
+
+    $('#table-cambio-precio tbody').on('click', '.js-cambio-precio-eliminar', function (event) {
+        event.preventDefault();
+        const id = Number(this.dataset.id);
+        if (Number.isInteger(id) && id > 0) {
+            window.cambioprecio?.eliminar(id);
+        }
     });
 
      $("#table-cambio-precio tbody").on("click", "tr", function () {

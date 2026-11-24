@@ -25,7 +25,8 @@ x-data="{ ...actions(), ...comunicacionParticipacionConsulta() }">
 ?>
 <li>
 <a class="dropdown-item pointer"
-:href="pdfUrl">
+:href="pdfUrl"
+@click="descargarConLoader($event)">
 <i class="ti ti-download"></i>
 Descargar
 </a>
@@ -363,23 +364,31 @@ No se encontraron evidencias
 <div class="card h-100 shadow-sm border bg-light position-relative">
 <div class="position-absolute top-0 end-0 p-2" style="z-index: 2;">
 <span class="badge bg-white text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center p-2" style="width: 32px; height: 32px;">
-<i class="ti ti-photo text-primary fs-6"></i>
+<i class="ti fs-6" :class="item.existe_archivo ? 'ti-photo text-primary' : 'ti-file-off text-secondary'"></i>
 </span>
 </div>
 
+<template x-if="item.existe_archivo">
 <a :href="item.url" target="_blank" class="text-decoration-none overflow-hidden d-block position-relative" style="height: 140px;">
 <img :src="item.url" class="w-100 h-100" style="object-fit: cover;" alt="Evidencia">
 </a>
+</template>
+<template x-if="!item.existe_archivo">
+<div class="d-flex align-items-center justify-content-center text-secondary" style="height: 140px;" aria-label="Archivo de evidencia no disponible">
+<i class="ti ti-file-off fs-2"></i>
+</div>
+</template>
 
 <div class="card-body border-top pb-2 bg-white">
-<a :href="item.url" target="_blank" class="text-body text-decoration-none">
+<a x-show="item.existe_archivo" :href="item.url" target="_blank" class="text-body text-decoration-none">
 <p class="small fw-bold text-truncate mb-0" :title="item.archivo" x-text="item.archivo"></p>
 </a>
+<p x-show="!item.existe_archivo" class="small fw-bold text-truncate mb-0 text-secondary" :title="item.archivo" x-text="item.archivo"></p>
 </div>
 
 <div class="card-footer bg-white">
 <div class="d-flex align-items-center gap-2">
-<a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :href="item.url" :download="item.archivo" title="Descargar">
+<a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" :class="!item.existe_archivo ? 'disabled' : ''" :href="item.download_url || '#'" :download="item.archivo" :aria-disabled="!item.existe_archivo" @click.prevent="item.existe_archivo && descargarConLoader($event)" title="Descargar">
 <i class="ti ti-download"></i><span>Descargar</span>
 </a>
 <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1" @click="eliminarEvidencia(item.id)" title="Eliminar">
@@ -580,6 +589,7 @@ Detalle:
     <div class="d-grid d-md-block">
 <a :href="detalle.url"
 target="_blank"
+@click="descargarConLoader($event)"
 class="btn bg-primary-subtle text-primary">
 
 <i class="ti ti-download"></i>
@@ -617,6 +627,7 @@ Fo.ADMONGAS.010 (Comunicación interna):
 
 <a :href="detalle.asistencia_url"
 target="_blank"
+@click="descargarConLoader($event)"
 class="btn bg-primary-subtle text-primary">
 <i class="ti ti-download"></i>
 Descargar asistencia

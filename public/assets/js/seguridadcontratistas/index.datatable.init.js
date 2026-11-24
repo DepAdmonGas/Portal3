@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 return `
-                    <a href="/sasisopa/seguridad-contratistas/formato12/pdf/${row.id}">
+                    <a href="/sasisopa/seguridad-contratistas/formato12/pdf/${row.id}" data-download-loader>
                         <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 return `
-                    <a href="/sasisopa/seguridad-contratistas/formato13/${row.id}">
+                    <a href="/sasisopa/seguridad-contratistas/formato13/${row.id}" data-download-loader>
                         <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
@@ -143,12 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
             render: function (data, type, row) {
 
                 if (!row.formato14 || !row.formato14_url) {
-                    return `<span class="opacity-50" style="cursor:default;"><i class="ti ti-x text-danger fs-7"></i></span>`;
+                    return `<span class="opacity-50" style="cursor:default;"><i class="ti ti-file-off text-muted fs-6" aria-label="Archivo Fo.ADMONGAS.014 no disponible"></i></span>`;
                 }
 
                 return `
-                    <a href="${row.formato14_url}" target="_BLANK">
-                        <i class="ti ti-file-type-pdf text-danger fs-7"></i>
+                    <a href="${row.formato14_url}" data-download-loader aria-label="Descargar archivo Fo.ADMONGAS.014">
+                        <i class="ti ti-file-type-pdf text-danger fs-6"></i>
                     </a>
                 `;
             }
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 return `
-                    <a href="/sasisopa/seguridad-contratistas/formato15/pdf/${row.id}">
+                    <a href="/sasisopa/seguridad-contratistas/formato15/pdf/${row.id}" data-download-loader>
                         <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 return `
-                    <a href="/sasisopa/seguridad-contratistas/carta-responsiva/pdf/${row.id}">
+                    <a href="/sasisopa/seguridad-contratistas/carta-responsiva/pdf/${row.id}" data-download-loader>
                         <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                     </a>
                 `;

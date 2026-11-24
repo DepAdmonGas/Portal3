@@ -1,5 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const formato016aDisponible = document.getElementById('container')
+        ?.dataset.formato016aDisponible === '1';
+
     const idSasisopa = document
     .getElementById('container')
     .dataset.idsasisopa;
@@ -116,11 +119,13 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center align-middle',
             render: function (data, type, row) {
 
-                return `
-                    <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.016a.doc">
-                        <i class="ti ti-file-download text-info fs-7"></i>
-                    </a>
-                `;
+                return formato016aDisponible
+                    ? `
+                        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.016a.doc" download="Fo.ADMONGAS.016a.doc" data-download-loader aria-label="Descargar formato Fo.ADMONGAS.016a">
+                            <i class="ti ti-file-download text-info fs-6"></i>
+                        </a>
+                    `
+                    : '<i class="ti ti-file-off text-muted fs-6" aria-label="Formato Fo.ADMONGAS.016a no disponible"></i>';
             }
         },
 
@@ -148,16 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return row.evaluacion
                     ? `
-                        <a
-                            href="${row.evaluacion}"
-                            target="_blank">
+                        <a href="${row.evaluacion}" data-download-loader aria-label="Descargar evaluación del simulacro">
 
-                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
+                            <i class="ti ti-file-type-pdf text-danger fs-6"></i>
 
                         </a>
                     `
                     : `
-                        <i class="ti ti-x fs-7"></i>
+                        <i class="ti ti-file-off text-muted fs-6" aria-label="Evaluación no disponible"></i>
                     `;
             }
         },

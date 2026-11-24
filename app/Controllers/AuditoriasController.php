@@ -102,12 +102,14 @@ class AuditoriasController extends BaseController{
             'estacionId' => $this->estacionModulo(),
             'moduleStationKey' => 'sasisopa',
             'links' =>[
-                
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/auditorias/programa.actions.init.js?v=?v=' . time(),
+                '/js/auditorias/programa.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -483,6 +485,7 @@ class AuditoriasController extends BaseController{
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/auditorias/interna.datatable.init.js?v=' . time(),
                 '/js/auditorias/interna.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -1002,6 +1005,7 @@ class AuditoriasController extends BaseController{
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/auditorias/externa.datatable.init.js?v=' . time(),
                 '/js/auditorias/externa.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];

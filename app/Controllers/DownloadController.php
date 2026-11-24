@@ -158,6 +158,11 @@ class DownloadController
             'sasisopa-incidentes-accidentes'         => dirname(__DIR__, 2) . '/public/uploads/archivos/incidentes-accidentes/',
             'sasisopa-revision-resultados'           => dirname(__DIR__, 2) . '/public/uploads/archivos/revision-resultados/',
             'sasisopa-evaluacion-desempeno'          => dirname(__DIR__, 2) . '/public/uploads/archivos/evaluacion-desempeño/',
+            'sasisopa-control-documentos-registros' => dirname(__DIR__, 2) . '/public/uploads/archivos/Fo.ADMONGAS/',
+            'sasisopa-control-documentos-procedimientos' => dirname(__DIR__, 2) . '/public/uploads/archivos/procedimientos/',
+            'sasisopa-integridad-mecanica-manual'    => dirname(__DIR__, 2) . '/public/uploads/archivos/manuales/',
+            'sasisopa-comunicacion-evidencias'       => dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias/',
+            'sasisopa-reporte-diario-facturas'       => dirname(__DIR__, 2) . '/public/uploads/archivos/cre/',
 
         ];
 
@@ -178,6 +183,7 @@ class DownloadController
                 echo 'Tipo no permitido';
                 exit;
             }
+
             $directorios = (array) $rutas[$tipo];
             $baseDirectorio = null;
             $rutaCompleta = null;

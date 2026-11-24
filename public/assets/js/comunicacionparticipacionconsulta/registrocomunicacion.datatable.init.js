@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" href="/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion?id=${row.id}">
+                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" href="/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion?id=${row.id}" @click.prevent='window.comunicacionParticipacionConsulta.descargarConLoader($event)'>
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>

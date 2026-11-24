@@ -32,7 +32,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                                     <a class="dropdown-item pointer" @click="openModalInvestigacion()"><i class="ti ti-plus"></i> Nuevo</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item pointer" href="/sasisopa/investigacion-incidentes-accidentes/pdf"><i class="ti ti-download"></i> Descargar</a>
+                                    <a class="dropdown-item pointer" href="/sasisopa/investigacion-incidentes-accidentes/pdf" data-download-loader><i class="ti ti-download"></i> Descargar</a>
                                 </li>
                             </ul>
                         </div>
@@ -40,11 +40,11 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                 </div>
             </div>
 
-            <div class="card-body p-0">
+            <div class="card-body">
 
                 <div class="datatables">
-                    <div class="table-responsive overflow-x-auto overflow-hidden">
-                        <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
+                    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+                        <table id="table-investigaciones-incidentes" class="table table-striped table-bordered text-nowrap align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th class="text-center">#</th>
@@ -71,255 +71,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
-
-                                <template
-                                    x-if="incidentes.length === 0">
-                                    <tr>
-                                        <td
-                                            colspan="14"
-                                            class="text-center">
-                                            No se encontró información
-                                        </td>
-                                    </tr>
-                                </template>
-
-                                <template
-                                    x-for="(item,index) in incidentes"
-                                    :key="item.id">
-
-                                    <tr>
-
-                                        <td class="text-center align-middle"
-                                            x-text="index + 1">
-                                        </td>
-
-                                        <td class="text-center align-middle"
-                                            x-text="item.fecha_larga">
-                                        </td>
-
-                                        <td class="text-center align-middle"
-                                            x-text="item.usuario">
-                                        </td>
-
-                                        <td class="text-center align-middle"
-                                            x-text="item.puesto">
-                                        </td>
-
-                                        <td class="text-center align-middle"
-                                            x-text="item.descripcion">
-                                        </td>
-
-                                        <td class="text-center align-middle"
-                                            x-text="item.tipo_evento">
-                                        </td>
-
-                                        <td class="text-center">
-                                            <span
-                                                x-text="
-                            item.muertes
-                            ? 'SI'
-                            : 'NO'
-                        ">
-                                            </span>
-                                        </td>
-
-                                        <!-- Grupo -->
-
-                                        <td
-                                            class="text-center">
-
-                                            <i x-show="item.grupo > 0"
-                                                class="ti ti-circle-check text-success fs-6">
-                                            </i>
-
-                                            <i x-show="item.grupo == 0"
-                                                class="ti ti-x text-danger fs-6">
-                                            </i>
-
-                                        </td>
-
-                                        <td
-                                            class="text-center">
-
-                                            <a
-                                                @click="
-                            grupoInterdisciplinario(
-                                item.id
-                            )
-                        ">
-
-                                                <i class="pointer ti ti-users fs-6">
-                                                </i>
-
-                                            </a>
-
-                                        </td>
-
-                                        <!-- Formato 026 -->
-
-                                        <td
-                                            class="text-center">
-
-                                            <template
-                                                x-if="
-                            !item.tercer_autorizado
-                        ">
-
-                                                <a
-                                                    href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.026.docx"
-                                                    download>
-
-                                                    <i class="ti ti-download text-primary fs-6">
-                                                    </i>
-
-                                                </a>
-
-                                            </template>
-
-                                            <template
-                                                x-if="
-                            item.tercer_autorizado
-                        ">
-
-                                                <i
-                                                    class="ti ti-x fs-6">
-                                                </i>
-
-                                            </template>
-
-                                        </td>
-
-                                        <td
-                                            class="text-center">
-
-                                            <template
-                                                x-if="
-                            !item.tercer_autorizado
-                        ">
-
-                                                <a
-                                                    @click="
-                                subir026(
-                                    item.id
-                                )
-                            ">
-
-                                                    <i class="pointer ti ti-upload text-success fs-6">
-                                                    </i>
-
-                                                </a>
-
-                                            </template>
-
-                                            <template
-                                                x-if="
-                            item.tercer_autorizado
-                        ">
-
-                                                <i
-                                                    class="ti ti-x fs-6">
-                                                </i>
-
-                                            </template>
-
-                                        </td>
-
-                                        <td
-                                            class="text-center">
-
-                                            <template
-                                                x-if="
-                            item.formato026.existe
-                        ">
-
-                                                <a
-                                                    :href="`/uploads/${item.formato026.archivo}`"
-                                                    target="_blank">
-
-                                                    <i class="ti ti-file-type-pdf text-danger fs-6">
-                                                    </i>
-
-                                                </a>
-
-                                            </template>
-
-                                            <template
-                                                x-if="
-                            !item.formato026.existe
-                        ">
-
-                                                <i
-                                                    class="ti ti-x text-danger fs-6">
-                                                </i>
-
-                                            </template>
-
-                                        </td>
-
-                                        <!-- Tercero -->
-
-                                        <td
-                                            class="text-center">
-
-                                            <template
-                                                x-if="
-                            item.tercer_autorizado
-                        ">
-
-                                                <a
-                                                    @click="
-                                openModalTercero(
-                                    item
-                                )
-                            ">
-
-                                                    <i
-                                                        class="pointer ti ti-shield-check text-success fs-6">
-                                                    </i>
-
-                                                </a>
-
-                                            </template>
-
-                                            <template
-                                                x-if="
-                            !item.tercer_autorizado
-                        ">
-
-                                                <i
-                                                    class="ti ti-x text-danger fs-6">
-                                                </i>
-
-                                            </template>
-
-                                        </td>
-
-                                        <!-- Eliminar -->
-
-                                        <td
-                                            class="text-center">
-
-                                            <a class="pointer"
-                                                @click="
-                            eliminarInvestigacion(
-                                item.id
-                            )
-                        ">
-
-                                                <i
-                                                    class="ti ti-trash text-danger fs-6">
-                                                </i>
-
-                                            </a>
-
-                                        </td>
-
-                                    </tr>
-
-                                </template>
-
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
@@ -347,12 +99,12 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
     </div>
 </div>
 
-            <div class="card-body p-0">
+            <div class="card-body">
 
                 <div class="datatables">
-                    <div class="table-responsive overflow-x-auto overflow-hidden">
+                    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
 
-                        <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+                        <table id="table-sin-accidentes" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
                             <thead>
                                 <tr>
                                     <th class="text-center align-middle" width="96px">#</th>
@@ -363,77 +115,7 @@ direccion='<?= $estacion['direccioncompleta'] ?? '' ?>';
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
-
-                                <template
-                                    x-if="registros.length === 0">
-
-                                    <tr>
-                                        <td colspan="4"
-                                            class="text-center">
-
-                                            <small>
-                                                No se encontró información
-                                            </small>
-
-                                        </td>
-                                    </tr>
-
-                                </template>
-
-                                <template
-                                    x-for="item in registros"
-                                    :key="item.id">
-
-                                    <tr :class="item.row_class">
-
-                                        <td class="text-center fw-bold"
-                                            x-text="item.id">
-                                        </td>
-
-                                        <td class="text-center"
-                                            x-text="item.fecha_larga">
-                                        </td>
-
-                                        <td class="text-center"
-                                            x-text="item.usuario">
-                                        </td>
-
-                                        <td class="text-center">
-
-                                            <div class="dropdown dropstart">
-                                                <a class="pointer" data-bs-toggle="dropdown">
-                                                    <i class="ti ti-dots-vertical fs-6"></i>
-                                                </a>
-                                                <ul class="dropdown-menu">
-                                                    <li>
-                                                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                            @click="editarNoAccidentes(item)">
-                                                            <i class="fs-4 ti ti-edit"></i>Editar
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                            :href="`/sasisopa/investigacion-incidentes-accidentes/no/pdf?id=${item.id}`">
-                                                            <i class="fs-4 ti ti-download"></i>Descargar
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item pointer d-flex align-items-center gap-3 pointer"
-                                                            @click="eliminarNo(item.id)">
-                                                            <i class="fs-4 ti ti-trash"></i>Eliminar
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-
-                                        </td>
-
-                                    </tr>
-
-                                </template>
-
-                            </tbody>
+                            <tbody></tbody>
                         </table>
 
                     </div>
@@ -1052,7 +734,8 @@ data-bs-backdrop="static"
                                             <td class="text-center align-middle">
 
                                                 <a :href="`/uploads/${uploadarchivoTercer}`"
-                                                    target="_blank">
+                                                    :download="uploadarchivoTercer.split('/').pop()"
+                                                    data-download-loader>
 
                                                     <i class="ti ti-file-type-pdf text-danger fs-7"></i>
 

@@ -58,12 +58,14 @@ public function index(int $year = 0){
             'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
              'links' =>[
-                
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
             ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/revisionresultados/index.actions.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];

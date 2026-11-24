@@ -73,7 +73,10 @@ document.addEventListener('alpine:init', () => {
 
             this.productos.forEach(producto=>{
 
-                if(!this.archivos[producto.id]){
+                const archivo=this.archivos[producto.id];
+                const esPdf=archivo && archivo.name.split('.').pop().toLowerCase()==='pdf';
+
+                if(!esPdf){
 
                     this.errores[producto.id]=true;
 
@@ -93,7 +96,7 @@ document.addEventListener('alpine:init', () => {
 
                 this.notify(
                     'error',
-                    'Selecciona todos los archivos PDF.'
+                    'Completa los campos obligatorios.'
                 );
 
                 return;
@@ -121,6 +124,8 @@ document.addEventListener('alpine:init', () => {
                     );
 
                 });
+
+            this.guardando=true;
 
             try{
 
@@ -150,8 +155,12 @@ document.addEventListener('alpine:init', () => {
 
                 this.notify(
                     'error',
-                    'No fue posible guardar las facturas.'
+                    e?.response?.data?.message || 'No fue posible guardar las facturas.'
                 );
+
+            }finally{
+
+                this.guardando=false;
 
             }
 

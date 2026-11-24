@@ -177,6 +177,11 @@ class PerfilController extends BaseController
             $longitudEmail = function_exists('mb_strlen') ? mb_strlen($email, 'UTF-8') : strlen($email);
             if ($email !== '' && (!filter_var($email, FILTER_VALIDATE_EMAIL) || $longitudEmail > 190)) {
                 $errores['email'] = 'Escribe un correo electrónico válido.';
+            } elseif ($email !== '' && Usuario::query()
+                ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower($email)])
+                ->where('id', '!=', $usuarioId)
+                ->exists()) {
+                $errores['email'] = 'Ese correo electrónico ya está registrado por otro usuario.';
             }
             if ($telefono !== '' && (!preg_match('/^[0-9+() .-]{7,25}$/', $telefono) || strlen(preg_replace('/\D/', '', $telefono)) < 7)) {
                 $errores['telefono'] = 'Escribe un teléfono válido de al menos 7 dígitos.';

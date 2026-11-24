@@ -134,8 +134,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
     <!-- Tarjeta 1: Fo.ADMONGAS.024 -->
     <div class="col-12 col-md-6 d-flex align-items-stretch mb-4 mb-md-0">
-        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" 
-           download
+        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc"
+           download="Fo.ADMONGAS.024.doc"
+           data-download-loader
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
             
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
@@ -167,8 +168,9 @@ x-data="{ ...actions(), ...auditoriaExterna()}">
 
     <!-- Tarjeta 2: Fo.ADMONGAS.025 -->
     <div class="col-12 col-md-6 d-flex align-items-stretch mb-0 mb-md-0">
-        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" 
-           download
+        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx"
+           download="Fo.ADMONGAS.025.docx"
+           data-download-loader
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
             
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
@@ -466,7 +468,7 @@ data-bs-backdrop="static"
                         <td class="align-middle text-center" x-text="a.fecha"></td>
                         <td class="align-middle text-center" x-text="a.comentario"></td>
                         <td class="text-center align-middle" width="36">
-                            <a :href="`/uploads/${a.archivo}`" download>
+                            <a :href="`/uploads/${a.archivo}`" :download="a.archivo.split('/').pop()" data-download-loader>
                                 <i class="ti ti-file-type-pdf text-danger fs-7"></i>
                             </a>
                         </td>
