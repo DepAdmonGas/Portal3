@@ -716,8 +716,16 @@ class RecepcionDescargaProductoController extends BaseController
 
     private function firmaUrl(?string $firma): string 
     {
-        if (empty($firma)) {return '';}
-        return $_ENV['APP_URL']. '/uploads/firma-personal/'. $firma;
+        $archivo = basename((string) $firma);
+        $ruta = PUBLIC_PATH . '/uploads/firma-personal/' . $archivo;
+
+        if ($archivo === '' || !is_file($ruta)) {
+            return '';
+        }
+
+        return rtrim((string) ($_ENV['APP_URL'] ?? ''), '/')
+            . '/uploads/firma-personal/'
+            . rawurlencode($archivo);
     }
 
     private function htmlTanques($tanques, float $litrosCompra): string 

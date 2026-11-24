@@ -54,6 +54,33 @@ document.addEventListener('alpine:init', () => {
 
         },
 
+        formatearPrecio(valor) {
+            const original = String(valor ?? '').replace(/,/g, '').replace(/[^\d.]/g, '');
+            if (original === '') return '';
+
+            const separador = original.indexOf('.');
+            let entero = separador >= 0 ? original.slice(0, separador) : original;
+            const decimales = separador >= 0
+                ? original.slice(separador + 1).replace(/\./g, '').slice(0, 2)
+                : null;
+
+            entero = (entero || '0').replace(/^0+(?=\d)/, '');
+            entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+            return decimales === null ? entero : `${entero}.${decimales}`;
+        },
+
+        actualizarPrecio(campo, event) {
+            const valor = this.formatearPrecio(event.target.value);
+            this.form[campo] = valor;
+            event.target.value = valor;
+        },
+
+        precioSinSeparadores(valor) {
+            const normalizado = String(valor ?? '').replace(/,/g, '').trim();
+            return normalizado === '' ? '0' : normalizado;
+        },
+
         validate() {
             Object.keys(this.errors).forEach(k => this.errors[k] = false);
             let valid = true;
@@ -74,7 +101,7 @@ document.addEventListener('alpine:init', () => {
     async guardar() {
 
         if (!this.validate()) {
-            this.notify('error', 'Completa los campos obligatorios');
+            this.notify('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -82,13 +109,15 @@ document.addEventListener('alpine:init', () => {
         
         fecha: this.form.fecha,
         hora: this.form.hora,
-        gsuper: this.form.gsuper,
-        gpremium: this.form.gpremium,
-        gdiesel: this.form.gdiesel
+        gsuper: this.precioSinSeparadores(this.form.gsuper),
+        gpremium: this.precioSinSeparadores(this.form.gpremium),
+        gdiesel: this.precioSinSeparadores(this.form.gdiesel)
     };
 
     const url = '/sasisopa/cambio-precio/create';
 
+    // createAction administra el loader y rechaza iniciar si loading ya está activo.
+    // No activar loading aquí antes de invocarlo.
     const res = await this.createAction({
         url,
         data: payload,
@@ -106,42 +135,22 @@ document.addEventListener('alpine:init', () => {
     async paginaWeb(idReporte) {
 
     try {
-
-        const params = new URLSearchParams({
-            idEstacion: document.getElementById('container').dataset.estacionId || this.estacion,
-            idReporte: idReporte,
-            GSUPER: this.form.gsuper,
-            GPREMIUM: this.form.gpremium,
-            GDIESEL: this.form.gdiesel,
-            Fecha: this.form.fecha,
-            Hora: this.form.hora,
-            TOKEN: '28102020'
+        const response = await axios.post('/sasisopa/cambio-precio/sync-web', {
+            id: idReporte
         });
 
-        const response = await fetch(
-            `https://www.admongas.com.mx/app/api/postCambioPrecio.php?${params.toString()}`
-        );
-
-        const json = await response.json();
-
-        if (json.status === 'success') {
-
-            this.notify(
-                'success',
-                'Cambio de precio actualizado en la Página Web.'
-            );
-
+        if (response.data?.success) {
+            this.notify('success', response.data.message);
+        } else {
+            throw new Error(response.data?.message || 'No se pudo sincronizar el cambio de precio.');
         }
 
     } catch (error) {
-
         console.error(error);
-
         this.notify(
             'error',
-            'Error al procesar la solicitud.'
+            error.response?.data?.message || 'El cambio se guardó en Portal3, pero no se pudo sincronizar con la Página Web.'
         );
-
     }
 
 },
@@ -158,60 +167,15 @@ document.addEventListener('alpine:init', () => {
             });
 
         if (res?.success) {
-            await this.eliminarWeb(id);
+            this.notify(
+                res.web_sync ? 'success' : 'error',
+                res.web_message || (res.web_sync
+                    ? 'El cambio también fue eliminado en la Página Web.'
+                    : 'El cambio se eliminó en Portal3, pero no se sincronizó con la Página Web.')
+            );
         }
 
     },
-
-    async eliminarWeb(id) {
-
-        try {
-
-            const response = await fetch(
-                'https://www.admongas.com.mx/app/api/postEliminarCambioPrecio.php',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        idReporte: id
-                    })
-                }
-            );
-
-            const json = await response.json();
-
-            if (json.success) {
-
-                this.notify(
-                    'success',
-                    'El cambio de precio fue eliminado'
-                );
-
-                return true;
-
-            }
-
-            this.notify(
-                'error',
-                'Error eliminando en servidor remoto'
-            );
-
-            return false;
-
-        } catch (e) {
-
-            this.notify(
-                'error',
-                'Error al conectar con el servidor remoto'
-            );
-
-            return false;
-
-        }
-
-    }
 
     }));
 });

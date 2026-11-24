@@ -11,6 +11,7 @@ document.addEventListener('alpine:init', () => {
         periodoVisualizado: '',
 
         modalBuscar: null,
+        tabla: null,
 
         init() {
 
@@ -64,6 +65,8 @@ document.addEventListener('alpine:init', () => {
                     ) {
                         this.years.push(y);
                     }
+
+                    this.inicializarTabla();
                 }
 
             } finally {
@@ -72,6 +75,69 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.modalBuscar.hide();
+        },
+
+        inicializarTabla() {
+            const selector = '#table-programa-auditorias';
+            if (!window.jQuery?.fn?.DataTable || !document.querySelector(selector)) return;
+
+            if ($.fn.DataTable.isDataTable(selector)) {
+                $(selector).DataTable().destroy();
+            }
+
+            const tabla = document.querySelector(selector);
+            const encabezado = tabla.tHead.rows[0];
+            tabla.tBodies[0]?.replaceChildren();
+            while (encabezado.cells.length > 3) {
+                encabezado.deleteCell(encabezado.cells.length - 1);
+            }
+
+            const years = this.years.map(Number);
+            years.forEach(year => {
+                const th = document.createElement('th');
+                th.className = 'text-center';
+                th.textContent = year;
+                encabezado.appendChild(th);
+            });
+
+            const mesAuditoria = fecha => {
+                const [year, month, day] = String(fecha || '').split('T')[0].split('-').map(Number);
+                if (!year || !month || !day) return '';
+                const mes = new Intl.DateTimeFormat('es-MX', { month: 'long' })
+                    .format(new Date(year, month - 1, day));
+                return mes.charAt(0).toUpperCase() + mes.slice(1);
+            };
+
+            const columnas = [
+                { data: 'tipo_auditoria', defaultContent: '', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                { data: 'responsable', defaultContent: '', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                { data: 'periodicidad', defaultContent: '', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                ...years.map(year => ({
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    render: (data, tipo, registro) => {
+                        const fecha = String(registro.fecha || '').split('T')[0];
+                        return Number(fecha.slice(0, 4)) === year ? mesAuditoria(fecha) : '';
+                    },
+                    createdCell: (celda, data, registro) => {
+                        const fecha = String(registro.fecha || '').split('T')[0];
+                        if (Number(fecha.slice(0, 4)) !== year) return;
+                        celda.classList.add(registro.tipo_auditoria === 'Interna' ? 'table-primary' : 'table-success');
+                    }
+                }))
+            ];
+
+            this.tabla = $(selector).DataTable({
+                data: this.registros,
+                columns: columnas,
+                autoWidth: false,
+                order: [],
+                language: {
+                    url: '/assets/libs/datatables.net/js/es-ES.json',
+                    emptyTable: 'No se encontró información para mostrar'
+                }
+            });
         },
 
         mes(fecha) {
@@ -109,45 +175,6 @@ document.addEventListener('alpine:init', () => {
             return new Date(registro.fecha)
                 .getFullYear() == year;
         },
-
-        async descargarPdf() {
-
-            const inicio = this.fechaInicio.split('-')[0];
-            const fin = this.fechaFin.split('-')[0];
-            const url = `/sasisopa/auditorias/programa/pdf/${inicio}/${fin}`;
-
-            window.loader?.show();
-
-            try {
-                const response = await fetch(url, {
-                    credentials: 'same-origin',
-                    headers: { Accept: 'application/pdf' }
-                });
-
-                if (!response.ok) {
-                    throw new Error('No fue posible descargar el programa de auditorías.');
-                }
-
-                const archivo = await response.blob();
-                if (!archivo.type.includes('pdf')) {
-                    throw new Error('El servidor no devolvió un archivo PDF.');
-                }
-
-                const archivoUrl = URL.createObjectURL(archivo);
-                const enlace = document.createElement('a');
-                enlace.href = archivoUrl;
-                enlace.download = 'Programa de auditorias.pdf';
-                document.body.appendChild(enlace);
-                enlace.click();
-                enlace.remove();
-                window.setTimeout(() => URL.revokeObjectURL(archivoUrl), 1000);
-            } catch (error) {
-                this.notify('error', error?.message || 'Error al descargar el archivo');
-            } finally {
-                window.loader?.hide();
-            }
-        }
-
 
     }));
 });

@@ -66,7 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <ul class="dropdown-menu">
                                  <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
-                                    href="/sasisopa/comunicacion-participacion-consulta/pdf-quejas-sugerencias/${row.id}">
+                                    href="/sasisopa/comunicacion-participacion-consulta/pdf-quejas-sugerencias/${row.id}"
+                                    ${!noDownload ? '' : `@click.prevent='window.comunicacionParticipacionConsulta.descargarConLoader($event)'`}>
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>

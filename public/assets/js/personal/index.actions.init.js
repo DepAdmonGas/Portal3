@@ -12,6 +12,7 @@ document.addEventListener('alpine:init', () => {
 
         error: '',
         mensajeErrorUsuario: '',
+        mensajeErrorEmail: '',
 
         modal: null,
 
@@ -108,6 +109,7 @@ validate() {
     Object.keys(this.errors).forEach(k => this.errors[k] = false);
     this.error = '';
     this.mensajeErrorUsuario = '';
+    this.mensajeErrorEmail = '';
 
     let valid = true;
 
@@ -135,6 +137,13 @@ validate() {
     if (errorUsuario) {
         this.errors.usuario = true;
         this.mensajeErrorUsuario = errorUsuario;
+        valid = false;
+    }
+
+    const email = String(this.email || '').trim();
+    if (!email || email.length > 190 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        this.errors.email = true;
+        this.mensajeErrorEmail = 'Escribe un correo electrónico válido.';
         valid = false;
     }
 
@@ -231,6 +240,13 @@ async submit() {
                     ? errorUsuario.join(' ')
                     : String(errorUsuario);
             }
+            const errorEmail = respuesta?.errors?.email;
+            if (errorEmail) {
+                this.errors.email = true;
+                this.mensajeErrorEmail = Array.isArray(errorEmail)
+                    ? errorEmail.join(' ')
+                    : String(errorEmail);
+            }
         }
     });
 
@@ -260,6 +276,7 @@ async submit() {
             this.password_confirmacion = '';
             this.error = '';
             this.mensajeErrorUsuario = '';
+            this.mensajeErrorEmail = '';
 
             Object.keys(this.errors).forEach(key => {
                 this.errors[key] = false;

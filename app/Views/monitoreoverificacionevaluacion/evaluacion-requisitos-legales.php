@@ -16,6 +16,7 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
 
 <div class="col-12 col-md-4  mb-4">
     <a href="/sasisopa/monitoreo-verificacion-evaluacion/evaluacion-cumplimiento-requisitos-legales/pdf" 
+       data-download-loader
        class="card  text-decoration-none card-hover overflow-hidden position-relative">
         
         <div class="card-body pb-4 p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
@@ -61,7 +62,7 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
                         <a class="dropdown-item pointer" @click="openNuevo()"><i class="ti ti-plus"></i> Nuevo</a>
                     </li>
                     <li>
-                        <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx"><i class="ti ti-download"></i> Descargar</a>
+                        <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.022.docx" download="Fo.ADMONGAS.022.docx" data-download-loader><i class="ti ti-download"></i> Descargar</a>
                     </li>
                 </ul>
             </div>   
@@ -69,9 +70,11 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
     </div>   
 </div>
 
-    <div class="card-body p-0">
-    
-    <table class="table table-striped mb-0 table-bordered text-nowrap align-middle">
+    <div class="card-body pb-0">
+
+    <div class="datatables">
+    <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+    <table id="table-evaluacion-requisitos-legales" class="table table-striped table-bordered text-nowrap align-middle">
         <thead>
             <tr>
                 <th class="text-center align-middle" width="48px">
@@ -91,63 +94,10 @@ x-data="{ ...actions(), ...evaluacionRequisitos()}">
                 </th>
             </tr>
         </thead>
-        <tbody>
-
-        <template
-                    x-for="registro in registros"
-                    :key="registro.id">
-
-                    <tr>
-
-                        <td
-                            class="text-center fw-bold"
-                            x-text="registro.numero">
-                        </td>
-
-                        <td
-                            class="text-center"
-                            x-text="registro.fecha_larga">
-                        </td>
-
-                        <td class="text-center">
-
-                            <a
-                                :href="registro.url_pdf"
-                                download>
-
-                                <i class="ti ti-download fs-6 text-primary"></i>
-                            </a>
-
-                        </td>
-
-                        <td class="text-center">
-
-                        <a @click="eliminar(registro.id)"><i class="ti ti-trash fs-6 text-danger pointer"></i></a>
-
-                        </td>
-
-                    </tr>
-
-        </template>
-
-                <tr
-                    x-show="!loading && registros.length === 0">
-
-                    <td
-                        colspan="4"
-                        class="text-center">
-
-                        <small>
-                            No se encontró información para mostrar
-                        </small>
-
-                    </td>
-
-                </tr>
-
-
-        </tbody>
+        <tbody></tbody>
     </table>
+    </div>
+    </div>
 
     </div>
 </div>

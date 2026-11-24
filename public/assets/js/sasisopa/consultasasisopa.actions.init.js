@@ -4,7 +4,6 @@ document.addEventListener('alpine:init', () => {
         lista: [],
 
         init(){
-        this.cargarConsulta();
         },
 
          async cargarConsulta(){

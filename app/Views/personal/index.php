@@ -146,8 +146,9 @@
                                 class="form-control"
                                 placeholder="Correo electrónico"
                                 x-model="email"
-                                @input="errors.email = false"
+                                @input="errors.email = false; mensajeErrorEmail = ''"
                                 :class="errors.email ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" x-show="errors.email" x-text="mensajeErrorEmail || 'Escribe un correo electrónico válido.'"></div>
 
                         </div>
 

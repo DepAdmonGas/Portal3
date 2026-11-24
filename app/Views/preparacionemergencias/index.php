@@ -1,6 +1,7 @@
 <div id="container" class="pb-4"
     data-module-station-key="sasisopa"
     data-estacion-id="<?= e($estacionId ?? '') ?>"
+    data-formato016a-disponible="<?= !empty($formato016aDisponible) ? '1' : '0' ?>"
     x-data="{ ...actions(), ...preparacionEmergencias()}">
 
     <?php if (empty($estacionId)): ?>
@@ -37,11 +38,12 @@
 
 
                     </div>
-                    <div class="card-body p-0">
+                    <div class="card-body pb-0">
 
-                        <div class="table-responsive">
+                        <div class="datatables">
+                            <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
 
-                            <table class="table table-striped mb-0 text-nowrap align-middle">
+                            <table id="table-protocolos-emergencias" class="table table-striped table-bordered text-nowrap align-middle">
 
                                 <thead>
 
@@ -53,7 +55,7 @@
 
                                         <th
                                             class=""
-                                            width="60">
+                                            width="48px">
 
                                             PDF
 
@@ -61,112 +63,23 @@
 
                                         <th
                                             class=""
-                                            width="60">
+                                             width="48px">
 
                                             Anexos
 
                                         </th>
 
-                                        <th class="text-center"><i class="ti ti-dots-vertical fs-6"></i></th>
+                                        <th class="text-center"  width="48px"><i class="ti ti-dots-vertical fs-6"></i></th>
 
                                     </tr>
 
                                 </thead>
 
-                                <tbody>
-
-                                    <template x-if="protocolos.length === 0">
-
-                                        <tr>
-
-                                            <td
-                                                colspan="5"
-                                                class="text-center py-2">
-
-                                                <small class="text-muted">
-                                                    No se encontró información para mostrar
-                                                </small>
-
-                                            </td>
-
-                                        </tr>
-
-                                    </template>
-
-                                    <template
-                                        x-for="item in protocolos"
-                                        :key="item.id">
-
-                                        <tr>
-
-                                            <td
-                                                x-text="item.fecha_formateada">
-                                            </td>
-
-                                            <td class="text-center">
-
-                                                <template x-if="item.archivo">
-
-                                                    <a
-                                                        :href="'/' + item.archivo"
-                                                        target="_blank">
-
-                                                        <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-
-                                                    </a>
-
-                                                </template>
-
-                                                <template x-if="!item.archivo">
-
-                                                    <i class="ti ti-file-off text-muted fs-7"></i>
-
-                                                </template>
-
-                                            </td>
-
-                                            <td class="text-center">
-
-                                                <a
-                                                    class="pointer"
-                                                    @click="abrirAnexos(item.id)">
-
-                                                    <i class="ti ti-paperclip fs-6 text-info"></i>
-
-                                                </a>
-
-                                            </td>
-
-                                            <td class="text-center" width="48px">
-
-                                                <div class="dropcen">
-                                                    <a class="pointer" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-
-                                                        <div class="dropcen">
-                                                            <a class="pointer" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                <i class="ti ti-dots-vertical fs-6"></i>
-                                                            </a>
-                                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                                <li>
-                                                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" @click="editarProtocolo(item)"><i class="ti ti-edit fs-4"></i> Editar</a>
-
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" @click="eliminarProtocolo(item.id)"><i class="ti ti-trash fs-4"></i> Eliminar</a>
-
-                                                                </li>
-
-                                                            </ul>
-                                                        </div>
-                                            </td>
-                                        </tr>
-
-                                    </template>
-
-                                </tbody>
+                                <tbody></tbody>
 
                             </table>
 
+                            </div>
                         </div>
 
                     </div>
@@ -228,7 +141,7 @@
                                     <a class="dropdown-item pointer" @click="openBuscarModal()"><i class="ti ti-search"></i> Buscar</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item pointer" :href="pdfUrl"><i class="ti ti-download"></i> Descargar</a>
+                                    <a class="dropdown-item pointer" :href="pdfUrl" data-download-loader><i class="ti ti-download"></i> Descargar</a>
                                 </li>
                             </ul>
                         </div>
@@ -526,13 +439,14 @@ errors.protocolo.archivo = false;
                                         <td
                                             class="text-center">
 
-                                            <a
-                                                :href="'/' + item.archivo"
-                                                target="_blank">
-
-                                                <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-
-                                            </a>
+                                            <template x-if="item.archivo">
+                                                <a :href="item.archivo" data-download-loader aria-label="Descargar anexo">
+                                                    <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+                                                </a>
+                                            </template>
+                                            <template x-if="!item.archivo">
+                                                <i class="ti ti-file-off text-muted fs-6" aria-label="Anexo no disponible"></i>
+                                            </template>
 
                                         </td>
 

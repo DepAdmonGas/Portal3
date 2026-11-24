@@ -1650,6 +1650,7 @@ $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/data
 $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/pdf', Route::auth(['MantenimientoPreventivoController', 'pdf']));
 $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/get', Route::auth(['MantenimientoPreventivoController', 'get']));
 $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/{id:\d+}', Route::auth(['MantenimientoPreventivoController', 'evidencias']));
+$r->addRoute('GET', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/descargar/{id:\d+}', Route::auth(['MantenimientoPreventivoController', 'descargarEvidencia']));
 $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/create', Route::auth(['MantenimientoPreventivoController', 'createEvidencia']));
 $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-preventivo/evidencias/delete', Route::auth(['MantenimientoPreventivoController', 'deleteEvidencia']));
 
@@ -1672,6 +1673,7 @@ $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/data
 $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/update', Route::auth(['MantenimientoCorrectivoController', 'update']));
 $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/pdf', Route::auth(['MantenimientoCorrectivoController', 'pdf']));
 $r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/{id:\d+}', Route::auth(['MantenimientoCorrectivoController', 'evidencias']));
+$r->addRoute('GET', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/descargar/{id:\d+}', Route::auth(['MantenimientoCorrectivoController', 'descargarEvidencia']));
 $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/create', Route::auth(['MantenimientoCorrectivoController', 'createEvidencia']));
 $r->addRoute('POST', '/control-actividades-procesos/mantenimiento-correctivo/evidencias/delete', Route::auth(['MantenimientoCorrectivoController', 'deleteEvidencia']));
 
@@ -2006,6 +2008,7 @@ $r->addRoute('GET', '/cursos/modulos/temas/{idModulo:\d+}', Route::auth(['Cursos
 $r->addRoute('GET', '/cambio-precio', Route::auth(['CambioPrecioController', 'index']));
 $r->addRoute('GET', '/cambio-precio/datetable', Route::auth(['CambioPrecioController', 'datetable']));
 $r->addRoute('POST', '/cambio-precio/create', Route::auth(['CambioPrecioController', 'create']));
+$r->addRoute('POST', '/cambio-precio/sync-web', Route::auth(['CambioPrecioController', 'syncWeb']));
 $r->addRoute('POST', '/cambio-precio/delete', Route::auth(['CambioPrecioController', 'delete']));
 });
 

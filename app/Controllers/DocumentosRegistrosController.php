@@ -100,6 +100,7 @@ class DocumentosRegistrosController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
 
             'help' => false
@@ -324,6 +325,7 @@ class DocumentosRegistrosController extends BaseController{
             'scripts' => [
                 '/js/vendor.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => false
         ];

@@ -49,6 +49,8 @@ class SeguridadContratistasController extends BaseController
         Breadcrumb::add(DropdownYearMesService::dropdownYearManual($year, 1, 2019, $yearMesTemplate), '');
 
         $permisos = ModuloService::permisosSesion($this->modulo);
+        $plantillaFormato14 = dirname(__DIR__, 2)
+            . '/public/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.014.xlsx';
 
         $data = [
             'title' => $title,
@@ -56,6 +58,7 @@ class SeguridadContratistasController extends BaseController
             'modulo' => $this->modulo,
             'estacionId' => $this->estacionModulo(),
             'year' => $year,
+            'formato14PlantillaDisponible' => is_file($plantillaFormato14),
             'yearMesTemplate' => $yearMesTemplate,
             'moduleStationKey' => 'sasisopa',
             'filtro_usuario' => $this->filtro_usuario,
@@ -68,6 +71,7 @@ class SeguridadContratistasController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/seguridadcontratistas/index.datatable.init.js?v=' . time(),
                 '/js/seguridadcontratistas/index.action.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -91,6 +95,12 @@ class SeguridadContratistasController extends BaseController
             ->orderByDesc('id')
             ->get()
             ->map(function ($item) {
+                $archivoFormato14 = basename((string) ($item->formato14?->archivo ?? ''));
+                $rutaFormato14 = dirname(__DIR__, 2)
+                    . '/public/uploads/archivos/seguridad-contratistas/'
+                    . $archivoFormato14;
+                $formato14Disponible = $archivoFormato14 !== '' && is_file($rutaFormato14);
+
                 return [
                     'id' => $item->id,
                     'folio' => '0' . $item->no_folio,
@@ -100,11 +110,9 @@ class SeguridadContratistasController extends BaseController
                     'justificacion' => $item->justificacion,
                     'proveedor' => $item->proveedor,
                     'formato12' => $item->formato12_exists,
-                    'formato14' => $item->formato14_exists,
-                    'formato14_url' =>
-                    $item->formato14?->archivo
-                        ? '/uploads/' .
-                        $item->formato14->archivo
+                    'formato14' => $formato14Disponible,
+                    'formato14_url' => $formato14Disponible
+                        ? '/download?tipo=sasisopa-seguridad-contratistas&file=' . rawurlencode($archivoFormato14)
                         : '',
                     'formato15' => $item->formato15_exists,
                     'carta_responsiva' => $item->carta_responsiva_exists
@@ -1257,12 +1265,16 @@ class SeguridadContratistasController extends BaseController
                     'descripcion' => $requisicion->descripcion ?? '',
                     'justificacion' => $requisicion->justificacion ?? '',
                     'archivo' => $formato?->archivo ?? '',
-                    'archivo_url' =>
-                    !empty($formato?->archivo)
-                        ? $_ENV['APP_URL']
-                        . '/uploads/'
-                        . $formato->archivo
-                        : ''
+                    'archivo_url' => (function () use ($formato) {
+                        $archivo = basename((string) ($formato?->archivo ?? ''));
+                        $ruta = dirname(__DIR__, 2)
+                            . '/public/uploads/archivos/seguridad-contratistas/'
+                            . $archivo;
+
+                        return $archivo !== '' && is_file($ruta)
+                            ? '/download?tipo=sasisopa-seguridad-contratistas&file=' . rawurlencode($archivo)
+                            : '';
+                    })()
                 ]
             ]);
         } catch (\Throwable $e) {

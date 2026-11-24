@@ -259,8 +259,6 @@ document.addEventListener('alpine:init', () => {
 
                 this.evidencias = json.data ?? [];
 
-                console.log(json.data);
-
                 this.modalEvidencia.show();
 
             }catch(e){

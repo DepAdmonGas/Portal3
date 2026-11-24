@@ -23,7 +23,11 @@ x-data="programaAuditoria()">
                     <a class="dropdown-item pointer" @click="abrirModalBuscar()"><i class="ti ti-search"></i> Buscar</a>
                 </li>
                  <li>
-                    <a class="dropdown-item pointer" @click="descargarPdf()"><i class="ti ti-download"></i> Descargar</a>
+                    <a class="dropdown-item pointer"
+                       :href="`/sasisopa/auditorias/programa/pdf/${fechaInicio.split('-')[0]}/${fechaFin.split('-')[0]}`"
+                       data-download-loader>
+                        <i class="ti ti-download"></i> Descargar
+                    </a>
                 </li>
             </ul>
         </div>
@@ -43,8 +47,9 @@ x-data="programaAuditoria()">
     </tr>
     </table>
     </div>
-<div class="table-resposive overflow-x-auto overflow-y-hiddien mb-3">
-    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle">
+<div class="datatables mb-3">
+<div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+    <table id="table-programa-auditorias" class="table table-striped table-bordered text-nowrap align-middle">
 
         <thead>
 
@@ -52,73 +57,14 @@ x-data="programaAuditoria()">
                 <th class="text-center">Tipo auditoría</th>
                 <th class="text-center">Responsable</th>
                 <th class="text-center">Periodicidad</th>
-                <template
-                    x-for="year in years"
-                    :key="year">
-
-                    <th
-                        class=" text-center"
-                        x-text="year">
-                    </th>
-
-                </template>
-
             </tr>
 
         </thead>
 
-        <tbody>
-
-            <template
-                x-for="registro in registros"
-                :key="registro.id">
-
-                <tr>
-
-                    <td
-                    class="text-center" 
-                    x-text="registro.tipo_auditoria"></td>
-
-                    <td 
-                    class="text-center"
-                    x-text="registro.responsable"></td>
-
-                    <td 
-                    class="text-center"
-                    x-text="registro.periodicidad"></td>
-
-                    <template
-                        x-for="year in years"
-                        :key="year">
-
-                        <td
-                            class="text-center"
-                            :class="{
-                                'table-primary':
-                                    registro.tipo_auditoria === 'Interna'
-                                    && existeEnYear(registro, year),
-
-                                'table-success':
-                                    registro.tipo_auditoria === 'Externa'
-                                    && existeEnYear(registro, year)
-                            }">
-
-                            <span
-                                x-show="existeEnYear(registro, year)"
-                                x-text="mes(registro.fecha)">
-                            </span>
-
-                        </td>
-
-                    </template>
-
-                </tr>
-
-            </template>
-
-        </tbody>
+        <tbody></tbody>
 
     </table>
+</div>
 </div>
 
     <div class="text-center"><small>*Las auditorias al SA se realizaran por personal interno de la empresa, que puede ser el gerente de la estación de servicio, el Representante legal, el departamento de gestión, entre otras y las auditorias externas se realizaran por un tercer acreditado (cada dos años de acuerdo a las DACG expendio de petrolíferos) ante la Agencia de Seguridad Energía y Ambiente, tercer acreditado que tendrá que tener vigente su autorización ante la Agencia y el personal podrá elegir. </small></div>

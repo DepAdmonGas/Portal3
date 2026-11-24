@@ -7,6 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let permisos = {};
     let url = '';
 
+    const tablaFirmas = document.getElementById('table-lista-asistencia-firma');
+    tablaFirmas.addEventListener('error', (event) => {
+        const imagen = event.target;
+        if (!(imagen instanceof HTMLImageElement) || !imagen.matches('[data-signature-image]')) return;
+
+        const firmaNoDisponible = document.createElement('i');
+        firmaNoDisponible.className = 'ti ti-signature-off fs-8 text-secondary-emphasis';
+        firmaNoDisponible.setAttribute('title', 'Firma no disponible');
+        firmaNoDisponible.setAttribute('aria-label', 'Firma no disponible');
+        imagen.replaceWith(firmaNoDisponible);
+    }, true);
+
     table2 = $('#table-lista-asistencia-firma').DataTable({
         processing: true,
         serverSide: false,
@@ -41,9 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center',
             render: function (data) {
 
-                if (!data) return '';
+                if (!data) return '<i class="ti ti-signature-off fs-8 text-secondary-emphasis" title="Firma no disponible" aria-label="Firma no disponible"></i>';
 
-                return `<img src="${url}${data}" style="width:60px;">`;
+                return `<img data-signature-image src="${url}${encodeURIComponent(data)}" style="width:60px;">`;
             }
             },
              

@@ -95,11 +95,11 @@
                         </label>
 
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                            type="text"
+                            inputmode="decimal"
                             class="form-control"
-                            x-model="form.gsuper">
+                            x-model="form.gsuper"
+                            @input="actualizarPrecio('gsuper', $event)">
                     </div>
 
                     <!-- G PREMIUM -->
@@ -109,11 +109,11 @@
                         </label>
 
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                            type="text"
+                            inputmode="decimal"
                             class="form-control"
-                            x-model="form.gpremium">
+                            x-model="form.gpremium"
+                            @input="actualizarPrecio('gpremium', $event)">
                     </div>
 
                     <!-- G DIESEL -->
@@ -123,11 +123,11 @@
                         </label>
 
                         <input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                            type="text"
+                            inputmode="decimal"
                             class="form-control"
                             x-model="form.gdiesel"
+                            @input="actualizarPrecio('gdiesel', $event)"
                             <?= empty($productoTres) ? 'disabled' : ''; ?>>
                     </div>
 
@@ -143,12 +143,6 @@
                             x-model="form.fecha"
                             @input="errors.fecha = false"
                             :class="errors.fecha ? 'is-invalid' : ''">
-
-                        <div
-                            class="invalid-feedback"
-                            x-show="errors.fecha">
-                            Selecciona una fecha.
-                        </div>
                     </div>
 
                     <div class="col-md-6">
@@ -162,12 +156,6 @@
                             x-model="form.hora"
                             @input="errors.hora = false"
                             :class="errors.hora ? 'is-invalid' : ''">
-
-                        <div
-                            class="invalid-feedback"
-                            x-show="errors.hora">
-                            Selecciona una hora.
-                        </div>
                     </div>
 
                 </div>

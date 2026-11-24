@@ -1,6 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
 
 const year = new Date().getFullYear();
+const tablaFirmas = document.getElementById('table-recepcion-descarga-producto');
+
+tablaFirmas?.addEventListener('error', (event) => {
+    const imagen = event.target;
+    if (!(imagen instanceof HTMLImageElement) || !imagen.matches('[data-signature-image]')) return;
+
+    const firmaNoDisponible = document.createElement('span');
+    firmaNoDisponible.className = 'd-inline-flex flex-column align-items-center text-secondary-emphasis';
+    firmaNoDisponible.title = 'Sin firma registrada';
+    firmaNoDisponible.setAttribute('aria-label', 'Sin firma registrada');
+
+    const icono = document.createElement('i');
+    icono.className = 'ti ti-signature-off fs-6';
+    firmaNoDisponible.append(icono, document.createTextNode('Sin firma registrada'));
+    imagen.replaceWith(firmaNoDisponible);
+}, true);
 
     table1 = $('#table-recepcion-descarga-producto').DataTable({
         processing: true,
@@ -113,15 +129,18 @@ const year = new Date().getFullYear();
                 render: function(data) {
 
                     if (!data.firma) {
-                           return `
-                        <div>
-                            <small>${data.nombre}</small>
-                        </div>`;
+                        return `
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="ti ti-signature-off fs-6 text-secondary-emphasis" title="Sin firma registrada" aria-label="Sin firma registrada"></i>
+                                <small class="text-secondary-emphasis">Sin firma registrada</small>
+                            </div>
+                            <div><small>${data.nombre}</small></div>`;
                     }
 
                     return `
                         <img
-                            width="50"
+                            data-signature-image
+                            style="width:64px;max-height:40px;object-fit:contain"
                             src="${data.firma}">
 
                         <div>
@@ -139,14 +158,17 @@ const year = new Date().getFullYear();
 
                     if (!data.firma) {
                         return `
-                        <div>
-                            <small>${data.nombre}</small>
-                        </div>`;
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="ti ti-signature-off fs-6 text-secondary-emphasis" title="Sin firma registrada" aria-label="Sin firma registrada"></i>
+                                <small class="text-secondary-emphasis">Sin firma registrada</small>
+                            </div>
+                            <div><small>${data.nombre}</small></div>`;
                     }
 
                     return `
                         <img
-                            width="50"
+                            data-signature-image
+                            style="width:64px;max-height:40px;object-fit:contain"
                             src="${data.firma}">
 
                         <div>

@@ -302,9 +302,13 @@ class PersonalController extends BaseController
                 ? $data['password_confirmacion']
                 : '';
             $nombreUsuario = trim((string) ($data['usuario'] ?? ''));
+            $email = trim((string) ($data['email'] ?? ''));
             $longitudUsuario = function_exists('mb_strlen')
                 ? mb_strlen($nombreUsuario, 'UTF-8')
                 : strlen($nombreUsuario);
+            $longitudEmail = function_exists('mb_strlen')
+                ? mb_strlen($email, 'UTF-8')
+                : strlen($email);
             $erroresUsuario = [];
 
             if (
@@ -315,6 +319,12 @@ class PersonalController extends BaseController
                 $erroresUsuario['usuario'] = 'Escribe un usuario de 3 a 50 caracteres; utiliza letras, números, punto, guion o guion bajo.';
             } elseif (Usuario::query()->where('usuario', $nombreUsuario)->exists()) {
                 $erroresUsuario['usuario'] = 'Ese nombre de usuario ya está registrado.';
+            }
+
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $longitudEmail > 190) {
+                $erroresUsuario['email'] = 'Escribe un correo electrónico válido.';
+            } elseif (Usuario::query()->whereRaw('LOWER(TRIM(email)) = ?', [strtolower($email)])->exists()) {
+                $erroresUsuario['email'] = 'Ese correo electrónico ya está registrado por otro usuario.';
             }
 
             if ($erroresUsuario) {
@@ -343,11 +353,11 @@ class PersonalController extends BaseController
 
             $idEstacion = (int) (ModuleStationService::getContext($this->moduleKey($data ?? []))['id_estacion'] ?? $this->estacionId());
 
-            Capsule::transaction(function () use ($data, $idEstacion, $password, $nombreUsuario) {
+            Capsule::transaction(function () use ($data, $idEstacion, $password, $nombreUsuario, $email) {
 
                 $usuario = Usuario::create([
                     'nombre' => trim($data['nombre']),
-                    'email' => trim($data['email']),
+                    'email' => $email,
                     'telefono' => trim($data['telefono']),
                     'id_gas' => $idEstacion,
                     'id_puesto' => (int) $data['id_puesto'],
@@ -427,9 +437,13 @@ class PersonalController extends BaseController
                 ? $data['password']
                 : '';
             $nombreUsuario = trim((string) ($data['usuario'] ?? ''));
+            $email = trim((string) ($data['email'] ?? ''));
             $longitudUsuario = function_exists('mb_strlen')
                 ? mb_strlen($nombreUsuario, 'UTF-8')
                 : strlen($nombreUsuario);
+            $longitudEmail = function_exists('mb_strlen')
+                ? mb_strlen($email, 'UTF-8')
+                : strlen($email);
             $erroresUsuario = [];
 
             if (
@@ -440,6 +454,15 @@ class PersonalController extends BaseController
                 $erroresUsuario['usuario'] = 'Escribe un usuario de 3 a 50 caracteres; utiliza letras, números, punto, guion o guion bajo.';
             } elseif (Usuario::query()->where('usuario', $nombreUsuario)->where('id', '!=', $idUsuario)->exists()) {
                 $erroresUsuario['usuario'] = 'Ese nombre de usuario ya está registrado.';
+            }
+
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $longitudEmail > 190) {
+                $erroresUsuario['email'] = 'Escribe un correo electrónico válido.';
+            } elseif (Usuario::query()
+                ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower($email)])
+                ->where('id', '!=', $idUsuario)
+                ->exists()) {
+                $erroresUsuario['email'] = 'Ese correo electrónico ya está registrado por otro usuario.';
             }
 
             if ($erroresUsuario) {
@@ -470,13 +493,13 @@ class PersonalController extends BaseController
                 }
             }
 
-            Capsule::transaction(function () use ($data, $password, $nombreUsuario) {
+            Capsule::transaction(function () use ($data, $password, $nombreUsuario, $email) {
 
                 $usuario = Usuario::findOrFail((int)$data['id']);
 
                 $usuario->update([
                     'nombre' => trim($data['nombre']),
-                    'email' => trim($data['email']),
+                    'email' => $email,
                     'telefono' => trim($data['telefono']),
                     'id_puesto' => (int) $data['id_puesto'],
                     'usuario' => $nombreUsuario,

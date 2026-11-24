@@ -197,6 +197,14 @@
     ).replace(/[+✓✔]/g, ' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase('es-MX');
     const getIntent = element => {
         const label = normalizeActionLabel(element);
+        const reporteSasisopa = element.closest('#container.sasisopa-reporte');
+        const enlaceDescargaReporte = reporteSasisopa
+            && element instanceof HTMLAnchorElement
+            && (element.hasAttribute('download')
+                || /descargar\s+documento/i.test(label)
+                || Boolean(element.querySelector('.ti-download, .ti-file-type-pdf, .ti-file-type-doc, .ti-file-type-xls'))
+                || /(?:^|\/)pdf(?:\/|$)|\.pdf(?:$|[?#])/i.test(element.getAttribute('href') || ''));
+        if (element.dataset.actionLoader === 'download' || enlaceDescargaReporte) return 'download';
         if (/^descargar\s+(pdf|excel)$/.test(label)) return 'download';
         if (/^nuevo(?:\s+registro)?$/.test(label)) return 'new';
         if (/^(guardar(?:\s+.*)?|actualizar(?:\s+estatus)?|finalizar(?:\s+.*)?|firmar(?:\s+.*)?|de\s+acuerdo|generar\s+token(?:\s+.*)?)$/.test(label)) return 'mutation';
@@ -243,18 +251,23 @@
             }
 
             const contentType = (response.headers.get('Content-Type') || blob.type || '').toLowerCase();
-            const isPdf = /^descargar\s+pdf$/i.test(normalizeActionLabel(element));
+            const label = normalizeActionLabel(element);
+            const path = new URL(element.href, window.location.href).pathname;
+            const isPdf = /^descargar\s+pdf$/i.test(label)
+                || /(?:^|\/)pdf(?:\/|$)|\.pdf$/i.test(path);
+            const isExcel = /^descargar\s+excel$/i.test(label)
+                || /\.(?:xlsx?|csv)$/i.test(path);
             if (isPdf && !(contentType.includes('application/pdf') || contentType.includes('octet-stream'))) {
                 throw new Error('El servidor no generó el PDF solicitado.');
             }
-            if (!isPdf && !(contentType.includes('spreadsheet') || contentType.includes('octet-stream') || contentType.includes('excel'))) {
+            if (isExcel && !(contentType.includes('spreadsheet') || contentType.includes('octet-stream') || contentType.includes('excel'))) {
                 throw new Error('El servidor no generó el archivo Excel solicitado.');
             }
 
             const disposition = response.headers.get('Content-Disposition') || '';
             const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
             const plainFilename = disposition.match(/filename="?([^";]+)"?/i)?.[1];
-            const extension = /^descargar\s+pdf$/i.test(normalizeActionLabel(element)) ? 'pdf' : 'xlsx';
+            const extension = isPdf ? 'pdf' : isExcel ? 'xlsx' : (path.match(/\.([a-z0-9]{2,5})$/i)?.[1] || 'bin');
             let filename = element.download || 'reporte.' + extension;
             if (encodedFilename) {
                 try { filename = decodeURIComponent(encodedFilename); } catch (_) { filename = encodedFilename; }

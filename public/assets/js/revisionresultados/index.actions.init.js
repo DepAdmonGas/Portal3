@@ -1,4 +1,10 @@
 document.addEventListener('alpine:init', () => {
+    const textoSeguro = valor => $('<div>').text(String(valor ?? '')).html();
+    const rutaArchivo = archivo => String(archivo ?? '')
+        .split('/')
+        .map(segmento => encodeURIComponent(segmento))
+        .join('/');
+
     Alpine.data('revisionResultados', () => ({
 
         year: new Date().getFullYear(),
@@ -58,6 +64,8 @@ document.addEventListener('alpine:init', () => {
             const selectedYear = Number(document.getElementById('container')?.dataset.year);
             if (selectedYear >= 2019) this.year = selectedYear;
 
+            window.revisionResultados = this;
+            this.inicializarTablaRevisionResultados();
             this.pdfUrl = '/sasisopa/monitoreo-verificacion-evaluacion/descargar-revision-resultados-detalle/' + this.year;
             await this.buscar();
             this.cargarRevisionResultados();
@@ -70,6 +78,75 @@ document.addEventListener('alpine:init', () => {
         );
 
 
+        },
+
+        inicializarTablaRevisionResultados() {
+            const selector = '#table-revision-resultados';
+            if (!window.jQuery?.fn?.DataTable || !document.querySelector(selector)) return;
+
+            window.tableRevisionResultados = $(selector).DataTable({
+                processing: true,
+                serverSide: false,
+                autoWidth: false,
+                stateSave: true,
+                order: [],
+                language: {
+                    url: '/assets/libs/datatables.net/js/es-ES.json',
+                    emptyTable: 'No se encontró información para mostrar'
+                },
+                data: [],
+                columns: [
+                    { data: 'id', className: 'text-center fw-bolder align-middle' },
+                    {
+                        data: 'fecha_larga',
+                        className: 'text-center align-middle',
+                        render: (fecha, tipo, fila) => tipo === 'sort' || tipo === 'type'
+                            ? fila.fecha
+                            : textoSeguro(fecha)
+                    },
+                    { data: 'usuario', defaultContent: 'S/I', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    {
+                        data: null,
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: (dato, tipo, fila) => {
+                            const id = Number(fila.id);
+                            const archivo = String(fila.archivo ?? '');
+                            const nombreArchivo = archivo.split('/').pop() || 'documento';
+                            const descarga = fila.tiene_archivo && archivo
+                                ? `<a class="dropdown-item pointer d-flex align-items-center gap-3" href="${textoSeguro(rutaArchivo(archivo))}" download="${textoSeguro(nombreArchivo)}" data-download-loader><i class="fs-4 ti ti-download"></i>Descargar</a>`
+                                : '<span class="dropdown-item d-flex align-items-center gap-3 text-muted"><i class="fs-4 ti ti-download"></i>Descargar</span>';
+
+                            return `
+                                <div class="dropdown dropstart">
+                                    <a class="pointer" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del registro">
+                                        <i class="ti ti-dots-vertical fs-6"></i>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="#" data-revision-accion="editar" data-id="${id}"><i class="fs-4 ti ti-edit"></i>Editar</a></li>
+                                        <li>${descarga}</li>
+                                        <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="#" data-revision-accion="eliminar" data-id="${id}"><i class="fs-4 ti ti-trash"></i>Eliminar</a></li>
+                                    </ul>
+                                </div>`;
+                        }
+                    }
+                ]
+            });
+
+            $(selector)
+                .off('click.revisionResultados', '[data-revision-accion]')
+                .on('click.revisionResultados', '[data-revision-accion]', event => {
+                    event.preventDefault();
+                    const componente = window.revisionResultados;
+                    const id = Number(event.currentTarget.dataset.id);
+                    const accion = event.currentTarget.dataset.revisionAccion;
+                    const registro = componente?.revisionResultados.find(item => Number(item.id) === id);
+                    if (!componente || !registro) return;
+
+                    if (accion === 'editar') componente.editarRevision(registro);
+                    if (accion === 'eliminar') componente.eliminar(id);
+                });
         },
 
         async buscar() {
@@ -131,6 +208,7 @@ document.addEventListener('alpine:init', () => {
 
                 this.revisionResultados =
                     data.data;
+                window.tableRevisionResultados?.clear().rows.add(this.revisionResultados).draw(false);
             }
 
         } finally {

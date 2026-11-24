@@ -19,7 +19,8 @@
                 ?>
                 <li>
                     <a class="dropdown-item pointer"
-                        href="/sasisopa/control-actividades-procesos/pdf-programa-anual-mantenimiento/<?= $idPrograma ?>">
+                        href="/sasisopa/control-actividades-procesos/pdf-programa-anual-mantenimiento/<?= $idPrograma ?>"
+                        aria-label="Descargar PDF" title="Descargar PDF">
                         <i class="ti ti-download"></i>
                         Descargar
                     </a>

@@ -247,7 +247,8 @@ document.addEventListener('alpine:init', () => {
             const data =
                 await response.json();
 
-            if (!data.success) {
+            if (!data.success || !data.data || typeof data.data !== 'object') {
+                this.detalle = null;
                 return;
             }
 

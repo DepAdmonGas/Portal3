@@ -29,7 +29,7 @@
                                     <a class="dropdown-item pointer" @click="openModalEvaluacion()"><i class="ti ti-plus"></i> Nuevo</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.028.docx"><i class="ti ti-download"></i> Descargar</a>
+                                    <a class="dropdown-item pointer" href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.028.docx" download="Fo.ADMONGAS.028.docx" data-download-loader><i class="ti ti-download"></i> Descargar</a>
                                 </li>
                             </ul>
                         </div>
@@ -37,10 +37,11 @@
                 </div>
             </div>
 
-            <div class="card-body p-0">
+            <div class="card-body">
 
-                <div class="table-responsive">
-                    <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+                <div class="datatables">
+                <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+                    <table id="table-evaluaciones-desempeno" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
 
                         <thead>
 
@@ -61,80 +62,12 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <template
-                                x-if="evaluaciones.length === 0">
-                                <tr>
-                                    <td
-                                        colspan="4"
-                                        class="text-center">
-                                        <small>
-                                            No se encontró información
-                                        </small>
-                                    </td>
-                                </tr>
-                            </template>
-                            <template
-                                x-for="item in evaluaciones"
-                                :key="item.id">
-                                <tr>
-                                    <td
-                                        class="text-center fw-bolder"
-                                        x-text="item.id">
-                                    </td>
-                                    <td
-                                        class="text-center"
-                                        x-text="item.fecha_larga">
-                                    </td>
-                                    <td
-                                        class="text-center"
-                                        x-text="item.usuario">
-                                    </td>
-                               <td class="text-center align-middle position-relative">
-
-    <div class="dropdown dropstart">
-        <a class="pointer" data-bs-toggle="dropdown">
-            <i class="ti ti-dots-vertical fs-6"></i>
-        </a>
-
-        <ul class="dropdown-menu">
-            <li>
-                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                    @click="editarEvaluacion(item)">
-                    <i class="fs-4 ti ti-edit"></i>
-                    Editar
-                </a>
-            </li>
-
-            <li>
-                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                    :href="item.archivo" download>
-                    <i class="fs-4 ti ti-download"></i>
-                    Descargar
-                </a>
-            </li>
-
-            <li>
-                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                    @click="eliminarEvaluacion(item.id)">
-                    <i class="fs-4 ti ti-trash"></i>
-                    Eliminar
-                </a>
-            </li>
-        </ul>
-    </div>
-
-</td>
-
-                                </tr>
-
-                            </template>
-
-                        </tbody>
+                        <tbody></tbody>
 
                     </table>
                 </div>
             </div>
+        </div>
         </div>
 
         <div class="card">
@@ -156,8 +89,10 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-responsive table-striped table-bordered mb-0  align-middle">
+            <div class="card-body">
+                <div class="datatables">
+                <div class="table-responsive pb-4 overflow-x-auto overflow-y-hidden">
+                <table id="table-implementaciones-desempeno" class="table table-striped table-bordered mb-0 text-nowrap align-middle">
                     <thead>
                         <tr>
                             <th class="text-center">#</th>
@@ -168,80 +103,10 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <template
-                            x-if="implementaciones.length === 0">
-                            <tr>
-                                <td
-                                    colspan="4"
-                                    class="text-center text-primary">
-                                    <small>
-                                        No se encontró información
-                                    </small>
-                                </td>
-                            </tr>
-                        </template>
-                        <template
-                            x-for="item in implementaciones"
-                            :key="item.id">
-                            <tr>
-                                <td
-                                    class="text-center" width="96px"
-                                    x-text="item.id">
-                                </td>
-                                <td
-                                    class="text-center"
-                                    x-text="item.fecha_larga">
-                                </td>
-                                <td
-                                    class="text-center"
-                                    x-text="item.usuario">
-                                </td>
-                                <td
-                                    class="text-center align-middle" width="48px">
-
-                                    <div class="dropdown dropstart">
-                                        <a class="pointer" data-bs-toggle="dropdown">
-                                            <i class="ti ti-dots-vertical fs-6"></i>
-                                        </a>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-
-                                                    @click="verImplementacion(item.id)">
-                                                    <i class="fs-4 ti ti-eye"></i>Detalle
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-
-                                                    @click="editarImplementacion(item.id)">
-                                                    <i class="fs-4 ti ti-edit"></i>Editar
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item d-flex align-items-center gap-3"
-                                                    :href="`/sasisopa/informes-desempeno/implementacion/pdf/${item.id}`" download>
-                                                    <i class="fs-4 ti ti-download"></i>Descargar
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                    @click="eliminarImplementacion(item.id)">
-                                                    <i class="fs-4 ti ti-trash"></i>Eliminar
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        </template>
-
-                    </tbody>
+                    <tbody></tbody>
                 </table>
+                </div>
+                </div>
 
 
             </div>
