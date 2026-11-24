@@ -2361,7 +2361,7 @@ final class ChecadorController extends BaseController
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js?v=20261118-1',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-positions.init.js?v=20261103-4',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-reader-profile.init.js?v=20261103-2',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-device-link.init.js?v=20261124-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-device-link.init.js?v=20261124-2',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.configuration.datatable.init.js?v=20261117-2',
                 ],
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,

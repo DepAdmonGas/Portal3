@@ -6,10 +6,19 @@ document.addEventListener('alpine:init', () => {
         copyingDevice: null,
         error: '',
         success: '',
+        generateUrl: '',
+        revokeUrl: '',
+        workplaceId: null,
+        csrfToken: '',
 
         init() {
+            const config = this.$el.dataset;
+            this.generateUrl = config.generateUrl || '';
+            this.revokeUrl = config.revokeUrl || '';
+            this.workplaceId = Number(config.workplaceId);
+            this.csrfToken = config.csrfToken || '';
             try {
-                const parsed = JSON.parse(this.$el.dataset.devices || '[]');
+                const parsed = JSON.parse(config.devices || '[]');
                 this.devices = Array.isArray(parsed) ? parsed.filter(item =>
                     Number.isSafeInteger(Number(item?.device?.id)) && Number(item.device.id) > 0
                 ) : [];
@@ -18,22 +27,33 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        requestReady(url) {
+            if (typeof url !== 'string' || !/^\/departamento-operativo\/recursos-humanos\/checador\/configuracion\/vinculacion-lector\/(generar|revocar)$/.test(url)
+                || !Number.isSafeInteger(this.workplaceId) || this.workplaceId < 1
+                || typeof this.csrfToken !== 'string' || this.csrfToken.trim() === '') {
+                this.error = 'No fue posible preparar la solicitud de vinculación. Actualiza la página.';
+                return false;
+            }
+            return true;
+        },
+
         async issue(deviceId) {
             const id = Number(deviceId);
             if (!Number.isSafeInteger(id) || id < 1 || this.loadingDevice !== null) return;
             this.clearMessages();
+            if (!this.requestReady(this.generateUrl)) return;
             // A previous plaintext token may have been revoked by a retry or a lost response.
             delete this.tokens[id];
             this.loadingDevice = id;
             try {
-                const response = await axios.post(this.$el.dataset.generateUrl, {
-                    workplace_id: Number(this.$el.dataset.workplaceId),
+                const response = await axios.post(this.generateUrl, {
+                    workplace_id: this.workplaceId,
                     device_id: id,
                 }, {
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': this.$el.dataset.csrfToken || '',
+                        'X-CSRF-TOKEN': this.csrfToken,
                     },
                 });
                 const body = response.data || {};
@@ -59,17 +79,18 @@ document.addEventListener('alpine:init', () => {
             const id = Number(deviceId);
             if (!Number.isSafeInteger(id) || id < 1 || this.loadingDevice !== null) return;
             this.clearMessages();
+            if (!this.requestReady(this.revokeUrl)) return;
             delete this.tokens[id];
             this.loadingDevice = id;
             try {
-                const response = await axios.post(this.$el.dataset.revokeUrl, {
-                    workplace_id: Number(this.$el.dataset.workplaceId),
+                const response = await axios.post(this.revokeUrl, {
+                    workplace_id: this.workplaceId,
                     device_id: id,
                 }, {
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': this.$el.dataset.csrfToken || '',
+                        'X-CSRF-TOKEN': this.csrfToken,
                     },
                 });
                 const body = response.data || {};
@@ -116,7 +137,7 @@ document.addEventListener('alpine:init', () => {
             const messages = {
                 401: 'Tu sesión expiró. Inicia sesión nuevamente.',
                 403: 'No tienes autorización para administrar la vinculación de esta estación.',
-                404: 'El dispositivo ya no pertenece a la estación seleccionada.',
+                404: 'No se encontró el servicio de vinculación. Actualiza la página o contacta a soporte.',
                 409: body.message || 'La estación, el dispositivo o sus permisos biométricos requieren revisión.',
                 419: 'La protección de sesión venció. Actualiza la página e inténtalo de nuevo.',
                 422: body.message || 'La solicitud de vinculación no es válida.',
