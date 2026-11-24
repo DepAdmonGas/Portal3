@@ -497,5 +497,34 @@ $assert(str_contains($controllerSource, "logM06IncidenceAccessDenial('incidence_
     && !str_contains($diagnosticSource, 'APP_ENV'),
     'M06 production denial diagnostics log only stage, reason, locality, route and correlation without an environment gate');
 
+$deviceAcl = new ReflectionMethod(\App\Services\ChecadorDeviceLinkSqlService::class, 'defaultAuthorization');
+$db->table('op_rh_v2_permission_grants')->insert([
+    ['permission_key' => 'checador-v2-dispositivos.leer', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador-v2-dispositivos.leer', 'principal_type' => 'POSITION', 'principal_id' => 13, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.dispositivos.vincular', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.dispositivos.biometria.administrar', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+]);
+$login(600);
+$actor = Auth::user();
+$assert($deviceAcl->invoke(null, $actor, 201, true) && !$deviceAcl->invoke(null, $actor, 204, true),
+    'device linking permits an authorized Encargado in the assigned locality and denies another station');
+$db->table('op_rh_v2_permission_grants')->where('permission_key', 'checador.dispositivos.biometria.administrar')->delete();
+$assert(!$deviceAcl->invoke(null, $actor, 201, true), 'device linking denies an Encargado when a required capability is missing');
+$db->table('op_rh_v2_permission_grants')->insert([
+    'permission_key' => 'checador.dispositivos.biometria.administrar', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1,
+]);
+$db->table('op_rh_v2_permission_grants')->insert([
+    'permission_key' => 'checador.dispositivos.vincular', 'principal_type' => 'USER', 'principal_id' => 600, 'granted' => 0, 'active' => 1,
+]);
+$assert(!$deviceAcl->invoke(null, $actor, 201, true) && $deviceAcl->invoke(null, $actor, 201, false),
+    'individual denial overrides position permission while preserving authorized read');
+$login(1300);
+$actor = Auth::user();
+$assert($deviceAcl->invoke(null, $actor, 201, false) && !$deviceAcl->invoke(null, $actor, 201, true),
+    'Dirección may read devices but cannot manage a link');
+$login(300);
+$assert(!$deviceAcl->invoke(null, Auth::user(), 201, false) && !$deviceAcl->invoke(null, Auth::user(), 201, true),
+    'a user outside institutional Checador scope cannot read or manage a link');
+
 printf("CHECADOR_ACCESS_FOUNDATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);
