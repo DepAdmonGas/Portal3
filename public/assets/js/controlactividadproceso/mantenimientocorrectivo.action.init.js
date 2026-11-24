@@ -21,7 +21,8 @@ document.addEventListener('alpine:init', () => {
             nombre_equipo: '',
             descripcion_hallazgo: '',
             descripcion_actividad: '',
-            herramienta: ''
+            herramienta: '',
+            evidencias: []
         },
 
         errorsBuscar: {
@@ -150,8 +151,7 @@ document.addEventListener('alpine:init', () => {
             herramienta:
             row.herramienta ?? '',
 
-            evidencias:
-            json.data ?? []
+            evidencias: Array.isArray(json.data) ? json.data : []
         };
 
         this.modalDetalle.show();

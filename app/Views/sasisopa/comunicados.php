@@ -26,7 +26,7 @@
     
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped  mb-0 pb-0">
+                <table id="tabla-comunicados" class="table table-bordered table-striped mb-0 pb-0">
 
                     <thead>
 
@@ -53,91 +53,7 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <template
-                            x-if="comunicados.length === 0">
-                            <tr>
-                                <td
-                                    colspan="7"
-                                    class="text-center text-primary">
-
-                                    No se encontró información
-
-                                </td>
-                            </tr>
-                        </template>
-                        <template
-                            x-for="item in comunicados"
-                            :key="item.id">
-                            <tr>
-                                <td
-                                    class="text-center align-middle fw-bolder"
-                                    x-text="item.id">
-                                </td>
-                                <td
-                                    class="text-center align-middle"
-                                    x-text="item.fecha_larga">
-                                </td>
-                                <td
-                                    class="text-center align-middle"
-                                    x-text="item.tema">
-                                </td>
-                                <td
-                                    class="text-center align-middle"
-                                    x-text="item.detalle">
-                                </td>
-
-                                <td class="text-center align-middle pb-0">
-
-                                    <template
-                                        x-for="puesto in item.dirigidoa"
-                                        :key="puesto.id">
-
-                                        <span
-                                            class="badge rounded-pill text-bg-info me-2 mb-3"
-                                            x-text="puesto.puesto">
-                                        </span>
-
-                                    </template>
-
-                                </td>
-
-                                <td
-                                    class="text-center align-middle">
-
-                                    <div class="dropdown dropstart">
-                                        <a class="pointer" data-bs-toggle="dropdown">
-                                            <i class="ti ti-dots-vertical fs-6"></i>
-                                        </a>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                    @click="verDetalle(item)">
-                                                    <i class="fs-4 ti ti-eye"></i>Detalle
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                    :href="item.archivo" download>
-                                                    <i class="fs-4 ti ti-download"></i>Descargar
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item pointer d-flex align-items-center gap-3"
-                                                    @click="eliminar(item)">
-                                                    <i class="fs-4 ti ti-trash"></i>Eliminar
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        </template>
-
-                    </tbody>
+                    <tbody></tbody>
 
                 </table>
             </div>
@@ -365,13 +281,15 @@ $event.target.files[0]
 
                                  <div class="row g-0 ms-auto w-100 justify-content-start">
                     <div class="col-12 col-md-auto d-grid">
-                      <a
+                                      <a
                                           :href="detalleComunicado.archivo"
-                                            target="_blank"
-                                            class="btn btn-outline-primary">
-                                            <i class="ti ti-file-download"></i>
-                                            Descargar
-                                        </a>
+                                          :download="(detalleComunicado.archivo || '').split('/').pop()"
+                                          data-download-loader
+                                          data-download-button-loader
+                                          class="btn btn-outline-primary">
+                                          <i class="ti ti-file-download"></i>
+                                          Descargar
+                                      </a>
                     </div>
                   </div>
 

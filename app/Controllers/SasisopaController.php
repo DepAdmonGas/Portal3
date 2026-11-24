@@ -2718,11 +2718,15 @@ class SasisopaController extends BaseController
             'modulo' => $this->modulo,
             'estacionId' => ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null,
             'moduleStationKey' => 'sasisopa',
-            'links' => [],
+            'links' => [
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sasisopa/consultasasisopa.actions.init.js?v=' . time(),
+                '/js/sasisopa/consultasasisopa.datatable.init.js?v=' . time(),
             ],
             'help' => false
 

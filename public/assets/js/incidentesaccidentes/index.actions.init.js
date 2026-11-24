@@ -1,4 +1,10 @@
 document.addEventListener('alpine:init', () => {
+    const textoSeguro = valor => $('<div>').text(String(valor ?? '')).html();
+    const rutaArchivo = archivo => String(archivo ?? '')
+        .split('/')
+        .map(segmento => encodeURIComponent(segmento))
+        .join('/');
+
     Alpine.data('incidentesAccidentes', () => ({
 
         incidentes: [],
@@ -97,9 +103,185 @@ document.addEventListener('alpine:init', () => {
 
            this.modalNoAccidentes = new bootstrap.Modal(document.getElementById('modalNoAccidentes'));
 
+           window.incidentesAccidentes = this;
+           this.inicializarTablas();
            this.incidentesAccidentes();
            this.noAccidentes();
 
+        },
+
+        inicializarTablas() {
+            if (!window.jQuery?.fn?.DataTable) return;
+
+            const opcionesComunes = {
+                processing: true,
+                serverSide: false,
+                autoWidth: false,
+                stateSave: true,
+                order: [],
+                language: {
+                    url: '/assets/libs/datatables.net/js/es-ES.json',
+                    emptyTable: 'No se encontró información para mostrar'
+                }
+            };
+
+            window.tableIncidentesInvestigaciones = $('#table-investigaciones-incidentes').DataTable({
+                ...opcionesComunes,
+                data: [],
+                columns: [
+                    {
+                        data: null,
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: (data, type, fila, meta) => meta.row + meta.settings._iDisplayStart + 1
+                    },
+                    {
+                        data: 'fecha_larga',
+                        className: 'text-center align-middle',
+                        render: (data, type, fila) => type === 'sort' || type === 'type'
+                            ? fila.fecha
+                            : textoSeguro(data)
+                    },
+                    { data: 'usuario', defaultContent: 'S/I', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    { data: 'puesto', defaultContent: 'S/I', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    { data: 'descripcion', defaultContent: '', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    { data: 'tipo_evento', defaultContent: '', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    {
+                        data: 'muertes',
+                        className: 'text-center align-middle',
+                        render: valor => valor ? 'SI' : 'NO'
+                    },
+                    {
+                        data: 'grupo',
+                        className: 'text-center align-middle',
+                        render: valor => Number(valor) > 0
+                            ? '<i class="ti ti-circle-check text-success fs-6"></i>'
+                            : '<i class="ti ti-x text-danger fs-6"></i>'
+                    },
+                    {
+                        data: 'id',
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: id => `<a href="#" data-incidente-accion="grupo" data-id="${Number(id)}" aria-label="Grupo interdisciplinario"><i class="pointer ti ti-users fs-6"></i></a>`
+                    },
+                    {
+                        data: null,
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: (data, type, fila) => fila.tercer_autorizado
+                            ? '<i class="ti ti-x fs-6"></i>'
+                            : '<a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.026.docx" download="Fo.ADMONGAS.026.docx" data-download-loader aria-label="Descargar formato Fo.ADMONGAS.026"><i class="ti ti-download text-primary fs-6"></i></a>'
+                    },
+                    {
+                        data: 'id',
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: (id, type, fila) => fila.tercer_autorizado
+                            ? '<i class="ti ti-x fs-6"></i>'
+                            : `<a href="#" data-incidente-accion="subir026" data-id="${Number(id)}" aria-label="Cargar formato Fo.ADMONGAS.026"><i class="pointer ti ti-upload text-success fs-6"></i></a>`
+                    },
+                    {
+                        data: 'formato026',
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: formato => {
+                            if (!formato?.existe || !formato.archivo) return '<i class="ti ti-x text-danger fs-6"></i>';
+                            const archivo = String(formato.archivo);
+                            const nombre = archivo.split('/').pop();
+                            return `<a href="/uploads/${rutaArchivo(archivo)}" download="${textoSeguro(nombre)}" data-download-loader aria-label="Descargar ${textoSeguro(nombre)}"><i class="ti ti-file-type-pdf text-danger fs-6"></i></a>`;
+                        }
+                    },
+                    {
+                        data: 'id',
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: (id, type, fila) => fila.tercer_autorizado
+                            ? `<a href="#" data-incidente-accion="tercero" data-id="${Number(id)}" aria-label="Ver tercer autorizado"><i class="pointer ti ti-shield-check text-success fs-6"></i></a>`
+                            : '<i class="ti ti-x text-danger fs-6"></i>'
+                    },
+                    {
+                        data: 'id',
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: id => `<a href="#" data-incidente-accion="eliminar" data-id="${Number(id)}" aria-label="Eliminar investigación"><i class="ti ti-trash text-danger fs-6"></i></a>`
+                    }
+                ]
+            });
+
+            window.tableSinAccidentes = $('#table-sin-accidentes').DataTable({
+                ...opcionesComunes,
+                data: [],
+                columns: [
+                    { data: 'id', className: 'text-center fw-bold align-middle' },
+                    {
+                        data: 'fecha_larga',
+                        className: 'text-center align-middle',
+                        render: (data, type, fila) => type === 'sort' || type === 'type'
+                            ? fila.fecha
+                            : textoSeguro(data)
+                    },
+                    { data: 'usuario', defaultContent: 'S/I', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    {
+                        data: null,
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: (data, type, fila) => `
+                            <div class="dropdown dropstart">
+                                <a class="pointer" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del registro">
+                                    <i class="ti ti-dots-vertical fs-6"></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="#" data-no-accidentes-accion="editar" data-id="${Number(fila.id)}"><i class="fs-4 ti ti-edit"></i>Editar</a></li>
+                                    <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="/sasisopa/investigacion-incidentes-accidentes/no/pdf?id=${Number(fila.id)}" download="Sin accidentes a la fecha.pdf" data-download-loader><i class="fs-4 ti ti-download"></i>Descargar</a></li>
+                                    <li><a class="dropdown-item pointer d-flex align-items-center gap-3" href="#" data-no-accidentes-accion="eliminar" data-id="${Number(fila.id)}"><i class="fs-4 ti ti-trash"></i>Eliminar</a></li>
+                                </ul>
+                            </div>`
+                    }
+                ],
+                createdRow: (row, data) => {
+                    if (data.row_class) row.classList.add(data.row_class);
+                }
+            });
+
+            $('#table-investigaciones-incidentes')
+                .off('click.incidentesAccidentes', '[data-incidente-accion]')
+                .on('click.incidentesAccidentes', '[data-incidente-accion]', event => {
+                    event.preventDefault();
+                    const id = Number(event.currentTarget.dataset.id);
+                    const accion = event.currentTarget.dataset.incidenteAccion;
+                    const componente = window.incidentesAccidentes;
+                    if (!componente) return;
+
+                    if (accion === 'grupo') componente.grupoInterdisciplinario(id);
+                    if (accion === 'subir026') componente.subir026(id);
+                    if (accion === 'eliminar') componente.eliminarInvestigacion(id);
+                    if (accion === 'tercero') {
+                        const registro = componente.incidentes.find(item => Number(item.id) === id);
+                        if (registro) componente.openModalTercero(registro);
+                    }
+                });
+
+            $('#table-sin-accidentes')
+                .off('click.incidentesAccidentes', '[data-no-accidentes-accion]')
+                .on('click.incidentesAccidentes', '[data-no-accidentes-accion]', event => {
+                    event.preventDefault();
+                    const id = Number(event.currentTarget.dataset.id);
+                    const accion = event.currentTarget.dataset.noAccidentesAccion;
+                    const componente = window.incidentesAccidentes;
+                    if (!componente) return;
+
+                    const registro = componente.registros.find(item => Number(item.id) === id);
+                    if (accion === 'editar' && registro) componente.editarNoAccidentes(registro);
+                    if (accion === 'eliminar') componente.eliminarNo(id);
+                });
         },
 
     //-------------------------------
@@ -117,6 +299,7 @@ document.addEventListener('alpine:init', () => {
         if(data.success){
 
             this.incidentes = data.data;
+            window.tableIncidentesInvestigaciones?.clear().rows.add(this.incidentes).draw(false);
         }
 
     } finally {
@@ -523,6 +706,7 @@ document.addEventListener('alpine:init', () => {
 
             if (data.success) {
                 this.registros = data.data;
+                window.tableSinAccidentes?.clear().rows.add(this.registros).draw(false);
             }
 
         } finally {

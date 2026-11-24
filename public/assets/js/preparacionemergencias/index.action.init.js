@@ -16,6 +16,90 @@ document.addEventListener('alpine:init', () => {
 
         idProtocoloActual: null,
 
+        inicializarTablaProtocolos() {
+            const selector = '#table-protocolos-emergencias';
+
+            if (!window.jQuery?.fn?.DataTable || !document.querySelector(selector)) {
+                return;
+            }
+
+            const componente = this;
+            const $tabla = $(selector);
+            const columnas = [
+                {
+                    data: 'fecha_formateada',
+                    render: (fecha, tipo, fila) => tipo === 'display'
+                        ? fecha
+                        : (fila.fechacreacion || fecha)
+                },
+                {
+                    data: 'archivo',
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: archivo => archivo
+                        ? `<a href="${archivo}" data-download-loader aria-label="Descargar protocolo"><i class="ti ti-file-type-pdf text-danger fs-6"></i></a>`
+                        : '<i class="ti ti-file-off text-muted fs-6" aria-label="Protocolo no disponible"></i>'
+                },
+                {
+                    data: 'id',
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: id => `<a class="pointer" data-protocolo-action="anexos" data-id="${id}" aria-label="Ver anexos"><i class="ti ti-paperclip fs-6 text-info"></i></a>`
+                },
+                {
+                    data: 'id',
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: id => `
+                        <div class="dropdown dropcenter">
+                            <a class="pointer" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del protocolo">
+                                <i class="ti ti-dots-vertical fs-6"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item pointer d-flex align-items-center gap-3" data-protocolo-action="editar" data-id="${id}"><i class="ti ti-edit fs-4"></i> Editar</a></li>
+                                <li><a class="dropdown-item pointer d-flex align-items-center gap-3" data-protocolo-action="eliminar" data-id="${id}"><i class="ti ti-trash fs-4"></i> Eliminar</a></li>
+                            </ul>
+                        </div>`
+                }
+            ];
+
+            let tabla;
+            if ($.fn.DataTable.isDataTable(selector)) {
+                tabla = $tabla.DataTable();
+                tabla.clear().rows.add(this.protocolos).draw();
+            } else {
+                tabla = $tabla.DataTable({
+                    data: this.protocolos,
+                    columns: columnas,
+                    autoWidth: false,
+                    stateSave: true,
+                    order: [],
+                    language: {
+                        url: '/assets/libs/datatables.net/js/es-ES.json',
+                        emptyTable: 'No se encontró información para mostrar'
+                    }
+                });
+            }
+
+            $tabla.off('click.preparacionProtocolos').on(
+                'click.preparacionProtocolos',
+                '[data-protocolo-action]',
+                function (event) {
+                    event.preventDefault();
+                    const id = Number(this.dataset.id);
+                    const accion = this.dataset.protocoloAction;
+                    const protocolo = componente.protocolos.find(item => Number(item.id) === id);
+
+                    if (accion === 'anexos') componente.abrirAnexos(id);
+                    if (accion === 'editar' && protocolo) componente.editarProtocolo(protocolo);
+                    if (accion === 'eliminar') componente.eliminarProtocolo(id);
+                }
+            );
+        },
+
         errors: {
             protocolo: {
                 fecha: false,
@@ -166,6 +250,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.protocolos = response.data.data ?? [];
+            this.inicializarTablaProtocolos();
 
         } catch(error){
             this.notify(

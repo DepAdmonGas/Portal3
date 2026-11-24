@@ -785,13 +785,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                             width="50"
                             class="text-center align-middle">
 
-                            <a
-                                href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.014.xlsx"
-                                download>
-
-                                <i class="ti ti-file-type-xls text-success fs-7"></i>
-
-                            </a>
+                            <?php if (!empty($formato14PlantillaDisponible)): ?>
+                                <a href="/download?tipo=sasisopa-control-documentos-registros&amp;file=Fo.ADMONGAS.014.xlsx"
+                                   download data-download-loader aria-label="Descargar plantilla Fo.ADMONGAS.014">
+                                    <i class="ti ti-file-type-xls text-success fs-6"></i>
+                                </a>
+                            <?php else: ?>
+                                <i class="ti ti-file-off text-muted fs-6" aria-label="Plantilla Fo.ADMONGAS.014 no disponible"></i>
+                            <?php endif; ?>
 
                         </td>
 
@@ -814,12 +815,14 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                             <template
                                 x-if="formato14.archivo_url">
 
-                                <a
-                                    :href="formato14.archivo_url"
-                                    target="_blank">
+                                <a :href="formato14.archivo_url"
+                                   target="_blank"
+                                   data-download-loader
+                                   data-download-mode="inline"
+                                   aria-label="Visualizar archivo PDF cargado">
 
                                     <i
-                                        class="ti ti-file-type-pdf text-danger fs-7">
+                                        class="ti ti-file-type-pdf text-danger fs-6">
                                     </i>
 
                                 </a>
@@ -830,7 +833,8 @@ x-data="{ ...actions(), ...seguridadContratistas()}">
                                 x-if="!formato14.archivo_url">
 
                                 <i
-                                    class="ti ti-circle-x text-muted fs-7">
+                                    class="ti ti-file-off text-muted fs-6"
+                                    aria-label="Archivo PDF no disponible">
                                 </i>
 
                             </template>

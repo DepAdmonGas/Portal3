@@ -10,7 +10,14 @@ x-data="{ ...actions(), ...equipoCritico()}">
         Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
     </div>
 
-<?php else: ?>
+<?php else:
+    $nombreArchivoProcedimientos = 'DLES.ADMONGAS.001.pdf';
+    $archivoProcedimientosDisponible = is_file(
+        PUBLIC_PATH . '/uploads/archivos/procedimientos/' . $nombreArchivoProcedimientos
+    );
+    $urlProcedimientos = '/download?tipo=sasisopa-control-documentos-procedimientos&file='
+        . rawurlencode($nombreArchivoProcedimientos) . '&view=1';
+?>
 
 <div class="row mt-2">
 
@@ -45,8 +52,14 @@ x-data="{ ...actions(), ...equipoCritico()}">
 
     <!-- Procedimientos de Operación, Seguridad y Mantenimiento -->
     <div class="col-md-4 d-flex align-items-stretch mb-4">
-        <a href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf" target="_blank"
+        <?php if ($archivoProcedimientosDisponible): ?>
+        <a href="<?= htmlspecialchars($urlProcedimientos, ENT_QUOTES, 'UTF-8') ?>" target="_blank"
+           data-download-loader data-download-mode="inline"
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+        <?php else: ?>
+        <div aria-disabled="true" title="El archivo de procedimientos no está disponible"
+           class="card h-100 w-100 text-decoration-none overflow-hidden position-relative">
+        <?php endif; ?>
             
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center gap-3">
@@ -64,12 +77,18 @@ x-data="{ ...actions(), ...equipoCritico()}">
             </div>
 
             <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
-                <span class="small">Ver procedimientos</span>
+                <span class="small <?= $archivoProcedimientosDisponible ? '' : 'text-muted' ?>">
+                    <?= $archivoProcedimientosDisponible ? 'Ver procedimientos' : 'Archivo no disponible' ?>
+                </span>
+                <?php if (!$archivoProcedimientosDisponible): ?>
+                    <i class="ti ti-file-off fs-6 text-muted" aria-label="Archivo no disponible"></i>
+                <?php else: ?>
                 <div class="icon-transition">
                     <i class="ti ti-arrow-right fs-5"></i>
                 </div>
+                <?php endif; ?>
             </div>
-        </a>
+        <?php if ($archivoProcedimientosDisponible): ?></a><?php else: ?></div><?php endif; ?>
     </div>
 
     <!-- Bitácoras -->
@@ -120,7 +139,7 @@ x-data="{ ...actions(), ...equipoCritico()}">
               : '' 
               ?>   
               <li>
-                <a class="dropdown-item" href="/sasisopa/integridad-mecanica-aseguramiento/pdf-equipo-critico"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item" href="/sasisopa/integridad-mecanica-aseguramiento/pdf-equipo-critico" aria-label="Descargar PDF" title="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
               </li>
             </ul>
           </div>   

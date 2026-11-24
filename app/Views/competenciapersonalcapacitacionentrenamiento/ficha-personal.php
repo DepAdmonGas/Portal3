@@ -10,16 +10,16 @@ $firmaUrlFicha = $firmaArchivoFicha !== ''
     data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
     x-data="{ ...actions(), ...fichaPersonalForm() }"
     data-id="<?= $usuario->id ?? '' ?>"
-    x-init="
-    nombre='<?= htmlspecialchars($usuario->nombre ?? '') ?>';
-    domicilio='<?= htmlspecialchars($usuario->domicilio ?? '') ?>';
-    fechaNacimiento='<?= $usuario->fecha_nacimiento ?? '' ?>';   
-    estadoCivil='<?= $usuario->estado_civil ?? '' ?>';
-    seguroSocial='<?= htmlspecialchars($usuario->seguro_social ?? '') ?>'; 
-    telefono='<?= htmlspecialchars($usuario->telefono ?? '') ?>';
-    email='<?= htmlspecialchars($usuario->email ?? '') ?>';
-    firmaPreview = <?= json_encode($firmaUrlFicha, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
-">
+    x-init='Object.assign($data, <?= htmlspecialchars(json_encode([
+        "nombre" => $usuario->nombre ?? "",
+        "domicilio" => $usuario->domicilio ?? "",
+        "fechaNacimiento" => $usuario->fecha_nacimiento ?? "",
+        "estadoCivil" => $usuario->estado_civil ?? "",
+        "seguroSocial" => $usuario->seguro_social ?? "",
+        "telefono" => $usuario->telefono ?? "",
+        "email" => $usuario->email ?? "",
+        "firmaPreview" => $firmaUrlFicha,
+    ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?: "{}", ENT_QUOTES, "UTF-8") ?>)'>
 <!-- Botón Descargar -->
 <div class="row g-0 w-100 justify-content-end">
     <div class="col-12 col-md-auto d-grid mt-3 mb-3">

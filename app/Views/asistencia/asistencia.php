@@ -1,13 +1,13 @@
 <div class="mt-4 pb-4" id="container" data-id="<?= $idListaAsistencia ?>"
 x-data="{ ...actions(), ...listaasistenciaForm() }"
-x-init="
-        fecha='<?= $asistencia->fecha->format('Y-m-d') ?>';
-        hora='<?= $asistencia->hora ? $asistencia->hora->format('H:i:s') : '' ?>';
-        lugar='<?= htmlspecialchars($asistencia->lugar) ?>';
-        encargado='<?= htmlspecialchars($asistencia->encargado) ?>';
-        tema='<?= htmlspecialchars($asistencia->tema) ?>';
-        finalidad='<?= htmlspecialchars($asistencia->finalidad) ?>';
-     ">
+x-init='Object.assign($data, <?= htmlspecialchars(json_encode([
+        "fecha" => $asistencia->fecha->format("Y-m-d"),
+        "hora" => $asistencia->hora ? $asistencia->hora->format("H:i:s") : "",
+        "lugar" => $asistencia->lugar,
+        "encargado" => $asistencia->encargado,
+        "tema" => $asistencia->tema,
+        "finalidad" => $asistencia->finalidad,
+    ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?: "{}", ENT_QUOTES, "UTF-8") ?>)'>
             <div class="row g-0 ms-auto w-100 justify-content-end">
                 <div class="col-12 col-md-auto d-grid mb-3">
       <?= 

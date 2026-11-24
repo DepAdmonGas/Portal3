@@ -19,8 +19,7 @@ x-data="monitoreoEvaluacion()">
     <div class="ms-auto col-12 col-md-auto d-grid">
         <a class="btn bg-primary-subtle text-primary"
            :href="pdfUrl"
-           target="_blank"
-           rel="noopener noreferrer">
+           data-download-loader>
              <i class="ti ti-download"></i> Descargar
         </a>
     </div>
@@ -561,7 +560,8 @@ x-data="monitoreoEvaluacion()">
 <div class="row">
     <!-- Programa de implementación del Sistema de Administración -->
     <div class="col-12 mb-4">
-        <a href="/sasisopa/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a" 
+        <a href="/sasisopa/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a"
+           data-download-loader
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
             
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">

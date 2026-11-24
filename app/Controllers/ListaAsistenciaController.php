@@ -161,6 +161,30 @@ class ListaAsistenciaController extends BaseController{
         $permisoEliminar = ModuloService::validaPermiso($this->modulo, 'eliminar');
 
         $data = ListaAsistenciaDetalle::where('id_lista_asistencia', $id)->get();
+        $firmasPorUsuario = Usuario::activo()
+            ->whereIn('nombre', $data->pluck('usuario')->filter()->unique()->values())
+            ->orderByDesc('id')
+            ->get(['id', 'nombre', 'firma'])
+            ->unique('nombre')
+            ->keyBy('nombre');
+
+        $directorioFirmas = dirname(__DIR__, 2) . '/public/uploads/firma-personal/';
+        $data->each(function ($detalle) use ($firmasPorUsuario, $directorioFirmas) {
+            $firmasCandidatas = [
+                $firmasPorUsuario->get($detalle->usuario)?->firma,
+                $detalle->firma,
+            ];
+
+            $detalle->firma = '';
+            foreach ($firmasCandidatas as $firma) {
+                $nombreArchivo = basename(str_replace('\\', '/', (string) $firma));
+                if ($nombreArchivo !== '' && is_file($directorioFirmas . $nombreArchivo)) {
+                    $detalle->firma = $nombreArchivo;
+                    break;
+                }
+            }
+        });
+
         $rutaPublica = $_ENV['APP_URL'] . '/uploads/firma-personal/';
 
          echo json_encode([
@@ -343,15 +367,28 @@ class ListaAsistenciaController extends BaseController{
     }
 
     public function pdfListaAsistencia($id){
-        header('Content-Type: application/pdf');
-
         $asistencia = ListaAsistencia::find($id);
+        if (!$asistencia) {
+            http_response_code(404);
+            exit;
+        }
 
-        $idEstacion = $asistencia
-            ? ModuleStationService::getContext(self::moduleKeyPorPunto((int) $asistencia->punto_sasisopa))['id_estacion']
-            : null;
+        $moduleKey = self::moduleKeyPorPunto((int) $asistencia->punto_sasisopa);
+        $idEstacion = ModuleStationService::getContext($moduleKey)['id_estacion'] ?? null;
+
+        if (!$idEstacion || (int) $asistencia->id_estacion !== (int) $idEstacion
+            || !ModuloService::validaPermiso($moduleKey, 'descargar')) {
+            http_response_code(404);
+            exit;
+        }
 
         $estacion = Estacion::find($idEstacion);
+        if (!$estacion) {
+            http_response_code(404);
+            exit;
+        }
+
+        header('Content-Type: application/pdf');
         $apoderado = htmlspecialchars($estacion->apoderado_legal ?? '');
 
         $logo = $_ENV['APP_URL'] . '/assets/images/logos/Logo.png';
@@ -726,7 +763,7 @@ class ListaAsistenciaController extends BaseController{
                 'fecha' => $e->fecha_hora
                     ? formatearFecha($e->fecha_hora) . ', ' . date('g:i a', strtotime($e->fecha_hora))
                     : '',
-                'url' => '/archivos/evidencias/' . $e->evidencia,
+                'url' => '/download?tipo=sasisopa-lista-asistencia-evidencias&file=' . rawurlencode($e->evidencia) . '&view=1',
             ]);
 
         echo json_encode(
@@ -738,15 +775,31 @@ class ListaAsistenciaController extends BaseController{
 
     public function createEvidencia()
     {
-        if (!isset($_FILES['evidencia'])) {
+        if (!isset($_FILES['evidencia']) || ($_FILES['evidencia']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             echo json_encode([
                 'success' => false,
-                'message' => 'No agrego la evidencia'
+                'message' => 'No se recibió correctamente la evidencia.'
             ]);
             return;
         }
 
         $archivo = $_FILES['evidencia'];
+        $idListaAsistencia = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+        $asistencia = $idListaAsistencia ? ListaAsistencia::find($idListaAsistencia) : null;
+
+        if (!$asistencia) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Lista de asistencia no encontrada.']);
+            return;
+        }
+
+        $moduleKey = self::moduleKeyPorPunto((int) $asistencia->punto_sasisopa);
+        $idEstacion = ModuleStationService::getContext($moduleKey)['id_estacion'] ?? null;
+        if (!$idEstacion || (int) $asistencia->id_estacion !== (int) $idEstacion) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Lista de asistencia no encontrada.']);
+            return;
+        }
 
         $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
 
@@ -758,10 +811,11 @@ class ListaAsistenciaController extends BaseController{
             return;
         }
 
-        $asistencia = ListaAsistencia::find($_POST['id'] ?? null);
-
-        $idEstacion = $asistencia->id_estacion
-            ?? ModuleStationService::getContext('sasisopa')['id_estacion'];
+        $infoImagen = @getimagesize($archivo['tmp_name']);
+        if (!$infoImagen || !in_array($infoImagen['mime'] ?? '', ['image/jpeg', 'image/png'], true)) {
+            echo json_encode(['success' => false, 'message' => 'El archivo no contiene una imagen JPG o PNG válida.']);
+            return;
+        }
 
         $nombre = sprintf(
             'EVIDENCIA-LA-%d-%d.%s',
@@ -770,16 +824,30 @@ class ListaAsistenciaController extends BaseController{
             $extension
         );
 
-        $ruta = __DIR__ . '../../../public/uploads/archivos/evidencias/' . $nombre;
+        $directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias';
+        if (!is_dir($directorio) && !mkdir($directorio, 0775, true) && !is_dir($directorio)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se pudo preparar la carpeta de evidencias.'
+            ]);
+            return;
+        }
 
-        $this->comprimirImagen(
+        $ruta = $directorio . '/' . $nombre;
+
+        $guardado = $this->comprimirImagen(
             $archivo['tmp_name'],
             $ruta,
             60
         );
 
+        if (!$guardado || !is_file($ruta)) {
+            echo json_encode(['success' => false, 'message' => 'No se pudo guardar la evidencia.']);
+            return;
+        }
+
         ListaAsistenciaEvidencia::create([
-            'id_lista_asistencia'=> $_POST['id'],
+            'id_lista_asistencia'=> $idListaAsistencia,
             'evidencia'=>$nombre,
             'fecha_hora' => date('Y-m-d H:i:s'),
         ]);
@@ -798,7 +866,7 @@ class ListaAsistenciaController extends BaseController{
 
         $evidencia = ListaAsistenciaEvidencia::findOrFail($id);
 
-        $archivo = __DIR__ . '../../../public/uploads/archivos/evidencias/' . $evidencia->evidencia;
+        $archivo = dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias/' . basename($evidencia->evidencia);
 
         if (is_file($archivo)) {
             unlink($archivo);

@@ -19,6 +19,9 @@ window.initSasisopaReporteDataTables = (root = document, includeEmpty = false) =
 
     tables.each(function () {
         const table = this;
+        // Las tablas dentro de modales son reactivas (x-for) y DataTables
+        // altera los nodos que Bootstrap/Alpine necesitan conservar.
+        if (table.closest('.modal')) return;
         if ($.fn.DataTable.isDataTable(table)) return;
 
         if (!table.id) table.id = `tabla-sasisopa-reporte-${++sasisopaReporteDataTableSequence}`;
@@ -26,6 +29,14 @@ window.initSasisopaReporteDataTables = (root = document, includeEmpty = false) =
         const columnCount = table.tHead?.rows[0]?.cells.length ?? 0;
         const body = table.tBodies[0];
         if (!columnCount || !body) return;
+
+        const columnasIndice = Array.from(table.tHead.rows[0].cells)
+            .map((cell, index) => ({
+                index,
+                titulo: cell.textContent.trim().toLocaleLowerCase('es-MX'),
+            }))
+            .filter(({ titulo }) => /#|folio/i.test(titulo))
+            .map(({ index }) => index);
 
         const hasDataRows = Array.from(body.rows).some((row) => row.cells.length === columnCount);
         if (!hasDataRows && !includeEmpty) return;
@@ -42,13 +53,20 @@ window.initSasisopaReporteDataTables = (root = document, includeEmpty = false) =
                     autoWidth: false,
                     stateSave: false,
                     order: [],
-                    columnDefs: [{
-                        targets: '.sasisopa-pdf-column',
-                        orderable: false,
-                        searchable: false,
-                        width: '48px',
-                        className: 'sasisopa-pdf-column text-center align-middle',
-                    }],
+                    columnDefs: [
+                        {
+                            targets: columnasIndice,
+                            width: '96px',
+                            className: 'sasisopa-index-column text-center align-middle',
+                        },
+                        {
+                            targets: '.sasisopa-pdf-column',
+                            orderable: false,
+                            searchable: false,
+                            width: '48px',
+                            className: 'sasisopa-pdf-column text-center align-middle',
+                        },
+                    ],
                     pageLength: 10,
                     lengthMenu: [10, 25, 50, 100],
                     language: { url: '/assets/libs/datatables.net/js/es-ES.json' },
@@ -78,6 +96,15 @@ window.initSasisopaReporteDataTables = (root = document, includeEmpty = false) =
         }
     });
 };
+
+// Los DataTables pueden reconstruir las filas x-for; delegar el clic evita que
+// Alpine evalúe el handler con un alcance `item` que ya fue retirado del DOM.
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-auditoria-asea-id]');
+    if (!button) return;
+
+    window.sasisopaReporte?.abrirAsea(button.dataset.auditoriaAseaId);
+});
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('reporte', (fechaInicio, fechaTermino) => ({
@@ -148,6 +175,7 @@ document.addEventListener('alpine:init', () => {
 
     async init(){
 
+        window.sasisopaReporte = this;
         this.modalAsea = new bootstrap.Modal(document.getElementById('modalAsea'));
         this.modalGrupo = new bootstrap.Modal(document.getElementById('modalGrupoInterdisciplinario'));
         this.modalTercer = new bootstrap.Modal(document.getElementById('modalTercerAutorizado'));
@@ -479,12 +507,18 @@ document.addEventListener('alpine:init', () => {
 
     },
 
-    abrirAsea(registro){
+    abrirAsea(idAuditoria){
 
-        window.destroySasisopaReporteDataTables(document.getElementById('modalAsea'));
-        this.ingresosAsea=registro.asea;
+        const registro = this.auditoriasExternas.find(
+            item => String(item.id) === String(idAuditoria)
+        );
+        if (!registro) {
+            window.Notify?.error('No se encontró la auditoría externa seleccionada.');
+            return;
+        }
+
+        this.ingresosAsea = Array.isArray(registro.asea) ? registro.asea : [];
         this.$nextTick(() => {
-            window.initSasisopaReporteDataTables(document.getElementById('modalAsea'));
             this.modalAsea.show();
         });
 
@@ -530,10 +564,8 @@ document.addEventListener('alpine:init', () => {
                     `/sasisopa/reporte/elemento16/grupo/${id}`
                 );
 
-                window.destroySasisopaReporteDataTables(document.getElementById('modalGrupoInterdisciplinario'));
                 this.grupo = data.data ?? [];
                 await this.$nextTick();
-                window.initSasisopaReporteDataTables(document.getElementById('modalGrupoInterdisciplinario'));
                 this.modalGrupo.show();
 
             } catch (e) {
@@ -552,10 +584,8 @@ document.addEventListener('alpine:init', () => {
                     `/sasisopa/reporte/elemento16/tercer/${id}`
                 );
 
-                window.destroySasisopaReporteDataTables(document.getElementById('modalTercerAutorizado'));
                 this.tercer = data.data;
                 await this.$nextTick();
-                window.initSasisopaReporteDataTables(document.getElementById('modalTercerAutorizado'));
                 this.modalTercer.show();
 
             } catch (e) {

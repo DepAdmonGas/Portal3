@@ -359,12 +359,20 @@
                                     </div>
                                     <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
                                         <template x-if="detalle.firma_recibe?.firma">
-                                            <img :src="detalle.firma_recibe.firma" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien recibe">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <img :src="detalle.firma_recibe.firma" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien recibe" @error="$el.classList.add('d-none'); $el.nextElementSibling.classList.remove('d-none')">
+                                                <div class="d-none d-flex flex-column align-items-center" role="status">
+                                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                    <h6 class="mb-1">Sin firma registrada</h6>
+                                                    <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
+                                                </div>
+                                            </div>
                                         </template>
                                         <template x-if="!detalle.firma_recibe?.firma">
                                             <div class="d-flex flex-column align-items-center">
-                                                <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-                                                <h6 class="text-muted mb-0">¡Falta la firma de quien recibe!</h6>
+                                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                <h6 class="mb-1">Sin firma registrada</h6>
+                                                <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
                                             </div>
                                         </template>
                                     </div>
@@ -385,12 +393,20 @@
                                     </div>
                                     <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
                                         <template x-if="detalle.firma_supervisa?.firma">
-                                            <img :src="detalle.firma_supervisa.firma" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien supervisa">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <img :src="detalle.firma_supervisa.firma" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien supervisa" @error="$el.classList.add('d-none'); $el.nextElementSibling.classList.remove('d-none')">
+                                                <div class="d-none d-flex flex-column align-items-center" role="status">
+                                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                    <h6 class="mb-1">Sin firma registrada</h6>
+                                                    <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
+                                                </div>
+                                            </div>
                                         </template>
                                         <template x-if="!detalle.firma_supervisa?.firma">
                                             <div class="d-flex flex-column align-items-center">
-                                                <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-                                                <h6 class="text-muted mb-0">¡Falta la firma de quien supervisa!</h6>
+                                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                <h6 class="mb-1">Sin firma registrada</h6>
+                                                <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
                                             </div>
                                         </template>
                                     </div>

@@ -1,7 +1,7 @@
 /* Los puntos del reporte se separan por título; su contenido usa filas y componentes nativos. */
 #container.sasisopa-reporte > .sasisopa-report-block {
     display: block;
-    margin: 0 0 1rem;
+    margin-block: 0 1.25rem;
 }
 
 #container.sasisopa-reporte > .sasisopa-report-block > .sasisopa-report-heading {
@@ -27,7 +27,7 @@
 }
 
 #container.sasisopa-reporte .sasisopa-report-table-card {
-    margin-block: 0 !important;
+    margin-block: 1rem !important;
 }
 
 #container.sasisopa-reporte .sasisopa-report-table-card .card-header {
@@ -52,6 +52,23 @@
     padding-right: 0.25rem;
     padding-left: 0.25rem;
     text-align: center !important;
+    vertical-align: middle;
+}
+
+#container.sasisopa-reporte .sasisopa-index-column {
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+    text-align: center !important;
+    vertical-align: middle;
+}
+
+#container.sasisopa-reporte .modal table.sasisopa-reporte-datatable th:first-child,
+#container.sasisopa-reporte .modal table.sasisopa-reporte-datatable td:first-child {
+    width: 96px;
+    min-width: 96px;
+    max-width: 96px;
+    text-align: center;
     vertical-align: middle;
 }
 

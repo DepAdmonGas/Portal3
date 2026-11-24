@@ -49,8 +49,6 @@ document.addEventListener('alpine:init', () => {
             document.getElementById('modalDetalleComunicado')
         );
 
-        this.cargarComunicados();
-
         window.comunicadosInstance = this;
 
         this.bindModalSelect2({
@@ -90,6 +88,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         async cargarComunicados(){
+        if (window.tableComunicados) {
+            window.tableComunicados.ajax.reload(null, false);
+            return;
+        }
+
         this.loading = true;
 
         try {

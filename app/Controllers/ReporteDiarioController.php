@@ -868,10 +868,39 @@ table {
                     'ff_producto_dos' => $item->ff_producto_dos,
                     'ff_producto_tres' => $item->ff_producto_tres,
 
+                    'archivos_disponibles' => [
+                        'f_producto_uno' => $this->existePdfFactura($item->f_producto_uno),
+                        'f_producto_dos' => $this->existePdfFactura($item->f_producto_dos),
+                        'f_producto_tres' => $this->existePdfFactura($item->f_producto_tres),
+                        'fi_producto_uno' => $this->existePdfFactura($item->fi_producto_uno),
+                        'fi_producto_dos' => $this->existePdfFactura($item->fi_producto_dos),
+                        'fi_producto_tres' => $this->existePdfFactura($item->fi_producto_tres),
+                        'ff_producto_uno' => $this->existePdfFactura($item->ff_producto_uno),
+                        'ff_producto_dos' => $this->existePdfFactura($item->ff_producto_dos),
+                        'ff_producto_tres' => $this->existePdfFactura($item->ff_producto_tres),
+                    ],
+
                 ];
             })
 
             ->toArray();
+    }
+
+    private function existePdfFactura(?string $ruta): bool
+    {
+        if (!$ruta) {
+            return false;
+        }
+
+        // La versión anterior almacenaba "archivos/cre/<archivo>.pdf" en la BD.
+        // Portal3 conserva esa ruta relativa y centraliza el archivo en uploads/archivos/cre.
+        $nombre = basename(str_replace('\\', '/', $ruta));
+        if ($nombre === '' || $nombre === '.' || $nombre === '..') {
+            return false;
+        }
+
+        $archivo = dirname(__DIR__, 2) . '/public/uploads/archivos/cre/' . $nombre;
+        return is_file($archivo) && is_readable($archivo);
     }
 
     private function obtenerProductos(): array
@@ -944,7 +973,10 @@ table {
             $idReporte = (int)($_POST['idReporte'] ?? 0);
             $tipo      = (int)($_POST['tipo'] ?? 0);
 
-            $reporte = ReporteCreMes::findOrFail($idReporte);
+            $reporte = ReporteCreMes::query()
+                ->where('id', $idReporte)
+                ->where('id_estacion', $this->estacionModulo())
+                ->firstOrFail();
 
             $prefijo = match ($tipo) {
                 1 => 'f',
@@ -955,28 +987,40 @@ table {
 
             $productos = $this->obtenerProductos();
 
-            // Todos los archivos son obligatorios
-            foreach ($productos as $index => $producto) {
+            // Validar todos los PDFs antes de comenzar a mover archivos.
+            foreach ($productos as $producto) {
 
-                $input = 'file' . ($index + 1);
+                $input = 'file' . $producto['id'];
 
                 if (
                     !isset($_FILES[$input]) ||
                     $_FILES[$input]['error'] !== UPLOAD_ERR_OK
                 ) {
+                    http_response_code(422);
                     echo json_encode([
                         'success' => false,
-                        'message' => "Debe seleccionar el PDF de {$producto['nombre']}."
+                        'message' => 'Completa los campos obligatorios.'
                     ]);
+                    return;
+                }
+
+                $extension = strtolower(pathinfo($_FILES[$input]['name'] ?? '', PATHINFO_EXTENSION));
+                if ($extension !== 'pdf') {
+                    http_response_code(422);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Todos los archivos deben ser PDF.'
+                    ]);
+                    return;
                 }
             }
 
             // mismo timestamp para todos
             $timestamp = time();
 
-            foreach ($productos as $index => $producto) {
+            foreach ($productos as $producto) {
 
-                $input = 'file' . ($index + 1);
+                $input = 'file' . $producto['id'];
 
                 $ruta = $this->subirPdf(
                     $_FILES[$input],
@@ -1017,10 +1061,7 @@ table {
         );
 
         if ($extension !== 'pdf') {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Todos los archivos deben ser PDF.'
-            ]);
+            throw new \RuntimeException('El archivo debe ser un PDF válido.');
         }
 
         $directorio =   __DIR__ . '/../../public/uploads/archivos/cre/';
@@ -1039,10 +1080,7 @@ table {
         $destino = $directorio . $nombre;
 
         if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No fue posible guardar el PDF del producto'
-            ]);
+            throw new \RuntimeException('No fue posible guardar el PDF del producto.');
         }
 
         return 'archivos/cre/' . $nombre;

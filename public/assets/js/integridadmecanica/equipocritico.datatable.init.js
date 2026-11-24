@@ -58,9 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 className: 'text-center align-middle td-small',
                 render: function (data, type, row) {
 
-                    const archivo = row.manual.split('/').pop();
+                    const archivo = row.manual_archivo || '';
                     const noDelete = permisos.eliminar;
                     const nomEquipo = JSON.stringify(row.nombre_equipo ?? '');
+                    const descargaManual = row.manual_disponible
+                        ? `<a class="dropdown-item pointer d-flex align-items-center gap-3" href="/download?tipo=sasisopa-integridad-mecanica-manual&file=${encodeURIComponent(archivo)}" data-download-loader><i class="fs-4 ti ti-download"></i>Descargar Manual</a>`
+                        : `<span class="dropdown-item d-flex align-items-center gap-3 text-muted"><i class="fs-4 ti ti-file-off" aria-label="Manual no disponible"></i>Manual no disponible</span>`;
                     
 
                     return `
@@ -69,12 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="ti ti-dots-vertical fs-6"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                 <li>
-                                    <a class="dropdown-item pointer d-flex align-items-center gap-3" 
-                                    @click="download('manual','${archivo}')">
-                                        <i class="fs-4 ti ti-download"></i>Descargar
-                                    </a>
-                                </li>
+                                 <li>${descargaManual}</li>
 
                                 <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDelete ? 'disabled text-muted' : ''}"

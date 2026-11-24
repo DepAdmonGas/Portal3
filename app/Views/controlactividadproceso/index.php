@@ -7,7 +7,14 @@
         Debes de seleccionar una estación del menú superior para poder visualizar los elementos de SASISOPA.
     </div>
 
-<?php else: ?>
+<?php else:
+    $nombreArchivoProcedimientos = 'DLES.ADMONGAS.001.pdf';
+    $archivoProcedimientosDisponible = is_file(
+        PUBLIC_PATH . '/uploads/archivos/procedimientos/' . $nombreArchivoProcedimientos
+    );
+    $urlProcedimientos = '/download?tipo=sasisopa-control-documentos-procedimientos&file='
+        . rawurlencode($nombreArchivoProcedimientos) . '&view=1';
+?>
 <div class="row mt-3 align-items-start">
 
     <!-- Contenedor para las cards navegables (Se adaptan solo entre ellas) -->
@@ -16,8 +23,14 @@
 
             <!-- Procedimientos de Operación, Seguridad y Mantenimiento -->
             <div class="col-md-6 d-flex align-items-stretch mb-4">
-                <a href="/uploads/archivos/procedimientos/DLES.ADMONGAS.001.pdf" target="_blank"
+                <?php if ($archivoProcedimientosDisponible): ?>
+                <a href="<?= htmlspecialchars($urlProcedimientos, ENT_QUOTES, 'UTF-8') ?>" target="_blank"
+                   data-download-loader data-download-mode="inline"
                    class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
+                <?php else: ?>
+                <div aria-disabled="true" title="El archivo de procedimientos no está disponible"
+                   class="card h-100 w-100 text-decoration-none overflow-hidden position-relative">
+                <?php endif; ?>
                     
                     <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center gap-3">
@@ -38,12 +51,18 @@
 
                     <!-- Pie de la tarjeta -->
                     <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
-                        <span class="small">Ver procedimientos</span>
+                        <span class="small <?= $archivoProcedimientosDisponible ? '' : 'text-muted' ?>">
+                            <?= $archivoProcedimientosDisponible ? 'Ver procedimientos' : 'Archivo no disponible' ?>
+                        </span>
+                        <?php if (!$archivoProcedimientosDisponible): ?>
+                            <i class="ti ti-file-off fs-6 text-muted" aria-label="Archivo no disponible"></i>
+                        <?php else: ?>
                         <div class="icon-transition">
                             <i class="ti ti-arrow-right fs-5"></i>
                         </div>
+                        <?php endif; ?>
                     </div>
-                </a>
+                <?php if ($archivoProcedimientosDisponible): ?></a><?php else: ?></div><?php endif; ?>
             </div>
 
             <!-- Programa anual de mantenimiento -->
@@ -92,7 +111,7 @@
                 <div class="d-flex flex-column gap-2">
                     
                     <!-- Configuración Bitácora -->
-                    <a href="/sasisopa/control-actividades-procesos/configuracion-bitacora" 
+                    <a href="/sasisopa/control-actividades-procesos/configuracion-bitacora" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-user-cog fs-5 me-2"></i>Configuración Bitácora
@@ -101,7 +120,7 @@
                     </a>
 
                     <!-- Recepción y Descarga del Producto -->
-                    <a href="/sasisopa/control-actividades-procesos/recepcion-descarga-producto" 
+                    <a href="/sasisopa/control-actividades-procesos/recepcion-descarga-producto" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-gas-station fs-5 me-2"></i>Recepción y Descarga del Producto
@@ -110,7 +129,7 @@
                     </a>
 
                     <!-- Mantenimiento Preventivo -->
-                    <a href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo" 
+                    <a href="/sasisopa/control-actividades-procesos/mantenimiento-preventivo" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-tool fs-5 me-2"></i>Mantenimiento Preventivo
@@ -119,7 +138,7 @@
                     </a>
 
                     <!-- Mantenimiento Correctivo -->
-                    <a href="/sasisopa/control-actividades-procesos/mantenimiento-correctivo" 
+                    <a href="/sasisopa/control-actividades-procesos/mantenimiento-correctivo" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-tool fs-5 me-2"></i>Mantenimiento Correctivo
@@ -128,7 +147,7 @@
                     </a>
 
                     <!-- Calibración de equipos -->
-                    <a href="/sasisopa/control-actividades-procesos/calibracion-equipos" 
+                    <a href="/sasisopa/control-actividades-procesos/calibracion-equipos" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-gauge fs-5 me-2"></i>Calibración de equipos
@@ -137,7 +156,7 @@
                     </a>
                     
                     <!-- Bitácora PROFECO -->
-                    <a href="/sasisopa/control-actividades-procesos/bitacora-dispensario" 
+                    <a href="/sasisopa/control-actividades-procesos/bitacora-dispensario" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-clipboard-text fs-5 me-2"></i>Bitácora de registro de eventos (PROFECO)
@@ -146,7 +165,7 @@
                     </a>
 
                     <!-- Mantenimiento V.1.2 -->
-                    <a href="/sasisopa/control-actividades-procesos/bitacora-mantenimiento" 
+                    <a href="/sasisopa/control-actividades-procesos/bitacora-mantenimiento" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-file-description fs-5 me-2"></i>Mantenimiento V.1.2
@@ -155,7 +174,7 @@
                     </a>
 
                     <!-- Bitácora de Residuos Peligrosos -->
-                    <a href="/sasisopa/control-actividades-procesos/bitacora-residuos-peligrosos" 
+                    <a href="/sasisopa/control-actividades-procesos/bitacora-residuos-peligrosos" data-action-loader="navigation"
                        class="btn bg-info-subtle text-info w-100 text-start d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none waves-effect waves-light">
                         <span class="d-flex align-items-center fw-medium">
                             <i class="ti ti-biohazard fs-5 me-2"></i>Bitácora de Residuos Peligrosos

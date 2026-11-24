@@ -24,9 +24,28 @@ private function estacionModulo(): ?int
     return ModuleStationService::getContext('sasisopa')['id_estacion'] ?? null;
 }
 
+private function urlDescargaProtocolo(?string $archivo): string
+{
+    $nombre = basename(trim((string) $archivo));
+
+    if ($nombre === '' || $nombre === '.' || $nombre === '..') {
+        return '';
+    }
+
+    $ruta = dirname(__DIR__, 2)
+        . '/public/uploads/archivos/protocolo/'
+        . $nombre;
+
+    return is_file($ruta)
+        ? '/download?tipo=sasisopa-simulacros&file=' . rawurlencode($nombre)
+        : '';
+}
+
 public function index(){
 
  $title = '13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS';
+ $plantillaEvaluacion = dirname(__DIR__, 2)
+     . '/public/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.016a.doc';
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('SASISOPA', '/sasisopa');
@@ -40,6 +59,7 @@ public function index(){
             'modulo' => $this->modulo,
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $this->estacionModulo(),
+            'formato016aDisponible' => is_file($plantillaEvaluacion),
             'moduleStationKey' => 'sasisopa',
             'links' => [
                 '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
@@ -53,6 +73,7 @@ public function index(){
                 '/libs/select2/dist/js/select2.min.js',
                 '/js/preparacionemergencias/index.datatable.init.js?v=' . time(),
                 '/js/preparacionemergencias/index.action.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
             'help' => true
         ];
@@ -81,7 +102,7 @@ public function protocoloGet()
 
                     'id' => $item->id,
 
-                    'archivo' => 'uploads/' . $item->archivo,
+                    'archivo' => $this->urlDescargaProtocolo($item->archivo),
 
                     'fecha_formateada' =>
                         formatearFecha($item->fechacreacion->format('Y-m-d')),
@@ -352,7 +373,7 @@ public function anexosGet($id)
                         $item->nombre_anexo,
 
                     'archivo' =>
-                        'uploads/' . $item->archivo,
+                        $this->urlDescargaProtocolo($item->archivo),
 
                     'fecha_formateada' =>
                         formatearFecha(
@@ -787,9 +808,7 @@ public function simulacroDatatable(){
                         $resumen,
 
                     'evaluacion' =>
-                        $evaluacion
-                            ? '/uploads/'.$evaluacion
-                            : ''
+                        $this->urlDescargaProtocolo($evaluacion)
                 ];
             });
 

@@ -606,18 +606,33 @@ protected string $modulo = 'sasisopa';
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        $evidencias =
-            ComunicacionEvidencia::where(
-                'id_comunicacion',
-                $id
-            )->get();
+        $idEstacion = $this->estacionModulo();
+        $comunicacion = $idEstacion
+            ? ComunicacionIE::where('id_estacion', $idEstacion)->find($id)
+            : null;
+
+        if (!$comunicacion) {
+            http_response_code(404);
+            echo json_encode([]);
+            return;
+        }
+
+        $evidencias = ComunicacionEvidencia::where('id_comunicacion', $id)->get();
 
         $data = $evidencias->map(function ($item) {
+            $archivo = basename(str_replace('\\', '/', (string) $item->archivo));
+            $rutaFisica = dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias/' . $archivo;
+            $existeArchivo = $archivo !== '' && is_file($rutaFisica);
+            $downloadUrl = $existeArchivo
+                ? '/download?tipo=sasisopa-comunicacion-evidencias&file=' . rawurlencode($archivo)
+                : null;
 
             return [
                 'id' => $item->id,
-                'archivo' => $item->archivo,
-                'url' => $_ENV['APP_URL'] . '/uploads/archivos/evidencias/' . $item->archivo
+                'archivo' => $archivo,
+                'existe_archivo' => $existeArchivo,
+                'url' => $downloadUrl ? $downloadUrl . '&view=1' : null,
+                'download_url' => $downloadUrl,
             ];
         });
 
@@ -641,8 +656,14 @@ protected string $modulo = 'sasisopa';
 
         $id = $data['id'] ?? null;
 
-        $evidencia =
-            ComunicacionEvidencia::find($id);
+        $idEstacion = $this->estacionModulo();
+        $evidencia = $idEstacion
+            ? ComunicacionEvidencia::whereKey($id)
+                ->whereHas('comunicacion', function ($query) use ($idEstacion) {
+                    $query->where('id_estacion', $idEstacion);
+                })
+                ->first()
+            : null;
 
         if (!$evidencia) {
 
@@ -654,13 +675,13 @@ protected string $modulo = 'sasisopa';
             return;
         }
 
-        $ruta =
-            __DIR__ . '../../../public/uploads/archivos/evidencias/' .
-            ltrim($evidencia->archivo, '/');
+        $directorio = dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias/';
+        $baseReal = realpath($directorio);
+        $rutaReal = realpath($directorio . basename(str_replace('\\', '/', (string) $evidencia->archivo)));
+        $prefijoDirectorio = $baseReal ? rtrim($baseReal, '/\\') . DIRECTORY_SEPARATOR : '';
 
-        if (file_exists($ruta)) {
-
-            unlink($ruta);
+        if ($rutaReal && $prefijoDirectorio !== '' && str_starts_with($rutaReal, $prefijoDirectorio) && is_file($rutaReal)) {
+            unlink($rutaReal);
         }
 
         $evidencia->delete();

@@ -57,6 +57,7 @@ class MantenimientoCorrectivoController extends BaseController
                 '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/controlactividadproceso/mantenimientocorrectivo.datatable.init.js?v=' . time(),
                 '/js/controlactividadproceso/mantenimientocorrectivo.action.init.js?v=' . time(),
+                '/js/controldocumentosregistros/downloads.init.js?v=' . time(),
             ],
 
             'help' => false
@@ -165,14 +166,133 @@ class MantenimientoCorrectivoController extends BaseController
 
     public function evidencias(int $id)
     {
-        $data = MantenimientoCorrectivoEvidencia::where(
-            'id_mantenimiento',
-            $id
-        )->get();
+        $idEstacion = $this->estacionModulo();
+        $registroValido = $idEstacion
+            && MantenimientoCorrectivo::query()
+                ->where('id', $id)
+                ->where('id_estacion', $idEstacion)
+                ->exists();
+
+        $data = $registroValido
+            ? MantenimientoCorrectivoEvidencia::where('id_mantenimiento', $id)
+                ->get()
+                ->map(function (MantenimientoCorrectivoEvidencia $evidencia) {
+                    $evidencia->download_url = '/sasisopa/control-actividades-procesos/mantenimiento-correctivo/evidencias/descargar/'
+                        . (int) $evidencia->id;
+
+                    return $evidencia;
+                })
+            : collect();
 
         echo json_encode([
             'data' => $data
         ]);
+    }
+
+    public function descargarEvidencia(int $id): void
+    {
+        $idEstacion = $this->estacionModulo();
+        $evidencia = MantenimientoCorrectivoEvidencia::find($id);
+
+        if (!$idEstacion
+            || !$evidencia
+            || !MantenimientoCorrectivo::query()
+                ->where('id', $evidencia->id_mantenimiento)
+                ->where('id_estacion', $idEstacion)
+                ->exists()) {
+            http_response_code(404);
+            exit;
+        }
+
+        $archivo = basename((string) $evidencia->nombre);
+        $url = parse_url((string) $evidencia->url);
+        $host = strtolower((string) ($url['host'] ?? ''));
+        $scheme = strtolower((string) ($url['scheme'] ?? ''));
+        $path = (string) ($url['path'] ?? '');
+        $bytes = false;
+
+        if ($archivo === '' || $archivo === '.' || $archivo === '..') {
+            http_response_code(404);
+            exit;
+        }
+
+        $appHost = strtolower((string) parse_url(
+            (string) ($_ENV['APP_URL'] ?? ''),
+            PHP_URL_HOST
+        ));
+        $esUrlLocal = $scheme === 'https'
+            && $host !== ''
+            && $host === $appHost
+            && str_starts_with($path, '/uploads/archivos/mantenimiento/');
+        $esUrlLegada = $scheme === 'https'
+            && $host === 'portal.admongas.com.mx'
+            && str_starts_with($path, '/bitacora-api-app/app/Mantenimiento/Archivos/');
+
+        if ($esUrlLocal) {
+            $rutaPublica = PUBLIC_PATH . '/uploads/archivos/mantenimiento/' . $archivo;
+            $rutaLegada = ROOT_PATH . '/uploads/archivos/mantenimiento/' . $archivo;
+            $ruta = is_file($rutaPublica) ? $rutaPublica : $rutaLegada;
+
+            if (is_file($ruta) && is_readable($ruta)) {
+                $bytes = file_get_contents($ruta);
+            }
+        } elseif ($esUrlLegada
+            && basename(rawurldecode($path)) === $archivo
+            && function_exists('curl_init')) {
+            $urlRemota = 'https://portal.admongas.com.mx' . $path;
+            $contenido = '';
+            $demasiadoGrande = false;
+            $curl = curl_init($urlRemota);
+            curl_setopt_array($curl, [
+                CURLOPT_RETURNTRANSFER => false,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 20,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
+                CURLOPT_WRITEFUNCTION => static function ($handle, string $fragmento) use (&$contenido, &$demasiadoGrande): int {
+                    if (strlen($contenido) + strlen($fragmento) > 20 * 1024 * 1024) {
+                        $demasiadoGrande = true;
+                        return 0;
+                    }
+
+                    $contenido .= $fragmento;
+                    return strlen($fragmento);
+                },
+            ]);
+
+            $resultado = curl_exec($curl);
+            $codigoHttp = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+
+            if ($demasiadoGrande) {
+                http_response_code(413);
+                exit;
+            }
+
+            if ($resultado !== false && $codigoHttp === 200) {
+                $bytes = $contenido;
+            }
+        }
+
+        if ($bytes === false || $bytes === '' || strlen($bytes) > 20 * 1024 * 1024) {
+            http_response_code(404);
+            exit;
+        }
+
+        $mimeReal = (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes) ?: '';
+        if (!in_array($mimeReal, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+            http_response_code(415);
+            exit;
+        }
+
+        $nombreDescarga = preg_replace('/[^a-zA-Z0-9._-]/', '_', $archivo);
+        header('Content-Type: ' . $mimeReal);
+        header('Content-Length: ' . strlen($bytes));
+        header('Content-Disposition: attachment; filename="' . $nombreDescarga . '"');
+        header('X-Content-Type-Options: nosniff');
+        echo $bytes;
+        exit;
     }
 
     public function createEvidencia()

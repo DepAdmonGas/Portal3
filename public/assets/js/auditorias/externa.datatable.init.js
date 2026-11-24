@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: '1%',
                 render: function () {
                     return `
-                        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" download>
+                        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.024.doc" download="Fo.ADMONGAS.024.doc" data-download-loader>
                             <i class="ti ti-file-download text-info fs-6"></i>
                         </a>
                     `;
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function (data, type, row) {
                     return row.formato024.existe
                         ? `
-                            <a href="/uploads/${row.formato024.archivo}" download>
+                            <a href="/uploads/${row.formato024.archivo}" download="${row.formato024.archivo.split('/').pop()}" data-download-loader>
                                 <i class="ti ti-download text-danger fs-6"></i>
                             </a>
                         `
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: '1%',
                 render: function () {
                     return `
-                        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" download>
+                        <a href="/uploads/archivos/Fo.ADMONGAS/Fo.ADMONGAS.025.docx" download="Fo.ADMONGAS.025.docx" data-download-loader>
                             <i class="ti ti-file-download text-info fs-6"></i>
                         </a>
                     `;
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 render: function (data, type, row) {
                     return row.formato025.existe
                         ? `
-                            <a href="/uploads/${row.formato025.archivo}" download>
+                            <a href="/uploads/${row.formato025.archivo}" download="${row.formato025.archivo.split('/').pop()}" data-download-loader>
                                 <i class="ti ti-download text-danger fs-6"></i>
                             </a>
                         `

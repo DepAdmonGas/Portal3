@@ -513,7 +513,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 </a>
     </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
 
         <div class="card sasisopa-report-table-card mb-3">
             <div class="card-header bg-primary text-white">
@@ -646,7 +646,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     <h4 class="card-title sasisopa-section-title"><span class="badge rounded-pill text-bg-primary">5</span><span>FUNCIONES, RESPONSABILIDADES Y AUTORIDAD</span></h4>
 
     <div class="row g-3 mb-3">
-        <div class="col-12 col-md-6 d-flex">
+        <div class="col-12 d-flex">
             <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" href="<?= $organigrama ?? '' ?>" download>
     <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
         <div class="d-flex align-items-center gap-3">
@@ -736,7 +736,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     <h4 class="card-title sasisopa-section-title"><span class="badge rounded-pill text-bg-primary">6</span><span>COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO</span></h4>
 
      <div class="row g-3 mb-3">
-        <div class="col-12 col-md-6 d-flex">
+        <div class="col-12 col-md-6">
             <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" href="/sasisopa/competencia-personal-capacitacion-entrenamiento/ficha-personal-pdf" download>
     <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
         <div class="d-flex align-items-center gap-3">
@@ -754,7 +754,9 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     </div>
 </a>
         </div>
-    </div>
+
+
+<div class="col-12 col-md-6">
 
      <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" :href="`/sasisopa/competencia-personal-capacitacion-entrenamiento/pdf-capacitacion-externa?inicio=${fechaInicio}&fin=${fechaTermino}`">
     <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
@@ -772,6 +774,12 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
     </div>
 </a>
+</div>
+
+
+<div class="col-12">
+<div class="card">
+<div class="card-body">
 
 <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
@@ -870,6 +878,17 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 </table>
 </div>
 
+</div>
+</div>
+</div>
+
+
+    </div>
+
+
+
+
+
     </div>
 </div>
 <!-- 6. COMPETENCIA DEL PERSONAL, CAPACITACIÓN Y ENTRENAMIENTO -->
@@ -881,7 +900,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 
  <div class="row">
 
-    <div class="col-lg-9">
+    <div class="col-lg-12">
 
             <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" :href="`/sasisopa/comunicacion-participacion-consulta/pdf-registro-comunicacion?inicio=${fechaInicio}&fin=${fechaTermino}`">
     <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
@@ -899,6 +918,14 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
     </div>
 </a>
+
+
+
+    </div>
+
+<div class="col-md-6">
+<div class="card">
+<div class="card-body">
 
         <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
@@ -994,9 +1021,14 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         </table>
 </div>
 
-    </div>
+</div>
+</div>
+</div>
 
-    <div class="col-lg-3">
+
+
+
+    <div class="col-md-6">
 
         <div class="card sasisopa-report-table-card mb-3">
             <div class="card-header bg-primary text-white">
@@ -1199,7 +1231,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
                     <i class="ti ti-file-type-pdf text-white display-6"></i>
                 </div>
                 <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                    <h4 class="fw-bold text-dark mb-0 lh-sm">Fo.ADMONGAS.011 (Programa Anual de Mantenimiento) <span x-text="elemento10.year"></span></h4>
+                    <h4 class="fw-bold text-dark mb-0 lh-sm">Fo.ADMONGAS.011 (Programa Anual de Mantenimiento <span x-text="elemento10.year"></span>) </h4>
                 </div>
             </div>
         </div>
@@ -1218,6 +1250,8 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     <div class="sasisopa-report-content">
     <h4 class="card-title sasisopa-section-title"><span class="badge rounded-pill text-bg-primary">11</span><span>INTEGRIDAD MECÁNICA Y ASEGURAMIENTO DE LA CALIDAD</span></h4>
 
+<div class="row g-3">
+    <div class="col-md-6 d-flex">
         <div class="card w-100 border-0 overflow-hidden position-relative card-hover">
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center gap-3">
@@ -1225,7 +1259,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
                         <i class="ti ti-file-type-pdf text-white display-6"></i>
                     </div>
                     <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                        <h4 class="fw-bold text-dark mb-0 lh-sm">Fo.ADMONGAS.011 (Programa Anual de Mantenimiento) <span x-text="elemento10.year"></span></h4>
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">Fo.ADMONGAS.011 (Programa Anual de Mantenimiento <span x-text="elemento10.year"></span>) </h4>
                     </div>
                 </div>
             </div>
@@ -1234,23 +1268,27 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
                 <div class="icon-transition"><template x-if="elemento10.programa"><a :href="'/sasisopa/control-actividades-procesos/pdf-programa-anual-mantenimiento/' + elemento10.programa.id" target="_blank" aria-label="Descargar programa anual de mantenimiento"><i class="ti ti-download fs-5"></i></a></template></div>
             </div>
         </div>
+    </div>
 
+    <div class="col-md-6 d-flex">
         <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" href="/sasisopa/integridad-mecanica-aseguramiento/pdf-equipo-critico" target="_blank">
-    <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
-        <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.1rem;">
-                <i class="ti ti-file-type-pdf text-white display-6"></i>
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-file-type-pdf text-white display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">Lista de equipos críticos</h4>
+                    </div>
+                </div>
             </div>
-            <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                <h4 class="fw-bold text-dark mb-0 lh-sm">Lista de equipos críticos</h4>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
             </div>
-        </div>
+        </a>
     </div>
-    <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
-        <span class="small">Descargar documento</span>
-        <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
-    </div>
-</a>
+</div>
 
     </div>
 </div>
@@ -1261,7 +1299,10 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     <div class="sasisopa-report-content">
     <h4 class="card-title sasisopa-section-title"><span class="badge rounded-pill text-bg-primary">12</span><span>SEGURIDAD DE CONTRATISTAS</span></h4>
 
-    <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
+<div class="card">
+<div class="card-body">
+
+   <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
         <thead>
 
@@ -1419,6 +1460,12 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     </table>
 </div>
 
+</div>
+</div>
+
+
+ 
+
 
     </div>
 </div>
@@ -1447,6 +1494,11 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
     </div>
 </a>
+
+
+
+<div class="card">
+<div class="card-body">
 
     <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
@@ -1568,6 +1620,11 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 </div>
 
 </div>
+</div>
+
+
+
+</div>
     </div>
 </div>
 <!-- 13. PREPARACIÓN Y RESPUESTA A EMERGENCIAS -->
@@ -1577,46 +1634,52 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     <div class="sasisopa-report-content">
     <h4 class="card-title sasisopa-section-title"><span class="badge rounded-pill text-bg-primary">14</span><span>MONITOREO, VERIFICACIÓN Y EVALUACIÓN</span></h4>
 
-<a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" :href="`/sasisopa/monitoreo-verificacion-evaluacion/descargar-revision-resultados-detalle/${year}`">
-    <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
-        <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.1rem;">
-                <i class="ti ti-file-type-pdf text-white display-6"></i>
+<div class="row g-3">
+    <div class="col-md-6 d-flex">
+        <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" :href="`/sasisopa/monitoreo-verificacion-evaluacion/descargar-revision-resultados-detalle/${year}`">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-file-type-pdf text-white display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">Resumen de revisión de resultados <span x-text="year"></span></h4>
+                    </div>
+                </div>
             </div>
-            <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                <h4 class="fw-bold text-dark mb-0 lh-sm">Resumen de revisión de resultados <span x-text="year"></span></h4>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
             </div>
-        </div>
+        </a>
     </div>
-    <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
-        <span class="small">Descargar documento</span>
-        <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
-    </div>
-</a>
 
-<a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" href="/sasisopa/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a">
-    <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
-        <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.1rem;">
-                <i class="ti ti-file-type-pdf text-white display-6"></i>
+    <div class="col-md-6 d-flex">
+        <a class="card w-100 border-0 overflow-hidden position-relative card-hover text-decoration-none" href="/sasisopa/monitoreo-verificacion-evaluacion/descargar-programa-implementacion-s-a">
+            <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.1rem;">
+                        <i class="ti ti-file-type-pdf text-white display-6"></i>
+                    </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
+                        <h4 class="fw-bold text-dark mb-0 lh-sm">Programa de implementación del Sistema de Administración</h4>
+                    </div>
+                </div>
             </div>
-            <div class="flex-grow-1 d-flex flex-column align-items-end justify-content-center text-end h-100">
-                <h4 class="fw-bold text-dark mb-0 lh-sm">Programa de implementación del Sistema de Administración</h4>
+            <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
+                <span class="small">Descargar documento</span>
+                <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
             </div>
-        </div>
+        </a>
     </div>
-    <div class="card-footer bg-transparent border-top border-light px-4 py-3 d-flex align-items-center justify-content-between text-primary fw-semibold mt-auto">
-        <span class="small">Descargar documento</span>
-        <div class="icon-transition"><i class="ti ti-download fs-5"></i></div>
-    </div>
-</a>
+</div>
 
 <div class="card sasisopa-report-table-card mt-3 mb-3">
     <div class="card-header bg-primary text-white">
         <h5 class="card-title text-white mb-0"><i class="ti ti-tool me-2"></i>Calibración, Verificación y mantenimiento de equipos</h5>
     </div>
-    <div class="card-body">
-<div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
+    <div class="card-body p-0">
+<div class="table-responsive overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
 <tr>
 
@@ -1675,102 +1738,98 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     </div>
 </a>
 
-<div class="card sasisopa-report-table-card mt-3 mb-3">
-    <div class="card-header bg-primary text-white">
-        <h5 class="card-title text-white mb-0"><i class="ti ti-file-report me-2"></i>Informe de revisión de resultados</h5>
-    </div>
-    <div class="card-body">
-<div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
-<thead>
-    <tr>
-    <th class="text-center">#</th>
-    <th class="text-center">Fecha</th>
-    <th class="text-center sasisopa-pdf-column" style="width:48px; min-width:48px; max-width:48px" data-orderable="false" data-searchable="false"><i class="ti ti-file-type-pdf text-muted fs-7"></i></th>
-    </tr>
-</thead>
-
-<tbody>
-    <template x-if="informes.length===0">
-        <tr>
-        <td colspan="3" class="text-center text-muted">
-        No se encontró información para mostrar
-        </td>
-        </tr>
-    </template>
-    <template x-for="(item,index) in informes" :key="item.id">
-        <tr>
-        <td class="text-center" x-text="index+1"></td>
-        <td class="text-center" x-text="item.fecha"></td>
-        <td class="text-center">
-        <template x-if="item.archivo_disponible">
-            <a :href="item.archivo_url" download>
-                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
-            </a>
-        </template>
-        <template x-if="!item.archivo_disponible">
-            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
-        </template>
-        </td>
-        </tr>
-    </template>
-</tbody>
-</table>
-</div>
-
-    </div>
-</div>
-
-    <div class="card sasisopa-report-table-card mt-3 mb-3">
-        <div class="card-header bg-primary text-white">
-            <h5 class="card-title text-white mb-0"><i class="ti ti-alert-triangle me-2"></i>Administración de hallazgos derivados del monitoreo del sistema de administración</h5>
+<div class="row g-3 mt-1 mb-3">
+    <div class="col-md-6 d-flex">
+        <div class="card w-100 sasisopa-report-table-card mb-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title text-white mb-0"><i class="ti ti-file-report me-2"></i>Informe de revisión de resultados</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th class="text-center">Fecha</th>
+                                <th class="text-center sasisopa-pdf-column" style="width:48px; min-width:48px; max-width:48px" data-orderable="false" data-searchable="false"><i class="ti ti-file-type-pdf text-muted fs-7"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-if="informes.length===0">
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">
+                                        No se encontró información para mostrar
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-for="(item,index) in informes" :key="item.id">
+                                <tr>
+                                    <td class="text-center" x-text="index+1"></td>
+                                    <td class="text-center" x-text="item.fecha"></td>
+                                    <td class="text-center">
+                                        <template x-if="item.archivo_disponible">
+                                            <a :href="item.archivo_url" download>
+                                                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+                                            </a>
+                                        </template>
+                                        <template x-if="!item.archivo_disponible">
+                                            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-    <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
-    <thead>
-    <tr>
-    <th class="text-center">Folio</th>
-    <th class="text-center">Fecha auditoría</th>
-    <th class="text-center">No. Control</th>
-    <th class="text-center">Tipo auditoría</th>
-    <th class="text-center sasisopa-pdf-column" style="width:48px; min-width:48px; max-width:48px" data-orderable="false" data-searchable="false"><i class="ti ti-file-type-pdf text-muted fs-7"></i></th>
-    </tr>
-    </thead>
-    <tbody>
-    <template x-if="hallazgos.length===0">
-    <tr>
-    <td colspan="5" class="text-center text-muted">
-    No se encontró información para mostrar
-    </td>
-    </tr>
-    </template>
+    </div>
 
-    <template x-for="item in hallazgos" :key="item.id">
-        <tr>
-
-            <td class="text-center">
-            <b x-text="item.folio"></b>
-            </td>
-
-            <td class="text-center" x-text="item.fecha_auditoria"></td>
-            <td class="text-center" x-text="item.no_control"></td>
-            <td class="text-center" x-text="item.tipo_auditoria"></td>
-
-            <td class="text-center">
-            <a :href="`/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/pdf/${item.id}`">
-            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
-            </a>
-            </td>
-
-        </tr>
-    </template>
-
-    </tbody>
-
-    </table>
-</div>
-
-
-
+    <div class="col-md-6 d-flex">
+        <div class="card w-100 sasisopa-report-table-card mb-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title text-white mb-0"><i class="ti ti-alert-triangle me-2"></i>Administración de hallazgos derivados del monitoreo del sistema de administración</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Folio</th>
+                                <th class="text-center">Fecha auditoría</th>
+                                <th class="text-center">No. Control</th>
+                                <th class="text-center">Tipo auditoría</th>
+                                <th class="text-center sasisopa-pdf-column" style="width:48px; min-width:48px; max-width:48px" data-orderable="false" data-searchable="false"><i class="ti ti-file-type-pdf text-muted fs-7"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-if="hallazgos.length===0">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        No se encontró información para mostrar
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-for="item in hallazgos" :key="item.id">
+                                <tr>
+                                    <td class="text-center">
+                                        <b x-text="item.folio"></b>
+                                    </td>
+                                    <td class="text-center" x-text="item.fecha_auditoria"></td>
+                                    <td class="text-center" x-text="item.no_control"></td>
+                                    <td class="text-center" x-text="item.tipo_auditoria"></td>
+                                    <td class="text-center">
+                                        <a :href="`/sasisopa/monitoreo-verificacion-evaluacion/atencion-hallazgos/pdf/${item.id}`">
+                                            <i class="ti ti-file-type-pdf text-danger fs-7"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <!-- 14. MONITOREO, VERIFICACIÓN Y EVALUACIÓN -->
@@ -1797,120 +1856,116 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     </div>
 </a>
 
-    <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
-    <thead>
-    <tr>
-    <th class="text-center align-middle">#</th>
-    <th class="text-center align-middle">Fecha</th>
-    <th class="text-center align-middle">Auditor</th>
-    <th class="text-center align-middle">Fo.ADMONGAS.024 (INFORME DE AUDITORÍA)</th>
-    <th class="text-center align-middle">Fo.ADMONGAS.025 (PLAN DE ATENCIÓN DE HALLAZGOS)</th>
-    </tr>
-    </thead>
-    <tbody>
-    <template
-    x-for="item in auditoriasInternas">
+<div class="row g-3 mt-1 mb-3">
+    <div class="col-md-6 d-flex">
+        <div class="card w-100 sasisopa-report-table-card mb-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title text-white mb-0"><i class="ti ti-clipboard-check me-2"></i>Auditorías internas</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
+                        <thead>
+                            <tr>
+                                <th class="text-center align-middle">#</th>
+                                <th class="text-center align-middle">Fecha</th>
+                                <th class="text-center align-middle">Auditor</th>
+                                <th class="text-center align-middle">Fo.ADMONGAS.024 (INFORME DE AUDITORÍA)</th>
+                                <th class="text-center align-middle">Fo.ADMONGAS.025 (PLAN DE ATENCIÓN DE HALLAZGOS)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="item in auditoriasInternas">
+                                <tr>
+                                    <td class="text-center align-middle" x-text="item.id"></td>
+                                    <td class="text-center align-middle" x-text="item.fecha"></td>
+                                    <td class="text-center align-middle" x-text="item.auditor"></td>
+                                    <td class="text-center align-middle">
+                                        <template x-if="item.formato024_disponible">
+                                            <a :href="item.formato024_url" target="_blank">
+                                                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+                                            </a>
+                                        </template>
+                                        <template x-if="!item.formato024_disponible">
+                                            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
+                                        </template>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <template x-if="item.formato025_disponible">
+                                            <a :href="item.formato025_url" target="_blank">
+                                                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+                                            </a>
+                                        </template>
+                                        <template x-if="!item.formato025_disponible">
+                                            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <tr>
-
-    <td class="text-center align-middle" x-text="item.id"></td>
-    <td class="text-center align-middle" x-text="item.fecha"></td>
-    <td class="text-center align-middle" x-text="item.auditor"></td>
-    <td class="text-center align-middle">
-
-        <template x-if="item.formato024_disponible">
-            <a
-                :href="item.formato024_url"
-                target="_blank">
-                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
-            </a>
-        </template>
-
-        <template x-if="!item.formato024_disponible">
-            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
-        </template>
-
-    </td>
-
-    <td class="text-center align-middle">
-        <template x-if="item.formato025_disponible">
-        <a
-        :href="item.formato025_url"
-        target="_blank">
-        <i class="ti ti-file-type-pdf text-danger fs-6"></i>
-        </a>
-        </template>
-        <template x-if="!item.formato025_disponible">
-            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
-        </template>
-
-    </td>
-
-    </tr>
-
-    </template>
-
-    </tbody>
-
-    </table>
-</div>
-
-    <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
-    <thead>
-    <tr>
-    <th class="text-center align-middle">#</th>
-    <th class="text-center align-middle">Fecha</th>
-    <th class="text-center align-middle">Prestador de servicio</th>
-    <th class="text-center align-middle">Fo.ADMONGAS.024 (INFORME DE AUDITORÍA)</th>
-    <th class="text-center align-middle">Fo.ADMONGAS.025 (PLAN DE ATENCIÓN DE HALLAZGOS)</th>
-    <th class="text-center align-middle">ASEA</th>
-    </tr>
-    </thead>
-    <tbody>
-    <template
-    x-for="item in auditoriasExternas">
-    <tr>
-    <td class="text-center align-middle" x-text="item.id"></td>
-    <td class="text-center align-middle" x-text="item.fecha"></td>
-    <td class="text-center align-middle" x-text="item.prestador"></td>
-    <td class="text-center align-middle">
-        <template x-if="item.formato024_disponible">
-        <a
-        :href="item.formato024_url"
-        target="_blank">
-        <i class="ti ti-file-type-pdf text-danger fs-6"></i>
-        </a>
-        </template>
-        <template x-if="!item.formato024_disponible">
-            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
-        </template>
-    </td>
-    <td class="text-center align-middle">
-        <template x-if="item.formato025_disponible">
-        <a
-        :href="item.formato025_url"
-        target="_blank">
-        <i class="ti ti-file-type-pdf text-danger fs-6"></i>
-        </a>
-        </template>
-        <template x-if="!item.formato025_disponible">
-            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
-        </template>
-
-    </td>
-    <td class="text-center align-middle">
-    <button
-    class="btn btn-sm btn-primary"
-    @click="abrirAsea(item)">
-    ASEA
-    </button>
-    </td>
-    </tr>
-    </template>
-
-    </tbody>
-
-    </table>
+    <div class="col-md-6 d-flex">
+        <div class="card w-100 sasisopa-report-table-card mb-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title text-white mb-0"><i class="ti ti-clipboard-list me-2"></i>Auditorías externas</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden">
+                    <table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
+                        <thead>
+                            <tr>
+                                <th class="text-center align-middle">#</th>
+                                <th class="text-center align-middle">Fecha</th>
+                                <th class="text-center align-middle">Prestador de servicio</th>
+                                <th class="text-center align-middle">Fo.ADMONGAS.024 (INFORME DE AUDITORÍA)</th>
+                                <th class="text-center align-middle">Fo.ADMONGAS.025 (PLAN DE ATENCIÓN DE HALLAZGOS)</th>
+                                <th class="text-center align-middle">ASEA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="item in auditoriasExternas">
+                                <tr>
+                                    <td class="text-center align-middle" x-text="item.id"></td>
+                                    <td class="text-center align-middle" x-text="item.fecha"></td>
+                                    <td class="text-center align-middle" x-text="item.prestador"></td>
+                                    <td class="text-center align-middle">
+                                        <template x-if="item.formato024_disponible">
+                                            <a :href="item.formato024_url" target="_blank">
+                                                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+                                            </a>
+                                        </template>
+                                        <template x-if="!item.formato024_disponible">
+                                            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
+                                        </template>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <template x-if="item.formato025_disponible">
+                                            <a :href="item.formato025_url" target="_blank">
+                                                <i class="ti ti-file-type-pdf text-danger fs-6"></i>
+                                            </a>
+                                        </template>
+                                        <template x-if="!item.formato025_disponible">
+                                            <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
+                                        </template>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <button type="button" class="btn btn-sm btn-primary" :data-auditoria-asea-id="item.id">
+                                            ASEA
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
     </div>
@@ -1922,6 +1977,11 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
     <div class="sasisopa-report-content">
     <h4 class="card-title sasisopa-section-title"><span class="badge rounded-pill text-bg-primary">16</span><span>INVESTIGACIÓN DE INCIDENTES Y ACCIDENTES</span></h4>
 
+
+
+<div class="card">
+
+<div class="card-header">
     <div class="text-end">
 
         <a href="/sasisopa/investigacion-incidentes-accidentes/pdf?inicio=<?= $fechaInicio ?>&fin=<?= $fechaTermino ?>">
@@ -1929,12 +1989,15 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         </a>
 
     </div>
+</div>
+
+<div class="card-body">
 
     <div class="table-responsive mt-2">
 
         <table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
-            <thead class="table-light">
+            <thead>
 
                 <tr>
 
@@ -2121,6 +2184,11 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
         </table>
 
     </div>
+</div>
+</div>
+
+
+
 
 
     <div class="card sasisopa-report-table-card mt-3 mb-3">
@@ -2539,7 +2607,7 @@ x-data="reporte('<?= $fechaInicio ?>', '<?= $fechaTermino ?>')">
 class="modal fade"
 id="modalAsea"
 tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
 
             <div class="modal-header modal-colored-header bg-primary text-white">
@@ -2557,7 +2625,7 @@ tabindex="-1">
 
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body p-3">
 
                 <div class="table-responsive pb-2 overflow-x-auto overflow-y-hidden"><table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
@@ -2571,6 +2639,14 @@ tabindex="-1">
                     </thead>
 
                     <tbody>
+
+                    <template x-if="ingresosAsea.length === 0">
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <span class="text-muted">No hay archivos ni registros de ingresos a la ASEA.</span>
+                            </td>
+                        </tr>
+                    </template>
 
                     <template
                     x-for="item in ingresosAsea">
@@ -2591,7 +2667,7 @@ tabindex="-1">
                         </a>
                     </template>
                     <template x-if="!item.archivo_disponible">
-                        <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible"></i>
+                        <i class="ti ti-file-off fs-6 text-muted" title="Archivo no disponible" aria-label="Archivo no disponible"></i>
                     </template>
 
                     </td>
@@ -2621,7 +2697,7 @@ tabindex="-1">
     tabindex="-1"
     aria-hidden="true">
 
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
         <div class="modal-content">
 
@@ -2639,7 +2715,7 @@ tabindex="-1">
 
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body p-3">
 
                 <div class="table-responsive">
 
@@ -2676,11 +2752,9 @@ tabindex="-1">
 
                                 <tr>
 
-                                    <td
-                                        colspan="4"
-                                        class="text-center text-muted">
-
-                                        No se encontró información
+                                    <td colspan="4" class="text-center py-4">
+                                        <i class="ti ti-users-group fs-2 text-muted d-block mb-2" aria-hidden="true"></i>
+                                        <span class="text-muted">No hay integrantes registrados para este grupo.</span>
 
                                     </td>
 
@@ -2739,7 +2813,7 @@ tabindex="-1">
     tabindex="-1"
     aria-hidden="true">
 
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
 
         <div class="modal-content">
 
@@ -2760,10 +2834,10 @@ tabindex="-1">
             </div>
 
             <div
-                class="modal-body"
+                class="modal-body p-3"
                 x-show="tercer">
 
-                <div class="row mb-4">
+                <div class="row g-3 mb-4">
 
                     <div class="col-md-6">
 
@@ -2773,9 +2847,7 @@ tabindex="-1">
 
                         </label>
 
-                        <div
-                            class="border rounded p-2"
-                            x-text="tercer.nombre">
+                        <div class="border rounded bg-light p-2" x-text="tercer.nombre || 'Sin información'">
                         </div>
 
                     </div>
@@ -2788,36 +2860,32 @@ tabindex="-1">
 
                         </label>
 
-                        <div
-                            class="border rounded p-2"
-                            x-text="tercer.numero">
+                        <div class="border rounded bg-light p-2" x-text="tercer.numero || 'Sin información'">
                         </div>
 
                     </div>
 
-                    <div class="col-md-6 mt-2">
+                    <div class="col-md-6">
 
                         <label class="form-label fw-bold">
 
                              * Nombre del líder de la investigación: 
                         </label>
 
-                        <div
-                            class="border rounded p-2"
-                            x-text="tercer.lider">
+                        <div class="border rounded bg-light p-2" x-text="tercer.lider || 'Sin información'">
                         </div>
 
                     </div>
 
                 </div>
 
-                <h6>
+                <h6 class="mb-3">
 
                      Informe final de la investigación causa raíz 
 
                 </h6>
 
-                <div class="table-responsive mt-3">
+                <div class="table-responsive">
 
                     <table class="table table-striped table-bordered mb-0 text-nowrap align-middle sasisopa-reporte-datatable">
 
@@ -2849,16 +2917,13 @@ tabindex="-1">
 
                         <tbody>
 
-                            <template
-                                x-if="!tercer.archivo_disponible">
+                            <template x-if="!tercer.archivo_disponible">
 
                                 <tr>
 
-                                    <td
-                                        colspan="3"
-                                        class="text-center text-muted">
-
-                                        No se encontró información
+                                    <td colspan="3" class="text-center py-4">
+                                        <i class="ti ti-file-off fs-2 text-muted d-block mb-2" aria-hidden="true"></i>
+                                        <span class="text-muted">No hay archivos disponibles para este tercer autorizado.</span>
 
                                     </td>
 
@@ -2883,9 +2948,7 @@ tabindex="-1">
 
                                     <td class="text-center">
 
-                                        <a
-                                            :href="tercer.archivo_url"
-                                            target="_blank">
+                                        <a :href="tercer.archivo_url" target="_blank" aria-label="Abrir archivo de la investigación">
 
                                             <i class="ti ti-file-type-pdf text-danger fs-6"></i>
 
@@ -2906,10 +2969,11 @@ tabindex="-1">
             </div>
 
             <div
-                class="modal-body text-center text-muted"
+                class="modal-body p-4 text-center"
                 x-show="!tercer">
 
-                No se encontró información
+                <i class="ti ti-file-off fs-2 text-muted d-block mb-2" aria-hidden="true"></i>
+                <span class="text-muted">No hay información ni archivos de un tercer autorizado para este registro.</span>
 
             </div>
 

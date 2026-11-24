@@ -238,7 +238,8 @@
 
                     <div class="modal-body">
 
-                        <div x-show="detalle">
+                        <template x-if="detalle">
+                            <div>
 
                             <!-- ENCABEZADO -->
 
@@ -382,7 +383,8 @@
                                 </div>
                             </div>
 
-                        </div>
+                            </div>
+                        </template>
 
                     </div>
                     <div class="modal-footer">
