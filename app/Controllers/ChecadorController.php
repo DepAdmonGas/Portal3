@@ -1579,10 +1579,7 @@ final class ChecadorController extends BaseController
                 $workerCatalog = null;
                 try {
                     if ($workspace === 'daily-attendance' && $m01DemoMode) {
-                        $demoReader = new ChecadorDailyReadService();
                         $demoAttendance = self::readM01SyntheticAttendance(
-                            $demoReader,
-                            $user,
                             $requestedWorkplace,
                             $date,
                             $requestedWorker,
@@ -1604,7 +1601,7 @@ final class ChecadorController extends BaseController
                         $effectiveScheduleErrors = $demoAttendance['effective_schedule_errors'];
                         $journeys = $demoAttendance['journeys'];
                         $journeyEvaluationState = $demoAttendance['journey_evaluation_state'];
-                    } elseif ($workspace === 'daily-attendance' && !$demoMode) {
+                    } elseif ($workspace === 'daily-attendance') {
                         $workerCatalog = (new \App\Services\ChecadorAttendanceRosterService())
                             ->workersForAttendanceFilter($requestedWorkplace, $date, null, false);
                         $authorizedM01LocalityIds = array_values(array_filter(array_map(
@@ -3248,8 +3245,7 @@ final class ChecadorController extends BaseController
                         $timezone, new \DateTimeImmutable('now', new \DateTimeZone('UTC'))
                     );
                     if ($today !== null) {
-                        $effectiveDateMin = max($weekStart,
-                            (new \DateTimeImmutable($today, new \DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d'));
+                        $effectiveDateMin = max($weekStart, $today);
                     }
                     $roster = (new \App\Services\ChecadorAttendanceRosterService())
                         ->workersForScheduleWeek($workplaceId, $weekStart, $timezone, $demoMode);
@@ -5623,10 +5619,8 @@ final class ChecadorController extends BaseController
         ];
     }
 
-    /** Build one isolated M01 demo result from the existing synthetic API adapter. */
+    /** Build M01's isolated local fixture without SQL, API calls, or Motor evaluation. */
     private static function readM01SyntheticAttendance(
-        ChecadorDailyReadService $reader,
-        \App\Models\Usuario $user,
         int $workplaceId,
         string $date,
         ?int $requestedWorkerId,
@@ -5656,9 +5650,9 @@ final class ChecadorController extends BaseController
             ];
         };
 
-        // Existing fixtures are scoped to their reserved demo station and date.
-        // Never fall through to live API or operational roster for other context.
-        if (!$reader->isDemoMode()
+        // Existing fixtures are scoped to their reserved development station and date.
+        // Never fall through to SQL/API or an operational roster for other context.
+        if (!ChecadorDailyReadService::demoModeEnabled()
             || $workplaceId !== 14
             || $date !== ChecadorDailyReadService::demoReferenceDate()) {
             return $unavailable('La demostración sintética no está configurada para este centro y fecha.');
@@ -5667,66 +5661,33 @@ final class ChecadorController extends BaseController
             return $unavailable('El filtro de colaborador no es válido.');
         }
 
-        $timezoneResult = $reader->resolveWorkplaceLocalDay($user, $workplaceId, $date);
-        if (!($timezoneResult['ok'] ?? false) || !is_array($timezoneResult['data'] ?? null)) {
-            return $unavailable('No fue posible cargar el escenario sintético de asistencia.');
+        $fixtureRows = self::m01SyntheticDetailPreviewRows($date);
+        if ($requestedWorkerId !== null && !isset($fixtureRows[$requestedWorkerId])) {
+            return $unavailable('El colaborador solicitado no pertenece al escenario sintético.');
         }
-        $timezone = $timezoneResult['data'];
-        $roster = (new \App\Services\ChecadorAttendanceRosterService())->currentRoster(
-            $workplaceId,
-            $date,
-            (string) ($timezone['timezone'] ?? ''),
-            true
-        );
-        $workers = is_array($roster['workers'] ?? null) ? $roster['workers'] : [];
-        if (($roster['status'] ?? '') !== 'demo_fixture' || count($workers) !== 1) {
-            return $unavailable('El padrón sintético no está disponible para este escenario.', $timezone, $roster);
+        $fixtureRows = $requestedWorkerId === null
+            ? $fixtureRows
+            : [$requestedWorkerId => $fixtureRows[$requestedWorkerId]];
+        $workers = [];
+        $events = [];
+        $effectiveSchedules = [];
+        foreach ($fixtureRows as $workerId => &$row) {
+            $profile = [
+                'worker_id' => (int) $workerId,
+                'full_name' => (string) $row['full_name'],
+                'employee_number' => (string) $row['employee_number'],
+            ];
+            $workers[] = $profile;
+            $effectiveSchedules[(int) $workerId] = $row['schedule'];
+            foreach ($row['slots'] as $slot) {
+                if (is_array($slot['event'] ?? null)) $events[] = $slot['event'];
+            }
+            foreach ($row['additional_events'] as $event) $events[] = $event;
+            $row['incidence_count'] = $row['incidence_count'] ?? null;
         }
-        $profile = $workers[0];
-        $workerId = self::positiveInteger($profile['worker_id'] ?? null);
-        if ($workerId === null || ($requestedWorkerId !== null && $requestedWorkerId !== $workerId)) {
-            return $unavailable('El colaborador solicitado no pertenece al escenario sintético.', $timezone, $roster);
-        }
-
-        $snapshot = $reader->createDailyPunchSnapshot(
-            $user,
-            $workplaceId,
-            $timezone,
-            self::creationRequestUuid()
-        );
-        $snapshotData = $snapshot['data'] ?? null;
-        if (!($snapshot['ok'] ?? false) || !is_array($snapshotData)
-            || trim((string) ($snapshotData['snapshot_token'] ?? '')) === '') {
-            return $unavailable('No fue posible cargar las marcaciones sintéticas del escenario.', $timezone, $roster);
-        }
-
-        $page = $reader->readDailyPunchSnapshotPage($user, (string) $snapshotData['snapshot_token']);
-        if (!($page['ok'] ?? false) || !is_array($page['events'] ?? null)) {
-            return $unavailable('No fue posible cargar las marcaciones sintéticas del escenario.', $timezone, $roster);
-        }
-        $events = array_values(array_filter($page['events'], static function (mixed $event) use ($workerId, $workplaceId): bool {
-            return is_array($event)
-                && (int) ($event['id_personal_resuelto'] ?? 0) === $workerId
-                && (int) ($event['id_estacion_resuelta'] ?? 0) === $workplaceId
-                && str_starts_with((string) ($event['event_uuid'] ?? ''), 'DEMO-CHECADOR');
-        }));
-
-        $scheduleResult = $reader->getEffectiveSchedule($user, $workerId, $workplaceId, $date);
-        $journeyResult = $reader->evaluateJourney(
-            $user,
-            $workerId,
-            $workplaceId,
-            $date,
-            (string) ($snapshotData['snapshot_audit_ref'] ?? '')
-        );
-        $schedule = ($scheduleResult['ok'] ?? false) ? ($scheduleResult['data'] ?? null) : null;
-        $journey = ($journeyResult['ok'] ?? false) ? ($journeyResult['data'] ?? null) : null;
-        $row = \App\Services\ChecadorAttendanceProjection::workerRow($profile, $events, $journey, (string) ($timezone['timezone'] ?? ''));
-        $row['schedule'] = $schedule;
-        $row['schedule_error'] = $schedule === null ? (string) ($scheduleResult['error']['kind'] ?? 'schedule_unavailable') : null;
-        $row['worked_seconds'] = null;
-        $row['worked_time_source'] = null;
-        $row['incidence_count'] = null;
+        unset($row);
+        $timezone = ['timezone' => 'America/Mexico_City'];
+        $roster = ['status' => 'demo_fixture', 'coverage' => 'isolated_local_fixture', 'workers' => $workers];
 
         return [
             'state' => 'success',
@@ -5738,21 +5699,17 @@ final class ChecadorController extends BaseController
                 'status' => 'synthetic_qa_fixture',
                 'complete' => false,
                 'message' => 'Datos sintéticos de demostración; no representan asistencia real.',
-                'api_records_read' => count($page['events']),
+                'fixture_records' => count($events),
             ],
             'attendance_roster' => $roster,
-            'worker_options' => [[
-                'worker_id' => $workerId,
-                'full_name' => (string) ($profile['full_name'] ?? 'Colaborador de demostración'),
-                'employee_number' => '',
-            ]],
+            'worker_options' => $workers,
             'selected_worker_id' => $requestedWorkerId,
             'scheduled_comodines' => ['status' => 'not_queried', 'workers' => [], 'message' => ''],
-            'attendance_rows' => [$workerId => $row],
-            'effective_schedules' => $schedule === null ? [] : [$workerId => $schedule],
-            'effective_schedule_errors' => $schedule === null ? [$workerId => (string) ($scheduleResult['error']['kind'] ?? 'schedule_unavailable')] : [],
-            'journeys' => $journey === null ? [] : [$workerId => $journey],
-            'journey_evaluation_state' => $journey === null ? 'unavailable' : 'evaluated',
+            'attendance_rows' => $fixtureRows,
+            'effective_schedules' => $effectiveSchedules,
+            'effective_schedule_errors' => [],
+            'journeys' => [],
+            'journey_evaluation_state' => 'not_evaluated',
         ];
     }
 
@@ -5918,6 +5875,17 @@ final class ChecadorController extends BaseController
             if ($id !== null) $rosterById[$id] = $profile;
         }
 
+        $persistedJourneyRead = self::readPersistedDailyJourneys(
+            $workplaceId,
+            $date,
+            $requestedWorkerId,
+            $timezone,
+            $rosterById
+        );
+        $journeysByWorker = is_array($persistedJourneyRead['journeys'] ?? null)
+            ? $persistedJourneyRead['journeys']
+            : [];
+
         $events = is_array($read['events'] ?? null) ? $read['events'] : [];
         $observedIds = [];
         $eventsByRosterWorker = [];
@@ -6003,16 +5971,48 @@ final class ChecadorController extends BaseController
         $attendanceRows = [];
         foreach ($rosterById as $workerId => $profile) {
             if ($requestedWorkerId !== null && $requestedWorkerId !== $workerId) continue;
+            $journey = $journeysByWorker[$workerId] ?? null;
             $row = \App\Services\ChecadorAttendanceProjection::workerRow(
                 $profile,
                 $eventsByRosterWorker[$workerId] ?? [],
-                null,
+                $journey,
                 $timezone
             );
-            $row['schedule'] = null;
-            $row['schedule_error'] = 'persisted_schedule_projection_unavailable';
-            $row['worked_seconds'] = null;
-            $row['worked_time_source'] = null;
+            if (($persistedJourneyRead['ok'] ?? false) !== true) {
+                $row['status'] = 'journey_unavailable';
+                $row['journey_status'] = 'RESULT_NOT_AVAILABLE';
+                $row['journey_message'] = (string) ($persistedJourneyRead['message'] ?? 'No fue posible leer los resultados persistidos de Jornada.');
+                $row['schedule'] = null;
+                $row['schedule_error'] = (string) ($persistedJourneyRead['error'] ?? 'sql_unavailable');
+            } elseif ($journey === null) {
+                $row['journey_message'] = 'Sin resultado de Jornada persistido para esta fecha.';
+                $row['schedule'] = null;
+                $row['schedule_error'] = 'persisted_journey_not_found';
+            } else {
+                $row['schedule'] = is_array($journey['schedule_projection'] ?? null) ? $journey['schedule_projection'] : null;
+                $row['schedule_error'] = $row['schedule'] === null ? 'persisted_schedule_details_unavailable' : null;
+                $row['p1_status'] = $journey['p1_status'] ?? null;
+                $row['p2_status'] = $journey['p2_status'] ?? null;
+                $row['journey_message'] = self::persistedJourneyStatusMessage($journey);
+                if (($journey['pairing_current_status'] ?? '') === 'missing') {
+                    $row['status'] = 'journey_not_evaluated';
+                } elseif (($journey['p2_status'] ?? null) === null) {
+                    $row['status'] = 'calculation_unavailable';
+                } else {
+                    $row['status'] = match ((string) $journey['p2_status']) {
+                        'CALCULATED' => 'evaluated',
+                        'AMBIGUOUS' => 'ambiguous',
+                        'PARTIAL_DATA', 'PENDING_SYNC', 'UNKNOWN_SCHEDULE', 'UNSCHEDULED_RECORDED', 'UNMATCHED_NO_PUNCHES' => 'incomplete',
+                        'WORKPLACE_MISMATCH' => 'review',
+                        'DAY_OFF_RECORDED' => 'day_off_recorded',
+                        default => $row['status'],
+                    };
+                }
+            }
+            $row['worked_seconds'] = is_int($journey['calculation']['segundos_trabajados_totales'] ?? null)
+                ? $journey['calculation']['segundos_trabajados_totales']
+                : null;
+            $row['worked_time_source'] = $row['worked_seconds'] !== null ? 'persisted_p2' : null;
             $row['incidence_count'] = null;
             $attendanceRows[$workerId] = $row;
         }
@@ -6054,6 +6054,124 @@ final class ChecadorController extends BaseController
         $empty['effective_schedules'] = [];
         $empty['effective_schedule_errors'] = array_fill_keys(array_keys($rosterById), 'persisted_schedule_projection_unavailable');
         return $empty;
+    }
+
+    /** Reads only already-persisted C01 projections; this method never invokes the Motor. */
+    private static function readPersistedDailyJourneys(
+        int $workplaceId,
+        string $date,
+        ?int $workerId,
+        string $timezone,
+        array $rosterById
+    ): array {
+        if ($rosterById === [] || ($workerId !== null && !isset($rosterById[$workerId]))) {
+            return ['ok' => true, 'journeys' => [], 'error' => null, 'message' => ''];
+        }
+        $reader = new \App\Services\ChecadorJourneySqlReadService();
+        $journeys = [];
+        $expectedTotal = null;
+        $expectedPages = null;
+        $page = 1;
+        do {
+            $result = $reader->read($workplaceId, $date, $date, $workerId, $page, 100);
+            if (($result['ok'] ?? false) !== true || !is_array($result['data'] ?? null)) {
+                $error = (string) ($result['error'] ?? 'sql_unavailable');
+                $message = match ($error) {
+                    'permission_denied' => 'La lectura de resultados de Jornada no está autorizada para esta localidad.',
+                    'schema_unavailable' => 'El esquema SQL de resultados P1/P2 no está disponible.',
+                    'persisted_data_inconsistent' => 'Los resultados persistidos de Jornada no son consistentes; no se asignan posiciones.',
+                    'result_limit_exceeded' => 'La consulta de Jornada excede el límite seguro; no se muestran resultados parciales.',
+                    default => 'No fue posible leer los resultados P1/P2 persistidos desde MariaDB.',
+                };
+                return ['ok' => false, 'journeys' => [], 'error' => $error, 'message' => $message];
+            }
+            $data = $result['data'];
+            $pagination = is_array($data['pagination'] ?? null) ? $data['pagination'] : [];
+            $total = (int) ($pagination['total_records'] ?? -1);
+            $pages = (int) ($pagination['total_pages'] ?? 0);
+            if ($total < 0 || $pages < 1 || $pages > 50
+                || ($expectedTotal !== null && $expectedTotal !== $total)
+                || ($expectedPages !== null && $expectedPages !== $pages)) {
+                return ['ok' => false, 'journeys' => [], 'error' => 'persisted_data_inconsistent',
+                    'message' => 'El conjunto paginado de resultados de Jornada cambió o no es válido; no se asignan posiciones.'];
+            }
+            $expectedTotal = $total;
+            $expectedPages = $pages;
+            foreach (is_array($data['journeys'] ?? null) ? $data['journeys'] : [] as $journey) {
+                if (!is_array($journey)) {
+                    return ['ok' => false, 'journeys' => [], 'error' => 'persisted_data_inconsistent',
+                        'message' => 'Una fila persistida de Jornada no tiene una proyección válida.'];
+                }
+                $id = self::positiveInteger($journey['worker_id'] ?? null);
+                $context = is_array($journey['context'] ?? null) ? $journey['context'] : [];
+                if ($id === null || !isset($rosterById[$id])
+                    || (int) ($context['id_estacion'] ?? 0) !== $workplaceId
+                    || (int) ($context['id_personal'] ?? 0) !== $id
+                    || (string) ($context['fecha_local'] ?? '') !== $date
+                    || (string) ($context['timezone'] ?? '') !== $timezone
+                    || isset($journeys[$id])) {
+                    return ['ok' => false, 'journeys' => [], 'error' => 'persisted_data_inconsistent',
+                        'message' => 'La identidad, localidad, fecha o zona horaria de una Jornada no coincide con la consulta M01.'];
+                }
+                $journey['schedule_projection'] = self::persistedScheduleProjection($journey['schedule'] ?? null, $timezone);
+                $journey['p1_status'] = is_string($journey['pairing']['estado_pareo'] ?? null)
+                    ? $journey['pairing']['estado_pareo'] : null;
+                $journey['p2_status'] = is_string($journey['calculation']['estado_calculo'] ?? null)
+                    ? $journey['calculation']['estado_calculo'] : null;
+                $journeys[$id] = $journey;
+            }
+            $page++;
+        } while ($page <= ($expectedPages ?? 1));
+
+        if (count($journeys) > ($expectedTotal ?? 0)) {
+            return ['ok' => false, 'journeys' => [], 'error' => 'persisted_data_inconsistent',
+                'message' => 'La lectura de Jornada devolvió más registros que el total confirmado.'];
+        }
+        return ['ok' => true, 'journeys' => $journeys, 'error' => null, 'message' => ''];
+    }
+
+    /** Adapts the stored schedule snapshot for the existing M01 view without resolving or recalculating it. */
+    private static function persistedScheduleProjection(mixed $schedule, string $timezone): ?array
+    {
+        if (!is_array($schedule)) return null;
+        $status = strtoupper(trim((string) ($schedule['estado_jornada'] ?? '')));
+        if ($status === '') return null;
+        $projection = ['estado_jornada' => $status, 'horario_local' => null];
+        if ($status !== 'SCHEDULED') return $projection;
+        $json = $schedule['payload_segmentos_json'] ?? null;
+        if (!is_string($json) || trim($json) === '') return null;
+        $segments = json_decode($json, true);
+        if (!is_array($segments) || json_last_error() !== JSON_ERROR_NONE) return null;
+        foreach ($segments as $segment) {
+            if (!is_array($segment)) return null;
+        }
+        $projection['horario_local'] = ['timezone' => $timezone, 'segmentos' => $segments];
+        return $projection;
+    }
+
+    private static function persistedJourneyStatusMessage(array $journey): string
+    {
+        $labels = [
+            'CALCULATED' => 'cálculo persistido', 'PARTIAL_DATA' => 'datos parciales',
+            'PENDING_SYNC' => 'sincronización pendiente', 'AMBIGUOUS' => 'resultado ambiguo',
+            'WORKPLACE_MISMATCH' => 'localidad no coincidente', 'DAY_OFF_RECORDED' => 'descanso persistido',
+            'UNSCHEDULED_RECORDED' => 'sin horario registrado', 'UNKNOWN_SCHEDULE' => 'horario desconocido',
+            'UNMATCHED_NO_PUNCHES' => 'sin marcaciones asociadas', 'PAIRED' => 'pareo persistido',
+            'PENDING_SYNC_COMPLETION' => 'completitud de sincronización pendiente',
+            'AMBIGUOUS_PAIRING' => 'pareo ambiguo', 'PARTIAL_MISSING_IN' => 'entrada de segmento no disponible',
+            'PARTIAL_MISSING_OUT' => 'salida de segmento no disponible', 'REVIEW_REQUIRED' => 'requiere revisión',
+        ];
+        $parts = [];
+        foreach (['p1_status' => 'P1', 'p2_status' => 'P2'] as $field => $prefix) {
+            $code = strtoupper(trim((string) ($journey[$field] ?? '')));
+            if ($code !== '') $parts[] = $prefix . ': ' . ($labels[$code] ?? 'estado persistido ' . $code);
+        }
+        if ($parts === []) {
+            return ($journey['pairing_current_status'] ?? '') === 'missing'
+                ? 'Jornada materializada; todavía no hay una revisión P1/P2 persistida.'
+                : 'No hay estado P1/P2 disponible en la proyección persistida.';
+        }
+        return implode(' · ', $parts);
     }
 
     private static function m06AdministrativeIncidenceSqlService(): \App\Services\ChecadorAdministrativeIncidenceSqlService

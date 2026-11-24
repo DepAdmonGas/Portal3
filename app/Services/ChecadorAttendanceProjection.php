@@ -23,6 +23,11 @@ final class ChecadorAttendanceProjection
         $duplicates = [];
         $extra = [];
         $classifiedIds = [];
+        $slotEvents = is_array($journey['persisted_pairing_events'] ?? null)
+            ? $journey['persisted_pairing_events']
+            : (is_array($journey['evaluated_raw_events'] ?? null)
+            ? $journey['evaluated_raw_events']
+            : []);
         $evaluatedEvents = is_array($journey['evaluated_raw_events'] ?? null)
             ? $journey['evaluated_raw_events']
             : [];
@@ -35,19 +40,19 @@ final class ChecadorAttendanceProjection
             if (!is_array($event)) continue;
             $sourceEvents[self::eventKey($event, 'raw-' . $index)] = $event;
         }
-        foreach ($evaluatedEvents as $index => $event) {
+        foreach ($slotEvents as $index => $event) {
             if (!is_array($event)) continue;
-            $sourceEvents[self::eventKey($event, 'journey-' . $index)] ??= $event;
+            $sourceEvents[self::eventKey($event, 'pairing-' . $index)] ??= $event;
         }
 
-        foreach ($evaluatedEvents as $event) {
+        foreach ($slotEvents as $event) {
             if (!is_array($event)) {
                 continue;
             }
             $role = $event['pairing_role'] ?? null;
             $ordinal = $event['segment_ordinal'] ?? null;
             $key = is_string($role) && is_int($ordinal) && $ordinal > 0 ? $role . ':' . $ordinal : null;
-            $eventKey = self::eventKey($event, 'journey-' . count($classifiedIds));
+            $eventKey = self::eventKey($event, 'pairing-' . count($classifiedIds));
             if ($key !== null && array_key_exists($key, $slots)) {
                 if ($slots[$key] === null) {
                     $slots[$key] = $event;
@@ -71,10 +76,14 @@ final class ChecadorAttendanceProjection
             $status = 'ambiguous';
         } elseif ($journeyStatus === 'REVIEW_REQUIRED') {
             $status = 'review';
-        } elseif ($journeyStatus === 'EVALUATED' && $observedCount > 0) {
+        } elseif (in_array($journeyStatus, ['CALCULATED', 'EVALUATED'], true) && $observedCount > 0) {
             $status = 'evaluated';
-        } elseif ($journeyStatus === 'DATA_INCOMPLETE') {
+        } elseif (in_array($journeyStatus, ['DATA_INCOMPLETE', 'PARTIAL_DATA', 'PENDING_SYNC', 'UNKNOWN_SCHEDULE', 'UNSCHEDULED_RECORDED', 'UNMATCHED_NO_PUNCHES'], true)) {
             $status = 'incomplete';
+        } elseif (in_array($journeyStatus, ['AMBIGUOUS', 'AMBIGUOUS_PAIRING'], true)) {
+            $status = 'ambiguous';
+        } elseif (in_array($journeyStatus, ['WORKPLACE_MISMATCH', 'REVIEW_REQUIRED'], true)) {
+            $status = 'review';
         } else {
             $status = 'unknown';
         }

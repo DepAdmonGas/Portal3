@@ -188,6 +188,66 @@ $projection = App\Services\ChecadorAttendanceProjection::workerRow(
 $assert(count(array_filter($projection['slots'], static fn(array $slot): bool => $slot['event'] !== null)) === 0
     && count($projection['additional_events'] ?? []) === 1,
     'raw event remains separately observed and does not fill an attendance slot without persisted projection');
+$persistedPairing = [
+    'journey_status' => 'CALCULATED',
+    'evaluated' => true,
+    'evaluated_raw_event_count' => null,
+    'evaluated_raw_events' => [
+        ['event_uuid' => 'pair-entry-1', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 14:00:00'],
+        ['event_uuid' => 'pair-exit-1', 'pairing_role' => 'EXIT', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 22:00:00'],
+        ['event_uuid' => 'pair-extra', 'pairing_role' => 'SURPLUS', 'ocurrido_at_utc' => '2026-11-23 23:00:00'],
+    ],
+    'persisted_pairing_events' => [
+        ['event_uuid' => 'pair-entry-1', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 14:00:00'],
+        ['event_uuid' => 'pair-exit-1', 'pairing_role' => 'EXIT', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 22:00:00'],
+        ['event_uuid' => 'pair-entry-2', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 2, 'ocurrido_at_utc' => '2026-11-23 23:00:00'],
+        ['event_uuid' => 'pair-exit-2', 'pairing_role' => 'EXIT', 'segment_ordinal' => 2, 'ocurrido_at_utc' => '2026-11-24 01:00:00'],
+        ['event_uuid' => 'pair-extra', 'pairing_role' => 'SURPLUS', 'ocurrido_at_utc' => '2026-11-24 02:00:00'],
+        ['event_uuid' => 'pair-unmatched', 'pairing_role' => 'UNMATCHED', 'ocurrido_at_utc' => '2026-11-24 03:00:00'],
+    ],
+];
+$fourPersistedSlots = App\Services\ChecadorAttendanceProjection::workerRow(
+    ['worker_id' => 900001, 'full_name' => 'Fixture M01 cuatro posiciones'], [], $persistedPairing, 'America/Mexico_City'
+);
+$assert(array_keys(array_filter($fourPersistedSlots['slots'], static fn(array $slot): bool => $slot['event'] !== null))
+    === ['ENTRY:1', 'EXIT:1', 'ENTRY:2', 'EXIT:2']
+    && count($fourPersistedSlots['additional_events']) === 2,
+    'M01 fills only persisted ENTRY/EXIT segment ordinals 1/2 and preserves SURPLUS/UNMATCHED events');
+$onePersistedSlot = App\Services\ChecadorAttendanceProjection::workerRow(
+    ['worker_id' => 900001, 'full_name' => 'Fixture M01 una marcación'], [], [
+        'journey_status' => 'PARTIAL_DATA', 'persisted_pairing_events' => [
+            ['event_uuid' => 'pair-entry-only', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 14:12:00'],
+        ],
+    ], 'America/Mexico_City'
+);
+$assert($onePersistedSlot['slots']['ENTRY:1']['event'] !== null
+    && $onePersistedSlot['slots']['EXIT:1']['event'] === null
+    && $onePersistedSlot['slots']['ENTRY:2']['event'] === null
+    && $onePersistedSlot['status'] === 'incomplete',
+    'one persisted classified punch fills only its explicit slot and keeps missing positions neutral');
+$twoPersistedSlots = App\Services\ChecadorAttendanceProjection::workerRow(
+    ['worker_id' => 900001, 'full_name' => 'Fixture M01 dos marcaciones'], [], [
+        'journey_status' => 'CALCULATED', 'persisted_pairing_events' => [
+            ['event_uuid' => 'pair-two-entry', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 14:00:00'],
+            ['event_uuid' => 'pair-two-exit', 'pairing_role' => 'EXIT', 'segment_ordinal' => 1, 'ocurrido_at_utc' => '2026-11-23 22:00:00'],
+        ],
+    ], 'America/Mexico_City'
+);
+$assert($twoPersistedSlots['slots']['ENTRY:1']['event'] !== null
+    && $twoPersistedSlots['slots']['EXIT:1']['event'] !== null
+    && $twoPersistedSlots['slots']['ENTRY:2']['event'] === null
+    && $twoPersistedSlots['slots']['EXIT:2']['event'] === null,
+    'two persisted punches fill only their explicit first-segment ENTRY/EXIT positions');
+$scheduleProjectionMethod = new ReflectionMethod(App\Controllers\ChecadorController::class, 'persistedScheduleProjection');
+$scheduleProjectionMethod->setAccessible(true);
+$storedScheduleProjection = $scheduleProjectionMethod->invoke(null, [
+    'estado_jornada' => 'SCHEDULED',
+    'payload_segmentos_json' => '[{"ordinal":1,"tipo_segmento":"WORK","hora_inicio_local":"06:00:00","hora_fin_local":"14:00:00","dia_offset_inicio":0,"dia_offset_fin":0}]',
+], 'America/Mexico_City');
+$assert(($storedScheduleProjection['horario_local']['segmentos'][0]['hora_inicio_local'] ?? '') === '06:00:00'
+    && ($storedScheduleProjection['horario_local']['segmentos'][0]['hora_fin_local'] ?? '') === '14:00:00'
+    && ($storedScheduleProjection['horario_local']['timezone'] ?? '') === 'America/Mexico_City',
+    'M01 presents the persisted 06:00–14:00 snapshot and its stored historical timezone without resolving a new schedule');
 $assert(($positive['from_utc'] ?? '') === '2026-11-23 06:00:00'
     && ($positive['to_utc'] ?? '') === '2026-11-24 06:00:00'
     && ($positive['timezone'] ?? '') === 'America/Mexico_City'
@@ -252,9 +312,19 @@ $dailyReaderMethod = $dailyReaderStart !== false && $dailyReaderEnd !== false
     ? substr($controller, $dailyReaderStart, $dailyReaderEnd - $dailyReaderStart)
     : '';
 $assert(str_contains($controller, 'self::readDailySqlAttendance(')
-    && !str_contains(substr($controller, strpos($controller, 'private static function readDailySqlAttendance(')), 'readObservedPunches(')
-    && str_contains($controller, "'persisted_schedule_projection_unavailable'"),
-    'operational M01 path uses SQL and leaves schedule/journey projections unavailable instead of inferring them');
+    && !str_contains($dailyReaderMethod, 'evaluateJourney(')
+    && str_contains($dailyReaderMethod, 'readPersistedDailyJourneys(')
+    && str_contains($controller, 'new \\App\\Services\\ChecadorJourneySqlReadService()')
+    && str_contains($controller, "elseif (\$workspace === 'daily-attendance')"),
+    'operational M01 reads persisted C01 projections directly and never evaluates the Motor on page load');
+$syntheticStart = strpos($controller, 'private static function readM01SyntheticAttendance(');
+$syntheticEnd = $syntheticStart === false ? false : strpos($controller, 'private static function safeSnapshotRef(', $syntheticStart);
+$syntheticMethod = $syntheticStart !== false && $syntheticEnd !== false
+    ? substr($controller, $syntheticStart, $syntheticEnd - $syntheticStart)
+    : '';
+$assert(str_contains($syntheticMethod, 'm01SyntheticDetailPreviewRows(')
+    && !preg_match('/evaluateJourney\(|createDailyPunchSnapshot\(|readDailyPunchSnapshotPage\(|getEffectiveSchedule\(/', $syntheticMethod),
+    'isolated M01 fixtures are local-only and do not call API, resolve schedules, or execute the Motor');
 $assert(str_contains($controller, "\$empty['observed_only_events'] = \$unrosteredEvents;")
     && str_contains($controller, 'if (isset($rosterById[$workerId]) && $belongsToLocalityAtEvent)')
     && str_contains($controller, 'WorkerWorkplaceAssignmentResolver')
@@ -272,6 +342,10 @@ $assert(str_contains($service, 'Auth::user() !== null')
 $assert(str_contains($view, 'formato y verificación criptográfica no confirmados por Portal3')
     && str_contains($view, 'La verificación criptográfica corresponde a API V2'),
     'view distinguishes stored seal presence from format and cryptographic verification');
+$assert(str_contains($view, 'journey_message') && str_contains($view, 'journey_unavailable')
+    && str_contains($controller, 'persistedJourneyStatusMessage')
+    && str_contains($controller, 'schedule_projection'),
+    'M01 exposes persisted P1/P2 reason or SQL-read failure and only the stored schedule snapshot');
 $assert(str_contains($view, '$successfulM01SqlRead = $state === \'success\' && ($m01SqlReadSuccessful ?? false) === true;')
     && str_contains($view, 'elseif (!$successfulM01SqlRead && ($attendanceCoverage[\'complete\'] ?? false) !== true)')
     && str_contains($view, 'if (!$successfulM01SqlRead):')

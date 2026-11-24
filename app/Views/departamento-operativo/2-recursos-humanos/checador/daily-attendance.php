@@ -93,6 +93,10 @@ $statusPresentation = static fn(string $status): array => match ($status) {
     'classification_pending' => ['Pendiente de clasificación', 'text-bg-secondary'],
     'no_observed_event' => ['Sin marcación observada', 'text-bg-light border text-body-secondary'],
     'punches_unavailable' => ['Marcaciones no disponibles', 'text-bg-warning'],
+    'journey_unavailable' => ['Resultado de Jornada no disponible', 'text-bg-warning'],
+    'journey_not_evaluated' => ['Jornada sin evaluación persistida', 'text-bg-secondary'],
+    'calculation_unavailable' => ['Cálculo P2 no disponible', 'text-bg-warning'],
+    'day_off_recorded' => ['Descanso persistido', 'text-bg-light border text-body-secondary'],
     default => ['No determinado', 'text-bg-light border text-body-secondary'],
 };
 $scheduleStatusLabel = static fn(string $status): string => match ($status) {
@@ -235,6 +239,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'evaluated_raw_events' => $evaluatedRawEvents,
         'evaluated_raw_events_complete' => $evaluatedRawEventsComplete,
         'status' => $status,
+        'journey_message' => trim((string) ($attendanceRow['journey_message'] ?? '')),
         'incidence_count' => is_int($attendanceRow['incidence_count'] ?? null) ? $attendanceRow['incidence_count'] : null,
         'incidences' => $incidenceList,
         'incidence_error' => $incidenceError,
@@ -355,6 +360,7 @@ if ($rosterFallbackDisplayed) {
                                     <?php endforeach; ?>
                                     <td>
                                         <span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span>
+                                        <?php if ($viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?>
                                         <?php if ($viewRow['observed_time_labels'] !== []): ?>
                                             <span class="d-block small text-body mt-1">
                                                 <?= count($viewRow['observed_time_labels']) === 1 ? 'Marcación observada: ' : 'Marcaciones observadas: ' ?><?= $esc(implode(', ', $viewRow['observed_time_labels'])) ?>
@@ -418,7 +424,7 @@ if ($rosterFallbackDisplayed) {
                     <div class="modal-body">
                         <div class="row g-2 mb-3">
                             <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Horario efectivo</span><strong><?= $esc($viewRow['schedule']) ?></strong></div></div>
-                            <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Estado disponible</span><span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span></div></div>
+                            <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Estado disponible</span><span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span><?php if ($viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?></div></div>
                         </div>
 
                         <section class="mb-3" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-slots-title">
