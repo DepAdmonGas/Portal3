@@ -214,9 +214,9 @@ final class ChecadorWeeklyScheduleSqlWriteService
                         ? null
                         : $this->authorizedTemplate($connection, $workplaceId, (int) $item['template_id']);
                     if ($item['template_id'] !== null && $template === null) throw new RuntimeException('template_not_allowed');
-                    $firstWorkStart = $this->assertSegments($connection, $item['template_id']);
+                    $this->assertSegments($connection, $item['template_id']);
                     $this->assertAssignmentDateIsSafe(
-                        $connection, $workerId, $workplaceId, $targetDate, $targetTimezone, $firstWorkStart
+                        $connection, $workerId, $workplaceId, $targetDate, $targetTimezone
                     );
                     $id = (int) $connection->table('op_rh_v2_turnos_asignaciones')->insertGetId([
                         'id_personal' => $workerId, 'id_estacion' => $workplaceId, 'id_plantilla' => $item['template_id'],
@@ -267,7 +267,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
             $kind = $exception instanceof RuntimeException ? $exception->getMessage() : 'database_write_failed';
             if (!in_array($kind, ['permission_denied', 'worker_unavailable', 'membership_unverified', 'membership_conflict',
                 'assignment_conflict', 'template_not_allowed', 'invalid_template_segments', 'invalid_validity',
-                'invalid_effective_date', 'shift_already_started', 'journey_already_materialized', 'timezone_unresolved',
+                'invalid_effective_date', 'journey_already_materialized', 'timezone_unresolved',
                 'readback_mismatch', 'audit_readback_failed'], true)) {
                 $kind = 'database_write_failed';
             }
@@ -404,9 +404,9 @@ final class ChecadorWeeklyScheduleSqlWriteService
                     }
                     $template = $payload['template_id'] === null ? null : $this->authorizedTemplate($connection, $workplaceId, (int) $payload['template_id']);
                     if ($payload['template_id'] !== null && $template === null) throw new RuntimeException('template_not_allowed');
-                    $firstWorkStart = $this->assertSegments($connection, $payload['template_id']);
+                    $this->assertSegments($connection, $payload['template_id']);
                     $this->assertAssignmentDateIsSafe(
-                        $connection, $workerId, $workplaceId, (string) ($payload['target_date'] ?? $payload['valid_from']), $timezone, $firstWorkStart
+                        $connection, $workerId, $workplaceId, (string) ($payload['target_date'] ?? $payload['valid_from']), $timezone
                     );
                     $id = (int) $connection->table('op_rh_v2_turnos_asignaciones')->insertGetId([
                         'id_personal' => $workerId, 'id_estacion' => $workplaceId,
@@ -533,7 +533,7 @@ final class ChecadorWeeklyScheduleSqlWriteService
             if (!in_array($kind, ['permission_denied', 'worker_unavailable', 'membership_unverified', 'membership_conflict',
                 'assignment_conflict', 'template_not_allowed', 'invalid_template_segments', 'stale_assignment',
                 'invalid_close_date', 'invalid_validity', 'invalid_membership_date', 'invalid_effective_date',
-                'shift_already_started', 'journey_already_materialized'], true)) $kind = 'database_write_failed';
+                'journey_already_materialized'], true)) $kind = 'database_write_failed';
             Logger::warning('Checador M03 SQL assignment write failed', [
                 'operation' => 'm03_assignment_' . strtolower($operation), 'workplace_id' => $workplaceId,
                 'worker_id' => $workerId, 'error_code' => $kind,
@@ -585,38 +585,30 @@ final class ChecadorWeeklyScheduleSqlWriteService
         return $row === null ? null : ['id' => (int) $row->id, 'version' => (int) $row->version];
     }
 
-    /** @return array{day_offset:int,time:string}|null earliest persisted WORK segment start */
-    private function assertSegments($connection, ?int $templateId): ?array
+    private function assertSegments($connection, ?int $templateId): void
     {
-        if ($templateId === null) return null;
+        if ($templateId === null) return;
         $segments = $connection->table('op_rh_v2_turnos_segmentos')->where('id_plantilla', $templateId)
             ->orderBy('ordinal')->lockForUpdate()->get(['tipo_segmento', 'hora_inicio_local', 'hora_fin_local', 'dia_offset_inicio', 'dia_offset_fin']);
         $workCount = 0;
-        $firstWorkStart = null;
         foreach ($segments as $segment) {
             if (strtoupper((string) $segment->tipo_segmento) === 'WORK') {
                 $workCount++;
-                $candidate = ['day_offset' => (int) $segment->dia_offset_inicio, 'time' => (string) $segment->hora_inicio_local];
-                if ($firstWorkStart === null || [$candidate['day_offset'], $candidate['time']] < [$firstWorkStart['day_offset'], $firstWorkStart['time']]) {
-                    $firstWorkStart = $candidate;
-                }
             }
             if (!self::validTime((string) $segment->hora_inicio_local) || !self::validTime((string) $segment->hora_fin_local)
                 || !in_array((int) $segment->dia_offset_inicio, [0, 1], true)
                 || !in_array((int) $segment->dia_offset_fin, [0, 1], true)) throw new RuntimeException('invalid_template_segments');
         }
-        if ($workCount < 1 || $firstWorkStart === null) throw new RuntimeException('invalid_template_segments');
-        return $firstWorkStart;
+        if ($workCount < 1) throw new RuntimeException('invalid_template_segments');
     }
 
-    /** A same-day assignment is allowed only before its persisted shift start and before Motor materialization. */
+    /** Same-day assignments are allowed at any hour until the Motor has materialized that date. */
     private function assertAssignmentDateIsSafe(
         $connection,
         int $workerId,
         int $workplaceId,
         string $targetDate,
-        string $timezone,
-        ?array $firstWorkStart
+        string $timezone
     ): void {
         if ($connection->table('op_rh_v2_jornadas_programadas')
             ->where('id_personal', $workerId)->where('id_estacion', $workplaceId)
@@ -627,19 +619,6 @@ final class ChecadorWeeklyScheduleSqlWriteService
         $nowUtc = ($this->clock)()->setTimezone(new DateTimeZone('UTC'));
         $today = ChecadorOperationalPeriod::currentLocalDate($timezone, $nowUtc);
         if ($today === null || $targetDate < $today) throw new RuntimeException('invalid_effective_date');
-        if ($targetDate > $today) return;
-        if ($firstWorkStart === null) throw new RuntimeException('invalid_effective_date');
-
-        try {
-            $startDate = (new DateTimeImmutable($targetDate . ' 00:00:00', new DateTimeZone($timezone)))
-                ->modify('+' . (int) $firstWorkStart['day_offset'] . ' days')->format('Y-m-d');
-            $shiftStart = new DateTimeImmutable($startDate . ' ' . $firstWorkStart['time'], new DateTimeZone($timezone));
-        } catch (Throwable) {
-            throw new RuntimeException('invalid_template_segments');
-        }
-        if ($shiftStart <= $nowUtc->setTimezone(new DateTimeZone($timezone))) {
-            throw new RuntimeException('shift_already_started');
-        }
     }
 
     private function audit($connection, int $actorId, int $workplaceId, int $workerId, int $assignmentId, string $operation,

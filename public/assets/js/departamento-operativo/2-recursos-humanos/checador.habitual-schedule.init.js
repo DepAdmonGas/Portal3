@@ -1,4 +1,19 @@
 document.addEventListener('alpine:init', () => {
+    const assignmentErrorMessages = {
+        assignment_conflict: 'Ya existe una asignación incompatible para ese periodo.',
+        journey_already_materialized: 'La jornada ya está materializada. No se modificó el horario; solicita el procedimiento autorizado de corrección o revisión de Jornada.',
+        membership_unverified: 'No se pudo verificar la adscripción del trabajador para la fecha seleccionada.',
+        membership_conflict: 'La adscripción del trabajador es ambigua para la fecha seleccionada.',
+        template_not_allowed: 'El turno no pertenece al catálogo autorizado de esta localidad.',
+        invalid_template_segments: 'El turno no tiene segmentos laborales válidos persistidos.',
+        invalid_effective_date: 'La fecha no puede ser anterior a hoy y debe quedar dentro del periodo consultado.',
+        timezone_unresolved: 'No se pudo confirmar la zona horaria de la localidad para esa fecha.',
+        database_write_failed: 'MariaDB no confirmó el guardado; la asignación no se declara guardada.',
+        readback_failed: 'El guardado ocurrió, pero no pudo confirmarse mediante lectura posterior. Consulta antes de reintentar.',
+        readback_mismatch: 'La lectura posterior no coincide con el cambio; no vuelvas a enviarlo hasta revisar la programación.',
+        audit_readback_failed: 'No se pudo confirmar la auditoría del cambio; no se declara guardado.',
+    };
+    const assignmentErrorMessage = (code) => assignmentErrorMessages[String(code || '')] || '';
     const scheduleSelect2Targets = [
         ['#habitual-schedule-assignment-modal', 'select[name^="schedule["]'],
         ['#habitual-schedule-replacement-modal', '#habitual-replacement-source, #habitual-replacement-template'],
@@ -235,7 +250,7 @@ document.addEventListener('alpine:init', () => {
             } catch (requestError) {
                 const responseData = requestError.response?.data;
                 const responseStatus = Number(requestError.response?.status || 0);
-                this.error = responseData?.message || requestError.message || ({
+                this.error = responseData?.message || assignmentErrorMessage(responseData?.code) || requestError.message || ({
                     401: 'La sesión expiró. Inicia sesión nuevamente.',
                     403: 'No tienes permiso para cambiar la programación de este centro.',
                     422: 'Revisa el trabajador, la fecha, el turno y la confirmación.',
@@ -493,7 +508,9 @@ document.addEventListener('alpine:init', () => {
                 this.completed = true;
                 window.setTimeout(() => window.location.reload(), 900);
             } catch (requestError) {
-                this.error = requestError.response?.data?.message || requestError.message
+                this.error = requestError.response?.data?.message
+                    || assignmentErrorMessage(requestError.response?.data?.code)
+                    || requestError.message
                     || 'No se confirmó el patrón completo; actualiza la matriz antes de reintentar.';
             } finally {
                 this.loading = false;
