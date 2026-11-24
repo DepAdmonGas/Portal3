@@ -176,8 +176,24 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                 default => 'Registro pendiente de clasificación',
             },
             'event' => $event,
-            'local' => null,
+            'local' => is_array($event['local_time'] ?? null) ? $event['local_time'] : null,
         ];
+    }
+
+    $observedTimeLabels = [];
+    foreach (is_array($attendanceRow['additional_events'] ?? null) ? $attendanceRow['additional_events'] : [] as $event) {
+        if (!is_array($event) || !is_array($event['local_time'] ?? null)) {
+            continue;
+        }
+        $localTime = $event['local_time'];
+        $time = trim((string) ($localTime['time'] ?? ''));
+        if (preg_match('/\A\d{2}:\d{2}(?::\d{2})?\z/', $time) !== 1) {
+            continue;
+        }
+        $date = trim((string) ($localTime['date'] ?? ''));
+        $observedTimeLabels[] = $date !== '' && $date !== $selectedDate
+            ? $date . ' ' . substr($time, 0, 5)
+            : substr($time, 0, 5);
     }
 
     $status = $statusPresentation((string) ($attendanceRow['status'] ?? 'unknown'));
@@ -214,6 +230,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'schedule' => $scheduleText,
         'slots' => $slots,
         'evidence' => $evidence,
+        'observed_time_labels' => $observedTimeLabels,
         'evaluated_raw_event_count' => $evaluatedRawEventCount,
         'evaluated_raw_events' => $evaluatedRawEvents,
         'evaluated_raw_events_complete' => $evaluatedRawEventsComplete,
@@ -336,7 +353,14 @@ if ($rosterFallbackDisplayed) {
                                             <?php else: ?>—<?php endif; ?>
                                         </td>
                                     <?php endforeach; ?>
-                                    <td><span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span></td>
+                                    <td>
+                                        <span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span>
+                                        <?php if ($viewRow['observed_time_labels'] !== []): ?>
+                                            <span class="d-block small text-body mt-1">
+                                                <?= count($viewRow['observed_time_labels']) === 1 ? 'Marcación observada: ' : 'Marcaciones observadas: ' ?><?= $esc(implode(', ', $viewRow['observed_time_labels'])) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <?php if ($viewRow['incidence_count'] !== null): ?>
                                             <span class="badge text-bg-light border"><?= (int) $viewRow['incidence_count'] ?></span>
