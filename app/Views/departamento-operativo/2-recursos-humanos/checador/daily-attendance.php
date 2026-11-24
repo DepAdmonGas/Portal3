@@ -29,6 +29,7 @@ $selectedWorkerId = isset($selectedWorkerId) ? (int) $selectedWorkerId : null;
 $workerSelectOptions = is_array($workerSelectOptions ?? null) ? $workerSelectOptions : [];
 $workerSelectAvailable = $workerSelectOptions !== [];
 $attendanceRows = is_array($attendanceRows ?? null) ? $attendanceRows : [];
+$observedOnlyEvents = is_array($observedOnlyEvents ?? null) ? $observedOnlyEvents : [];
 $attendanceCoverage = is_array($attendanceCoverage ?? null) ? $attendanceCoverage : [];
 $journeyEvaluationState = is_string($journeyEvaluationState ?? null) ? $journeyEvaluationState : 'not_run';
 $syntheticDetailPreviewMode = ($syntheticDetailPreviewMode ?? false) === true;
@@ -56,6 +57,7 @@ $dashboardHref = is_string($dashboardHref ?? null) && $dashboardHref !== ''
 $journeyBaseUrl = '/departamento-operativo/recursos-humanos/checador/jornadas';
 $incidenceBaseUrl = '/departamento-operativo/recursos-humanos/checador/incidencias';
 $state = (string) ($state ?? 'idle');
+$successfulM01SqlRead = $state === 'success' && ($m01SqlReadSuccessful ?? false) === true;
 $coverageStatus = (string) ($attendanceCoverage['status'] ?? 'unknown');
 $showCoverageIndicator = $state === 'success'
     && ($attendanceCoverage['complete'] ?? false) !== true
@@ -273,7 +275,7 @@ if ($rosterFallbackDisplayed) {
         <div class="alert <?= $state === 'idle' ? 'alert-info' : 'alert-warning' ?> py-2" role="status">
             <?= $esc($stateMessageForAttendance) ?>
         </div>
-    <?php elseif (($attendanceCoverage['complete'] ?? false) !== true): ?>
+    <?php elseif (!$successfulM01SqlRead && ($attendanceCoverage['complete'] ?? false) !== true): ?>
         <div class="alert alert-info py-2" role="status">Cobertura no confirmada: esta consulta no confirma que se hayan recibido todas las marcaciones del período.</div>
     <?php endif; ?>
 
@@ -283,13 +285,13 @@ if ($rosterFallbackDisplayed) {
                     <caption class="<?= ($showCoverageIndicator || $showJourneyNotEvaluated || $rosterFallbackDisplayed) ? 'caption-top text-start small text-body-secondary py-1' : 'visually-hidden' ?>">
                         <span class="visually-hidden"><?= $rosterFallbackDisplayed ? 'Padrón autorizado de referencia; no constituye evidencia de asistencia en la fecha consultada.' : 'Asistencia observada por colaborador para la fecha laboral seleccionada.' ?></span>
                         <?php if ($rosterFallbackDisplayed): ?><span class="d-inline-flex align-items-center gap-1" role="status"><i class="ti ti-info-circle text-warning-emphasis" aria-hidden="true"></i><span>PADRÓN DE REFERENCIA: las marcaciones no están disponibles.</span></span><?php endif; ?>
-                        <?php if ($showCoverageIndicator): ?>
+                        <?php if ($showCoverageIndicator && !$successfulM01SqlRead): ?>
                             <span class="d-inline-flex align-items-center gap-1" role="status"><i class="ti ti-info-circle text-warning-emphasis" aria-hidden="true"></i><span>Cobertura no confirmada</span></span>
                         <?php endif; ?>
                         <?php if ($showJourneyNotEvaluated): ?>
                             <span class="d-inline-flex align-items-center gap-1 ms-2" role="status"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Journey no se evalúa al abrir Asistencia; las marcaciones quedan pendientes de clasificación.</span></span>
                         <?php endif; ?>
-                        <span class="d-inline-flex align-items-center gap-1 ms-2"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Una celda vacía no confirma una ausencia.</span></span>
+                        <?php if (!$successfulM01SqlRead): ?><span class="d-inline-flex align-items-center gap-1 ms-2"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Una celda vacía no confirma una ausencia.</span></span><?php endif; ?>
                     </caption>
                     <thead>
                         <tr>
@@ -460,8 +462,12 @@ if ($rosterFallbackDisplayed) {
                                                 <td class="text-nowrap"><?= isset($event['id_dispositivo']) ? (int) $event['id_dispositivo'] : 'No disponible' ?></td>
                                                 <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null)) ?></td>
                                                 <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::processingStatusLabel($event['estado_procesamiento'] ?? $event['processing_status'] ?? null)) ?></td>
-                                                <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::integrityLabel()) ?></td>
-                                                <td><?= $referenceDisclosure((string) ($event['event_uuid'] ?? $event['id_evento'] ?? 'No disponible')) ?></td>
+                                                <td class="text-nowrap">
+                                                    <?php if (array_key_exists('integrity_seal_present', $event)): ?>
+                                                        <?= !empty($event['integrity_seal_present']) ? 'Sello almacenado' : 'Sello no disponible' ?>; formato y verificación criptográfica no confirmados por Portal3
+                                                    <?php else: ?><?= $esc(\App\Services\ChecadorPresentationFormatter::integrityLabel()) ?><?php endif; ?>
+                                                </td>
+                                                <td><?= $referenceDisclosure((string) ($event['event_uuid'] ?? $event['id_evento'] ?? $event['id'] ?? 'No disponible')) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -507,6 +513,32 @@ if ($rosterFallbackDisplayed) {
             </div>
         </div>
     <?php endforeach; ?>
+    <?php if ($observedOnlyEvents !== []): ?>
+        <section class="mt-3" aria-labelledby="m01-observed-outside-roster-title">
+            <h2 class="h6" id="m01-observed-outside-roster-title">Eventos observados fuera del padrón acreditado</h2>
+            <p class="small text-muted">Estos eventos se muestran aparte. No agregan trabajadores al padrón ni determinan entradas, salidas, faltas u horas trabajadas.</p>
+            <div class="table-responsive overflow-x-auto overflow-y-hidden">
+                <table class="table table-sm table-striped table-bordered align-middle">
+                    <caption class="visually-hidden">Eventos de marcación observados sin adscripción histórica acreditada</caption>
+                    <thead><tr><th scope="col">Identidad</th><th scope="col">Adscripción</th><th scope="col">Hora local</th><th scope="col">Fecha y hora UTC</th><th scope="col">Recepción</th><th scope="col">Integridad</th><th scope="col">Referencia</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($observedOnlyEvents as $observedOnly): if (!is_array($observedOnly) || !is_array($observedOnly['event'] ?? null)) continue; $observedEvent = $observedOnly['event']; $observedLocal = is_array($observedEvent['local_time'] ?? null) ? $observedEvent['local_time'] : null; ?>
+                            <tr>
+                                <td><?= $esc($observedOnly['worker_label'] ?? 'Identidad no disponible') ?></td>
+                                <td><?= $esc($observedOnly['membership_label'] ?? 'Adscripción no confirmada') ?></td>
+                                <td class="text-nowrap"><?= $observedLocal !== null ? $esc((string) ($observedLocal['date'] ?? '') . ' ' . (string) ($observedLocal['time'] ?? '')) : 'No disponible' ?></td>
+                                <td class="text-nowrap"><?= $esc($observedEvent['ocurrido_at_utc'] ?? 'No disponible') ?></td>
+                                <td class="text-nowrap"><?= $esc(\App\Services\ChecadorPresentationFormatter::processingStatusLabel($observedEvent['processing_status'] ?? null)) ?></td>
+                                <td><?= !empty($observedEvent['integrity_seal_present']) ? 'Sello almacenado' : 'Sello no disponible' ?>; formato y verificación criptográfica no confirmados por Portal3</td>
+                                <td><?= $referenceDisclosure((string) ($observedEvent['event_uuid'] ?? $observedEvent['id'] ?? 'No disponible')) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted mb-0">El formato del sello no se valida en esta vista. La verificación criptográfica corresponde a API V2 y su resultado no se infiere de esta lectura.</p>
+        </section>
+    <?php endif; ?>
     </div>
 
 <div class="modal fade" id="checador-filter-modal" tabindex="-1" aria-labelledby="checador-filter-modal-title" aria-hidden="true" data-checador-filter-modal>
