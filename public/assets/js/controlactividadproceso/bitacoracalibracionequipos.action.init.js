@@ -39,15 +39,21 @@ document.addEventListener('alpine:init', () => {
 
         init() {
         const currentYear = new Date().getFullYear();
+        const requestedYear = Number(new URLSearchParams(window.location.search).get('year'));
+        const selectedYear = Number.isInteger(requestedYear)
+            && requestedYear >= 2020
+            && requestedYear <= currentYear + 20
+                ? requestedYear
+                : currentYear;
         window.bitacoraCalibracionEquipos = this;
         this.modalNuevo = new bootstrap.Modal(document.getElementById('modalNuevo'));
         this.modalResultados = new bootstrap.Modal(document.getElementById('modalResultados'));
         this.modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
         this.modalBuscar = new bootstrap.Modal(document.getElementById('ModalBuscar'));
 
-        this.filtro.year = currentYear;
-        this.actualizarPeriodo(currentYear, '');
-        this.pdfUrl = '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/pdf?year=' + currentYear + '&mes=';
+        this.filtro.year = selectedYear;
+        this.actualizarPeriodo(selectedYear, '');
+        this.pdfUrl = '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/pdf?year=' + selectedYear + '&mes=';
 
         document.getElementById('modalNuevo')?.addEventListener('hidden.bs.modal', () => {
             this.limpiarNuevo();
@@ -57,7 +63,7 @@ document.addEventListener('alpine:init', () => {
             this.limpiarResultados();
         });
 
-            for (let i = 2020; i <= currentYear; i++) {
+            for (let i = 2020; i <= Math.max(currentYear, selectedYear); i++) {
                 this.years.push(i);
             }
 

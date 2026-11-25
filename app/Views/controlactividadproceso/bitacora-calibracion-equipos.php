@@ -290,96 +290,67 @@
                             <div class="row mt-4">
                                 <!-- Responsable de la verificación -->
                                 <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
-                                    <template x-if="detalle.responsable_verificacion">
-                                        <div class="card border h-100">
-                                            <div class="card-header bg-primary text-white py-3 border-0">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-                                                        <i class="ti ti-user-check fs-5"></i>
-                                                    </div>
-                                                    <div class="ms-3 overflow-hidden">
-                                                        <h6 class="mb-0 text-white">Responsable de la verificación</h6>
-                                                    </div>
+                                    <div class="card border h-100">
+                                        <div class="card-header bg-primary text-white py-3 border-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                                                    <i class="ti ti-user-check fs-5"></i>
+                                                </div>
+                                                <div class="ms-3 overflow-hidden">
+                                                    <h6 class="mb-0 text-white">Responsable de la verificación</h6>
                                                 </div>
                                             </div>
-                                            <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                                                <i class="ti ti-user text-primary mb-3" style="font-size:80px;"></i>
-                                            </div>
-                                            <div class="card-footer bg-light text-center">
-                                                <h6 class="mb-0 fw-semibold text-truncate" x-text="detalle.responsable_verificacion"></h6>
+                                        </div>
+                                        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                                            <div class="d-flex flex-column align-items-center" role="status">
+                                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                <h6 class="mb-1">Sin firma registrada</h6>
+                                                <p class="text-muted mb-0">Este responsable no tiene una firma asociada a este registro.</p>
                                             </div>
                                         </div>
-                                    </template>
-                                    <template x-if="!detalle.responsable_verificacion">
-                                        <div class="card border h-100">
-                                            <div class="card-header bg-primary text-white py-3 border-0">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-                                                        <i class="ti ti-clock-hour-4 fs-5"></i>
-                                                    </div>
-                                                    <div class="ms-3">
-                                                        <h6 class="mb-0 text-white">Responsable de la verificación</h6>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                                                <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-                                                <h6 class="text-muted mb-0">Sin responsable registrado</h6>
-                                            </div>
-                                            <div class="card-footer bg-light text-center">
-                                                <small class="text-muted">Pendiente de asignar</small>
-                                            </div>
+                                        <div class="card-footer bg-light text-center">
+                                            <small class="text-muted" x-text="detalle.responsable_verificacion || 'Pendiente de asignar'"></small>
                                         </div>
-                                    </template>
+                                    </div>
                                 </div>
 
                                 <!-- Supervisor de la actividad -->
                                 <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
 
-                                    <template x-if="detalle.usuario?.firma_url">
-                                        <div class="card border h-100">
-                                            <div class="card-header bg-primary text-white py-3 border-0">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-                                                        <i class="ti ti-user-check fs-5"></i>
-                                                    </div>
-                                                    <div class="ms-3 overflow-hidden">
-                                                        <h6 class="mb-0 text-white">Firma de quien supervisa la actividad</h6>
-                                                    </div>
+                                    <div class="card border h-100">
+                                        <div class="card-header bg-primary text-white py-3 border-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
+                                                    <i class="ti ti-user-check fs-5"></i>
                                                 </div>
-                                            </div>
-                                            <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                                                <div>
-                                                    <img :src="detalle.usuario.firma_url" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma">
+                                                <div class="ms-3 overflow-hidden">
+                                                    <h6 class="mb-0 text-white">Firma de quien supervisa la actividad</h6>
                                                 </div>
-                                            </div>
-                                            <div class="card-footer bg-light text-center">
-                                                <h6 class="mb-0 fw-semibold text-truncate" x-text="detalle.usuario?.nombre"></h6>
                                             </div>
                                         </div>
-                                    </template>
-
-                                    <template x-if="!detalle.usuario?.firma_url">
-                                        <div class="card border h-100">
-                                            <div class="card-header bg-primary text-white py-3 border-0">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:50px;height:50px;">
-                                                        <i class="ti ti-clock-hour-4 fs-5"></i>
-                                                    </div>
-                                                    <div class="ms-3">
-                                                        <h6 class="mb-0 text-white">Firma de quien supervisa la actividad</h6>
+                                        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
+                                            <template x-if="detalle.usuario?.firma_url">
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <img :src="detalle.usuario.firma_url" class="img-fluid" style="max-height:90px;object-fit:contain;" alt="Firma de quien supervisa" @error="$el.classList.add('d-none'); $el.nextElementSibling.classList.remove('d-none')">
+                                                    <div class="d-none d-flex flex-column align-items-center" role="status">
+                                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                        <h6 class="mb-1">Sin firma registrada</h6>
+                                                        <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
-                                                <i class="ti ti-signature-off text-gray mb-3" style="font-size:100px;"></i>
-                                                <h6 class="text-muted mb-0" x-text="detalle.usuario?.nombre || 'Sin firma registrada'"></h6>
-                                            </div>
-                                            <div class="card-footer bg-light text-center">
-                                                <small class="text-muted">Pendiente de firma electronica</small>
-                                            </div>
+                                            </template>
+                                            <template x-if="!detalle.usuario?.firma_url">
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width:58px;height:58px"><i class="ti ti-signature-off fs-7 text-muted"></i></div>
+                                                    <h6 class="mb-1">Sin firma registrada</h6>
+                                                    <p class="text-muted mb-0">Este usuario aún no tiene una firma asociada.</p>
+                                                </div>
+                                            </template>
                                         </div>
-                                    </template>
+                                        <div class="card-footer bg-light text-center">
+                                            <small class="text-muted" x-text="detalle.usuario?.nombre || 'Pendiente de firma electrónica'"></small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

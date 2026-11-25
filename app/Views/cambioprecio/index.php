@@ -1,7 +1,8 @@
 <div id="container" class="pb-4"
     x-data="{ ...actions(), ...cambioPrecio()}"
     data-module-station-key="<?= htmlspecialchars($moduleStationKey ?? '') ?>"
-    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>">
+    data-estacion-id="<?= (int) ($estacionId ?? 0) ?>"
+    data-producto-tres="<?= !empty($productoTres) ? '1' : '0' ?>">
 
 <?php if (empty($estacionId)): ?>
 
@@ -99,6 +100,7 @@
                             inputmode="decimal"
                             class="form-control"
                             x-model="form.gsuper"
+                            :class="errors.gsuper ? 'is-invalid' : ''"
                             @input="actualizarPrecio('gsuper', $event)">
                     </div>
 
@@ -113,6 +115,7 @@
                             inputmode="decimal"
                             class="form-control"
                             x-model="form.gpremium"
+                            :class="errors.gpremium ? 'is-invalid' : ''"
                             @input="actualizarPrecio('gpremium', $event)">
                     </div>
 
@@ -127,6 +130,7 @@
                             inputmode="decimal"
                             class="form-control"
                             x-model="form.gdiesel"
+                            :class="errors.gdiesel ? 'is-invalid' : ''"
                             @input="actualizarPrecio('gdiesel', $event)"
                             <?= empty($productoTres) ? 'disabled' : ''; ?>>
                     </div>

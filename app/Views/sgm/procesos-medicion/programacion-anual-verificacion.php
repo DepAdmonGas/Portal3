@@ -26,68 +26,27 @@
                             <button type="button" class="dropdown-item" @click="openModalNuevo()"><i class="ti ti-plus"></i> Nuevo</button>
                         </li>
                         <li>
-                            <a class="dropdown-item" :href="pdf"><i class="ti ti-download"></i> Descargar</a>
+                            <a class="dropdown-item" :href="pdf" data-action-loader="download" aria-label="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
                         </li>
                     </ul>
                 </div>
             </div>
 
-            <div class="table-responsive overflow-x-auto overflow-y-hidden">
-
-                <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
-
-                    <template x-if="lista.length === 0">
-                        <tbody>
+            <div class="datatables mt-3">
+                <div class="table-responsive overflow-x-auto overflow-y-hidden">
+                    <table id="table-programa-anual-verificacion" class="table table-striped table-bordered text-nowrap align-middle mb-0 w-100">
+                        <thead>
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    No existe información para mostrar.
-                                </td>
+                                <th>Categoría</th>
+                                <th>Equipo</th>
+                                <th>Periodicidad</th>
+                                <th>Fecha</th>
+                                <th class="text-center" style="width: 48px;"><i class="ti ti-trash text-danger fs-6"></i></th>
                             </tr>
-                        </tbody>
-                    </template>
-
-                    <template x-for="grupo in lista" :key="grupo.categoria">
-
-                        <tbody>
-
-                            <tr>
-                                <td class="text-center"><strong x-text="grupo.categoria"></strong></td>
-                                <td class="text-center"><strong>Periodicidad</strong></td>
-                                <td class="text-center"><strong>Fecha</strong></td>
-                                <td class="text-center"><i class="ti ti-trash text-danger fs-6"></td>
-                            </tr>
-
-                            <template x-if="grupo.items.length === 0">
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">
-                                        No existe información para esta categoría.
-                                    </td>
-                                </tr>
-                            </template>
-
-                            <template x-for="item in grupo.items" :key="item.id">
-
-                                <tr>
-
-                                    <td class="text-center" x-text="item.nombre + ' ' + item.detalle"></td>
-
-                                    <td class="text-center" x-text="item.periodicidad"></td>
-
-                                    <td class="text-center" x-text="item.fecha"></td>
-
-                                    <td class="text-center " width="48px"><a @click="eliminar(item.id, item.nombre)"><i class="ti ti-trash pointer text-danger fs-6"></a></td>
-
-
-                                </tr>
-
-                            </template>
-
-                        </tbody>
-
-                    </template>
-
-                </table>
-
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
 
 

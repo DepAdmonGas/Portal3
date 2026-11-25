@@ -6,6 +6,7 @@ use App\Services\ModuloService;
 use App\Models\Sgm\CalibracionEquipo;
 use App\Models\Sgm\CalibracionEquipoDetalle;
 use App\Models\Sgm\CalibracionEquipoTanque;
+use App\Models\Sasisopa\TanqueAlmacenamiento;
 use App\Services\CalibracionEquipoService;
 use App\Services\ModuleStationService;
 
@@ -124,6 +125,121 @@ class CalibracionTanquesController extends BaseController
                 'message' => $e->getMessage()
             ]);
         }
+    }
+
+    private function calibracionPendiente(int $id): ?CalibracionEquipo
+    {
+        $estacionId = $this->estacionModulo();
+        if (!$estacionId) {
+            return null;
+        }
+
+        $calibracion = CalibracionEquipo::query()
+            ->where('id', $id)
+            ->where('id_estacion', $estacionId)
+            ->where('equipo', 'Tanques de almacenamiento')
+            ->where('estado', 0)
+            ->first();
+
+        return $calibracion;
+    }
+
+    public function getTanques(): void
+    {
+        header('Content-Type: application/json');
+        $idCalibracion = (int) ($_GET['id_calibracion'] ?? 0);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar tanques a esta calibración']);
+            return;
+        }
+
+        $calibracion = $this->calibracionPendiente($idCalibracion);
+        if (!$calibracion) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'La calibración no está disponible para la estación actual']);
+            return;
+        }
+
+        $idsOcupados = CalibracionEquipoTanque::query()
+            ->where('id_calibracion', $idCalibracion)
+            ->pluck('id_tanque')
+            ->toArray();
+
+        $tanques = TanqueAlmacenamiento::query()
+            ->where('id_estacion', $calibracion->id_estacion)
+            ->when($idsOcupados, fn ($query) => $query->whereNotIn('id', $idsOcupados))
+            ->orderBy('no_tanque')
+            ->get(['id', 'no_tanque', 'capacidad', 'producto']);
+
+        echo json_encode(['success' => true, 'data' => $tanques]);
+    }
+
+    public function create(): void
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($data) ? $data : [];
+        $idCalibracion = (int) ($data['id_calibracion'] ?? 0);
+        $idTanque = (int) ($data['id_tanque'] ?? 0);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar tanques']);
+            return;
+        }
+
+        $calibracion = $this->calibracionPendiente($idCalibracion);
+        $tanque = $calibracion
+            ? TanqueAlmacenamiento::query()->where('id', $idTanque)->where('id_estacion', $calibracion->id_estacion)->first()
+            : null;
+
+        if (!$calibracion || !$tanque) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'La calibración o el tanque seleccionado no está disponible']);
+            return;
+        }
+
+        if (CalibracionEquipoTanque::query()->where('id_calibracion', $idCalibracion)->where('id_tanque', $idTanque)->exists()) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'El tanque ya está agregado a esta calibración']);
+            return;
+        }
+
+        $registro = CalibracionEquipoTanque::create([
+            'id_calibracion' => $idCalibracion,
+            'id_tanque' => $idTanque,
+            'resultado1' => '',
+            'resultado2' => '',
+            'resultados' => '',
+        ])->load('tanque');
+
+        echo json_encode(['success' => true, 'message' => 'Tanque agregado', 'tanque' => $registro]);
+    }
+
+    public function delete(): void
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($data) ? $data : [];
+        $id = (int) ($data['id'] ?? 0);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para eliminar tanques']);
+            return;
+        }
+
+        $registro = CalibracionEquipoTanque::find($id);
+        if (!$registro || !$this->calibracionPendiente((int) $registro->id_calibracion)) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'El tanque no pertenece a una calibración pendiente de esta estación']);
+            return;
+        }
+
+        $registro->delete();
+        echo json_encode(['success' => true, 'message' => 'Tanque eliminado']);
     }
 
     private function editarTanque($contenido,$id,$input) {

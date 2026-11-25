@@ -2,6 +2,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('evaluacion', () => ({
 
       ordenes: [],
+      tablaOrdenes: null,
       modo: 'create',
       modalNuevo: null,
 
@@ -70,6 +71,92 @@ document.addEventListener('alpine:init', () => {
             return;
         }
 
+        this.tablaOrdenes = $('#table-orden-servicio').DataTable({
+            processing: true,
+            serverSide: false,
+            autoWidth: false,
+            order: [],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            language: {
+                url: '/assets/libs/datatables.net/js/es-ES.json',
+                emptyTable: 'No se encontró información para mostrar.'
+            },
+            columns: [
+                { data: 'numero', width: '96px', className: 'text-center fw-bolder align-middle' },
+                { data: 'fecha', className: 'text-center align-middle text-nowrap' },
+                { data: 'hora', className: 'text-center align-middle text-nowrap' },
+                { data: 'descripcion', className: 'align-middle', render: $.fn.dataTable.render.text() },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => `<a href="#" class="pointer" data-order-action="edit" data-order-id="${Number(row.id)}" aria-label="Editar orden"><i class="ti ti-edit fs-6 text-warning"></i></a>`
+                },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => `<a href="#" class="pointer" data-order-action="detail" data-order-id="${Number(row.id)}" aria-label="Ver orden"><i class="ti ti-file-description fs-6 text-info"></i></a>`
+                },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => `<a class="pointer" href="/sgm/gestion-recursos/orden-servicio-evaluacion-proveedores/pdf/${Number(row.id)}" data-action-loader="download" aria-label="Descargar PDF"><i class="ti ti-file-type-pdf fs-6 text-danger"></i></a>`
+                },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => `<a href="#" class="pointer" data-order-action="edit-evaluation" data-order-id="${Number(row.id)}" aria-label="Editar evaluación"><i class="ti ti-edit fs-6 text-warning"></i></a>`
+                },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => row.evaluacion
+                        ? `<a href="#" class="pointer" data-order-action="detail-evaluation" data-order-id="${Number(row.id)}" aria-label="Ver evaluación"><i class="ti ti-file-description fs-6 text-info"></i></a>`
+                        : '<i class="ti ti-file-off fs-6" aria-label="Sin evaluación"></i>'
+                },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => row.evaluacion
+                        ? `<a class="pointer" href="/sgm/gestion-recursos/orden-servicio-evaluacion-proveedores/evaluacion/pdf/${Number(row.id)}" data-action-loader="download" aria-label="Descargar PDF"><i class="ti ti-file-type-pdf fs-6 text-danger"></i></a>`
+                        : '<i class="ti ti-file-off fs-6" aria-label="Sin evaluación"></i>'
+                },
+                {
+                    data: null,
+                    className: 'text-center align-middle',
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => `<a href="#" class="pointer" data-order-action="delete" data-order-id="${Number(row.id)}" aria-label="Eliminar orden"><i class="ti ti-trash fs-6 text-danger"></i></a>`
+                }
+            ]
+        });
+
+        document.querySelector('#table-orden-servicio tbody')?.addEventListener('click', event => {
+            const action = event.target.closest('[data-order-action]');
+            if (!action) return;
+            event.preventDefault();
+            const id = Number(action.dataset.orderId);
+            switch (action.dataset.orderAction) {
+                case 'edit': this.openEditar(id); break;
+                case 'detail': this.detalleOrden(id); break;
+                case 'edit-evaluation': this.openEvaluacion(id); break;
+                case 'detail-evaluation': this.detalleEvaluacion(id); break;
+                case 'delete': this.eliminar(id); break;
+            }
+        });
+
         this.cargarOrdenes();
 
         this.modalNuevo = new bootstrap.Modal(
@@ -101,6 +188,7 @@ document.addEventListener('alpine:init', () => {
         if(res.success){
 
             this.ordenes = res.data;
+            this.tablaOrdenes.clear().rows.add(this.ordenes).draw();
 
         }
 

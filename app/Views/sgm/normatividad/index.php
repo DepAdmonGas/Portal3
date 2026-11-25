@@ -17,7 +17,7 @@
 
 <!---------- CARD DESCARGA Fo.SGM.006 ---------->
     <div class="col-md-6 d-flex align-items-stretch mb-4">
-        <a href="/sgm/normatividad-aplicable-mediciones/pdf-requisito-legal" download
+        <a href="/sgm/normatividad-aplicable-mediciones/pdf-requisito-legal" download data-action-loader="download" aria-label="Descargar PDF"
            class="card h-100 w-100 text-decoration-none card-hover overflow-hidden position-relative">
             
             <div class="card-body p-4 pb-0 mb-0 d-flex flex-column justify-content-between">
@@ -102,7 +102,7 @@
                 <button type="button" class="dropdown-item" @click="nuevo()"><i class="ti ti-plus"></i> Nuevo</button>
               </li>
               <li>
-                <a class="dropdown-item" href="/sgm/normatividad-aplicable-mediciones/inventario-normatividad/pdf"><i class="ti ti-download"></i> Descargar</a>
+                <a class="dropdown-item" href="/sgm/normatividad-aplicable-mediciones/inventario-normatividad/pdf" data-action-loader="download" aria-label="Descargar PDF"><i class="ti ti-download"></i> Descargar</a>
               </li>
               <li>
                 <a class="dropdown-item" href="/sasisopa/mejores-practicas-estandares"><i class="ti ti-file"></i> Mejores Prácticas y Estándares</a>

@@ -24,6 +24,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     calibracionOriginal: {},
+    jarrasDisponibles: [],
+    nuevaJarra: '',
 
 
     init() {
@@ -159,6 +161,61 @@ document.addEventListener('alpine:init', () => {
     }
 },
 
+async cargarJarrasDisponibles() {
+    try {
+        const response = await axios.get(
+            '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/get-jarras',
+            { params: { id_calibracion: this.calibracion.id } }
+        );
+        this.jarrasDisponibles = response.data?.success ? response.data.data : [];
+    } catch (error) {
+            this.notify('error', error.response?.data?.message || 'Error al cargar jarras disponibles');
+    }
+},
+
+async abrirModalJarras() {
+    await this.cargarJarrasDisponibles();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalJarra')).show();
+},
+
+async agregarJarra() {
+    if (!this.nuevaJarra) {
+        this.notify('error', 'Seleccione una jarra patrón');
+        return;
+    }
+
+    try {
+        const response = await this.createAction({
+            url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/create',
+            data: { id_calibracion: this.calibracion.id, id_jarra: this.nuevaJarra }
+        });
+        if (!response?.success) return;
+        response.jarra._original = { resultado1: response.jarra.resultado1 };
+        this.calibracion.jarras.push(response.jarra);
+        this.jarrasDisponibles = this.jarrasDisponibles.filter(item => Number(item.id) !== Number(this.nuevaJarra));
+        this.nuevaJarra = '';
+        bootstrap.Modal.getInstance(document.getElementById('modalJarra'))?.hide();
+    } catch (error) {
+        this.notify('error', 'Error al agregar jarra patrón');
+    }
+},
+
+async eliminarJarra(id) {
+    try {
+        const response = await this.deleteAction({
+            url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/delete',
+            id,
+            name: 'Jarra patrón'
+        });
+        if (response?.success) {
+            this.calibracion.jarras = this.calibracion.jarras.filter(item => Number(item.id) !== Number(id));
+            await this.cargarJarrasDisponibles();
+        }
+    } catch (error) {
+        this.notify('error', 'Error al eliminar jarra patrón');
+    }
+},
+
 async finalizar() {
 
     try {
@@ -179,8 +236,9 @@ async finalizar() {
 
         this.calibracion.estado = 1;
 
-        window.location.href =
-            '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos';
+        const fecha = String(this.calibracion.fecha_formateada || this.calibracion.fecha || '');
+        const year = /^\d{4}/.exec(fecha)?.[0] || new Date().getFullYear();
+        window.location.href = `/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos?year=${year}`;
 
     } catch (e) {
 

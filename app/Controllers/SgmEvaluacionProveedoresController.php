@@ -47,11 +47,14 @@ class SgmEvaluacionProveedoresController extends BaseController
             'filtro_usuario' => $this->filtro_usuario,
             'estacionId' => $estacionId,
             'moduleStationKey' => 'sgm',
-            'links' => [],
+            'links' => [
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sgm/gestion-recursos/orderservicioevaluacionproveedores.actions.init.js?v=1.1.0'
+                '/js/sgm/gestion-recursos/orderservicioevaluacionproveedores.actions.init.js?v=1.2.0'
             ],
             'help' => true
         ];
@@ -343,6 +346,7 @@ class SgmEvaluacionProveedoresController extends BaseController
                 'solicitante.puesto',
                 'realizadoPor'
             ])
+            ->where('id_estacion', $this->estacionModulo())
             ->findOrFail($id);
 
         $hora = Carbon::createFromFormat(
@@ -710,6 +714,7 @@ class SgmEvaluacionProveedoresController extends BaseController
                 'evaluacion.personalEvaluacion.puesto'
             ])
 
+            ->where('id_estacion', $this->estacionModulo())
             ->findOrFail($idOrden);
 
         $evaluacion = $orden->evaluacion;

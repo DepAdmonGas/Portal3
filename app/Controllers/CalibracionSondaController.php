@@ -8,6 +8,7 @@ use App\Services\ModuloService;
 use App\Models\Sgm\CalibracionEquipo;
 use App\Models\Sgm\CalibracionEquipoDetalle;
 use App\Models\Sgm\CalibracionEquipoSonda;
+use App\Models\Sasisopa\SondasMedicion;
 use App\Services\CalibracionEquipoService;
 use App\Services\ModuleStationService;
 
@@ -168,6 +169,119 @@ class CalibracionSondaController extends BaseController
             ]);
         }
 
+    }
+
+    private function calibracionPendiente(int $id): ?CalibracionEquipo
+    {
+        $estacionId = $this->estacionModulo();
+        if (!$estacionId) {
+            return null;
+        }
+
+        $calibracion = CalibracionEquipo::query()
+            ->where('id', $id)
+            ->where('id_estacion', $estacionId)
+            ->where('equipo', 'Sondas de medición')
+            ->where('estado', 0)
+            ->first();
+
+        return $calibracion;
+    }
+
+    public function getSondas(): void
+    {
+        header('Content-Type: application/json');
+        $idCalibracion = (int) ($_GET['id_calibracion'] ?? 0);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar sondas a esta calibración']);
+            return;
+        }
+
+        $calibracion = $this->calibracionPendiente($idCalibracion);
+        if (!$calibracion) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'La calibración no está disponible para la estación actual']);
+            return;
+        }
+
+        $idsOcupados = CalibracionEquipoSonda::query()
+            ->where('id_calibracion', $idCalibracion)
+            ->pluck('id_sonda')
+            ->toArray();
+
+        $sondas = SondasMedicion::query()
+            ->where('id_estacion', $calibracion->id_estacion)
+            ->when($idsOcupados, fn ($query) => $query->whereNotIn('id', $idsOcupados))
+            ->orderBy('no_sonda')
+            ->get(['id', 'no_sonda', 'marca', 'modelo']);
+
+        echo json_encode(['success' => true, 'data' => $sondas]);
+    }
+
+    public function create(): void
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($data) ? $data : [];
+        $idCalibracion = (int) ($data['id_calibracion'] ?? 0);
+        $idSonda = (int) ($data['id_sonda'] ?? 0);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar sondas']);
+            return;
+        }
+
+        $calibracion = $this->calibracionPendiente($idCalibracion);
+        $sonda = $calibracion
+            ? SondasMedicion::query()->where('id', $idSonda)->where('id_estacion', $calibracion->id_estacion)->first()
+            : null;
+
+        if (!$calibracion || !$sonda) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'La calibración o la sonda seleccionada no está disponible']);
+            return;
+        }
+
+        if (CalibracionEquipoSonda::query()->where('id_calibracion', $idCalibracion)->where('id_sonda', $idSonda)->exists()) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'La sonda ya está agregada a esta calibración']);
+            return;
+        }
+
+        $registro = CalibracionEquipoSonda::create([
+            'id_calibracion' => $idCalibracion,
+            'id_sonda' => $idSonda,
+            'resultado1' => '',
+        ])->load('sonda');
+
+        echo json_encode(['success' => true, 'message' => 'Sonda agregada', 'sonda' => $registro]);
+    }
+
+    public function delete(): void
+    {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+        $data = is_array($data) ? $data : [];
+        $id = (int) ($data['id'] ?? 0);
+
+        if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para eliminar sondas']);
+            return;
+        }
+
+        $registro = CalibracionEquipoSonda::find($id);
+        if (!$registro || !$this->calibracionPendiente((int) $registro->id_calibracion)) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'La sonda no pertenece a una calibración pendiente de esta estación']);
+            return;
+        }
+
+        $registro->delete();
+        echo json_encode(['success' => true, 'message' => 'Sonda eliminada']);
     }
 
     public function editarCalibracionSonda($contenido, $id, $input)

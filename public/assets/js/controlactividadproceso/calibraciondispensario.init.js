@@ -279,8 +279,9 @@ document.addEventListener('alpine:init', () => {
 
                 this.calibracion.estado = 1;
 
-                window.location.href =
-                    '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos';
+                const fecha = String(this.calibracion.fecha_formateada || this.calibracion.fecha || '');
+                const year = /^\d{4}/.exec(fecha)?.[0] || new Date().getFullYear();
+                window.location.href = `/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos?year=${year}`;
 
             } catch (e) {
 

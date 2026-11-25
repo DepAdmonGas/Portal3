@@ -79,13 +79,38 @@ document.addEventListener('alpine:init', () => {
 
         inicializarTabla() {
             const selector = '#table-programa-auditorias';
-            if (!window.jQuery?.fn?.DataTable || !document.querySelector(selector)) return;
+            if (!window.jQuery?.fn?.DataTable) return;
 
-            if ($.fn.DataTable.isDataTable(selector)) {
-                $(selector).DataTable().destroy();
+            let tabla = document.querySelector(selector);
+            if (!tabla?.tHead?.rows?.length) return;
+
+            if ($.fn.DataTable.isDataTable(tabla)) {
+                const encabezadosBase = Array.from(tabla.tHead.rows[0].cells)
+                    .slice(0, 3)
+                    .map(celda => celda.cloneNode(true));
+                const wrapper = tabla.closest('.dataTables_wrapper');
+                const contenedor = wrapper?.parentNode;
+                const siguienteNodo = wrapper?.nextSibling ?? null;
+
+                // destroy(true) evita que DataTables reinserte la tabla usando
+                // una referencia de DOM que puede haber quedado obsoleta.
+                $(tabla).DataTable().destroy(true);
+
+                if (!contenedor) return;
+
+                const nuevaTabla = tabla.cloneNode(false);
+                const thead = document.createElement('thead');
+                const fila = document.createElement('tr');
+                encabezadosBase.forEach(celda => fila.appendChild(celda));
+                thead.appendChild(fila);
+                nuevaTabla.append(thead, document.createElement('tbody'));
+                contenedor.insertBefore(
+                    nuevaTabla,
+                    siguienteNodo?.parentNode === contenedor ? siguienteNodo : null
+                );
+                tabla = nuevaTabla;
             }
 
-            const tabla = document.querySelector(selector);
             const encabezado = tabla.tHead.rows[0];
             tabla.tBodies[0]?.replaceChildren();
             while (encabezado.cells.length > 3) {
