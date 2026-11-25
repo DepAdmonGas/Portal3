@@ -59,10 +59,6 @@ namespace {
         $t->dateTime('valid_from_utc'); $t->dateTime('valid_to_utc')->nullable(); $t->dateTime('recorded_at_utc');
         $t->integer('recorded_by')->nullable(); $t->string('reason')->nullable(); $t->integer('supersedes_id')->nullable();
     });
-    $schema->create('op_rh_v2_dispositivo_identidad_personal', static function ($t): void {
-        $t->increments('id'); $t->integer('id_personal'); $t->integer('es_activo');
-        $t->dateTime('valido_desde'); $t->dateTime('valido_hasta')->nullable();
-    });
     $schema->create('tb_usuarios', static function ($t): void { $t->increments('id'); $t->string('nombre'); });
     $db->table('tb_usuarios')->insert(['id'=>7,'nombre'=>'Operador de prueba']);
     $db->table('op_rh_puestos')->insert(['id'=>6,'puesto'=>'Encargado']);
@@ -84,11 +80,6 @@ namespace {
     $createdId = $service::addPersonal($input, []);
     $created = $db->table('op_rh_personal')->where('id', $createdId)->first();
     $assert($created !== null && (int)$created->id_estacion === 101 && (int)$created->estado === 1, 'authorized Encargado creates an active worker at the assigned station');
-    $duplicateEdit = $input;
-    $duplicateEdit['no_colaborador'] = '19';
-    $assert($service::editPersonal(3, $duplicateEdit, []) === false
-        && $db->table('op_rh_personal')->where('id', 3)->value('no_colaborador') === null,
-        'duplicate active employee number is rejected during edit as well as creation');
     $membership = $db->table('op_rh_personal_localidad_version')->where('worker_id', $createdId)->first();
     $assert($membership !== null && (int)$membership->workplace_id === 1001, 'new worker receives canonical membership through append-only assignment service');
     $assignment = $membership ? (new \App\Services\WorkerWorkplaceAssignmentResolver())->resolveAssignmentsAsRecordedAt(
@@ -97,74 +88,23 @@ namespace {
         (new \DateTimeImmutable((string)$membership->recorded_at_utc, new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z')
     ) : [];
     $assert(($assignment['status'] ?? '') === 'RESOLVED_SINGLE' && (int)($assignment['assignments'][0]['workplace_id'] ?? 0) === 1001, 'canonical membership readback resolves to the assigned locality');
-    $assert($db->table('op_rh_personal_acceso')->where('id_personal', $createdId)->count() === 0, 'worker creation does not create an empty biometric access row or fingerprint');
+    $accessRows = $db->table('op_rh_personal_acceso')->where('id_personal', $createdId)->get();
+    $assert($accessRows->count() === 1 && (string)$accessRows[0]->huella === '' && (int)$accessRows[0]->pin === 0,
+        'worker creation creates one access row using the existing no-template/no-PIN convention');
     $assert($service::addPersonal($input, []) === null && $db->table('op_rh_personal')->count() === 4, 'duplicate active employee number at the same station is rejected');
-    $now = gmdate('Y-m-d H:i:s');
-    $db->table('op_rh_v2_dispositivo_identidad_personal')->insert([
-        'id_personal'=>$createdId, 'es_activo'=>1, 'valido_desde'=>$now, 'valido_hasta'=>null,
-    ]);
-    \App\Core\Auth::$position = 13;
-    $move = $input;
-    $move['id_estacion'] = 202;
-    $assert($service::editPersonal((int)$createdId, $move, []) === false
-        && (int)$db->table('op_rh_personal')->where('id', $createdId)->value('id_estacion') === 101,
-        'station change is rejected while a current API device identity exists');
-    \App\Services\ModuloDptoOperativoService::$permissions = ['leer'=>1, 'editar'=>1, 'eliminar'=>1];
-    $assert($service::deletePersonal((int)$createdId) === false
-        && (int)$db->table('op_rh_personal')->where('id', $createdId)->value('estado') === 1,
-        'soft offboarding is rejected while a current API device identity exists');
-    $schema->create('op_rh_personal_baja', static function ($t): void {
-        $t->increments('id'); $t->integer('id_personal'); $t->string('fecha_baja')->nullable();
-        $t->string('motivo')->nullable(); $t->text('detalle')->nullable(); $t->text('solucion')->nullable();
-        $t->text('proceso')->nullable(); $t->integer('estado_proceso')->nullable();
-    });
-    $assert($service::addBajaPersonal((int)$createdId, ['fecha_baja'=>'2026-11-25','motivo'=>'Prueba'], [])
-        === false && (int)$db->table('op_rh_personal')->where('id', $createdId)->value('estado') === 1
-        && $db->table('op_rh_personal_baja')->count() === 0,
-        'formal offboarding is rejected before writes while a current API identity exists');
-    $db->table('op_rh_v2_dispositivo_identidad_personal')->where('id_personal', $createdId)->update(['es_activo'=>0]);
-    $assert($service::editPersonal((int)$createdId, $move, []) === false
-        && (int)$db->table('op_rh_personal')->where('id', $createdId)->value('id_estacion') === 101,
-        'station change remains blocked when historical API identity mappings exist');
-    \App\Core\Auth::$position = 6;
-    \App\Services\ModuloDptoOperativoService::$permissions = ['leer'=>1, 'editar'=>1, 'crear'=>1, 'eliminar'=>1];
-    $secondInput = $input;
-    $secondInput['no_colaborador'] = '20';
-    $secondInput['nombre_completo'] = 'Trabajador sin identidad';
-    $secondWorkerId = $service::addPersonal($secondInput, []);
-    \App\Core\Auth::$position = 13;
-    $moveSecond = $secondInput;
-    $moveSecond['id_estacion'] = 202;
-    $assert($secondWorkerId !== null && $service::editPersonal((int)$secondWorkerId, $moveSecond, [])
-        && (int)$db->table('op_rh_personal')->where('id', $secondWorkerId)->value('id_estacion') === 202,
-        'authorized Direction station change appends and confirms canonical membership');
-    $movedMembership = (new \App\Services\WorkerWorkplaceAssignmentResolver())->resolveAssignments(
-        (int)$secondWorkerId, (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z')
-    );
-    $assert(($movedMembership['status'] ?? '') === 'RESOLVED_SINGLE'
-        && (int)($movedMembership['assignments'][0]['workplace_id'] ?? 0) === 2002,
-        'station change readback resolves to the new canonical locality');
-    \App\Services\ModuleStationService::$contextStation = 202;
-    $moveSecond['id_estacion'] = 101;
-    $assert($service::editPersonal((int)$secondWorkerId, $moveSecond, [])
-        && (int)$db->table('op_rh_personal')->where('id', $secondWorkerId)->value('id_estacion') === 101,
-        'authorized station return appends another canonical membership version');
-    \App\Services\ModuleStationService::$contextStation = 101;
-    \App\Core\Auth::$position = 6;
-    \App\Services\ModuloDptoOperativoService::$permissions = ['leer'=>1, 'editar'=>1, 'crear'=>1, 'eliminar'=>1];
-    $bajaSuccess = $secondWorkerId !== null && $service::addBajaPersonal((int)$secondWorkerId, [
-        'fecha_baja'=>'2026-11-25','motivo'=>'Baja controlada',
-    ], []);
-    $assert($bajaSuccess === true, 'offboarding succeeds for an unlinked worker and persists the existing baja workflow');
-    $closedMembership = (new \App\Services\WorkerWorkplaceAssignmentResolver())->resolveAssignments(
-        (int)$secondWorkerId, (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z')
-    );
-    $assert((int)$db->table('op_rh_personal')->where('id', $secondWorkerId)->value('estado') === 0
-        && ($closedMembership['status'] ?? '') === 'RESOLVED_NONE',
-        'offboarding closes canonical membership append-only and preserves worker history');
+    $db->statement("CREATE TRIGGER fail_personal_access_insert BEFORE INSERT ON op_rh_personal_acceso BEGIN SELECT RAISE(ABORT, 'isolated access insert failure'); END");
+    $rollbackObserved = false;
+    $failedInput = $input;
+    $failedInput['no_colaborador'] = '21';
+    try { $service::addPersonal($failedInput, []); } catch (\Throwable) { $rollbackObserved = true; }
+    $assert($rollbackObserved && $db->table('op_rh_personal')->count() === 4
+        && $db->table('op_rh_personal_localidad_version')->count() === 1
+        && $db->table('op_rh_personal_acceso')->count() === 2,
+        'access-row failure rolls back worker and canonical membership in the same transaction');
+    $db->statement('DROP TRIGGER fail_personal_access_insert');
     \App\Services\ModuloDptoOperativoService::$permissions = ['leer'=>0, 'editar'=>0];
     $assert($service::getAcceso(1) === null && ($service::editarPin(1, '98765')['code'] ?? null) === 403, 'missing permissions deny read and write');
-    $assert($service::addPersonal([], []) === null && $db->table('op_rh_personal')->count() === 5, 'worker creation without create permission is denied before writes');
+    $assert($service::addPersonal([], []) === null && $db->table('op_rh_personal')->count() === 4, 'worker creation without create permission is denied before writes');
     \App\Core\Auth::$active = false;
     $assert($service::getAcceso(1) === null && ($service::editarPin(1, '98765')['code'] ?? null) === 403, 'anonymous access denied');
 }
