@@ -15,8 +15,12 @@ document.addEventListener('alpine:init', () => {
 
         errors: {
             fecha: false,
-            hora: false
+            hora: false,
+            gsuper: false,
+            gpremium: false,
+            gdiesel: false
         },
+        productoTres: false,
 
         init(){
 
@@ -25,6 +29,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             window.cambioprecio = this;
+            this.productoTres = document.getElementById('container')?.dataset.productoTres === '1';
             this.modal = new bootstrap.Modal(
                 document.getElementById('modalCambioPrecio')
             );
@@ -74,11 +79,12 @@ document.addEventListener('alpine:init', () => {
             const valor = this.formatearPrecio(event.target.value);
             this.form[campo] = valor;
             event.target.value = valor;
+            this.errors[campo] = false;
         },
 
         precioSinSeparadores(valor) {
             const normalizado = String(valor ?? '').replace(/,/g, '').trim();
-            return normalizado === '' ? '0' : normalizado;
+            return normalizado;
         },
 
         validate() {
@@ -95,13 +101,29 @@ document.addEventListener('alpine:init', () => {
             valid = false;
             }            
 
+            ['gsuper', 'gpremium'].forEach(campo => {
+                const precio = Number(this.precioSinSeparadores(this.form[campo]));
+                if (!Number.isFinite(precio) || precio <= 0) {
+                    this.errors[campo] = true;
+                    valid = false;
+                }
+            });
+
+            if (this.productoTres) {
+                const diesel = Number(this.precioSinSeparadores(this.form.gdiesel));
+                if (!Number.isFinite(diesel) || diesel <= 0) {
+                    this.errors.gdiesel = true;
+                    valid = false;
+                }
+            }
+
             return valid;
         },
 
     async guardar() {
 
         if (!this.validate()) {
-            this.notify('error', 'Completa los campos obligatorios.');
+            this.notify('error', 'Captura fecha y hora, y precios mayores a $0.00 para los productos habilitados.');
             return;
         }
 
@@ -121,43 +143,26 @@ document.addEventListener('alpine:init', () => {
     const res = await this.createAction({
         url,
         data: payload,
-        table: '#table-cambio-precio'
+        table: '#table-cambio-precio',
+        notify: false
     });
 
     if (res?.success) {
-        this.paginaWeb(res.id);
+        this.notify(
+            res.web_sync ? 'success' : 'error',
+            res.web_message || (res.web_sync
+                ? 'Cambio de precio actualizado en la Página Web.'
+                : 'El cambio se guardó en Portal3, pero no se sincronizó con la Página Web.')
+        );
         this.modal.hide();
         this.resetModal();
     }
 
     },
 
-    async paginaWeb(idReporte) {
-
-    try {
-        const response = await axios.post('/sasisopa/cambio-precio/sync-web', {
-            id: idReporte
-        });
-
-        if (response.data?.success) {
-            this.notify('success', response.data.message);
-        } else {
-            throw new Error(response.data?.message || 'No se pudo sincronizar el cambio de precio.');
-        }
-
-    } catch (error) {
-        console.error(error);
-        this.notify(
-            'error',
-            error.response?.data?.message || 'El cambio se guardó en Portal3, pero no se pudo sincronizar con la Página Web.'
-        );
-    }
-
-},
-
     async eliminar(id){
 
-        name = id;
+        const name = `Cambio de precio #${id}`;
 
              const res = await this.deleteAction({
                 url: '/sasisopa/cambio-precio/delete',

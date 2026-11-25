@@ -196,6 +196,25 @@ public function create(): void
             exit;
         }
 
+        if ($precios['gsuper'] <= 0 || $precios['gpremium'] <= 0) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Captura un precio mayor a $0.00 para G SUPER y G PREMIUM.'
+            ]);
+            return;
+        }
+
+        $estacion = Estacion::find($idEstacion);
+        if ((bool) ($estacion?->producto_tres) && $precios['gdiesel'] <= 0) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Captura un precio mayor a $0.00 para G DIESEL.'
+            ]);
+            return;
+        }
+
         $cambioPrecio = null;
 
         Capsule::transaction(function () use ($fecha, $hora, $precios, $idEstacion, $idUsuario, &$cambioPrecio) {
@@ -278,10 +297,16 @@ public function create(): void
 
         });
 
+        // Ejecuta la sincronización en el servidor como parte de la solicitud
+        // de guardado; así no depende de una segunda llamada desde el navegador.
+        [$sincronizadoWeb, $mensajeWeb] = $this->sincronizarCambioPrecioPaginaWeb($cambioPrecio);
+
         echo json_encode([
             'success' => true,
             'message' => 'Cambio de precio agregado correctamente.',
-            'id' => $cambioPrecio?->id
+            'id' => $cambioPrecio?->id,
+            'web_sync' => $sincronizadoWeb,
+            'web_message' => $mensajeWeb
         ]);
 
     } catch (\Throwable $e) {
@@ -370,13 +395,20 @@ private function sincronizarCambioPrecioPaginaWeb(CambioPrecio $cambio): array
         return [false, 'El servidor no tiene habilitada la conexión cURL requerida.'];
     }
 
+    // El módulo anterior enviaba vacío el campo Diesel cuando la estación no
+    // maneja ese producto. La API interpreta "0.00" como un precio presente.
+    $estacion = Estacion::find((int) $cambio->id_estacion);
+    $diesel = (bool) ($estacion?->producto_tres)
+        ? number_format((float) $cambio->gdiesel, 2, '.', '')
+        : '';
+
     // Replica el endpoint/token del módulo legado desde el servidor para evitar CSP.
     $params = http_build_query([
         'idEstacion' => $cambio->id_estacion,
         'idReporte' => $cambio->id,
         'GSUPER' => number_format((float) $cambio->gsuper, 2, '.', ''),
         'GPREMIUM' => number_format((float) $cambio->gpremium, 2, '.', ''),
-        'GDIESEL' => number_format((float) $cambio->gdiesel, 2, '.', ''),
+        'GDIESEL' => $diesel,
         'Fecha' => $cambio->fecha->format('Y-m-d'),
         'Hora' => substr((string) $cambio->hora, 0, 5),
         'TOKEN' => '28102020'
@@ -387,6 +419,7 @@ private function sincronizarCambioPrecioPaginaWeb(CambioPrecio $cambio): array
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 5,
         CURLOPT_TIMEOUT => 15,
+        CURLOPT_USERAGENT => $this->userAgentForLegacyApi(),
         // fetch del módulo anterior seguía redirecciones automáticamente.
         // Mantener esa compatibilidad, limitando los saltos a HTTPS.
         CURLOPT_FOLLOWLOCATION => true,
@@ -394,7 +427,8 @@ private function sincronizarCambioPrecioPaginaWeb(CambioPrecio $cambio): array
         CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
-        CURLOPT_HTTPHEADER => ['Accept: application/json']
+        // La versión anterior enviaba una petición AJAX GET con Accept */*.
+        CURLOPT_HTTPHEADER => ['Accept: */*']
     ]);
 
     $body = curl_exec($curl);
@@ -404,16 +438,31 @@ private function sincronizarCambioPrecioPaginaWeb(CambioPrecio $cambio): array
 
     if ($body === false || $status < 200 || $status >= 300) {
         return [false, $curlError !== ''
-            ? 'No fue posible conectar con el servicio de precios.'
-            : 'El servicio de precios respondió con un error HTTP.'];
+            ? 'No fue posible sincronizar con el servicio de precios: ' . $curlError
+            : 'El servicio de precios respondió con HTTP ' . $status . '.'];
     }
 
     $respuesta = json_decode($body, true);
     if (!is_array($respuesta) || ($respuesta['status'] ?? null) !== 'success') {
-        return [false, 'El servicio de precios no confirmó la actualización.'];
+        $detalle = is_array($respuesta)
+            ? trim(strip_tags((string) ($respuesta['message'] ?? $respuesta['error'] ?? '')))
+            : '';
+        return [false, $detalle !== ''
+            ? 'El servicio de precios rechazó la actualización: ' . substr($detalle, 0, 240)
+            : 'El servicio de precios no confirmó la actualización (HTTP ' . $status . ').'];
     }
 
     return [true, 'Cambio de precio actualizado en la Página Web.'];
+}
+
+private function userAgentForLegacyApi(): string
+{
+    $userAgent = trim((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    $userAgent = preg_replace('/[\r\n]+/', ' ', $userAgent) ?? '';
+
+    return $userAgent !== ''
+        ? $userAgent
+        : 'Mozilla/5.0 (compatible; Portal3-CambioPrecio/1.0)';
 }
 
 private function validarProductos(
@@ -599,22 +648,22 @@ public function delete(): void
 
         }
 
-        Capsule::transaction(function () use ($cambio) {
-
-           $this->eliminarBitacoraCambioPrecio(
-                $cambio->id_estacion,
-                $cambio->fecha->format('Y-m-d'),
-                $cambio->hora
-            );
-
-            $cambio->delete();
-
-        });
-
         [$eliminadoRemoto, $mensajeEliminarRemoto] = $this->eliminarCambioPrecioPaginaWeb($id);
+        if (!$eliminadoRemoto) {
+            http_response_code(502);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se eliminó el registro porque la Página Web no confirmó la eliminación. ' . $mensajeEliminarRemoto
+            ]);
+            return;
+        }
+
+        // Después de eliminar, la página pública debe quedar con el precio
+        // más reciente que siga registrado para esta estación. Esto también
+        // cubre el borrado de filas históricas, sin aplicar un precio viejo.
         $cambioAnterior = CambioPrecio::query()
             ->where('id_estacion', $idEstacion)
-            ->where('id', '<', $id)
+            ->where('id', '<>', $id)
             ->orderByDesc('id')
             ->first();
 
@@ -624,25 +673,52 @@ public function delete(): void
             [$precioRestaurado, $mensajeRestauracion] = $this->sincronizarCambioPrecioPaginaWeb($cambioAnterior);
         }
 
-        $sincronizado = $eliminadoRemoto && $precioRestaurado;
-        if ($cambioAnterior && $eliminadoRemoto && $precioRestaurado) {
-            $mensajeRemoto = 'Se eliminó el registro y se aplicó el cambio de precio a $0.00 en la Página Web.';
-        } elseif ($cambioAnterior && !$eliminadoRemoto && !$precioRestaurado) {
-            $mensajeRemoto = 'Se eliminó en Portal3, pero la Página Web no confirmó la eliminación ni la restauración del último precio.';
-        } elseif ($cambioAnterior && !$eliminadoRemoto) {
-            $mensajeRemoto = 'Se aplicó el último precio en la Página Web, pero no se pudo retirar el cambio eliminado.';
-        } elseif ($cambioAnterior) {
-            $mensajeRemoto = 'Se eliminó en Portal3 y en la Página Web, pero no se pudo aplicar el último precio existente.';
-        } elseif ($eliminadoRemoto) {
-            $mensajeRemoto = 'El registro también fue eliminado en la Página Web; no hay otro cambio para restaurar.';
-        } else {
-            $mensajeRemoto = 'Se eliminó en Portal3, pero la Página Web no confirmó la eliminación.';
+        if (!$precioRestaurado) {
+            // Compensación: si no se pudo aplicar el precio anterior, intenta
+            // restaurar el cambio remoto y conserva el registro local para reintentar.
+            [$cambioRemotoRestaurado, $mensajeCompensacion] = $this->sincronizarCambioPrecioPaginaWeb($cambio);
+            http_response_code(502);
+            echo json_encode([
+                'success' => false,
+                'message' => 'La Página Web eliminó el cambio, pero no confirmó el precio anterior. El registro se conserva en Portal3. ' .
+                    ($cambioRemotoRestaurado ? 'Se restauró el precio eliminado en la Página Web.' : $mensajeCompensacion),
+                'web_sync' => false,
+                'web_delete_message' => $mensajeEliminarRemoto,
+                'web_restore_message' => $mensajeRestauracion
+            ]);
+            return;
         }
+
+        try {
+            Capsule::transaction(function () use ($cambio) {
+                $this->eliminarBitacoraCambioPrecio(
+                    $cambio->id_estacion,
+                    $cambio->fecha->format('Y-m-d'),
+                    $cambio->hora
+                );
+
+                $cambio->delete();
+            });
+        } catch (\Throwable $errorLocal) {
+            // Si falla la eliminación local, compensa la eliminación remota.
+            [$cambioRemotoRestaurado, $mensajeCompensacion] = $this->sincronizarCambioPrecioPaginaWeb($cambio);
+            throw new \RuntimeException(
+                $cambioRemotoRestaurado
+                    ? 'No se eliminó el registro local; el precio público fue restaurado. ' . $errorLocal->getMessage()
+                    : 'Falló la eliminación local y también la restauración del precio público. ' . $mensajeCompensacion,
+                0,
+                $errorLocal
+            );
+        }
+
+        $mensajeRemoto = $cambioAnterior
+            ? 'Se eliminó el cambio y se aplicó el último precio restante (registro #' . $cambioAnterior->id . ') en la Página Web.'
+            : 'Se eliminó el cambio en la Página Web; no quedan precios registrados para esta estación.';
 
         echo json_encode([
             'success' => true,
             'message' => 'Cambio de precio eliminado correctamente.',
-            'web_sync' => $sincronizado,
+            'web_sync' => true,
             'web_message' => $mensajeRemoto,
             'web_delete_message' => $mensajeEliminarRemoto,
             'web_restore_message' => $mensajeRestauracion
@@ -663,7 +739,7 @@ public function delete(): void
 private function eliminarCambioPrecioPaginaWeb(int $idReporte): array
 {
     if (!function_exists('curl_init')) {
-        return [false, 'El cambio se eliminó en Portal3, pero el servidor no tiene habilitada la conexión cURL.'];
+        return [false, 'El servidor no tiene habilitada la conexión cURL requerida para sincronizar.'];
     }
 
     $curl = curl_init('https://www.admongas.com.mx/app/api/postEliminarCambioPrecio.php');
@@ -673,6 +749,7 @@ private function eliminarCambioPrecioPaginaWeb(int $idReporte): array
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 5,
         CURLOPT_TIMEOUT => 15,
+        CURLOPT_USERAGENT => $this->userAgentForLegacyApi(),
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_MAXREDIRS => 3,
         CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
@@ -685,16 +762,24 @@ private function eliminarCambioPrecioPaginaWeb(int $idReporte): array
     ]);
 
     $body = curl_exec($curl);
+    $curlError = curl_error($curl);
     $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
     curl_close($curl);
 
     if ($body === false || $status < 200 || $status >= 300) {
-        return [false, 'El cambio se eliminó en Portal3, pero no fue posible conectar con la Página Web.'];
+        return [false, $curlError !== ''
+            ? 'Falló la conexión con la Página Web: ' . $curlError
+            : 'La Página Web respondió con HTTP ' . $status . '.'];
     }
 
     $respuesta = json_decode($body, true);
     if (!is_array($respuesta) || empty($respuesta['success'])) {
-        return [false, 'El cambio se eliminó en Portal3, pero la Página Web no confirmó la eliminación.'];
+        $detalle = is_array($respuesta)
+            ? trim(strip_tags((string) ($respuesta['message'] ?? $respuesta['error'] ?? '')))
+            : '';
+        return [false, $detalle !== ''
+            ? 'La Página Web rechazó la eliminación: ' . substr($detalle, 0, 240)
+            : 'La Página Web no confirmó la eliminación (HTTP ' . $status . ').'];
     }
 
     return [true, 'El cambio también fue eliminado en la Página Web.'];

@@ -8,6 +8,7 @@ use App\Services\ModuloService;
 use App\Models\Sgm\CalibracionEquipo;
 use App\Models\Sgm\CalibracionEquipoDetalle;
 use App\Models\Sgm\CalibracionEquipoJarra;
+use App\Models\Sasisopa\JarraPatron;
 use App\Services\CalibracionEquipoService;
 use App\Services\ModuleStationService;
 
@@ -162,6 +163,119 @@ class CalibracionJarraPatronController extends BaseController
         View::render('controlactividadproceso/calibracion-jarra-patron',$data,'sasisopa');
     }
 
+
+private function calibracionPendiente(int $id): ?CalibracionEquipo
+{
+    $estacionId = $this->estacionModulo();
+    if (!$estacionId) {
+        return null;
+    }
+
+    $calibracion = CalibracionEquipo::query()
+        ->where('id', $id)
+        ->where('id_estacion', $estacionId)
+        ->where('equipo', 'Jarra patron')
+        ->where('estado', 0)
+        ->first();
+
+    return $calibracion;
+}
+
+public function getJarras(): void
+{
+    header('Content-Type: application/json');
+    $idCalibracion = (int) ($_GET['id_calibracion'] ?? 0);
+
+    if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar jarras a esta calibración']);
+        return;
+    }
+
+    $calibracion = $this->calibracionPendiente($idCalibracion);
+    if (!$calibracion) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'La calibración no está disponible para la estación actual']);
+        return;
+    }
+
+    $idsOcupados = CalibracionEquipoJarra::query()
+        ->where('id_calibracion', $idCalibracion)
+        ->pluck('id_jarra')
+        ->toArray();
+
+    $jarras = JarraPatron::query()
+        ->where('id_estacion', $calibracion->id_estacion)
+        ->when($idsOcupados, fn ($query) => $query->whereNotIn('id', $idsOcupados))
+        ->orderBy('marca')
+        ->get(['id', 'marca', 'no_serie', 'capacidad']);
+
+    echo json_encode(['success' => true, 'data' => $jarras]);
+}
+
+public function create(): void
+{
+    header('Content-Type: application/json');
+    $data = json_decode(file_get_contents('php://input'), true);
+    $data = is_array($data) ? $data : [];
+    $idCalibracion = (int) ($data['id_calibracion'] ?? 0);
+    $idJarra = (int) ($data['id_jarra'] ?? 0);
+
+    if (!ModuloService::validaPermiso($this->modulo, 'crear')) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para agregar jarras']);
+        return;
+    }
+
+    $calibracion = $this->calibracionPendiente($idCalibracion);
+    $jarra = $calibracion
+        ? JarraPatron::query()->where('id', $idJarra)->where('id_estacion', $calibracion->id_estacion)->first()
+        : null;
+
+    if (!$calibracion || !$jarra) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => 'La calibración o la jarra seleccionada no está disponible']);
+        return;
+    }
+
+    if (CalibracionEquipoJarra::query()->where('id_calibracion', $idCalibracion)->where('id_jarra', $idJarra)->exists()) {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'La jarra ya está agregada a esta calibración']);
+        return;
+    }
+
+    $registro = CalibracionEquipoJarra::create([
+        'id_calibracion' => $idCalibracion,
+        'id_jarra' => $idJarra,
+        'resultado1' => '',
+    ])->load('jarra');
+
+    echo json_encode(['success' => true, 'message' => 'Jarra agregada', 'jarra' => $registro]);
+}
+
+public function delete(): void
+{
+    header('Content-Type: application/json');
+    $data = json_decode(file_get_contents('php://input'), true);
+    $data = is_array($data) ? $data : [];
+    $id = (int) ($data['id'] ?? 0);
+
+    if (!ModuloService::validaPermiso($this->modulo, 'eliminar')) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No tienes permiso para eliminar jarras']);
+        return;
+    }
+
+    $registro = CalibracionEquipoJarra::find($id);
+    if (!$registro || !$this->calibracionPendiente((int) $registro->id_calibracion)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'La jarra no pertenece a una calibración pendiente de esta estación']);
+        return;
+    }
+
+    $registro->delete();
+    echo json_encode(['success' => true, 'message' => 'Jarra eliminada']);
+}
 
 public function update()
 {

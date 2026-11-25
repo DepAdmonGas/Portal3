@@ -171,9 +171,12 @@ class SgmProcesosMedicionController extends BaseController
             'estacionId' => $this->estacionModulo(),
             'year' => $year,
             'moduleStationKey' => 'sgm',
-            'links' => [],
+            'links' => [
+                '/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
+            ],
             'scripts' => [
                 '/js/vendor.min.js',
+                '/libs/datatables.net/js/jquery.dataTables.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
                 '/js/sgm/procesos-medicion/programaanualverificacion.actions.init.js?v=' . time(),
 

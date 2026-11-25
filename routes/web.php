@@ -1718,14 +1718,23 @@ $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora
 
 $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/{id:\d+}', Route::auth(['CalibracionSondaController', 'index']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/update', Route::auth(['CalibracionSondaController', 'update']));
+$r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/get-sondas', Route::auth(['CalibracionSondaController', 'getSondas']));
+$r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/create', Route::auth(['CalibracionSondaController', 'create']));
+$r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/delete', Route::auth(['CalibracionSondaController', 'delete']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-sonda/finalizar', Route::auth(['CalibracionSondaController', 'finalizar']));
 
 $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/{id:\d+}', Route::auth(['CalibracionJarraPatronController', 'index']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/update', Route::auth(['CalibracionJarraPatronController', 'update']));
+$r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/get-jarras', Route::auth(['CalibracionJarraPatronController', 'getJarras']));
+$r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/create', Route::auth(['CalibracionJarraPatronController', 'create']));
+$r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/delete', Route::auth(['CalibracionJarraPatronController', 'delete']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-jarra-patron/finalizar', Route::auth(['CalibracionJarraPatronController', 'finalizar']));
 
 $r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/{id:\d+}', Route::auth(['CalibracionTanquesController', 'index']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/update', Route::auth(['CalibracionTanquesController', 'update']));
+$r->addRoute('GET', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/get-tanques', Route::auth(['CalibracionTanquesController', 'getTanques']));
+$r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/create', Route::auth(['CalibracionTanquesController', 'create']));
+$r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/delete', Route::auth(['CalibracionTanquesController', 'delete']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/upload-resultado', Route::auth(['CalibracionTanquesController', 'uploadResultado']));
 $r->addRoute('POST', '/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/finalizar', Route::auth(['CalibracionTanquesController', 'finalizar']));
 

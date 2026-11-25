@@ -144,7 +144,7 @@ x-data="calibracionVerificacion()">
 
             </template>
 
-            <tr x-show="!loading && equipos.length === 0">
+            <tr x-show="!loadingEquipos && equipos.length === 0">
 
                 <td colspan="4" class="text-center">
 

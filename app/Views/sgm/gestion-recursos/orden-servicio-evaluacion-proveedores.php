@@ -24,11 +24,12 @@
                   </div>
 
 
-    <div class="table-responsive mt-4 overflow-x-auto overflow-y-hidden">
-        <table class="table table-striped table-bordered mb-0  align-middle">
+    <div class="datatables mt-3">
+    <div class="table-responsive overflow-x-auto overflow-y-hidden">
+        <table id="table-orden-servicio" class="table table-striped table-bordered mb-0 align-middle w-100">
             <thead>
                 <tr>
-                    <th class="text-center align-middle"whidt="96 px">#</th>
+                    <th class="text-center align-middle" style="width: 96px; min-width: 96px;">#</th>
                     <th class="text-center align-middle text-nowrap">Fecha</th>
                     <th class="text-center align-middle text-nowrap">Hora</th>
                     <th class="align-middle">Descripción detallada del servicio</th>
@@ -41,156 +42,11 @@
                     <th class="text-center align-middle"><i class="ti ti-trash text-muted fs-6"></i></th>
                 </tr>
             </thead>
-            <tbody>
-
-                <template
-                    x-if="ordenes.length===0">
-
-                    <tr>
-                        <td
-                            colspan="11"
-                            class="text-center text-muted">
-                            No se encontró información para mostrar.
-                        </td>
-                    </tr>
-                </template>
-
-                <template
-                    x-for="orden in ordenes"
-                    :key="orden.id">
-                    <tr>
-                        <td
-                            class="text-center fw-bolder align-middle"
-                            x-text="orden.numero">
-                        </td>
-                        <td
-                            class="text-center align-middle|
-                            text-nowrap"
-                            x-text="orden.fecha">
-                        </td>
-                        <td
-                            class="text-center align-middle
-                            text-nowrap"
-                            x-text="orden.hora">
-                        </td>
-                        <td class="align-middle"
-                            x-text="orden.descripcion">
-                        </td>
-                        <!-- Orden -->
-                        <td class="text-center align-middle">
-
-                            <span
-                                class="pointer"
-                                @click="openEditar(orden.id)">
-
-                                <i class="ti ti-edit fs-6 text-warning"></i>
-
-                            </span>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                            <a
-                                class="pointer"
-                                @click="detalleOrden(orden.id)">
-
-                                <i class="ti ti-file-description fs-6 text-info"></i>
-
-                            </a>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                            <a
-                                class="pointer"
-                                target="_blank"
-                                :href="'/sgm/gestion-recursos/orden-servicio-evaluacion-proveedores/pdf/'+orden.id">
-
-                                <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
-
-                            </a>
-
-                        </td>
-
-                        <!-- Evaluación -->
-
-                        <td class="text-center align-middle">
-
-                            <span
-                                class="pointer"
-                                @click="openEvaluacion(orden.id)">
-
-                                <i class="ti ti-edit fs-6 text-warning"></i>
-
-                            </span>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                            <template x-if="orden.evaluacion">
-
-                                <a
-                                    class="pointer"
-                                    @click="detalleEvaluacion(orden.id)">
-
-                                    <i class="ti ti-file-description fs-6 text-info"></i>
-
-                                </a>
-
-                            </template>
-
-                            <template x-if="!orden.evaluacion">
-
-                                <i class="ti ti-x fs-6"></i>
-
-                            </template>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                            <template x-if="orden.evaluacion">
-
-                                <a
-                                    class="pointer"
-                                    target="_blank"
-                                    :href="'/sgm/gestion-recursos/orden-servicio-evaluacion-proveedores/evaluacion/pdf/'+orden.id">
-
-                                    <i class="ti ti-file-type-pdf fs-6 text-danger"></i>
-
-                                </a>
-
-                            </template>
-
-                            <template x-if="!orden.evaluacion">
-
-                                <i class="ti ti-x fs-6"></i>
-
-                            </template>
-
-                        </td>
-
-                        <td class="text-center align-middle">
-
-                            <a
-                                class="pointer"
-                                @click="eliminar(orden.id)">
-                                <i class="ti ti-trash fs-6 text-danger"></i>
-                            </a>
-
-                        </td>
-
-                    </tr>
-
-                </template>
-
-            </tbody>
+            <tbody></tbody>
 
         </table>
 
+    </div>
     </div>
 
 

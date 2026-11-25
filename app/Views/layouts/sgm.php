@@ -99,7 +99,7 @@
                     </li>
 
                     <li class="sidebar-item">
-                        <a class="sidebar-link" href="<?= $doc_sgm['archivo'] ?>" aria-expanded="false" download>
+                        <a class="sidebar-link" href="<?= $doc_sgm['archivo'] ?>" aria-expanded="false" download data-action-loader="download">
                             <span>
                                 <i class="ti ti-gauge"></i>
                             </span>
@@ -109,7 +109,7 @@
                     </li>
 
                     <li class="sidebar-item">
-                        <a class="sidebar-link" href="<?= $doc_mpsgm['archivo'] ?>" aria-expanded="false" download>
+                        <a class="sidebar-link" href="<?= $doc_mpsgm['archivo'] ?>" aria-expanded="false" download data-action-loader="download">
                             <span>
                                 <i class="ti ti-book-2"></i>
                             </span>

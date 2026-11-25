@@ -7,16 +7,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let permisos = {};
     let url = '';
 
+    const crearFallbackFirma = () => {
+        const contenedor = document.createElement('span');
+        contenedor.className = 'd-inline-flex flex-column align-items-center text-muted';
+
+        const icono = document.createElement('i');
+        icono.className = 'ti ti-signature-off fs-6';
+        icono.setAttribute('aria-hidden', 'true');
+
+        const texto = document.createElement('small');
+        texto.textContent = 'Firma no registrada';
+
+        contenedor.append(icono, texto);
+        return contenedor;
+    };
+
+    const fallbackFirmaHtml = '<span class="d-inline-flex flex-column align-items-center text-muted"><i class="ti ti-signature-off fs-6" aria-hidden="true"></i><small>Firma no registrada</small></span>';
+
     const tablaFirmas = document.getElementById('table-lista-asistencia-firma');
     tablaFirmas.addEventListener('error', (event) => {
         const imagen = event.target;
         if (!(imagen instanceof HTMLImageElement) || !imagen.matches('[data-signature-image]')) return;
 
-        const firmaNoDisponible = document.createElement('i');
-        firmaNoDisponible.className = 'ti ti-signature-off fs-8 text-secondary-emphasis';
-        firmaNoDisponible.setAttribute('title', 'Firma no disponible');
-        firmaNoDisponible.setAttribute('aria-label', 'Firma no disponible');
-        imagen.replaceWith(firmaNoDisponible);
+        imagen.replaceWith(crearFallbackFirma());
     }, true);
 
     table2 = $('#table-lista-asistencia-firma').DataTable({
@@ -53,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             className: 'text-center',
             render: function (data) {
 
-                if (!data) return '<i class="ti ti-signature-off fs-8 text-secondary-emphasis" title="Firma no disponible" aria-label="Firma no disponible"></i>';
+                if (!data) return fallbackFirmaHtml;
 
                 return `<img data-signature-image src="${url}${encodeURIComponent(data)}" style="width:60px;">`;
             }

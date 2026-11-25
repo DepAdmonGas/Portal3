@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    const currentYear = new Date().getFullYear();
+    const requestedYear = Number(new URLSearchParams(window.location.search).get('year'));
+    const selectedYear = Number.isInteger(requestedYear)
+        && requestedYear >= 2020
+        && requestedYear <= currentYear + 20
+            ? requestedYear
+            : currentYear;
+
     table1 = $('#table-bitacora-calibracion-equipos').DataTable({
         processing: true,
         serverSide: false,
@@ -9,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
             url: '/assets/libs/datatables.net/js/es-ES.json'
         },
         ajax: {
-            url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/datatable?year=' + new Date().getFullYear() + '&mes=',
+            url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos/datatable?year=' + selectedYear + '&mes=',
             type: 'GET',
             dataSrc: function (json) {
             permisos = json.permisos;

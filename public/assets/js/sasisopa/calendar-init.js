@@ -574,7 +574,10 @@ document.addEventListener('alpine:init', () => {
                     data:{
 
                         id:
-                        this.detalle.id
+						this.detalle.id,
+
+                        modulo:
+                        this.modulo
 
                     }
 

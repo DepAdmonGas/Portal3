@@ -432,11 +432,21 @@ No se encontro informacion                     </td>
                         x-text="asistente.usuario.nombre"
                     ></td>
                     <td class="text-center align-middle">
-                        <img
-                            x-show="asistente.usuario.firma"
-                            :src="'<?= $_ENV['APP_URL'] ?>/uploads/firma-personal/' + asistente.usuario.firma"
-                            width="70"
-                        >
+                        <template x-if="asistente.firma_disponible">
+                            <img
+                                :src="'<?= $_ENV['APP_URL'] ?>/uploads/firma-personal/' + asistente.usuario.firma"
+                                width="70"
+                                alt="Firma del asistente"
+                                @error="asistente.firma_disponible = false"
+                            >
+                        </template>
+                        <template x-if="!asistente.firma_disponible">
+                            <div class="text-center text-muted">
+                                <i class="ti ti-signature-off fs-6" aria-hidden="true"></i>
+                                <br>
+                                <small>Firma no registrada</small>
+                            </div>
+                        </template>
                     </td>
                     <td class="text-center align-middle">
 

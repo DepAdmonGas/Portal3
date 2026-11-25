@@ -24,6 +24,8 @@ document.addEventListener('alpine:init', () => {
             id: null,
             resultados: ''
         },
+        tanquesDisponibles: [],
+        nuevoTanque: '',
 
     init() {
 
@@ -126,6 +128,62 @@ document.addEventListener('alpine:init', () => {
         }
     },
 
+    async cargarTanquesDisponibles() {
+        try {
+            const response = await axios.get(
+                '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/get-tanques',
+                { params: { id_calibracion: this.calibracion.id } }
+            );
+            this.tanquesDisponibles = response.data?.success ? response.data.data : [];
+        } catch (error) {
+            this.notify('error', error.response?.data?.message || 'Error al cargar tanques disponibles');
+        }
+    },
+
+    async abrirModalTanques() {
+        await this.cargarTanquesDisponibles();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalTanque')).show();
+    },
+
+    async agregarTanque() {
+        if (!this.nuevoTanque) {
+            this.notify('error', 'Seleccione un tanque');
+            return;
+        }
+
+        try {
+            const response = await this.createAction({
+                url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/create',
+                data: { id_calibracion: this.calibracion.id, id_tanque: this.nuevoTanque }
+            });
+
+            if (!response?.success) return;
+            response.tanque._original = { resultado1: response.tanque.resultado1, resultado2: response.tanque.resultado2 };
+            this.calibracion.tanques.push(response.tanque);
+            this.tanquesDisponibles = this.tanquesDisponibles.filter(item => Number(item.id) !== Number(this.nuevoTanque));
+            this.nuevoTanque = '';
+            bootstrap.Modal.getInstance(document.getElementById('modalTanque'))?.hide();
+        } catch (error) {
+            this.notify('error', 'Error al agregar tanque');
+        }
+    },
+
+    async eliminarTanque(id) {
+        try {
+            const response = await this.deleteAction({
+                url: '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos-tanques-almacenamiento/delete',
+                id,
+                name: 'Tanque'
+            });
+            if (response?.success) {
+                this.calibracion.tanques = this.calibracion.tanques.filter(item => Number(item.id) !== Number(id));
+                await this.cargarTanquesDisponibles();
+            }
+        } catch (error) {
+            this.notify('error', 'Error al eliminar tanque');
+        }
+    },
+
     abrirModalResultados(item)
     {
         this.tanqueSeleccionado = item;
@@ -187,7 +245,9 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 this.calibracion.estado = 1;
-                window.location.href = '/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos';
+                const fecha = String(this.calibracion.fecha_formateada || this.calibracion.fecha || '');
+                const year = /^\d{4}/.exec(fecha)?.[0] || new Date().getFullYear();
+                window.location.href = `/sasisopa/control-actividades-procesos/calibracion-equipos/bitacora-calibracion-equipos?year=${year}`;
 
             } catch (e) {
 

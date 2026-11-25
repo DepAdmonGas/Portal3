@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                  <li>
                                     <a class="dropdown-item pointer d-flex align-items-center gap-3 ${!noDownload ? 'disabled' : ''}"
                                     href="/lista-asistencia/pdf/${row.id}" target="_blank"
-                                    aria-label="Descargar PDF" ${!noDownload ? 'aria-disabled="true" tabindex="-1"' : ''}>
+                                    aria-label="Descargar PDF" data-action-loader="download" ${!noDownload ? 'aria-disabled="true" tabindex="-1"' : ''}>
                                         <i class="ti ti-download"></i>Descargar
                                     </a>
                                 </li>
