@@ -67,7 +67,7 @@ class SgmEstablecimientoController extends BaseController
                 '/js/sgm/establecimiento-objetivos/objetivos.actions.init.js?v=' . time(),
                 '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.action.init.js?v=' . time(),
 
-                '/js/asistencia/listaasistencia.datatable.init.js?v=1.0.2',
+                '/js/asistencia/listaasistencia.datatable.init.js?v=' . time(),
                 '/js/sgm/establecimiento-objetivos/seguimientoobjetivos.datatable.init.js?v=' . time(),
             ],
             'help' => true
@@ -424,6 +424,15 @@ class SgmEstablecimientoController extends BaseController
             ]);
 
         $seguimiento = $seguimiento->toArray();
+
+        foreach ($seguimiento['asistentes'] as &$asistente) {
+            $archivoFirma = trim((string) ($asistente['usuario']['firma'] ?? ''));
+            $asistente['firma_disponible'] = $archivoFirma !== ''
+                && is_file(
+                    PUBLIC_PATH . '/uploads/firma-personal/' . basename($archivoFirma)
+                );
+        }
+        unset($asistente);
 
         $seguimiento['fecha'] = Carbon::parse(
             $seguimiento['fecha']

@@ -136,7 +136,19 @@ calibracion.metodo_calibracion,
 
             </div>
 
-            <div class="table table-responsive">
+            <?php if (!empty($permisos['crear'])): ?>
+                <template x-if="Number(calibracion.estado) === 0">
+                    <div class="row g-0 ms-auto w-100 justify-content-end mt-3">
+                        <div class="col-12 col-md-auto d-grid">
+                            <button type="button" class="btn bg-primary-subtle text-primary" @click="abrirModalTanques()">
+                                <i class="ti ti-plus"></i> Nuevo
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            <?php endif; ?>
+
+            <div class="table-responsive">
                 <table class="table table-striped table-bordered mt-4 mb-0 text-nowrap align-middle">
 
                     <thead>
@@ -147,6 +159,9 @@ calibracion.metodo_calibracion,
                             <th class="align-middle text-center">Incertidumbre de calibración</th>
                             <th class="align-middle text-center">Cumple con los límites establecidos</th>
                             <th class="align-middle text-center"><i class="ti ti-file-text text-muted fs-6"></i></th>
+                            <?php if (!empty($permisos['eliminar'])): ?>
+                                <th class="align-middle text-center" width="48px"><i class="ti ti-trash fs-6 text-muted"></i></th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
 
@@ -194,6 +209,15 @@ item,
                                         <i class="ti ti-file-text fs-6"></i>
                                     </a>
                                 </td>
+                                <?php if (!empty($permisos['eliminar'])): ?>
+                                    <td class="text-center align-middle">
+                                        <template x-if="Number(calibracion.estado) === 0">
+                                            <a class="pointer" @click="eliminarTanque(item.id)" aria-label="Eliminar tanque">
+                                                <i class="ti ti-trash fs-6 text-danger"></i>
+                                            </a>
+                                        </template>
+                                    </td>
+                                <?php endif; ?>
 
                             </tr>
 
@@ -252,6 +276,39 @@ calibracion.observaciones,
         </div>
     </div>
 
+
+    <?php if (!empty($permisos['crear'])): ?>
+        <div class="modal fade" id="modalTanque" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header modal-colored-header bg-primary text-white">
+                        <h5 class="modal-title text-white"><i class="ti ti-building-warehouse me-1"></i> Nuevo tanque</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">* Tanque:</label>
+                        <select class="form-select" x-model="nuevoTanque">
+                            <option value="">Seleccione un tanque...</option>
+                            <template x-for="item in tanquesDisponibles" :key="item.id">
+                                <option :value="item.id" x-text="'Tanque ' + item.no_tanque + ' - ' + item.capacidad + ' - ' + item.producto"></option>
+                            </template>
+                        </select>
+                        <p class="text-muted mt-2 mb-0" x-show="tanquesDisponibles.length === 0">No hay tanques disponibles.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                            <div class="col-12 col-md-auto d-grid mb-1 mb-md-0 me-0 me-md-2">
+                                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x"></i> Cancelar</button>
+                            </div>
+                            <div class="col-12 col-md-auto d-grid">
+                                <button type="button" class="btn btn-success" @click="agregarTanque()"><i class="ti ti-check"></i> Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Modal Resultados -->
 

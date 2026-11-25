@@ -502,6 +502,7 @@
                             detalle.tipo === 'curso'
                             && Number(detalle.estado) === 1
                             && Number(detalle.resultado) < 60
+                            && <?= !empty($permisos['crear']) ? 'true' : 'false' ?>
                         ">
 
                         <button

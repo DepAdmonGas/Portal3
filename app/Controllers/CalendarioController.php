@@ -137,7 +137,7 @@ class CalendarioController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sasisopa/calendar-init.js?v=1.0.3'
+                '/js/sasisopa/calendar-init.js?v=1.0.5'
 
             ]
         ];
@@ -168,7 +168,7 @@ class CalendarioController extends BaseController
                 '/js/vendor.min.js',
                 '/libs/fullcalendar/index.global.min.js',
                 '/js/core/module-station-selector.js?v=' . time(),
-                '/js/sasisopa/calendar-init.js?v=1.0.3'
+                '/js/sasisopa/calendar-init.js?v=1.0.5'
 
             ]
         ];
@@ -910,8 +910,38 @@ class CalendarioController extends BaseController
         try {
 
             $id = (int) ($data['id'] ?? 0);
+            $modulo = mb_strtoupper(trim((string) ($data['modulo'] ?? '')));
+            $moduleKey = match ($modulo) {
+                'SASISOPA' => 'sasisopa',
+                'SGM' => 'sgm',
+                default => null,
+            };
 
-            $curso = CursoCalendario::findOrFail($id);
+            if (!$id || !$moduleKey) {
+                http_response_code(422);
+                throw new \InvalidArgumentException('No se recibieron los datos del curso para reagendar.');
+            }
+
+            if (!ModuloService::validaPermiso($moduleKey, 'crear')) {
+                http_response_code(403);
+                throw new \RuntimeException('No tienes permiso para reagendar cursos.');
+            }
+
+            $idEstacion = $moduleKey === 'sasisopa'
+                ? $this->estacionModulo()
+                : $this->estacionModuloSgm();
+
+            if (!$idEstacion) {
+                http_response_code(422);
+                throw new \RuntimeException('Selecciona una estación para reagendar el curso.');
+            }
+
+            $curso = CursoCalendario::query()
+                ->where('id_estacion', $idEstacion)
+                ->whereHas('tema', function ($query) use ($modulo) {
+                    $query->where('categoria', $modulo);
+                })
+                ->findOrFail($id);
 
             if (
                 $curso->estado != 1 ||
@@ -923,19 +953,24 @@ class CalendarioController extends BaseController
                 );
             }
 
-            $nuevo = $curso->replicate();
+            $fechaReagendada = $curso->fecha_programada
+                ->copy()
+                ->addDay()
+                ->toDateString();
+            $curso->fecha_programada = $fechaReagendada;
+            // Esta columna es NOT NULL y las capacitaciones pendientes usan
+            // 0000-00-00 como valor para indicar que aún no tienen fecha real.
+            $curso->fecha_real = '0000-00-00';
+            $curso->resultado = 0;
+            $curso->observaciones = '';
+            $curso->estado = 0;
 
-            $nuevo->fecha_programada = $curso->fecha_programada->format('Y-m-d');
-            $nuevo->fecha_real = null;
-            $nuevo->resultado = 0;
-            $nuevo->observaciones = '';
-            $nuevo->estado = 0;
-
-            $nuevo->save();
+            $curso->save();
 
             echo json_encode([
                 'success' => true,
-                'message' => 'Curso Reagendado'
+                'message' => 'Curso Reagendado',
+                'fecha_programada' => $fechaReagendada
             ]);
         } catch (\Throwable $e) {
 

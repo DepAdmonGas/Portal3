@@ -1,9 +1,11 @@
 <div id="container" data-elemento="110" data-herramienta="2" data-id="0">
 
     
-    <div class="datatables mt-3">
-        <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
-            <table id="table-auditorias-sgm" class="table table-striped table-bordered align-middle mb-4">
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="datatables">
+                <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+                    <table id="table-auditorias-sgm" class="table table-striped table-bordered align-middle mb-4">
                     <thead>
                         <tr>
                             <th class="text-center" width="96px">#</th>
@@ -25,11 +27,11 @@
 
                     <tbody></tbody>
 
-                </table>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-     
- 
 
     <div class="row">
         <div class="col-md-6">

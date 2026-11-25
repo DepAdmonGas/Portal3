@@ -52,66 +52,21 @@
       </div>
   </div>
   </div>
-  <div class="card-body p-0">
-
-
-  <table class="table table-striped table-bordered text-nowrap align-middle mb-0">
-    <thead>
-    <tr>
-    <th class="text-center">#</th>
-    <th class="text-center">Fecha</th>
-    <th class="text-center text-danger"><i class="ti ti-trash  fs-6"></i></th>
-    </tr>
-    </thead>
-    <tbody>
-    <template
-    x-for="(item,index) in politicas"
-    :key="item.id"
-    >
-    <tr
-    @click="seleccionar(item)"
-    :class="{
-    'table-primary':politica?.id==item.id
-    }"
-    style="cursor:pointer"
-    >
-    <td class="text-center align-middle"
-    x-text="index+1"
-    ></td>
-    <td class="text-center align-middle"
-    x-text="item.fecha"
-    ></td>
-    <td class="text-center align-middle" width="48">
-    <a
-    class="text-danger"
-    @click.stop="eliminar(item)"
-    >
-    <i class="ti ti-trash fs-6"></i>
-    </a>
-    </td>
-    </tr>
-    </template>
-
-    <tr
-    x-show="politicas.length==0"
-    >
-
-    <td
-    colspan="3"
-    class="text-center text-muted"
-    >
-
-    No hay políticas registradas
-
-    </td>
-
-    </tr>
-
-    </tbody>
-
-  </table>
-
-
+  <div class="card-body">
+    <div class="datatables">
+      <div class="table-responsive overflow-x-auto overflow-y-hidden pb-3">
+        <table id="table-politicas-sgm" class="table table-striped table-bordered text-nowrap align-middle">
+          <thead>
+            <tr>
+              <th class="text-center">#</th>
+              <th class="text-center">Fecha</th>
+              <th class="text-center text-danger"><i class="ti ti-trash fs-6"></i></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>    
   </div>
@@ -133,7 +88,7 @@
   <i class="ti ti-calendar-event fs-6"></i>
   <span
 class="card-title"
-x-text="politica.fecha">
+x-text="politica ? politica.fecha : 'Sin política registrada'">
 </span>
 </h4>
 

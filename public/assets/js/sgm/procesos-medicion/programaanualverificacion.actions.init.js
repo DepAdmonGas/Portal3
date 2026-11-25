@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
         year: new Date().getFullYear(),
         formato: 15,
         lista: [],
+        tablaPrograma: null,
         loading:false,
 
         modalNuevo:null,
@@ -31,6 +32,44 @@ document.addEventListener('alpine:init', () => {
                 this.year = initialYear;
             }
             this.actualizarYearBreadcrumb();
+            this.tablaPrograma = $('#table-programa-anual-verificacion').DataTable({
+                processing: true,
+                serverSide: false,
+                autoWidth: false,
+                order: [],
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    url: '/assets/libs/datatables.net/js/es-ES.json',
+                    emptyTable: 'No existe información para mostrar.'
+                },
+                columns: [
+                    { data: 'categoria', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    {
+                        data: null,
+                        className: 'text-center align-middle',
+                        render: (data, type, row) => $.fn.dataTable.render.text().display(`${row.nombre || ''} ${row.detalle || ''}`.trim())
+                    },
+                    { data: 'periodicidad', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    { data: 'fecha', className: 'text-center align-middle', render: $.fn.dataTable.render.text() },
+                    {
+                        data: null,
+                        className: 'text-center align-middle',
+                        orderable: false,
+                        searchable: false,
+                        render: () => '<a href="#" class="pointer" data-programa-action="delete" aria-label="Eliminar programación"><i class="ti ti-trash pointer text-danger fs-6"></i></a>'
+                    }
+                ]
+            });
+
+            document.querySelector('#table-programa-anual-verificacion tbody')?.addEventListener('click', event => {
+                const action = event.target.closest('[data-programa-action="delete"]');
+                if (!action) return;
+                event.preventDefault();
+                const fila = this.tablaPrograma.row(action.closest('tr')).data();
+                if (fila) this.eliminar(Number(fila.id), fila.nombre);
+            });
+
             document.addEventListener('click', (event) => {
                 const target = event.target instanceof Element ? event.target : event.target?.parentElement;
                 const opcion = target?.closest('[data-sgm-programa-year]');
@@ -60,6 +99,13 @@ document.addEventListener('alpine:init', () => {
                 });
 
                 this.lista = data.data;
+                const filas = this.lista.flatMap(grupo =>
+                    (grupo.items || []).map(item => ({
+                        ...item,
+                        categoria: grupo.categoria
+                    }))
+                );
+                this.tablaPrograma.clear().rows.add(filas).draw();
 
             }catch(error){
 

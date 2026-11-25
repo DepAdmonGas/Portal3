@@ -318,8 +318,8 @@
                                             <!-- ACUSE -->
                                             <td>
                                                 <template x-if="row.acuse">
-                                                    <a class="pointer"
-                                                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
+                                                    <a class="pointer" data-action-loader="download" aria-label="Descargar acuse"
+                                                        :href="'/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                                         <i class="ti ti-download text-success fs-6"></i>
                                                     </a>
                                                 </template>
@@ -331,8 +331,8 @@
                                             <!-- REQUISITO -->
                                             <td>
                                                 <template x-if="row.requisito">
-                                                    <a class="pointer"
-                                                        @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
+                                                    <a class="pointer" data-action-loader="download" aria-label="Descargar requisito legal"
+                                                        :href="'/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                                         <i class="ti ti-download text-success fs-6"></i>
                                                     </a>
                                                 </template>
@@ -466,8 +466,8 @@
                                                 <td x-text="row.fecha_vencimiento || 'S/I'"></td>
                                                 <td>
                                                     <template x-if="row.acusepdf">
-                                                        <a class="pointer"
-                                                            @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
+                                                        <a class="pointer" data-action-loader="download" aria-label="Descargar acuse"
+                                                            :href="'/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
                                                             <i class="ti ti-download text-success fs-6"></i>
                                                         </a>
                                                     </template>
@@ -477,8 +477,8 @@
                                                 </td>
                                                 <td>
                                                     <template x-if="row.requisitolegalpdf">
-                                                        <a class="pointer"
-                                                            @click="window.location.href='/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
+                                                        <a class="pointer" data-action-loader="download" aria-label="Descargar requisito legal"
+                                                            :href="'/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
                                                             <i class="ti ti-download text-primary fs-6"></i>
                                                         </a>
                                                     </template>

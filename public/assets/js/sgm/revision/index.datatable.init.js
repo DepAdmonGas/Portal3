@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </a>
                                 </li>
                                  <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" href="/sgm/revision/pdf/${row.id}" download>
+                                    <a class="dropdown-item d-flex align-items-center gap-3 btn-delete" href="/sgm/revision/pdf/${row.id}" download data-action-loader="download" aria-label="Descargar PDF">
                                         <i class="fs-4 ti ti-download"></i>Descargar
                                     </a>
                                 </li>

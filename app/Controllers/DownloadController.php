@@ -162,6 +162,7 @@ class DownloadController
             'sasisopa-control-documentos-procedimientos' => dirname(__DIR__, 2) . '/public/uploads/archivos/procedimientos/',
             'sasisopa-integridad-mecanica-manual'    => dirname(__DIR__, 2) . '/public/uploads/archivos/manuales/',
             'sasisopa-comunicacion-evidencias'       => dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias/',
+            'sasisopa-lista-asistencia-evidencias'   => dirname(__DIR__, 2) . '/public/uploads/archivos/evidencias/',
             'sasisopa-reporte-diario-facturas'       => dirname(__DIR__, 2) . '/public/uploads/archivos/cre/',
 
         ];
