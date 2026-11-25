@@ -1018,14 +1018,20 @@ final class ChecadorController extends BaseController
             http_response_code(401);
             self::redirect('/login');
         }
+        $setAdminPinError = static function (string $message) use ($actor, $workplaceId): void {
+            Session::set('checador_admin_pin_feedback', [
+                'type' => 'error', 'message' => $message, 'user_id' => (int) $actor->id,
+                'workplace_id' => $workplaceId, 'at' => time(),
+            ]);
+        };
         if (!Request::isSecure()) {
-            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'La emisión requiere una conexión HTTPS.']);
+            $setAdminPinError('La emisión requiere una conexión HTTPS.');
         } elseif (!\App\Core\CsrfToken::validate(trim((string)($input['_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')))) {
-            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'Actualiza la página antes de continuar.']);
+            $setAdminPinError('Actualiza la página antes de continuar.');
         } elseif (($input['confirm_action'] ?? null) !== '1') {
-            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'Confirma la operación antes de continuar.']);
+            $setAdminPinError('Confirma la operación antes de continuar.');
         } elseif ($workplaceId === null) {
-            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'Selecciona una estación autorizada.']);
+            $setAdminPinError('Selecciona una estación autorizada.');
         } else {
             $service = new ChecadorAdministrativePinSqlService();
             $result = match ($operation) {
@@ -1064,7 +1070,7 @@ final class ChecadorController extends BaseController
                 Session::set('checador_admin_pin_feedback',['type'=>'error','message'=>$message,'user_id'=>(int)$actor->id,'workplace_id'=>$workplaceId,'at'=>time()]);
             }
         }
-        $target='/departamento-operativo/recursos-humanos/checador/acceso-temporal';
+        $target='/departamento-operativo/recursos-humanos/checador/configuracion';
         if($workplaceId!==null)$target.='?workplace_id='.$workplaceId;
         self::redirect($target);
     }
@@ -1635,14 +1641,6 @@ final class ChecadorController extends BaseController
             'message' => '',
             'cancelable_uuid' => null,
         ];
-        $administrativePinPanel = ['ok'=>false,'state'=>'unavailable','devices'=>[],'history'=>[],'can_issue'=>false,'can_revoke'=>false,'error'=>'not_loaded'];
-        $administrativePinFeedback = Session::pull('checador_admin_pin_feedback', null);
-        if (!is_array($administrativePinFeedback)
-            || (int)($administrativePinFeedback['user_id']??0)!==(int)($currentUser->id??0)
-            || (int)($administrativePinFeedback['workplace_id']??0)!==(int)($requestedWorkplace??0)
-            || (int)($administrativePinFeedback['at']??0)<time()-60) {
-            $administrativePinFeedback=null;
-        }
         $state = 'idle';
         $stateMessage = '';
         $workspaceNeedsExistingSnapshot = in_array($workspace, ['journeys', 'incidences', 'adjustments'], true);
@@ -2166,11 +2164,6 @@ final class ChecadorController extends BaseController
             }
         }
 
-        if ($workspace === 'temporary-access' && $requestedWorkplace !== null && $currentUser) {
-            $administrativePinPanel = (new ChecadorAdministrativePinSqlService())
-                ->readForWorkplace($currentUser, $requestedWorkplace);
-        }
-
         $payrollComparisonAvailable = !$demoMode
             && (new ChecadorPayrollComparisonReadService())->authorization($requestedWorkplace)['allowed'];
         // The weekly route has a separate read capability from schedule
@@ -2300,8 +2293,6 @@ final class ChecadorController extends BaseController
                 'evaluationFeedback' => $evaluationFeedback,
                 'temporaryAccessPanel' => $workspaceTemporaryAccessPanel,
                 'temporaryAccessFeedback' => $temporaryAccessFeedback,
-                'administrativePinPanel' => $administrativePinPanel,
-                'administrativePinFeedback' => $administrativePinFeedback,
                 'canViewTemporaryPin' => $workspace === null
                     ? !empty($temporaryAccessPanel['can_edit'])
                     : $canViewTemporaryPin,
@@ -2376,6 +2367,22 @@ final class ChecadorController extends BaseController
 
         $user = Auth::user();
         $demoMode = ChecadorDailyReadService::demoModeEnabled();
+        $administrativePinPanel = [
+            'ok' => false, 'state' => $demoMode ? 'not_read_in_demo' : 'unavailable',
+            'devices' => [], 'history' => [], 'can_issue' => false, 'can_revoke' => false,
+            'error' => $demoMode ? 'not_read_in_demo' : 'not_loaded',
+        ];
+        $administrativePinFeedback = Session::pull('checador_admin_pin_feedback', null);
+        if (!is_array($administrativePinFeedback)
+            || (int) ($administrativePinFeedback['user_id'] ?? 0) !== (int) ($user->id ?? 0)
+            || (int) ($administrativePinFeedback['workplace_id'] ?? 0) !== (int) ($workplaceId ?? 0)
+            || (int) ($administrativePinFeedback['at'] ?? 0) < time() - 60) {
+            $administrativePinFeedback = null;
+        }
+        if (!$demoMode && $workplaceId !== null && $user !== null) {
+            $administrativePinPanel = (new ChecadorAdministrativePinSqlService())
+                ->readForWorkplace($user, $workplaceId);
+        }
         $workerRaw = $query['worker_id'] ?? null;
         $workerId = self::positiveInteger($workerRaw);
         $historyInputInvalid = $workerRaw !== null && $workerRaw !== '' && $workerId === null;
@@ -2437,6 +2444,8 @@ final class ChecadorController extends BaseController
                 'selectedWorkplaceName' => $workplaceName,
                 'configuration' => $configuration,
                 'deviceLink' => $deviceLink,
+                'administrativePinPanel' => $administrativePinPanel,
+                'administrativePinFeedback' => $administrativePinFeedback,
                 'demoMode' => $demoMode,
                 'configurationFeedback' => Session::pull('checador_configuration_feedback', null),
                 'attendancePolicyWritesEnabled' => !$demoMode && !empty($configuration['permissions']['policy_edit']),

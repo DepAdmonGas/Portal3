@@ -674,9 +674,9 @@ $r->addRoute('POST', '/recursos-humanos/checador/evaluations/evaluate', Route::a
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/authorize', Route::auth(['ChecadorController', 'temporaryAccessAuthorize']));
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/reject', Route::auth(['ChecadorController', 'temporaryAccessReject']));
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/cancel', Route::auth(['ChecadorController', 'temporaryAccessCancel']));
-$r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/admin-pin', Route::auth(['ChecadorController', 'administrativePinIssue']));
-$r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/admin-pin/{authorizationUuid:[0-9a-fA-F-]{36}}/revoke', Route::auth(['ChecadorController', 'administrativePinRevoke']));
-$r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/admin-session/{sessionUuid:[0-9a-fA-F-]{36}}/revoke', Route::auth(['ChecadorController', 'administrativeSessionRevoke']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/admin-pin', Route::auth(['ChecadorController', 'administrativePinIssue']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/admin-pin/{authorizationUuid:[0-9a-fA-F-]{36}}/revoke', Route::auth(['ChecadorController', 'administrativePinRevoke']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/admin-session/{sessionUuid:[0-9a-fA-F-]{36}}/revoke', Route::auth(['ChecadorController', 'administrativeSessionRevoke']));
 
 //----- Recibo de nomina
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));

@@ -553,6 +553,8 @@ $readerProfileItemsJson = htmlspecialchars(
                 <?php if ($canReadDeviceLink && !$canManageDeviceLink): ?><p class="small text-muted mt-2 mb-0">Acceso de consulta; la administración está reservada al Encargado autorizado de la estación.</p><?php endif; ?>
             </div>
 
+            <?php require __DIR__ . '/workspace-administrative-pin.php'; ?>
+
             <?php if (!empty($canEditReaderProfiles) && !empty($m11ConfigurationPostEnabled) && ($demoMode ?? false) !== true): ?>
                 <div class="modal fade" id="m11-reader-profile-modal" tabindex="-1" aria-labelledby="m11-reader-profile-title" aria-hidden="true">
                     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">

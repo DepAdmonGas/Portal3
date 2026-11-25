@@ -238,8 +238,13 @@ final class ChecadorAdministrativePinSqlService
         $fresh=Usuario::query()->where('id',(int)$actor->id)->where('estatus',0)->first();
         if(!$fresh)return false;
         $position=(int)$fresh->id_puesto;
-        $inherited=ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared($workplaceId,$action==='leer'?'leer':'editar');
-        if(empty($inherited['allowed']))return false;
+        // Administrative configuration PINs belong to Checador and use its
+        // canonical locality ACL. They must not inherit the separate
+        // attendance Temporary Access module permission.
+        $scope=ChecadorAccessService::authorize($workplaceId);
+        $stationWorkplaceIds=array_map(static fn(array $item):int=>(int)($item['id']??0),$scope['station_workplaces']??[]);
+        if(empty($scope['allowed'])
+            || !in_array($workplaceId,$stationWorkplaceIds,true))return false;
         if($action==='leer')return in_array($position,[6,13],true);
         if($position!==6)return false;
         $specific=$action==='emitir'?ChecadorV2PermissionService::ADMIN_PIN_ISSUE:ChecadorV2PermissionService::ADMIN_PIN_REVOKE;
