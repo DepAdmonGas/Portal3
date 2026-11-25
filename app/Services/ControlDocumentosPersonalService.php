@@ -10,6 +10,7 @@ use App\Models\Operativo\RhPersonalBajaArchivos;
 use App\Models\Operativo\RhPersonalBajaComentarios;
 use App\Models\Operativo\RhPersonalListaNegra;
 use App\Models\Operativo\RhPersonalAcceso;
+use App\Models\Operativo\RhPersonalLocalidadVersion;
 use App\Models\Operativo\RhPersonalAsistencia;
 use App\Models\Operativo\RhPersonalAsistenciaIncidencia;
 use App\Models\Operativo\RhPuestos;
@@ -17,6 +18,7 @@ use App\Models\Operativo\RhLocalidad;
 use App\Models\Operativo\RhListaIncidencias;
 use App\Models\Usuario;
 use App\Models\Estacion;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class ControlDocumentosPersonalService
 {
@@ -63,7 +65,7 @@ return [
 'nombre_puesto' => $nombrePuesto,
 'multiestacion' => $multiestacion,
 'puedeLeer'     => !empty($permisosDb['leer']),
-'puedeCrear'    => $multiestacion && $tienePermisoCrear,
+'puedeCrear'    => ($multiestacion || $idPuesto === 6) && $tienePermisoCrear,
 'puedeEditar'   => $tienePermisoEditar,
 'puedeEliminar' => $multiestacion && $tienePermisoEliminar,
 'puedeEliminarBaja' => $tienePermisoEliminar,
@@ -83,6 +85,123 @@ foreach ($depts as $d) {
 $ids[] = (int)$d['id'];
 }
 return array_values(array_unique($ids));
+}
+
+/** Physical station IDs only; department/locality IDs must not be written to id_estacion. */
+private static function getAllowedPhysicalStationIds(): array
+{
+    $ids = array_values(array_unique(array_filter(array_map(
+        static fn(array $station): int => (int) ($station['id'] ?? 0),
+        ModuleStationService::getAvailableStations('control-documentos-personal')
+    ), static fn(int $id): bool => $id > 0)));
+
+    return array_values(array_filter($ids, static function (int $id): bool {
+        return self::resolveCanonicalWorkplaceForStation($id) !== null;
+    }));
+}
+
+/** Resolve a physical station to exactly one canonical locality through the existing numlista bridge. */
+private static function resolveCanonicalWorkplaceForStation(int $stationId): ?int
+{
+    if ($stationId < 1) return null;
+
+    try {
+        $station = Estacion::query()->whereKey($stationId)->where('estatus', 0)->first();
+        $numlista = (int) ($station->numlista ?? 0);
+        if (!$station || $numlista < 1
+            || Estacion::query()->where('numlista', $numlista)->count() !== 1
+            || RhLocalidad::query()->where('numlista', $numlista)->count() !== 1) {
+            return null;
+        }
+
+        $mapped = MultiestacionService::convertIds(
+            [$stationId], MultiestacionService::TABLA_ESTACIONES, MultiestacionService::TABLA_RH_LOCALIDADES
+        );
+        if (count($mapped) !== 1 || (int) $mapped[0] < 1) return null;
+        $workplaceId = (int) $mapped[0];
+
+        return ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId) === $stationId
+            ? $workplaceId
+            : null;
+    } catch (\Throwable) {
+        return null;
+    }
+}
+
+/** A current API-owned identity must be revoked through its canonical flow before station or employment changes. */
+private static function hasCurrentDeviceIdentity(int $workerId): bool
+{
+    try {
+        if (!Capsule::connection('default')->getSchemaBuilder()->hasTable('op_rh_v2_dispositivo_identidad_personal')) {
+            return true;
+        }
+
+        $connection = Capsule::connection('default');
+        $nowUtc = $connection->getDriverName() === 'sqlite'
+            ? gmdate('Y-m-d H:i:s.u')
+            : Capsule::raw('UTC_TIMESTAMP(6)');
+        return $connection->table('op_rh_v2_dispositivo_identidad_personal')
+            ->where('id_personal', $workerId)
+            ->where('es_activo', 1)
+            ->where('valido_desde', '<=', $nowUtc)
+            ->where(static function ($query) use ($nowUtc): void {
+                $query->whereNull('valido_hasta')->orWhere('valido_hasta', '>', $nowUtc);
+            })->exists();
+    } catch (\Throwable) {
+        // Unknown identity state is not safe to treat as an unlinked worker.
+        return true;
+    }
+}
+
+/** The API sync provisioner treats any identity history as a conflict; do not silently move a mapped worker. */
+private static function hasDeviceIdentityHistory(int $workerId): bool
+{
+    try {
+        if (!Capsule::connection('default')->getSchemaBuilder()->hasTable('op_rh_v2_dispositivo_identidad_personal')) {
+            return true;
+        }
+        return Capsule::connection('default')->table('op_rh_v2_dispositivo_identidad_personal')
+            ->where('id_personal', $workerId)->exists();
+    } catch (\Throwable) {
+        return true;
+    }
+}
+
+/** Append a correction that closes the one current canonical membership without rewriting its history. */
+private static function closeCanonicalMembership(int $workerId, int $expectedWorkplaceId, int $actorId, string $reason, string $effectiveAt): bool
+{
+    if ($workerId < 1 || $expectedWorkplaceId < 1 || $actorId < 1) return false;
+    $assignment = (new WorkerWorkplaceAssignmentResolver())->resolveAssignments($workerId, $effectiveAt);
+    if (($assignment['status'] ?? '') !== 'RESOLVED_SINGLE'
+        || (int) ($assignment['assignments'][0]['workplace_id'] ?? 0) !== $expectedWorkplaceId
+        || ($assignment['assignments'][0]['valid_from_utc'] ?? '') >= $effectiveAt) {
+        return false;
+    }
+
+    $assignmentRow = $assignment['assignments'][0];
+    // The resolver reads SQL DATETIME values, while the append-only writer
+    // deliberately requires an explicit UTC instant at its boundary.
+    $validFromUtc = (new \DateTimeImmutable(
+        (string) $assignmentRow['valid_from_utc'],
+        new \DateTimeZone('UTC')
+    ))->format('Y-m-d\\TH:i:s.u\\Z');
+    $versionId = (new WorkerWorkplaceAssignmentVersionService())->appendVersion(
+        $workerId,
+        $expectedWorkplaceId,
+        $validFromUtc,
+        $effectiveAt,
+        $actorId,
+        $reason,
+        (int) $assignmentRow['id']
+    );
+    $version = RhPersonalLocalidadVersion::query()->whereKey($versionId)->first();
+    if (!$version) return false;
+    $recordedAsOf = (new \DateTimeImmutable((string) $version->recorded_at_utc, new \DateTimeZone('UTC')))
+        ->format('Y-m-d\\TH:i:s.u\\Z');
+    $readback = (new WorkerWorkplaceAssignmentResolver())->resolveAssignmentsAsRecordedAt(
+        $workerId, $effectiveAt, $recordedAsOf
+    );
+    return ($readback['status'] ?? '') === 'RESOLVED_NONE' && $readback['assignments'] === [];
 }
 
 /** Alcance independiente del módulo de bajas, sin alterar Control de Documentos. */
@@ -419,13 +538,20 @@ return $data;
 
 public static function addPersonal(array $input, array $files): ?int
 {
+if (!Auth::check() || !self::getPermisos()['puedeCrear']) return null;
 $validationErrors = self::validatePersonalInput($input);
 if ($validationErrors) return null;
 
 $ctx = ModuleStationService::getContext('control-documentos-personal');
 $idEstacion = (int)($input['id_estacion'] ?? 0);
 if (!$idEstacion) $idEstacion = (int)($ctx['id_estacion'] ?? $ctx['id_depto'] ?? 0);
-if (!$idEstacion) return null;
+if (!$idEstacion || !in_array($idEstacion, self::getAllowedPhysicalStationIds(), true)) return null;
+$actor = Auth::user();
+if ((int) ($actor->id_puesto ?? 0) === 6 && ((int) ($actor->id_gas ?? 0) < 1 || (int) $actor->id_gas !== $idEstacion)) return null;
+$workplaceId = self::resolveCanonicalWorkplaceForStation($idEstacion);
+if ($workplaceId === null) return null;
+$actorId = (int) ($actor->id ?? 0);
+if ($actorId < 1) return null;
 
 $data = [
 'id_estacion'      => $idEstacion,
@@ -443,7 +569,45 @@ $data[$campo] = '';
 
 $nombrePersonal = $data['nombre_completo'];
 
-$record = RhPersonal::create($data);
+$record = Capsule::connection('default')->transaction(static function () use ($data, $idEstacion, $workplaceId, $actorId) {
+    // Serialize Portal3 personnel registrations at the physical station.
+    $connection = Capsule::connection('default');
+    $station = $connection->table('tb_estaciones')
+        ->where('id', $idEstacion)->where('estatus', 0)->lockForUpdate()->first(['id']);
+    if (!$station || self::resolveCanonicalWorkplaceForStation($idEstacion) !== $workplaceId) return null;
+    $duplicate = RhPersonal::query()->where('id_estacion', $idEstacion)
+        ->where('no_colaborador', $data['no_colaborador'])->where('estado', 1)->exists();
+    if ($duplicate) return null;
+    $personal = RhPersonal::create($data);
+    $effectiveAt = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z');
+    $membershipId = (new WorkerWorkplaceAssignmentVersionService())->appendVersion(
+        (int) $personal->id, $workplaceId, $effectiveAt, null, $actorId,
+        'Alta desde Control de Documentos del Personal'
+    );
+    $membership = RhPersonalLocalidadVersion::query()->whereKey($membershipId)->first();
+    if (!$membership) throw new \RuntimeException('CANONICAL_MEMBERSHIP_READBACK_FAILED');
+    $recordedAsOf = (new \DateTimeImmutable((string) $membership->recorded_at_utc, new \DateTimeZone('UTC')))
+        ->format('Y-m-d\\TH:i:s.u\\Z');
+    $resolved = (new WorkerWorkplaceAssignmentResolver())->resolveAssignmentsAsRecordedAt(
+        (int) $personal->id,
+        $effectiveAt,
+        $recordedAsOf
+    );
+    if (!$membership || (int) $membership->worker_id !== (int) $personal->id
+        || (int) $membership->workplace_id !== $workplaceId
+        || ($resolved['status'] ?? '') !== 'RESOLVED_SINGLE'
+        || (int) ($resolved['assignments'][0]['workplace_id'] ?? 0) !== $workplaceId) {
+        throw new \RuntimeException('CANONICAL_MEMBERSHIP_READBACK_FAILED');
+    }
+
+    // Deliberately do not create op_rh_personal_acceso or a fingerprint here.
+    $readback = RhPersonal::query()->whereKey((int) $personal->id)
+        ->where('id_estacion', $idEstacion)->where('estado', 1)->first();
+    if (!$readback || (int) $readback->no_colaborador !== (int) $data['no_colaborador']) {
+        throw new \RuntimeException('PERSONAL_READBACK_FAILED');
+    }
+    return $readback;
+});
 if (!$record) return null;
 
 foreach (self::DOCUMENT_TYPES as $campo => $info) {
@@ -463,22 +627,82 @@ return $record->id;
 
 public static function editPersonal(int $id, array $input, array $files): bool
 {
-$record = RhPersonal::find($id);
+$permissions = self::getPermisos();
+if (!Auth::check() || !$permissions['puedeLeer'] || !$permissions['puedeEditar']) return false;
+$record = self::findAuthorizedPersonal($id);
 if (!$record) return false;
+
+$selected = self::selectedContextId('control-documentos-personal');
+if ($selected < 0 || ($selected > 0 && (int) $record->id_estacion !== $selected)) return false;
 
 $validationErrors = self::validatePersonalInput($input, (int)$record->id_estacion);
 if ($validationErrors) return false;
 
 $idEstacionNuevo = (int)($input['id_estacion'] ?? $record->id_estacion);
-
-$record->update([
+$allowedPhysicalStations = self::getAllowedPhysicalStationIds();
+if (!in_array($idEstacionNuevo, $allowedPhysicalStations, true)) return false;
+$actor = Auth::user();
+if ((int) ($actor->id_puesto ?? 0) === 6 && ((int) ($actor->id_gas ?? 0) < 1 || (int) $actor->id_gas !== $idEstacionNuevo)) return false;
+$workplaceIdNuevo = self::resolveCanonicalWorkplaceForStation($idEstacionNuevo);
+if ($workplaceIdNuevo === null) return false;
+$data = [
 'id_estacion'     => $idEstacionNuevo,
 'fecha_ingreso'   => normalizarFecha($input['fecha_ingreso'] ?? ''),
 'no_colaborador'  => self::parseCollaboratorNumber($input['no_colaborador'] ?? 0),
 'nombre_completo' => trim($input['nombre_completo'] ?? ''),
 'puesto'          => (int)($input['puesto'] ?? 0),
 'sd'              => self::parseSalary($input['sd'] ?? 0),
-]);
+];
+
+try {
+    $record = Capsule::connection('default')->transaction(static function () use ($id, $record, $idEstacionNuevo, $workplaceIdNuevo, $data, $actor): ?RhPersonal {
+        $locked = RhPersonal::query()->whereKey($id)->lockForUpdate()->first();
+        if (!$locked || (int) $locked->id_estacion !== (int) $record->id_estacion) return null;
+        $station = Capsule::connection('default')->table('tb_estaciones')
+            ->where('id', $idEstacionNuevo)->where('estatus', 0)->lockForUpdate()->first(['id']);
+        if (!$station || self::resolveCanonicalWorkplaceForStation($idEstacionNuevo) !== $workplaceIdNuevo) return null;
+
+        $duplicate = RhPersonal::query()->where('id_estacion', $idEstacionNuevo)
+            ->where('no_colaborador', $data['no_colaborador'])->where('estado', 1)->where('id', '<>', $id)->exists();
+        if ($duplicate) return null;
+
+        if ((int) $locked->id_estacion !== $idEstacionNuevo) {
+            if (self::hasDeviceIdentityHistory($id)) return null;
+            $oldWorkplaceId = self::resolveCanonicalWorkplaceForStation((int) $locked->id_estacion);
+            if ($oldWorkplaceId === null) return null;
+            $effectiveAt = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z');
+            $actorId = (int) ($actor->id ?? 0);
+            if (!self::closeCanonicalMembership(
+                $id, $oldWorkplaceId, $actorId, 'Cambio de estación: cierre de adscripción anterior', $effectiveAt
+            )) return null;
+            $membershipId = (new WorkerWorkplaceAssignmentVersionService())->appendVersion(
+                $id, $workplaceIdNuevo, $effectiveAt, null, $actorId,
+                'Cambio de estación desde Control de Documentos del Personal'
+            );
+            $membership = RhPersonalLocalidadVersion::query()->whereKey($membershipId)->first();
+            if (!$membership) throw new \RuntimeException('CANONICAL_MEMBERSHIP_READBACK_FAILED');
+            $recordedAsOf = (new \DateTimeImmutable((string) $membership->recorded_at_utc, new \DateTimeZone('UTC')))
+                ->format('Y-m-d\\TH:i:s.u\\Z');
+            $resolved = (new WorkerWorkplaceAssignmentResolver())->resolveAssignmentsAsRecordedAt($id, $effectiveAt, $recordedAsOf);
+            if ((int) ($resolved['assignments'][0]['workplace_id'] ?? 0) !== $workplaceIdNuevo
+                || ($resolved['status'] ?? '') !== 'RESOLVED_SINGLE') {
+                throw new \RuntimeException('CANONICAL_MEMBERSHIP_READBACK_FAILED');
+            }
+        }
+
+        $locked->fill($data);
+        $locked->save();
+        $readback = RhPersonal::query()->whereKey($id)->first();
+        if (!$readback || (int) $readback->id_estacion !== $idEstacionNuevo
+            || (int) $readback->no_colaborador !== (int) $data['no_colaborador']) {
+            throw new \RuntimeException('PERSONAL_READBACK_FAILED');
+        }
+        return $readback;
+    });
+} catch (\Throwable) {
+    return false;
+}
+if (!$record) return false;
 
 $nombrePersonal = $record->nombre_completo;
 
@@ -499,15 +723,37 @@ return true;
 
 public static function deletePersonal(int $id): bool
 {
-$record = RhPersonal::find($id);
+$permissions = self::getPermisos();
+if (!Auth::check() || !$permissions['puedeLeer'] || !$permissions['puedeEliminarBaja']) return false;
+$record = self::findAuthorizedPersonal($id);
 if (!$record) return false;
+
+$selected = self::selectedContextId('control-documentos-personal');
+if ($selected < 0 || ($selected > 0 && (int) $record->id_estacion !== $selected)) return false;
 
 $idEstacion = $record->id_estacion;
 $nombrePersonal = $record->nombre_completo;
 $puesto = RhPuestos::find($record->puesto);
 $nombrePuesto = $puesto ? $puesto->puesto : '';
 
-$record->update(['estado' => 0]);
+try {
+    $updated = Capsule::connection('default')->transaction(static function () use ($id, $record): bool {
+        $locked = RhPersonal::query()->whereKey($id)->lockForUpdate()->first();
+        if (!$locked || (int) $locked->id_estacion !== (int) $record->id_estacion
+            || self::hasCurrentDeviceIdentity($id)) return false;
+        $workplaceId = self::resolveCanonicalWorkplaceForStation((int) $locked->id_estacion);
+        $actorId = (int) (Auth::user()->id ?? 0);
+        $effectiveAt = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z');
+        if ($workplaceId === null || !self::closeCanonicalMembership(
+            $id, $workplaceId, $actorId, 'Baja desde Control de Documentos del Personal', $effectiveAt
+        )) return false;
+        $locked->update(['estado' => 0]);
+        return (int) RhPersonal::query()->whereKey($id)->value('estado') === 0;
+    });
+} catch (\Throwable) {
+    return false;
+}
+if (!$updated) return false;
 
 self::notify($idEstacion, 'eliminó personal', [
 'nombre' => $nombrePersonal,
@@ -801,7 +1047,9 @@ return "/download?tipo={$downloadTipo}&file=" . urlencode($archivo);
 public static function addBajaPersonal(int $idPersonal, array $input, array $files): bool
 {
 $permisos = self::getPermisos();
-    if (!$permisos['puedeLeer'] || !$permisos['puedeEliminar']) return false;
+    if (!Auth::check() || !$permisos['puedeLeer'] || !$permisos['puedeEliminarBaja']) return false;
+$actorId = (int) (Auth::user()->id ?? 0);
+if ($actorId < 1) return false;
 $record = self::findAuthorizedPersonal($idPersonal);
 if (!$record) return false;
 $selected = self::selectedContextId('control-documentos-personal');
@@ -811,16 +1059,45 @@ $fechaBaja = normalizarFecha($input['fecha_baja'] ?? '');
 $motivo = trim((string)($input['motivo'] ?? ''));
 if (!$fechaBaja || $motivo === '') return false;
 
-$bajaData = [
-'id_personal'     => $idPersonal,
-'fecha_baja'      => $fechaBaja,
-'motivo'          => $motivo,
-'detalle'         => $input['detalle'] ?? '',
-'solucion'        => '',
-'proceso'         => '',
-'estado_proceso'  => 0,
-];
-$baja = RhPersonalBaja::create($bajaData);
+try {
+    $baja = Capsule::connection('default')->transaction(static function () use ($idPersonal, $record, $fechaBaja, $motivo, $input, $actorId): ?RhPersonalBaja {
+        $locked = RhPersonal::query()->whereKey($idPersonal)->lockForUpdate()->first();
+        if (!$locked || (int) $locked->id_estacion !== (int) $record->id_estacion || (int) $locked->estado !== 1
+            || self::hasCurrentDeviceIdentity($idPersonal)) return null;
+        $workplaceId = self::resolveCanonicalWorkplaceForStation((int) $locked->id_estacion);
+        $effectiveAt = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z');
+        if ($workplaceId === null || !self::closeCanonicalMembership(
+            $idPersonal, $workplaceId, $actorId,
+            'Baja de personal desde Control de Documentos', $effectiveAt
+        )) return null;
+
+        $baja = RhPersonalBaja::create([
+            'id_personal' => $idPersonal,
+            'fecha_baja' => $fechaBaja,
+            'motivo' => $motivo,
+            'detalle' => $input['detalle'] ?? '',
+            'solucion' => '',
+            'proceso' => '',
+            'estado_proceso' => 0,
+        ]);
+        $locked->update(['estado' => 0]);
+        if (($input['motivo'] ?? '') === 'Mala practica') {
+            RhPersonalListaNegra::create([
+                'id_personal' => $idPersonal,
+                'fecha' => $fechaBaja,
+                'motivo' => $motivo,
+                'detalle' => $input['detalle'] ?? '',
+            ]);
+        }
+        if ((int) RhPersonal::query()->whereKey($idPersonal)->value('estado') !== 0) {
+            throw new \RuntimeException('PERSONAL_OFFBOARD_READBACK_FAILED');
+        }
+        return $baja;
+    });
+} catch (\Throwable) {
+    return false;
+}
+if (!$baja) return false;
 $idBaja = (int)$baja->getKey();
 
 $uploadDir = self::getBajaUploadDir();
@@ -840,17 +1117,6 @@ RhPersonalBajaArchivos::create([
 'archivo'     => $filename,
 ]);
 }
-}
-
-$record->update(['estado' => 0]);
-
-if (($input['motivo'] ?? '') === 'Mala practica') {
-RhPersonalListaNegra::create([
-'id_personal' => $idPersonal,
-'fecha'   => normalizarFecha($input['fecha_baja'] ?? ''),
-'motivo'  => $input['motivo'] ?? '',
-'detalle' => $input['detalle'] ?? '',
-]);
 }
 
 $puesto = RhPuestos::find($record->puesto);
@@ -941,24 +1207,16 @@ error_log('Error notificando control documentos personal: ' . $e->getMessage());
 }
 }
 
-public static function getAcceso(int $idPersonal): array
+public static function getAcceso(int $idPersonal): ?array
 {
+$personal = Auth::check() && self::getPermisos()['puedeLeer'] ? self::findAuthorizedPersonal($idPersonal) : null;
+if (!$personal) return null;
 $acceso = RhPersonalAcceso::where('id_personal', $idPersonal)->first();
-
-if (!$acceso) {
-$acceso = RhPersonalAcceso::create([
-'id_personal' => $idPersonal,
-'huella'      => '',
-'pin'         => 0,
-]);
-}
-
-$personal = self::findAuthorizedPersonal($idPersonal);
 $puesto = $personal ? RhPuestos::find($personal->puesto) : null;
 $nombrePuesto = $puesto ? $puesto->puesto : '';
 
 return [
-'huella'       => $acceso->huella ?? '',
+'huella'       => !empty($acceso->huella),
 'pin_registrado' => !empty($acceso->pin),
 'nombre_puesto' => $nombrePuesto,
 ];
@@ -1618,6 +1876,8 @@ return ['success' => true, 'message' => 'Incidencia registrada correctamente.'];
 
 public static function editarPin(int $idPersonal, string $pin): array
 {
+$personal = Auth::check() && self::getPermisos()['puedeEditar'] ? self::findAuthorizedPersonal($idPersonal) : null;
+if (!$personal) return ['success' => false, 'message' => 'No tienes autorización para modificar el acceso de este trabajador.', 'code' => 403];
 $pinLimpio = trim($pin);
 
 if (strlen($pinLimpio) < 5) {
@@ -1643,7 +1903,6 @@ RhPersonalAcceso::create([
 $acceso->update(['pin' => (int)$pinLimpio]);
 }
 
-$personal = RhPersonal::find($idPersonal);
 if ($personal) {
 self::notify((int)$personal->id_estacion, 'editó PIN', [
 'nombre' => $personal->nombre_completo ?? '',
