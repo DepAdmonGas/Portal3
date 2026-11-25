@@ -139,7 +139,8 @@ $temporary = $render('workspace-temporary-access.php', $common + [
 $assert(str_contains($temporary, 'Solicitudes de acceso temporal')
     && str_contains($temporary, 'Colaborador de prueba')
     && str_contains($temporary, 'No incluido en esta lectura')
-    && str_contains($temporary, 'PIN no se consulta')
+    && !str_contains($temporary, 'PIN de configuración')
+    && !str_contains($temporary, 'admin-pin')
     && !str_contains($temporary, '<form'), 'temporary-access workspace renders only queue data and does not expose write controls or a PIN');
 $oneTimePin = $render('workspace-temporary-access.php', $common + [
     'canViewTemporaryPin' => true,
