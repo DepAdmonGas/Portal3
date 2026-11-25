@@ -684,6 +684,32 @@ $readerProfileItemsJson = htmlspecialchars(
         </div>
     </section>
 
+    <?php if (!empty($capabilityGrantAccess['can_write'])): ?>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 mb-4" id="checador-capability-grants">
+            <div class="col" data-checador-module-card>
+                <a href="/departamento-operativo/recursos-humanos/checador/configuracion/permisos-capacidades" class="d-block h-100 text-decoration-none focus-ring focus-ring-primary rounded-3">
+                <article class="card bg-body border rounded-3 shadow-sm card-hover h-100 mb-0">
+                    <div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">
+                        <span class="rounded-3 bg-primary-subtle text-primary p-3 d-inline-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="ti ti-shield-lock fs-9" aria-hidden="true"></i>
+                        </span>
+                        <div class="d-flex flex-column flex-grow-1 h-100">
+                            <h3 class="card-title fs-6 fw-bolder mb-2">Permisos y capacidades</h3>
+                            <p class="text-body-secondary mb-3">Administra permisos efectivos del Checador por puesto y usuario.</p>
+                            <ul class="list-unstyled d-flex flex-wrap gap-2 mt-auto mb-0" aria-label="Funciones disponibles">
+                                <li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">Puestos</span></li>
+                                <li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">Usuarios</span></li>
+                                <li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">Auditoría</span></li>
+                            </ul>
+                        </div>
+                        <i class="ti ti-chevron-right fs-7 text-primary align-self-center flex-shrink-0" aria-hidden="true"></i>
+                    </div>
+                </article>
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <section class="card mb-4" id="m11-effective-permissions" aria-labelledby="m11-effective-permissions-heading">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-3">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-lock-check fs-5"></i></span>

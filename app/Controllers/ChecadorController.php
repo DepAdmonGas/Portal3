@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Auth;
 use App\Core\Breadcrumb;
+use App\Core\CsrfToken;
 use App\Core\JsonResponse;
 use App\Core\Logger;
 use App\Core\Request;
@@ -28,6 +29,8 @@ use App\Services\ChecadorJourneySqlReadService;
 use App\Services\ChecadorAdjustmentSqlReadService;
 use App\Services\ChecadorWeeklyScheduleSqlReadService;
 use App\Services\ChecadorRawPunchReadService;
+use App\Services\ChecadorAdministrativePinSqlService;
+use App\Services\ChecadorPermissionGrantAdminService;
 use App\Services\ModuleStationService;
 use App\Services\RecibosNominaService;
 
@@ -989,6 +992,83 @@ final class ChecadorController extends BaseController
         $this->renderDashboardWorkspace('temporary-access');
     }
 
+    public function administrativePinIssue(): void
+    {
+        $this->handleAdministrativePinWrite('issue');
+    }
+
+    public function administrativePinRevoke(string $authorizationUuid): void
+    {
+        $this->handleAdministrativePinWrite('revoke_pin', $authorizationUuid);
+    }
+
+    public function administrativeSessionRevoke(string $sessionUuid): void
+    {
+        $this->handleAdministrativePinWrite('revoke_session', $sessionUuid);
+    }
+
+    private function handleAdministrativePinWrite(string $operation, ?string $uuid = null): void
+    {
+        header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        $actor = Auth::user();
+        $input = Request::all();
+        $workplaceId = self::positiveInteger($input['workplace_id'] ?? null);
+        if (!$actor || !Auth::check()) {
+            http_response_code(401);
+            self::redirect('/login');
+        }
+        if (!Request::isSecure()) {
+            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'La emisión requiere una conexión HTTPS.']);
+        } elseif (!\App\Core\CsrfToken::validate(trim((string)($input['_csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')))) {
+            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'Actualiza la página antes de continuar.']);
+        } elseif (($input['confirm_action'] ?? null) !== '1') {
+            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'Confirma la operación antes de continuar.']);
+        } elseif ($workplaceId === null) {
+            Session::set('checador_admin_pin_feedback', ['type'=>'error','message'=>'Selecciona una estación autorizada.']);
+        } else {
+            $service = new ChecadorAdministrativePinSqlService();
+            $result = match ($operation) {
+                'issue' => $service->issue($actor, $workplaceId, self::positiveInteger($input['device_id'] ?? null) ?? 0),
+                'revoke_pin' => $service->revokePin($actor, $workplaceId, (string)$uuid),
+                'revoke_session' => $service->revokeSession($actor, $workplaceId, (string)$uuid),
+                default => ['ok'=>false,'error'=>'invalid_input'],
+            };
+            if (!empty($result['ok'])) {
+                $feedback = ['type'=>'success','message'=>match($operation){
+                    'issue'=>'PIN de configuración generado. Muéstralo al Lector ahora; no volverá a mostrarse.',
+                    'revoke_pin'=>'PIN pendiente revocado.','revoke_session'=>'Sesión administrativa revocada.',default=>'Operación confirmada.',
+                },'user_id'=>(int)$actor->id,'workplace_id'=>$workplaceId,'at'=>time()];
+                if ($operation === 'issue') {
+                    $feedback['pin']=(string)($result['pin']??'');
+                    $feedback['expires_at_utc']=(string)($result['item']['expires_at_utc']??'');
+                    $feedback['device_name']=(string)($result['item']['device_name']??'');
+                }
+                Session::set('checador_admin_pin_feedback',$feedback);
+            } else {
+                $error=(string)($result['error']??'admin_pin_write_unavailable');
+                $message=match($error){
+                    'permission_denied'=>'No tienes autorización para esta operación en la estación seleccionada.',
+                    'station_mapping_unresolved'=>'No se pudo verificar la localidad y estación autorizadas.',
+                    'device_not_found'=>'El dispositivo no pertenece a la estación seleccionada.',
+                    'device_inactive'=>'El dispositivo está inactivo.',
+                    'credential_unavailable'=>'Se requiere una sola credencial vigente para el dispositivo.',
+                    'biometric_grant_unavailable'=>'El dispositivo no tiene un permiso biométrico vigente.',
+                    'active_session_exists'=>'El dispositivo ya tiene una sesión administrativa vigente.',
+                    'secret_unavailable'=>'La configuración privada compartida no está disponible; no se generó el PIN.',
+                    'feature_disabled'=>'El servicio de PIN de configuración sigue deshabilitado.',
+                    'invalid_input'=>'La solicitud no es válida.','not_found'=>'No se encontró la autorización dentro de esta estación.',
+                    'not_revocable'=>'El registro ya no se encuentra en un estado revocable.',
+                    default=>'El servicio de PIN de configuración no está disponible; no se confirmó ningún cambio.',
+                };
+                Session::set('checador_admin_pin_feedback',['type'=>'error','message'=>$message,'user_id'=>(int)$actor->id,'workplace_id'=>$workplaceId,'at'=>time()]);
+            }
+        }
+        $target='/departamento-operativo/recursos-humanos/checador/acceso-temporal';
+        if($workplaceId!==null)$target.='?workplace_id='.$workplaceId;
+        self::redirect($target);
+    }
+
     /** Render a lightweight entry page; operational data is loaded only by its workspace route. */
     private function renderModuleDirectory(): void
     {
@@ -1399,7 +1479,7 @@ final class ChecadorController extends BaseController
             : ($demoMode || $realApiPostOperationsEnabled);
         $canViewTemporaryPin = $workspace === 'temporary-access'
             && !$demoMode
-            && $realApiPostOperationsEnabled
+            && ChecadorDailyReadService::temporaryAccessApiPostOperationsEnabled()
             && (ChecadorAccessService::authorizeTemporaryAccess($requestedWorkplace, 'editar')['allowed'] ?? false) === true;
         $demoScenario = $demoMode ? ChecadorDailyReadService::configuredDemoScenario() : null;
 
@@ -1555,6 +1635,14 @@ final class ChecadorController extends BaseController
             'message' => '',
             'cancelable_uuid' => null,
         ];
+        $administrativePinPanel = ['ok'=>false,'state'=>'unavailable','devices'=>[],'history'=>[],'can_issue'=>false,'can_revoke'=>false,'error'=>'not_loaded'];
+        $administrativePinFeedback = Session::pull('checador_admin_pin_feedback', null);
+        if (!is_array($administrativePinFeedback)
+            || (int)($administrativePinFeedback['user_id']??0)!==(int)($currentUser->id??0)
+            || (int)($administrativePinFeedback['workplace_id']??0)!==(int)($requestedWorkplace??0)
+            || (int)($administrativePinFeedback['at']??0)<time()-60) {
+            $administrativePinFeedback=null;
+        }
         $state = 'idle';
         $stateMessage = '';
         $workspaceNeedsExistingSnapshot = in_array($workspace, ['journeys', 'incidences', 'adjustments'], true);
@@ -2030,8 +2118,8 @@ final class ChecadorController extends BaseController
                 if (!empty($temporaryReadAccess['allowed'])) {
                     $temporaryAccessPanel['visible'] = true;
                     $temporaryAccessPanel['can_edit'] = !$demoMode
-                        && $realApiPostOperationsEnabled
-                        && (int) ($temporaryReadAccess['permissions']['editar'] ?? 0) === 1;
+                        && ChecadorDailyReadService::temporaryAccessApiPostOperationsEnabled()
+                        && (ChecadorAccessService::authorizeTemporaryAccess($requestedWorkplace, 'editar')['allowed'] ?? false) === true;
                 if ($demoMode) {
                     $temporaryAccessPanel['state'] = 'demo_blocked';
                     $temporaryAccessPanel['message'] = 'El acceso temporal no está simulado. No se consultó la API ni se ejecutaron acciones.';
@@ -2076,6 +2164,11 @@ final class ChecadorController extends BaseController
                     Session::remove('checador_temporary_access_cancelable');
                 }
             }
+        }
+
+        if ($workspace === 'temporary-access' && $requestedWorkplace !== null && $currentUser) {
+            $administrativePinPanel = (new ChecadorAdministrativePinSqlService())
+                ->readForWorkplace($currentUser, $requestedWorkplace);
         }
 
         $payrollComparisonAvailable = !$demoMode
@@ -2207,6 +2300,8 @@ final class ChecadorController extends BaseController
                 'evaluationFeedback' => $evaluationFeedback,
                 'temporaryAccessPanel' => $workspaceTemporaryAccessPanel,
                 'temporaryAccessFeedback' => $temporaryAccessFeedback,
+                'administrativePinPanel' => $administrativePinPanel,
+                'administrativePinFeedback' => $administrativePinFeedback,
                 'canViewTemporaryPin' => $workspace === null
                     ? !empty($temporaryAccessPanel['can_edit'])
                     : $canViewTemporaryPin,
@@ -2323,6 +2418,9 @@ final class ChecadorController extends BaseController
             && (ChecadorAccessService::authorizeTemporaryAccess($workplaceId, 'leer')['allowed'] ?? false) === true;
         $canReadScheduling = $workplaceId !== null
             && (ChecadorAccessService::authorizeScheduling($workplaceId, 'leer')['allowed'] ?? false) === true;
+        $capabilityGrantAccess = $user !== null
+            ? (new ChecadorPermissionGrantAdminService())->actorAccess((int) $user->id)
+            : ['can_read' => false, 'can_write' => false];
 
         Breadcrumb::add('Home', '/home');
         Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
@@ -2351,6 +2449,7 @@ final class ChecadorController extends BaseController
                 'historyInputInvalid' => $historyInputInvalid,
                 'temporaryAccessAvailable' => $temporaryAccessAvailable,
                 'canReadScheduling' => $canReadScheduling,
+                'capabilityGrantAccess' => $capabilityGrantAccess,
                 'links' => [
                     '/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
                 ],
@@ -2369,6 +2468,127 @@ final class ChecadorController extends BaseController
             ],
             'departamento-operativo'
         );
+    }
+
+    public function capabilityGrantIndex(): void
+    {
+        $this->renderCapabilityGrantAdmin(null, null);
+    }
+
+    public function capabilityGrantPosition(string $positionId): void
+    {
+        $this->renderCapabilityGrantAdmin('POSITION', $positionId);
+    }
+
+    public function capabilityGrantUser(string $userId): void
+    {
+        $this->renderCapabilityGrantAdmin('USER', $userId);
+    }
+
+    private function renderCapabilityGrantAdmin(?string $principalType, ?string $rawPrincipalId): void
+    {
+        $actor = Auth::user();
+        if (!$actor || !Auth::check()) {
+            self::redirect('/login');
+        }
+        $service = new ChecadorPermissionGrantAdminService();
+        $actorAccess = $service->actorAccess((int) $actor->id);
+        if (empty($actorAccess['can_read'])) {
+            self::renderAccessDenied((string) ($actorAccess['reason'] ?? 'permission_denied'), null);
+            return;
+        }
+
+        $principalId = null;
+        $panel = null;
+        if ($principalType !== null) {
+            $principalId = self::positiveInteger($rawPrincipalId);
+            if ($principalId === null) {
+                http_response_code(404);
+                self::renderAccessDenied('invalid_capability_target', null);
+                return;
+            }
+            $panel = $principalType === 'POSITION'
+                ? $service->positionPanel((int) $actor->id, $principalId)
+                : $service->userPanel((int) $actor->id, $principalId);
+            if (empty($panel['visible'])) {
+                self::renderAccessDenied('capability_target_denied', null);
+                return;
+            }
+        }
+
+        $directory = $service->targetDirectory((int) $actor->id);
+        $directory['history'] = $service->auditHistory((int) $actor->id);
+        $feedback = Session::pull('checador_capability_admin_feedback', null);
+        if (!is_array($feedback)
+            || (int) ($feedback['actor_id'] ?? 0) !== (int) $actor->id
+            || ($feedback['principal_type'] ?? null) !== $principalType
+            || (int) ($feedback['principal_id'] ?? 0) !== (int) ($principalId ?? 0)) {
+            $feedback = null;
+        }
+
+        Breadcrumb::add('Home', '/home');
+        Breadcrumb::add('Dirección de Operaciones', '/departamento-operativo');
+        Breadcrumb::add('Recursos Humanos', '/departamento-operativo/recursos-humanos');
+        Breadcrumb::add('Checador', '/departamento-operativo/recursos-humanos/checador');
+        Breadcrumb::add('Configuración', '/departamento-operativo/recursos-humanos/checador/configuracion');
+        Breadcrumb::add('Permisos y capacidades', '');
+
+        View::render(
+            'departamento-operativo/2-recursos-humanos/checador/configuration-capabilities',
+            [
+                'title' => 'Permisos y capacidades del Checador',
+                'actorAccess' => $actorAccess,
+                'directory' => $directory,
+                'principalType' => $principalType,
+                'principalId' => $principalId,
+                'capabilitiesPanel' => $panel,
+                'capabilitiesCsrfToken' => CsrfToken::token(),
+                'capabilitiesFeedback' => $feedback,
+                'help' => false,
+            ],
+            'departamento-operativo'
+        );
+    }
+
+    public function updatePositionCapabilityGrant(string $positionId): void
+    {
+        $this->updateCapabilityGrant('POSITION', $positionId);
+    }
+
+    public function updateUserCapabilityGrant(string $userId): void
+    {
+        $this->updateCapabilityGrant('USER', $userId);
+    }
+
+    private function updateCapabilityGrant(string $principalType, string $rawPrincipalId): void
+    {
+        $actor = Auth::user();
+        $principalId = self::positiveInteger($rawPrincipalId);
+        if (!$actor || !Auth::check()) self::redirect('/login');
+        if ($principalId === null || !CsrfToken::validate((string) ($_POST['_csrf_token'] ?? ''))) {
+            http_response_code($principalId === null ? 404 : 403);
+            self::renderAccessDenied('invalid_capability_request', null);
+            return;
+        }
+
+        $result = (new ChecadorPermissionGrantAdminService())->update(
+            (int) $actor->id,
+            $principalType,
+            $principalId,
+            (string) ($_POST['permission_key'] ?? ''),
+            (string) ($_POST['decision'] ?? ''),
+            (string) ($_POST['reason'] ?? ''),
+            (string) ($_POST['expected_state'] ?? '')
+        );
+        Session::set('checador_capability_admin_feedback', [
+            'actor_id' => (int) $actor->id,
+            'principal_type' => $principalType,
+            'principal_id' => $principalId,
+            'code' => $result['code'],
+            'ok' => $result['ok'],
+        ]);
+        $segment = $principalType === 'POSITION' ? 'puestos' : 'usuarios';
+        self::redirect('/departamento-operativo/recursos-humanos/checador/configuracion/permisos-capacidades/' . $segment . '/' . $principalId);
     }
 
     /** Issue a one-time Windows Reader link token through Portal3 SQL only. */
@@ -4494,7 +4714,7 @@ final class ChecadorController extends BaseController
             $feedback('error', 'El modo demostración no simula solicitudes, PIN ni acciones de acceso temporal.');
             self::redirect($redirect);
         }
-        if (!ChecadorDailyReadService::realApiPostOperationsEnabled()) {
+        if (!ChecadorDailyReadService::temporaryAccessApiPostOperationsEnabled()) {
             $feedback('error', 'Las acciones reales de acceso temporal están deshabilitadas hasta validar el ambiente, la autenticación y los permisos del servicio.');
             self::redirect($redirect);
         }

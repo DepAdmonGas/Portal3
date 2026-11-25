@@ -640,6 +640,11 @@ $r->addRoute('POST', '/recursos-humanos/checador/incidencias/data', Route::auth(
 $r->addRoute('GET', '/recursos-humanos/checador/ajustes', Route::auth(['ChecadorController', 'adjustments']));
 $r->addRoute('GET', '/recursos-humanos/checador/acceso-temporal', Route::auth(['ChecadorController', 'temporaryAccess']));
 $r->addRoute('GET', '/recursos-humanos/checador/configuracion', Route::auth(['ChecadorController', 'configuration']));
+$r->addRoute('GET', '/recursos-humanos/checador/configuracion/permisos-capacidades', Route::auth(['ChecadorController', 'capabilityGrantIndex']));
+$r->addRoute('GET', '/recursos-humanos/checador/configuracion/permisos-capacidades/puestos/{positionId:\d+}', Route::auth(['ChecadorController', 'capabilityGrantPosition']));
+$r->addRoute('GET', '/recursos-humanos/checador/configuracion/permisos-capacidades/usuarios/{userId:\d+}', Route::auth(['ChecadorController', 'capabilityGrantUser']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/permisos-capacidades/puestos/{positionId:\d+}', Route::auth(['ChecadorController', 'updatePositionCapabilityGrant']));
+$r->addRoute('POST', '/recursos-humanos/checador/configuracion/permisos-capacidades/usuarios/{userId:\d+}', Route::auth(['ChecadorController', 'updateUserCapabilityGrant']));
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/plantillas', Route::auth(['ChecadorController', 'saveConfigurationScheduleTemplate']));
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/puestos', Route::auth(['ChecadorController', 'saveConfigurationPosition']));
 $r->addRoute('POST', '/recursos-humanos/checador/configuracion/perfiles-lector', Route::auth(['ChecadorController', 'updateConfigurationReaderProfile']));
@@ -669,6 +674,9 @@ $r->addRoute('POST', '/recursos-humanos/checador/evaluations/evaluate', Route::a
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/authorize', Route::auth(['ChecadorController', 'temporaryAccessAuthorize']));
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/reject', Route::auth(['ChecadorController', 'temporaryAccessReject']));
 $r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/{requestUuid}/cancel', Route::auth(['ChecadorController', 'temporaryAccessCancel']));
+$r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/admin-pin', Route::auth(['ChecadorController', 'administrativePinIssue']));
+$r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/admin-pin/{authorizationUuid:[0-9a-fA-F-]{36}}/revoke', Route::auth(['ChecadorController', 'administrativePinRevoke']));
+$r->addRoute('POST', '/recursos-humanos/checador/acceso-temporal/admin-session/{sessionUuid:[0-9a-fA-F-]{36}}/revoke', Route::auth(['ChecadorController', 'administrativeSessionRevoke']));
 
 //----- Recibo de nomina
 $r->addRoute('GET', '/recursos-humanos/recibos-nomina/{idYear:\d+}', Route::auth(['RecibosNominaController', 'index']));

@@ -25,7 +25,7 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
     }
 };
 
-$environmentKeys = ['APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO', 'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE'];
+$environmentKeys = ['CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED', 'APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO', 'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE'];
 $originalEnvironment = [];
 foreach ($environmentKeys as $key) {
     $originalEnvironment[$key] = [array_key_exists($key, $_ENV), $_ENV[$key] ?? null, getenv($key)];
@@ -83,7 +83,8 @@ $queueRow = [
 
 try {
     $setEnvironment('APP_ENV', 'dev');
-    $setEnvironment('CHECADOR_API_REAL_POSTS_ENABLED', 'true');
+    $setEnvironment('CHECADOR_API_REAL_POSTS_ENABLED', null);
+    $setEnvironment('CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED', '1');
     $setEnvironment('CHECADOR_ADVANCED_DEMO_ENABLED', 'false');
     $setEnvironment('CHECADOR_ADVANCED_DEMO_SCENARIO', null);
 
@@ -194,6 +195,7 @@ try {
     $routes = file_get_contents(__DIR__ . '/../routes/web.php') ?: '';
     $assert(str_contains($controller, "authorizeTemporaryAccess(\$workplaceId, 'editar')")
         && str_contains($controller, "authorizeTemporaryAccess(\$requestedWorkplace, 'leer')")
+        && !str_contains($controller, 'authorizeTemporaryAccessInheritedPrepared(')
         && str_contains($accessService, "getTemporaryAccessPermissions")
         && str_contains($accessService, "station_workplaces"),
         'TAP09 Portal3 rechecks the independent ACL and physical Checador workplace before operations');

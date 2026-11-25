@@ -17,7 +17,7 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
     $condition ? $passes++ : $fails++;
 };
 
-$keys = ['APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO'];
+$keys = ['CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED', 'APP_ENV', 'CHECADOR_API_REAL_POSTS_ENABLED', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO'];
 $previous = [];
 foreach ($keys as $key) {
     $previous[$key] = [array_key_exists($key, $_ENV), $_ENV[$key] ?? null, getenv($key)];
@@ -104,6 +104,14 @@ try {
         'snapshot, Journey, incidence, lifecycle, admin evaluation and temporary access POST operations fail closed');
     $assert($networkCalls === 0 && $tokenCalls === 0 && $history === [], 'closed POST gate runs before JWT creation and HTTP transport');
 
+    $set('CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED', null);
+    $set('CHECADOR_API_REAL_POSTS_ENABLED', 'true');
+    $stillClosed = $service->temporaryAccessAction($user, $uuid, 'authorize');
+    $assert(($stillClosed['error']['kind'] ?? '') === 'api_post_disabled' && $networkCalls === 0, 'global POST gate cannot enable Temporary Access');
+    $set('CHECADOR_API_REAL_POSTS_ENABLED', null);
+    $set('CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED', '1');
+    $otherModule = $service->evaluateJourney($user, 558, 1, '2026-10-19');
+    $assert(ChecadorDailyReadService::temporaryAccessApiPostOperationsEnabled() && !ChecadorDailyReadService::realApiPostOperationsEnabled() && ($otherModule['error']['kind'] ?? '') === 'api_post_disabled' && $networkCalls === 0, 'dedicated gate does not open other POST operations');
     $set('CHECADOR_API_REAL_POSTS_ENABLED', 'true');
     $assert(ChecadorDailyReadService::realApiPostOperationsEnabled(), 'explicit opt-in opens the gate only in a local development environment');
     $set('APP_ENV', 'production');

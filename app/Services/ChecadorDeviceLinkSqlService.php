@@ -232,6 +232,7 @@ final class ChecadorDeviceLinkSqlService
                 if ($mode !== 'token') {
                     Capsule::connection('default')->table('op_rh_v2_device_biometric_grants')->where('id_dispositivo', $deviceId)
                         ->where('activo', 1)->whereNull('revocado_at_utc')->update(['activo' => 0, 'revocado_at_utc' => $now, 'valido_hasta_utc' => $now]);
+                    $this->invalidateAdministrativePinState($deviceId, $stationId, $now);
                 }
                 if ($mode === 'device') {
                     Capsule::connection('default')->table('op_rh_v2_dispositivo_credenciales')->where('id_dispositivo', $deviceId)
@@ -247,6 +248,45 @@ final class ChecadorDeviceLinkSqlService
             self::logFailure($exception, 'revoke_' . $mode, $workplaceId, $deviceId);
             return ['ok' => false, 'error' => 'device_link_write_failed'];
         }
+    }
+
+    /** Revoking biometric access or unlinking a device must invalidate its admin PIN and sessions. */
+    private function invalidateAdministrativePinState(int $deviceId, int $stationId, string $now): void
+    {
+        $db = Capsule::connection('default');
+        $schema = $db->getSchemaBuilder();
+        $hasPins = $schema->hasTable('op_rh_v2_admin_pin');
+        $hasSessions = $schema->hasTable('op_rh_v2_admin_session');
+        if (!$hasPins && !$hasSessions) return;
+        if (!$hasPins || !$hasSessions) throw new \RuntimeException('administrative_pin_schema_incomplete');
+
+        $pins = $db->table('op_rh_v2_admin_pin')->where('device_id', $deviceId)->where('station_id', $stationId)
+            ->where('state', 'PENDING')->lockForUpdate()->get(['id', 'locality_id', 'actor_user_id']);
+        foreach ($pins as $pin) {
+            $db->table('op_rh_v2_admin_pin')->where('id', (int)$pin->id)->where('state', 'PENDING')
+                ->update(['state'=>'REVOKED','revoked_at_utc'=>$now]);
+            $this->auditAdminInvalidation((int)$pin->actor_user_id,(int)$pin->locality_id,'ADMIN_PIN',(int)$pin->id);
+        }
+        $sessions = $db->table('op_rh_v2_admin_session')->where('device_id', $deviceId)->where('station_id', $stationId)
+            ->where('state', 'ACTIVE')->lockForUpdate()->get(['id', 'locality_id', 'actor_user_id']);
+        foreach ($sessions as $session) {
+            $db->table('op_rh_v2_admin_session')->where('id', (int)$session->id)->where('state', 'ACTIVE')
+                ->update(['state'=>'REVOKED','ended_at_utc'=>$now]);
+            $this->auditAdminInvalidation((int)$session->actor_user_id,(int)$session->locality_id,'ADMIN_SESSION',(int)$session->id);
+        }
+    }
+
+    private function auditAdminInvalidation(int $actorId,int $workplaceId,string $entity,int $entityId):void
+    {
+        Capsule::connection('default')->table('op_rh_v2_m11_configuration_audit')->insert([
+            'actor_portal_user_id'=>$actorId,
+            'permission_key'=>ChecadorV2PermissionService::ADMIN_PIN_REVOKE,
+            'workplace_id'=>$workplaceId,
+            'entity_type'=>$entity,
+            'entity_id'=>$entityId,
+            'action'=>'CREDENTIAL_OR_GRANT_REVOKED',
+            'created_at_utc'=>(string)Capsule::connection('default')->selectOne('SELECT UTC_TIMESTAMP(6) AS now_utc')->now_utc,
+        ]);
     }
 
     private function audit(int $actorId, string $permission, int $workplaceId, string $entity, int $entityId, string $action): void

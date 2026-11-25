@@ -90,6 +90,14 @@ final class ChecadorDailyReadService
             && in_array($flag, ['1', 'true', 'yes', 'on'], true);
     }
 
+    /** Dedicated, default-off gate for the three Temporary Access supervisor POSTs. */
+    public static function temporaryAccessApiPostOperationsEnabled(): bool
+    {
+        $environment = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: '')));
+        $flag = (string) ($_ENV['CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED'] ?? getenv('CHECADOR_TEMPORARY_ACCESS_POSTS_ENABLED') ?: '');
+        return in_array($environment, ['dev', 'development', 'local'], true) && $flag === '1';
+    }
+
     /** Keep approved local schedule writes isolated from unrelated API POSTs. */
     public static function scheduleApiPostOperationsEnabled(): bool
     {
@@ -2459,7 +2467,11 @@ final class ChecadorDailyReadService
                 $response = $this->demoResponse($method, $path, [], $body, $user, $idempotencyKey, $demoLocalityId);
             } else {
                 $scheduleWrite = preg_match('#\Aapi/v2/shift-(?:assignments(?:/[1-9][0-9]*/(?:close|replace))?|templates(?:/[A-Za-z0-9_-]{1,64}/versions)?)\z#D', ltrim($path, '/')) === 1;
-                if (strtoupper($method) === 'POST'
+                $temporaryWrite = preg_match('#\Aapi/v2/temporary-access/requests/[0-9a-fA-F-]{36}/(?:authorize|reject|cancel)\z#D', ltrim($path, '/')) === 1;
+                if (strtoupper($method) === 'POST' && $temporaryWrite && !self::temporaryAccessApiPostOperationsEnabled()) {
+                    return self::failure('api_post_disabled', 403);
+                }
+                if (strtoupper($method) === 'POST' && !$temporaryWrite
                     && !self::realApiPostOperationsEnabled()
                     && !($scheduleWrite && self::scheduleApiPostOperationsEnabled())) {
                     return self::failure('api_post_disabled', 403);

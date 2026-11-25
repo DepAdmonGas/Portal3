@@ -185,6 +185,71 @@ final class ChecadorAccessService
         }
     }
 
+    /**
+     * Capability grants are global principals (USER/POSITION), not locality
+     * records. Only an actor whose effective Checador ACL covers every active
+     * configured locality may administer them.
+     */
+    public static function hasCompleteConfiguredWorkplaceScope(array $authorization): bool
+    {
+        if (empty($authorization['allowed'])) return false;
+
+        try {
+            $config = ModuloConfig::query()
+                ->where('modulo_key', self::MODULE_KEY)
+                ->where('activo', 1)
+                ->first();
+            if (!$config || (bool) $config->allow_all) return false;
+
+            $type = (string) ($config->tipo ?? '');
+            $departmentType = (string) ($config->tipo_departamento ?? '');
+            $supportsDepartments = $type === 'stations_and_departments' && $departmentType === 'localidades';
+            if (!$supportsDepartments && !($type === 'stations_only' && $departmentType === 'puestos')) return false;
+
+            $rawSupportedStations = $config->estaciones_soportadas;
+            $supportedStationIds = ($rawSupportedStations === null || $rawSupportedStations === []) && $supportsDepartments
+                ? []
+                : self::positiveIdList($rawSupportedStations);
+            if ($supportedStationIds === null) return false;
+            $activeStationIds = Estacion::query()->whereIn('id', $supportedStationIds)
+                ->where('estatus', 0)->orderBy('id')->pluck('id')->map(static fn($id): int => (int) $id)->all();
+            if ($activeStationIds === [] && !$supportsDepartments) return false;
+            $expected = self::mapStationIdsToUniqueLocalities($activeStationIds);
+            if (count($expected) !== count($activeStationIds)) return false;
+
+            if ($supportsDepartments) {
+                $rawDepartments = $config->departamentos_soportados;
+                if ($rawDepartments !== null && $rawDepartments !== []) {
+                    $departmentIds = self::positiveIdList($rawDepartments);
+                    if ($departmentIds === null) return false;
+                    $activeDepartments = RhLocalidad::query()->whereIn('id', $departmentIds)
+                        ->orderBy('id')->pluck('id')->map(static fn($id): int => (int) $id)->all();
+                    if (count($activeDepartments) !== count($departmentIds)) return false;
+                    $stationLocalityIds = array_map('intval', array_column($expected, 'id'));
+                    foreach ($activeDepartments as $id) {
+                        if (!in_array($id, $stationLocalityIds, true)) {
+                            $expected[] = ['id' => $id];
+                        }
+                    }
+                }
+            }
+
+            $expectedIds = array_values(array_unique(array_map(
+                static fn(array $item): int => (int) ($item['id'] ?? 0),
+                $expected
+            )));
+            $actualIds = array_values(array_unique(array_map(
+                static fn(array $item): int => (int) ($item['id'] ?? 0),
+                is_array($authorization['workplaces'] ?? null) ? $authorization['workplaces'] : []
+            )));
+            sort($expectedIds);
+            sort($actualIds);
+            return $expectedIds !== [] && $actualIds === $expectedIds;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
     /** Preserve the independent legacy Biométricos ACL used by Comodines. */
     public static function authorizeBiometricosScheduling(?int $requestedLocalityId, string $action): array
     {
@@ -620,6 +685,43 @@ final class ChecadorAccessService
         }
     }
 
+    /** Prepared inherited ACL; intentionally not wired to routes before addendum approval. */
+    public static function authorizeTemporaryAccessInheritedPrepared(?int $requestedLocalityId, string $action): array
+    {
+        $deny = static fn(string $reason): array => ['allowed'=>false,'reason'=>$reason,'workplace_id'=>null,'permissions'=>['leer'=>0,'editar'=>0]];
+        if ($requestedLocalityId === null || $requestedLocalityId < 1 || !in_array($action, ['leer','editar'], true)) return $deny('invalid_temporary_access_scope');
+        try {
+            $scope = self::authorize($requestedLocalityId);
+            if (empty($scope['allowed']) || !in_array($requestedLocalityId, array_map('intval', array_column($scope['station_workplaces'] ?? [], 'id')), true)) return $deny('temporary_access_station_out_of_checador_scope');
+            $actor = Auth::user();
+            if (!$actor || !Auth::check()) return $deny('unauthenticated');
+            $users = Usuario::query()->where('id',(int)$actor->id)->where('estatus',0)->get();
+            if ($users->count() !== 1) return $deny('inactive_user');
+            $user = $users->first(); $userId=(int)$user->id; $position=(int)$user->id_puesto;
+            $db = \Illuminate\Database\Capsule\Manager::connection();
+            $parents = $db->table('modulos_dpto_operativo')->where('clave','recursos-humanos')->where('activo',1)->get(['id']);
+            $configs = $db->table('tb_modulos_config')->where('modulo_key','checador')->where('activo',1)->get(['id']);
+            if ($parents->count() !== 1 || $configs->count() !== 1) return $deny('authorization_lookup_failed');
+            $parentId=(int)$parents->first()->id;
+            $hasDirect = $db->table('modulos_usuarios_do as u')->join('modulos_dpto_operativo as m','m.id','=','u.id_modulo')->where('u.id_usuario',$userId)->where('m.activo',1)->exists();
+            $parentRows = $hasDirect
+                ? $db->table('modulos_usuarios_do')->where('id_modulo',$parentId)->where('id_usuario',$userId)->get(['leer','editar'])
+                : $db->table('modulos_puestos_do')->where('id_modulo',$parentId)->where('id_puesto',$position)->get(['leer','editar']);
+            $submodules = $db->table('modulos_sub_dpto_operativo')->where('id_modulo',$parentId)->where('clave','checador')->where('activo',1)->get(['id']);
+            if ($parentRows->count() !== 1 || $submodules->count() !== 1) return $deny('temporary_access_permission_denied');
+            $subId=(int)$submodules->first()->id;
+            $subGrants = $hasDirect
+                ? $db->table('modulos_sub_usuarios_do')->where('id_sub_modulo',$subId)->where('id_usuario',$userId)->count()
+                : $db->table('modulos_sub_puestos_do')->where('id_sub_modulo',$subId)->where('id_puesto',$position)->count();
+            $modules=$db->table('modulos_dpto_operativo')->where('clave','acceso-temporal')->get(['id']);
+            if ($modules->count()>1) return $deny('temporary_access_permission_denied');
+            $specific = $modules->isEmpty() ? [] : $db->table('modulos_usuarios_do')->where('id_modulo',(int)$modules->first()->id)->where('id_usuario',$userId)->get(['leer','editar'])->map(static fn($row):array=>(array)$row)->all();
+            $parent=(array)$parentRows->first();
+            if (!ChecadorTemporaryAccessInheritedPolicy::allows($position,$action,true,true,$subGrants===1,$parent,$specific)) return $deny('temporary_access_permission_denied');
+            return ['allowed'=>true,'reason'=>'authorized','workplace_id'=>$requestedLocalityId,'permissions'=>['leer'=>1,'editar'=>($position===6 && ChecadorTemporaryAccessInheritedPolicy::allows($position,'editar',true,true,true,$parent,$specific))?1:0]];
+        } catch (Throwable) { return $deny('authorization_lookup_failed'); }
+    }
+
     /**
      * Re-resolve the independent Temporary Access ACL and physical-station
      * scope for each supervisor operation. Departments are never accepted as
@@ -660,6 +762,11 @@ final class ChecadorAccessService
                 return $deny('inactive_user');
             }
 
+            $positionId = (int) ($user->id_puesto ?? 0);
+            if (!in_array($positionId, [6, 13], true) || ($action === 'editar' && $positionId !== 6)) {
+                return $deny('temporary_access_role_denied');
+            }
+
             $moduleConfig = ModuloConfig::query()
                 ->where('modulo_key', self::TEMPORARY_ACCESS_MODULE_KEY)
                 ->where('activo', 1)
@@ -673,6 +780,13 @@ final class ChecadorAccessService
                 || $supportedStations === null
                 || $supportedStations === []) {
                 return $deny('temporary_access_module_configuration_missing');
+            }
+
+            // estaciones_soportadas is expressed in physical station IDs;
+            // the requested workplace is a canonical locality ID.
+            $physicalStationId = self::resolveActiveStationIdForLocality($requestedLocalityId);
+            if ($physicalStationId === null || !in_array($physicalStationId, $supportedStations, true)) {
+                return $deny('temporary_access_station_out_of_scope');
             }
 
             $permissions = ModuloDptoOperativoService::getTemporaryAccessPermissions(
@@ -699,7 +813,7 @@ final class ChecadorAccessService
                 'workplace_id' => $requestedLocalityId,
                 'permissions' => [
                     'leer' => (int) ($permissions['leer'] ?? 0),
-                    'editar' => (int) ($permissions['editar'] ?? 0),
+                    'editar' => $positionId === 6 ? (int) ($permissions['editar'] ?? 0) : 0,
                 ],
             ];
         } catch (Throwable) {

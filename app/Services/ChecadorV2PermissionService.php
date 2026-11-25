@@ -24,6 +24,8 @@ final class ChecadorV2PermissionService
     public const DEVICE_READ = 'checador-v2-dispositivos.leer';
     public const DEVICE_LINK = 'checador.dispositivos.vincular';
     public const DEVICE_BIOMETRIC_ADMIN = 'checador.dispositivos.biometria.administrar';
+    public const ADMIN_PIN_ISSUE = 'checador.admin_pin.emitir';
+    public const ADMIN_PIN_REVOKE = 'checador.admin_pin.revocar';
     public const COMODINES_READ = 'checador.comodines.leer';
     public const COMODINES_REQUEST = 'checador.comodines.solicitar';
     public const COMODINES_APPROVE = 'checador.comodines.aprobar';
@@ -35,6 +37,7 @@ final class ChecadorV2PermissionService
         self::READER_PROFILE_READ, self::READER_PROFILE_EDIT,
         self::POSITION_CATALOG_READ, self::POSITION_CATALOG_EDIT,
         self::DEVICE_READ, self::DEVICE_LINK, self::DEVICE_BIOMETRIC_ADMIN,
+        self::ADMIN_PIN_ISSUE, self::ADMIN_PIN_REVOKE,
         self::COMODINES_READ, self::COMODINES_REQUEST, self::COMODINES_APPROVE, self::COMODINES_CANCEL,
     ];
 
