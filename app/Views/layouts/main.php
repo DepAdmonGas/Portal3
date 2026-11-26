@@ -171,6 +171,22 @@
 
                                 <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-center">
 
+                                    <?php if (!empty($tutorialDisponible)): ?>
+                                        <li class="nav-item nav-icon-hover-bg rounded-circle">
+                                            <button
+                                                type="button"
+                                                class="nav-link pointer border-0 bg-transparent <?= !empty($tutorialPendiente) ? 'd-none' : '' ?>"
+                                                id="portal3TutorialReplay"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#portal3TutorialBienvenida"
+                                                aria-label="Volver a ver el tutorial de bienvenida"
+                                                title="Volver a ver el tutorial de bienvenida"
+                                                <?= !empty($tutorialPendiente) ? 'hidden' : '' ?>>
+                                                <i class="ti ti-help-circle" aria-hidden="true"></i>
+                                            </button>
+                                        </li>
+                                    <?php endif; ?>
+
                                     <li class="nav-item nav-icon-hover-bg rounded-circle">
                                         <a class="nav-link moon dark-layout pointer" style="display: flex;">
                                             <i class="ti ti-moon moon" style="display: flex;"></i>
