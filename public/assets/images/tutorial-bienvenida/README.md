@@ -2,9 +2,10 @@
 
 Agrega las capturas reales en esta carpeta como archivos WebP. La aplicación
 las detectará y mostrará automáticamente cuando sus nombres coincidan con los
-espacios de captura del recorrido. Para `navegacion-sidebar`,
-`breadcrumbs-periodo`, `cards-componentes` y `dropdowns-botones-iconos` también se admiten animaciones GIF;
-si existe, se superpone al WebP como su versión animada.
+espacios de captura del recorrido. Para las capturas animadas se usa de preferencia
+`<nombre>.anim.webp`; si no existe o no carga, se utiliza `<nombre>.gif`.
+La animación se superpone a la captura WebP estática. Conserva los desenfoques
+de privacidad al reemplazar cualquiera de estos archivos.
 
 Se recomienda proporción 16:10 y ancho de 1600 px. Las imágenes se ajustan sin
 deformación. Puedes entregar PNG si necesitas conservar texto fino; conviértelo

@@ -9,6 +9,7 @@
     data-obligatorio="<?= !empty($tutorialPendiente) ? '1' : '0' ?>"
     data-capturas="<?= htmlspecialchars(json_encode($tutorialCapturasDisponibles ?? [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), ENT_QUOTES, 'UTF-8') ?>"
     data-capturas-animadas="<?= htmlspecialchars(json_encode($tutorialCapturasAnimadas ?? [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), ENT_QUOTES, 'UTF-8') ?>"
+    data-capturas-animadas-alta-calidad="<?= htmlspecialchars(json_encode($tutorialCapturasAnimadasAltaCalidad ?? [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), ENT_QUOTES, 'UTF-8') ?>"
     data-complete-url="/home/tutorial/complete">
     <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
         <div class="modal-content" x-data="tutorialBienvenida()" x-init="init()" @keydown.arrow-right.window="siguienteDesdeTeclado($event)" @keydown.arrow-left.window="anteriorDesdeTeclado($event)">
@@ -50,7 +51,7 @@
                                 <div class="portal3-tutorial-image-stack">
                                     <img class="portal3-tutorial-image" :src="capturaRuta(pasoActual.imagen)" :alt="`Captura de Portal3: ${pasoActual.titulo}`" @error="marcarCapturaNoDisponible(pasoActual.imagen)">
                                     <template x-if="capturaAnimadaDisponible(pasoActual.imagen)">
-                                        <img class="portal3-tutorial-image portal3-tutorial-image-overlay" :src="capturaAnimadaRuta(pasoActual.imagen)" alt="" aria-hidden="true">
+                                        <img class="portal3-tutorial-image portal3-tutorial-image-overlay" :src="capturaAnimadaRuta(pasoActual.imagen)" @error="usarAnimacionAlternativa($event, pasoActual.imagen)" alt="" aria-hidden="true">
                                     </template>
                                 </div>
                             </template>
