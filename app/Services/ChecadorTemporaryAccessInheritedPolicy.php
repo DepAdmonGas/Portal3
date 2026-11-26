@@ -3,7 +3,7 @@
 declare(strict_types=1);
 namespace App\Services;
 
-/** Prepared policy only: not wired into SEC-L03 until the addendum is approved. */
+/** Approved inherited authorization policy for Temporary Access supervision. */
 final class ChecadorTemporaryAccessInheritedPolicy
 {
     /** @param list<array<string,mixed>> $individualTemporaryGrants */

@@ -1465,8 +1465,8 @@ final class ChecadorController extends BaseController
             self::redirect('/departamento-operativo/recursos-humanos/checador/asistencia');
         }
 
-        // Temporary Access has a separate read ACL and applies only to an
-        // authorized physical station. Re-check it before any queue request.
+        // Temporary Access inherits the authorized Checador read ACL and
+        // physical-station scope. Re-check both before any queue request.
         if ($workspace === 'temporary-access') {
             $temporaryAccessRead = ChecadorAccessService::authorizeTemporaryAccess($requestedWorkplace, 'leer');
             if (!($temporaryAccessRead['allowed'] ?? false)) {
@@ -4712,7 +4712,7 @@ final class ChecadorController extends BaseController
 
         $authorization = ChecadorAccessService::authorizeTemporaryAccess($workplaceId, 'editar');
         if (empty($authorization['allowed']) || (int) ($authorization['permissions']['leer'] ?? 0) !== 1) {
-            $feedback('error', 'No tienes permisos independientes de lectura y edición para este centro de trabajo.');
+            $feedback('error', 'No tienes permisos efectivos de lectura y edición del Checador para esta estación.');
             self::redirect($redirect);
         }
         if (!$user) {

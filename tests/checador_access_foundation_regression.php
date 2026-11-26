@@ -534,10 +534,16 @@ $db->table('modulos_puestos_do')->insert([
 ]);
 $db->table('tb_modulos_config')->insert(['modulo_key'=>'acceso-temporal', 'tipo'=>'stations_only',
     'tipo_departamento'=>'localidades', 'estaciones_soportadas'=>'[101,102,104,111]', 'departamentos_soportados'=>'[]', 'allow_all'=>0, 'activo'=>1]);
+// Approved inheritance: parent Checador edit controls Encargado writes; no
+// positive acceso-temporal grant or per-module station list is required.
+$db->table('modulos_puestos_do')->where('id_modulo', 2)->where('id_puesto', 6)->update(['editar' => 1]);
+$db->table('modulos_puestos_do')->where('id_modulo', 50)->delete();
+$db->table('tb_modulos_config')->where('modulo_key', 'acceso-temporal')->delete();
+$db->table('modulos_dpto_operativo')->where('id', 50)->update(['activo' => 0]);
 $login(600);
 $pinOwn = ChecadorAccessService::authorizeTemporaryAccess(201, 'editar');
 $pinForeign = ChecadorAccessService::authorizeTemporaryAccess(204, 'editar');
-$assert(($pinOwn['allowed'] ?? false) && !($pinForeign['allowed'] ?? false), 'PIN Encargado edits only the authorized physical station through canonical mapping');
+$assert(($pinOwn['allowed'] ?? false) && !($pinForeign['allowed'] ?? false), 'PIN Encargado inherits Checador edit without a positive dedicated grant or locality configuration and remains station-scoped');
 $db->table('tb_usuarios')->insert(['id'=>605, 'id_gas'=>102, 'id_puesto'=>6, 'estatus'=>0]);
 $login(605);
 $pinOther = ChecadorAccessService::authorizeTemporaryAccess(202, 'editar');
@@ -557,30 +563,35 @@ $pinIndividualRead = ChecadorAccessService::authorizeTemporaryAccess(201, 'leer'
 if (!($pinIndividualRead['allowed'] ?? false)) echo 'PIN_INDIVIDUAL_REASON ' . ($pinIndividualRead['reason'] ?? 'unknown') . "\n";
 $assert(($pinIndividualRead['allowed'] ?? false)
     && !(ChecadorAccessService::authorizeTemporaryAccess(201, 'editar')['allowed'] ?? false), 'PIN individual edit denial takes precedence over position');
+$db->table('modulos_usuarios_do')->where('id_modulo', 50)->where('id_usuario', 600)->update(['leer' => 0, 'editar' => 1]);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccess(201, 'leer')['allowed'] ?? false)
+    && !(ChecadorAccessService::authorizeTemporaryAccess(201, 'editar')['allowed'] ?? false), 'PIN individual read denial blocks both queue access and write actions');
+$db->table('modulos_usuarios_do')->where('id_modulo', 50)->where('id_usuario', 600)->update(['leer' => 1, 'editar' => 0]);
 $db->table('tb_usuarios')->where('id', 600)->update(['estatus'=>1]);
 $assert(!(ChecadorAccessService::authorizeTemporaryAccess(201, 'leer')['allowed'] ?? false), 'PIN inactive user is denied');
 $db->table('tb_usuarios')->where('id', 600)->update(['estatus'=>0]);
 $assert(ChecadorAccessService::temporaryAccessRequestBelongsToLocality(101, 201)
     && !ChecadorAccessService::temporaryAccessRequestBelongsToLocality(104, 201), 'PIN request matching rejects a different physical station');
 
-// Prepared inherited policy: synthetic SQLite fixtures only; routes still use SEC-L03.
+// Inherited policy edge cases use isolated SQLite fixtures; production reads
+// the same institutional ACL through the public authorizeTemporaryAccess path.
 $db->table('modulos_usuarios_do')->where('id_modulo',50)->where('id_usuario',600)->delete();
 $db->table('modulos_usuarios_do')->where('id_modulo',2)->where('id_usuario',600)->update(['leer'=>1,'editar'=>1]);
 $login(600);
-$assert((ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'prepared PIN Encargado inherits without dedicated grant');
-$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(204,'editar')['allowed'] ?? false), 'prepared PIN rejects a foreign station');
+$assert((ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN Encargado passes with inactive dedicated module and no locality config');
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(204,'editar')['allowed'] ?? false), 'inherited PIN rejects a foreign station');
 $db->table('modulos_usuarios_do')->insert(['id_modulo'=>50,'id_usuario'=>600,'leer'=>1,'editar'=>0]);
-$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'prepared PIN explicit user denial overrides inherited permission');
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN explicit user denial overrides Checador permission');
 $db->table('modulos_usuarios_do')->where('id_modulo',50)->where('id_usuario',600)->delete();
 $db->table('modulos_usuarios_do')->where('id_modulo',2)->where('id_usuario',600)->update(['editar'=>0]);
-$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'prepared PIN parent edit revocation is immediate');
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN parent edit revocation is immediate');
 $db->table('tb_usuarios')->where('id',600)->update(['estatus'=>1]);
-$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false), 'prepared PIN inactive supervisor denied');
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false), 'inherited PIN inactive supervisor denied');
 $db->table('tb_usuarios')->where('id',600)->update(['estatus'=>0]);
 $login(1300);
-$assert((ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false) && !(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'prepared PIN Direccion reads only');
+$assert((ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false) && !(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN Direccion reads only');
 $login(300);
-$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false), 'prepared PIN other roles denied');
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false), 'inherited PIN other roles denied');
 
 printf("CHECADOR_ACCESS_FOUNDATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

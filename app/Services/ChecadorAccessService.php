@@ -685,7 +685,7 @@ final class ChecadorAccessService
         }
     }
 
-    /** Prepared inherited ACL; intentionally not wired to routes before addendum approval. */
+    /** Resolve inherited Checador ACL plus any explicit individual Temporary Access denial. */
     public static function authorizeTemporaryAccessInheritedPrepared(?int $requestedLocalityId, string $action): array
     {
         $deny = static fn(string $reason): array => ['allowed'=>false,'reason'=>$reason,'workplace_id'=>null,'permissions'=>['leer'=>0,'editar'=>0]];
@@ -723,102 +723,14 @@ final class ChecadorAccessService
     }
 
     /**
-     * Re-resolve the independent Temporary Access ACL and physical-station
-     * scope for each supervisor operation. Departments are never accepted as
-     * PIN scope, and this ACL is never inferred from Checador permissions.
+     * Resolve Temporary Access through the approved Checador ACL and station
+     * scope. An explicit individual Temporary Access denial remains a veto.
      *
      * @return array{allowed:bool,reason:string,workplace_id:?int,permissions:array{leer:int,editar:int}}
      */
     public static function authorizeTemporaryAccess(?int $requestedLocalityId, string $action): array
     {
-        $deny = static fn(string $reason): array => [
-            'allowed' => false,
-            'reason' => $reason,
-            'workplace_id' => null,
-            'permissions' => ['leer' => 0, 'editar' => 0],
-        ];
-
-        if ($requestedLocalityId === null || $requestedLocalityId < 1
-            || !in_array($action, ['leer', 'editar'], true)) {
-            return $deny('invalid_temporary_access_scope');
-        }
-
-        try {
-            $checadorAccess = self::authorize($requestedLocalityId);
-            if (empty($checadorAccess['allowed'])
-                || !in_array($requestedLocalityId, array_map('intval', array_column($checadorAccess['station_workplaces'] ?? [], 'id')), true)) {
-                return $deny('temporary_access_station_out_of_checador_scope');
-            }
-
-            $authenticatedUser = Auth::user();
-            if (!$authenticatedUser || !Auth::check()) {
-                return $deny('unauthenticated');
-            }
-            $user = Usuario::query()
-                ->where('id', (int) $authenticatedUser->id)
-                ->where('estatus', 0)
-                ->first();
-            if (!$user) {
-                return $deny('inactive_user');
-            }
-
-            $positionId = (int) ($user->id_puesto ?? 0);
-            if (!in_array($positionId, [6, 13], true) || ($action === 'editar' && $positionId !== 6)) {
-                return $deny('temporary_access_role_denied');
-            }
-
-            $moduleConfig = ModuloConfig::query()
-                ->where('modulo_key', self::TEMPORARY_ACCESS_MODULE_KEY)
-                ->where('activo', 1)
-                ->first();
-            $supportedStations = $moduleConfig
-                ? self::positiveIdList($moduleConfig->estaciones_soportadas)
-                : null;
-            if (!$moduleConfig
-                || (string) ($moduleConfig->tipo_departamento ?? '') !== 'localidades'
-                || (bool) ($moduleConfig->allow_all ?? true)
-                || $supportedStations === null
-                || $supportedStations === []) {
-                return $deny('temporary_access_module_configuration_missing');
-            }
-
-            // estaciones_soportadas is expressed in physical station IDs;
-            // the requested workplace is a canonical locality ID.
-            $physicalStationId = self::resolveActiveStationIdForLocality($requestedLocalityId);
-            if ($physicalStationId === null || !in_array($physicalStationId, $supportedStations, true)) {
-                return $deny('temporary_access_station_out_of_scope');
-            }
-
-            $permissions = ModuloDptoOperativoService::getTemporaryAccessPermissions(
-                (int) $user->id,
-                self::TEMPORARY_ACCESS_MODULE_KEY
-            );
-            $required = (int) ($permissions[$action] ?? 0) === 1;
-            if (!$required) {
-                return $deny('temporary_access_permission_denied');
-            }
-
-            // ModuleStationService resolves this module's own effective
-            // station allowlist in canonical locality space because its
-            // configured tipo_departamento is `localidades`.
-            $moduleWorkplaces = ModuleStationService::getAvailableStations(self::TEMPORARY_ACCESS_MODULE_KEY);
-            $moduleWorkplaceIds = array_map('intval', array_column($moduleWorkplaces, 'id'));
-            if (!in_array($requestedLocalityId, $moduleWorkplaceIds, true)) {
-                return $deny('temporary_access_station_out_of_scope');
-            }
-
-            return [
-                'allowed' => true,
-                'reason' => 'authorized',
-                'workplace_id' => $requestedLocalityId,
-                'permissions' => [
-                    'leer' => (int) ($permissions['leer'] ?? 0),
-                    'editar' => $positionId === 6 ? (int) ($permissions['editar'] ?? 0) : 0,
-                ],
-            ];
-        } catch (Throwable) {
-            return $deny('authorization_lookup_failed');
-        }
+        return self::authorizeTemporaryAccessInheritedPrepared($requestedLocalityId, $action);
     }
 
     /**
