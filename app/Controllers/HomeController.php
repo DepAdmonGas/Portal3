@@ -11,6 +11,7 @@ use App\Services\SolicitudTarjetasService;
 use App\Services\SoporteEstacionesService;
 use App\Services\SoporteActividadesService;
 use App\Services\SoporteService;
+use App\Services\TutorialBienvenidaService;
 
 class HomeController extends BaseController
 {
@@ -56,12 +57,33 @@ class HomeController extends BaseController
             $conteoSolicitudes[SoporteService::RUTA] = SoporteService::getContadorHome();
         }
 
+        $tutorialEstado = TutorialBienvenidaService::estado((int) (Auth::id() ?? 0));
+        $tutorialPendiente = $tutorialEstado === 'pending';
+        $tutorialDisponible = in_array($tutorialEstado, ['pending', 'completed'], true);
+        $tutorialUsuario = Session::get('usuario') ?? [];
+        $tutorialMultiestacion = !empty($tutorialUsuario['multiestacion'])
+            || (int) (Auth::user()?->id_gas ?? 0) === 2;
+
         $data = [
             'title'   => 'Home',
             'modulo' => '',
             'modulousuario' => $modulos,
             'conteoSolicitudesHome' => $conteoSolicitudes,
-            'scripts' => []
+            'tutorialPendiente' => $tutorialPendiente,
+            'tutorialDisponible' => $tutorialDisponible,
+            'tutorialMultiestacion' => $tutorialMultiestacion,
+            'tutorialCapturasDisponibles' => $tutorialDisponible
+                ? TutorialBienvenidaService::capturasDisponibles()
+                : [],
+            'tutorialCapturasAnimadas' => $tutorialDisponible
+                ? TutorialBienvenidaService::capturasAnimadas()
+                : [],
+            'scripts' => $tutorialDisponible ? [
+                '/js/home/tutorial-bienvenida.init.js?v=1.0.8',
+            ] : [],
+            'links' => $tutorialDisponible ? [
+                '/css/home/tutorial-bienvenida.css?v=1.0.3',
+            ] : [],
         ];
 
         View::render('home/index', $data, 'main');

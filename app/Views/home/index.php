@@ -45,3 +45,7 @@
 
     </div>
 </div>
+
+<?php if (!empty($tutorialDisponible)): ?>
+    <?php include __DIR__ . '/_tutorial-bienvenida.php'; ?>
+<?php endif; ?>

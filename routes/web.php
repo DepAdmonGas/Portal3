@@ -18,6 +18,7 @@ $r->addRoute('GET', '/download', Route::auth(['DownloadController', 'download'])
 
 // ---------------- HOME ----------------
 $r->addRoute('GET', '/home', Route::auth(['HomeController', 'index']));
+$r->addRoute('POST', '/home/tutorial/complete', Route::auth(['TutorialBienvenidaController', 'complete']));
 
 // ---------------- SWITCHEO DE LA SESION DE LA ESTACION ----------------
 $r->addRoute('POST', '/switch-estacion', Route::auth(['SwitchEstacionController', 'switchSessionEstacion']));
