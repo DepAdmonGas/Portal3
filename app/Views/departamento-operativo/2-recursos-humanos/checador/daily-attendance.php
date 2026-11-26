@@ -144,10 +144,17 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                 . ((int) ($segment['dia_offset_fin'] ?? 0) > 0 ? ' (día siguiente)' : '');
         }
         if ($segmentLabels !== []) {
-            $scheduleText = implode('; ', $segmentLabels);
+            $scheduleText = (($schedule['source'] ?? '') === 'assigned'
+                ? trim((string) ($schedule['nombre'] ?? 'Turno')) . ' · Horario asignado: '
+                : 'Horario histórico: ') . implode('; ', $segmentLabels);
         }
     } elseif ($schedule === null && ($attendanceRow['schedule_error'] ?? null) !== null) {
-        $scheduleText = 'Horario no disponible';
+        $scheduleText = match ($attendanceRow['schedule_error']) {
+            'unassigned' => 'Sin programación asignada',
+            'ambiguous' => 'Conflicto de asignaciones',
+            'membership_unverified' => 'Adscripción no confirmada',
+            default => 'Horario no disponible',
+        };
     }
 
     $slots = [];

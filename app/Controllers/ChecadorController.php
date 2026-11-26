@@ -28,6 +28,7 @@ use App\Services\ChecadorPayrollComparisonReadService;
 use App\Services\ChecadorJourneySqlReadService;
 use App\Services\ChecadorAdjustmentSqlReadService;
 use App\Services\ChecadorWeeklyScheduleSqlReadService;
+use App\Services\ChecadorWeeklyScheduleService;
 use App\Services\ChecadorRawPunchReadService;
 use App\Services\ChecadorAdministrativePinSqlService;
 use App\Services\ChecadorPermissionGrantAdminService;
@@ -2124,7 +2125,7 @@ final class ChecadorController extends BaseController
 
         // Temporary Access is a separate capability and only applies to an
         // explicitly authorized physical station, never a department alias.
-        if ($requestedWorkplace !== null) {
+        if ($requestedWorkplace !== null && $workspace !== 'daily-attendance') {
                 $temporaryReadAccess = ChecadorAccessService::authorizeTemporaryAccess($requestedWorkplace, 'leer');
                 if (!empty($temporaryReadAccess['allowed'])) {
                     $temporaryAccessPanel['visible'] = true;
@@ -6312,6 +6313,28 @@ final class ChecadorController extends BaseController
             return $name !== '' && $name !== 'Nombre no disponible';
         }));
         $sortProfiles($workerOptions);
+        // M01 may present persisted assignment facts without materializing a journey.
+        // The M01 locality authorization has already been checked above.
+        $assignmentCells = [];
+        $assignmentReadOk = false;
+        $actor = Auth::user();
+        $monday = ChecadorWeeklyScheduleService::monday($date);
+        if ($actor !== null && $monday !== null) {
+            $scheduleReader = new ChecadorWeeklyScheduleSqlReadService(
+                static fn($user, int $locality): bool => (int) ($user->id ?? 0) === (int) ($actor->id ?? 0)
+                    && in_array($locality, $authorizedWorkplaceIds, true)
+                    && (ChecadorAccessService::authorize($locality)['allowed'] ?? false) === true
+            );
+            $scheduleRead = $scheduleReader->readWeek($actor, $workplaceId, $monday, array_values($rosterById));
+            if (($scheduleRead['ok'] ?? false) === true) {
+                $scheduleData = $scheduleRead['data'];
+                $matrix = ChecadorWeeklyScheduleService::matrix(array_values($rosterById), $scheduleData['assignments_by_worker'], $scheduleData['templates_by_id'], $monday);
+                foreach ($matrix['workers'] as $scheduleWorker) {
+                    $assignmentCells[(int) $scheduleWorker['worker_id']] = $scheduleWorker['cells'][$date] ?? null;
+                }
+                $assignmentReadOk = true;
+            }
+        }
         $attendanceRows = [];
         foreach ($rosterById as $workerId => $profile) {
             if ($requestedWorkerId !== null && $requestedWorkerId !== $workerId) continue;
@@ -6329,9 +6352,21 @@ final class ChecadorController extends BaseController
                 $row['schedule'] = null;
                 $row['schedule_error'] = (string) ($persistedJourneyRead['error'] ?? 'sql_unavailable');
             } elseif ($journey === null) {
-                $row['journey_message'] = 'Sin resultado de Jornada persistido para esta fecha.';
+                $row['journey_message'] = 'Jornada pendiente de evaluación.';
                 $row['schedule'] = null;
-                $row['schedule_error'] = 'persisted_journey_not_found';
+                $cell = $assignmentCells[$workerId] ?? null;
+                $cellStatus = (string) ($cell['status'] ?? 'unavailable');
+                if ($assignmentReadOk && $cellStatus === 'assigned') {
+                    $template = $cell['template'];
+                    $row['schedule'] = ['estado_jornada'=>'SCHEDULED', 'nombre'=>(string) ($template['nombre'] ?? ''),
+                        'source'=>'assigned', 'horario_local'=>['timezone'=>$timezone, 'segmentos'=>$template['segmentos'] ?? []]];
+                    $row['schedule_error'] = null;
+                } elseif ($assignmentReadOk && $cellStatus === 'rest') {
+                    $row['schedule'] = ['estado_jornada'=>'DAY_OFF', 'source'=>'assigned'];
+                    $row['schedule_error'] = null;
+                } else {
+                    $row['schedule_error'] = $assignmentReadOk ? $cellStatus : 'assignment_read_failed';
+                }
             } else {
                 $row['schedule'] = is_array($journey['schedule_projection'] ?? null) ? $journey['schedule_projection'] : null;
                 $row['schedule_error'] = $row['schedule'] === null ? 'persisted_schedule_details_unavailable' : null;
