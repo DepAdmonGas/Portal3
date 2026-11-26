@@ -2323,6 +2323,7 @@ final class ChecadorController extends BaseController
                     ]
                     : [],
                 'scripts' => [
+                    ...($workspace === 'temporary-access' ? ['/assets/js/departamento-operativo/2-recursos-humanos/checador.temporary-access.init.js?v=20261125-1'] : []),
                     ...(in_array($workspace, ['daily-attendance', 'journeys'], true) ? [
                         '/assets/js/vendor.min.js',
                         '/assets/libs/select2/dist/js/select2.full.min.js',
@@ -4763,6 +4764,7 @@ final class ChecadorController extends BaseController
             self::redirect($redirect);
         }
         $pendingInSelectedWorkplace = false;
+        $temporaryWorkerName = null;
         foreach ($queue['requests'] as $request) {
             if (strtolower((string) ($request['request_uuid'] ?? '')) === $requestUuid
                 && ChecadorAccessService::temporaryAccessRequestBelongsToLocality(
@@ -4770,6 +4772,7 @@ final class ChecadorController extends BaseController
                     $workplaceId
                 )) {
                 $pendingInSelectedWorkplace = true;
+                $temporaryWorkerName = (string) ($request['nombre_trabajador'] ?? '');
                 break;
             }
         }
@@ -4812,6 +4815,7 @@ final class ChecadorController extends BaseController
                 $feedback('success', 'PIN temporal autorizado. Se muestra una sola vez y vence en el horario UTC indicado.', [
                     'temporary_pin' => $data['temporary_pin'],
                     'pin_expires_at_utc' => $data['pin_expires_at_utc'],
+                    'worker_name' => $temporaryWorkerName,
                 ]);
                 Session::set('checador_temporary_access_cancelable', [
                     'user_id' => (int) $user->id,

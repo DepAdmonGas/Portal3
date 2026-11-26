@@ -10,6 +10,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
 ?>
             <?php if (($adminPanel['state'] ?? '') !== 'denied'): ?>
                 <section class="border rounded p-3 mt-3" aria-labelledby="m11-admin-pin-heading">
+                    <?php if (empty($administrativePinHistoryOnly)): ?>
                     <h3 class="h6 mb-1" id="m11-admin-pin-heading"><i class="ti ti-shield-lock me-1" aria-hidden="true"></i>PIN de configuración</h3>
                     <p class="small text-muted mb-3">PIN administrativo para autorizar temporalmente la configuración biométrica desde el Lector. Vigencia de cinco minutos.</p>
                     <?php if ($adminFeedback !== null): ?>
@@ -70,6 +71,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                             <button type="button" class="btn btn-primary" disabled><i class="ti ti-lock me-1" aria-hidden="true"></i>Generar PIN de configuración</button>
                             <p class="small text-body-secondary mt-2 mb-0"><?= empty($adminPanel['can_issue']) ? 'La emisión requiere permisos de edición y el servicio habilitado.' : 'La emisión requiere esquema, secreto compartido, credencial y grant biométrico vigentes, y ausencia de sesión activa.' ?></p>
                         </div>
+                    <?php endif; ?>
                     <?php endif; ?>
                     <div class="mt-4">
                         <h4 class="h6"><i class="ti ti-history me-1" aria-hidden="true"></i>Historial de PIN de configuración</h4>

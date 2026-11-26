@@ -14,33 +14,37 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
     <div class="d-flex justify-content-end mb-3">
         <a class="btn btn-outline-secondary btn-sm" href="/departamento-operativo/recursos-humanos/checador"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Volver al Checador</a>
     </div>
+    <?php
+    $adminPanel = is_array($administrativePinPanel ?? null) ? $administrativePinPanel : [];
+    $adminFeedback = is_array($administrativePinFeedback ?? null) ? $administrativePinFeedback : null;
+    $devices = array_values(array_filter($adminPanel['devices'] ?? [], static fn(array $device): bool => !empty($device['device_active']) && !empty($device['credential_active']) && !empty($device['biometric_grant_active']) && empty($device['session'])));
+    $canGenerate = !empty($adminPanel['can_issue']) && !empty($adminPanel['secret_configured']) && $devices !== [];
+    ?>
     <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
-        <div class="col">
-            <section class="card bg-body border rounded-3 shadow-sm card-hover h-100 mb-0" aria-label="PIN de configuración del Lector">
-                <div class="card-body p-3 p-lg-4">
-                    <?php $administrativePinReturnTo = 'acceso-temporal'; require __DIR__ . '/workspace-administrative-pin.php'; ?>
-                </div>
-            </section>
-        </div>
-        <div class="col">
-            <section class="card bg-body border rounded-3 shadow-sm card-hover h-100 mb-0" aria-labelledby="personnel-pin-title">
-                <div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">
-                    <span class="rounded-3 bg-primary-subtle text-primary p-3 d-inline-flex align-items-center justify-content-center flex-shrink-0"><i class="ti ti-key fs-9" aria-hidden="true"></i></span>
-                    <div class="d-flex flex-column flex-grow-1 h-100">
-                        <h2 class="card-title fs-6 fw-bolder mb-2" id="personnel-pin-title">PIN de acceso del personal</h2>
-                        <p class="text-body-secondary mb-3">Autoriza marcaciones temporales cuando un trabajador no puede utilizar su huella.</p>
-                        <ul class="list-unstyled d-flex flex-wrap gap-2 mb-3"><li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">15 minutos</span></li><li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">Una marcación</span></li></ul>
-                        <?php if (($panel['state'] ?? '') === 'success'): ?>
-                            <p class="mb-3">Solicitudes pendientes: <strong><?= count($requests) ?></strong></p>
-                        <?php else: ?>
-                            <p class="text-body-secondary mb-3">Solicitudes pendientes: no disponibles</p>
-                        <?php endif; ?>
-                        <div class="mt-auto"><a class="btn btn-primary" href="#temporary-access-requests"><i class="ti ti-list-details me-1" aria-hidden="true"></i>Administrar solicitudes</a></div>
-                    </div>
-                </div>
-            </section>
-        </div>
+        <div class="col"><section class="card bg-body border rounded-3 shadow-sm h-100 mb-0"><div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">
+            <span class="rounded-3 bg-primary-subtle text-primary p-3 flex-shrink-0"><i class="ti ti-shield-lock fs-9" aria-hidden="true"></i></span>
+            <div><h2 class="card-title fs-6 fw-bolder mb-2">PIN de configuración</h2><p class="text-body-secondary mb-2">Autoriza la configuración biométrica del Lector.</p>
+            <p class="small mb-3">5 minutos · Un solo uso</p><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#configuration-pin-modal" <?= !$canGenerate ? 'disabled' : '' ?>>Generar PIN</button></div>
+        </div></section></div>
+        <div class="col"><section class="card bg-body border rounded-3 shadow-sm h-100 mb-0"><div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">
+            <span class="rounded-3 bg-primary-subtle text-primary p-3 flex-shrink-0"><i class="ti ti-key fs-9" aria-hidden="true"></i></span>
+            <div><h2 class="card-title fs-6 fw-bolder mb-2" id="personnel-pin-title">PIN de acceso del personal</h2><p class="text-body-secondary mb-2">Autoriza una marcación cuando no se puede usar la huella.</p>
+            <p class="small mb-3">15 minutos · Una marcación<?php if (($panel['state'] ?? '') === 'success'): ?> · Pendientes: <?= count($requests) ?><?php endif; ?></p><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#personnel-pin-modal">Administrar PIN</button></div>
+        </div></section></div>
     </div>
+    <div class="modal fade" id="configuration-pin-modal" tabindex="-1" aria-labelledby="configuration-pin-heading" aria-hidden="true" <?= $adminFeedback !== null ? 'data-show-feedback="1"' : '' ?>>
+        <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h2 class="modal-title fs-5 text-white" id="configuration-pin-heading">Generar PIN de configuración</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+        <?php if ($adminFeedback !== null): ?><div class="alert alert-<?= ($adminFeedback['type'] ?? '') === 'success' ? 'success' : 'warning' ?>" role="status"><?= $esc($adminFeedback['message'] ?? '') ?></div><?php endif; ?>
+        <?php if ($adminFeedback !== null && preg_match('/\A[0-9]{6}\z/D', (string) ($adminFeedback['pin'] ?? ''))): ?>
+            <p class="h3"><code data-one-time-pin><?= $esc($adminFeedback['pin']) ?></code></p><p>Dispositivo: <?= $esc($adminFeedback['device_name'] ?? 'No disponible') ?><br>Vence: <?= $esc($adminFeedback['expires_at_utc'] ?? 'No disponible') ?> UTC</p><button type="button" class="btn btn-outline-primary" data-copy-pin>Copiar PIN</button>
+        <?php elseif ($canGenerate): ?>
+            <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-pin"><input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><input type="hidden" name="return_to" value="acceso-temporal">
+            <label for="configuration-pin-device" class="form-label">Dispositivo autorizado</label><select id="configuration-pin-device" name="device_id" class="form-select mb-3" required><?php foreach ($devices as $device): ?><option value="<?= (int) $device['device_id'] ?>"><?= $esc($device['device_name']) ?></option><?php endforeach; ?></select><p class="small">Vigencia: cinco minutos. Un solo uso.</p><label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo generar el PIN.</label><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancelar</button> <button type="submit" class="btn btn-primary">Generar PIN</button></form>
+        <?php else: ?><p class="text-body-secondary mb-0">La generación no está disponible para esta estación.</p><?php endif; ?>
+        </div><div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button></div></div></div>
+    </div>
+    <div class="modal fade" id="personnel-pin-modal" tabindex="-1" aria-labelledby="temporary-access-workspace-heading" aria-hidden="true" <?= is_array($temporaryAccessFeedback ?? null) ? 'data-show-feedback="1"' : '' ?>><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content">
     <section class="card" id="temporary-access-requests" aria-labelledby="temporary-access-workspace-heading">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-key fs-5"></i></span>
@@ -54,7 +58,8 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                         && isset($temporaryAccessFeedback['temporary_pin'])
                         && preg_match('/\A[0-9]{6}\z/', (string) $temporaryAccessFeedback['temporary_pin'])): ?>
                         <p class="small mb-1 mt-2">Código de un solo uso:</p>
-                        <p class="h3 mb-1"><code><?= $esc($temporaryAccessFeedback['temporary_pin']) ?></code></p>
+                        <p class="h3 mb-1"><code data-one-time-pin><?= $esc($temporaryAccessFeedback['temporary_pin']) ?></code></p>
+                        <?php if (!empty($temporaryAccessFeedback['worker_name'])): ?><p class="mb-1">Trabajador: <?= $esc($temporaryAccessFeedback['worker_name']) ?></p><?php endif; ?>
                         <p class="small mb-0">Vence: <?= $esc($temporaryAccessFeedback['pin_expires_at_utc'] ?? 'No disponible') ?> UTC. Este código no se volverá a mostrar después de cerrar este mensaje.</p>
                     <?php endif; ?>
                 </div>
@@ -107,4 +112,6 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
             <?php endif; ?>
         </div>
     </section>
+    <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button></div></div></div></div>
+    <div class="accordion" id="pin-history-accordion"><div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pin-history" aria-expanded="false" aria-controls="pin-history">Historial de autorizaciones</button></h2><div id="pin-history" class="accordion-collapse collapse" data-bs-parent="#pin-history-accordion"><div class="accordion-body"><?php $administrativePinReturnTo = 'acceso-temporal'; $administrativePinFeedback = null; $administrativePinHistoryOnly = true; require __DIR__ . '/workspace-administrative-pin.php'; ?></div></div></div></div>
 </div>

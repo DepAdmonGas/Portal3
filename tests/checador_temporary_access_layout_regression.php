@@ -13,9 +13,9 @@ $html = (string) ob_get_clean();
 $assert = static function(bool $ok,string $message):void { if(!$ok)throw new RuntimeException($message); echo ($ok?'PASS ':'FAIL ').$message.PHP_EOL; };
 $assert(str_contains($html, 'Solicitudes de acceso temporal') && str_contains($html, 'Volver al Checador'), 'attendance PIN workspace retains its existing heading and return navigation');
 $assert(str_contains($html, 'PIN de acceso del personal')
-    && str_contains($html, 'Administrar solicitudes')
-    && str_contains($html, 'Solicitudes pendientes:')
-    && str_contains($html, 'href="#temporary-access-requests"'), 'attendance PIN card and request navigation are available again');
+    && str_contains($html, 'Administrar PIN')
+    && str_contains($html, 'Pendientes:')
+    && str_contains($html, 'data-bs-target="#personnel-pin-modal"'), 'attendance PIN card and request navigation are available again');
 $assert(str_contains($html, 'No hay solicitudes pendientes para esta estación.') && str_contains($html, 'PIN de configuración'), 'successful empty attendance queue and configuration PIN card are retained');
 $assert(str_contains($html, 'm11-admin-pin-heading') && str_contains($html, 'personnel-pin-title'), 'both PIN cards use existing components');
 echo "RESULT: 4 PASS / 0 FAIL".PHP_EOL;
