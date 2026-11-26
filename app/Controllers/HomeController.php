@@ -78,8 +78,11 @@ class HomeController extends BaseController
             'tutorialCapturasAnimadas' => $tutorialDisponible
                 ? TutorialBienvenidaService::capturasAnimadas()
                 : [],
+            'tutorialCapturasAnimadasAltaCalidad' => $tutorialDisponible
+                ? TutorialBienvenidaService::capturasAnimadasAltaCalidad()
+                : [],
             'scripts' => $tutorialDisponible ? [
-                '/js/home/tutorial-bienvenida.init.js?v=1.0.8',
+                '/js/home/tutorial-bienvenida.init.js?v=1.0.19',
             ] : [],
             'links' => $tutorialDisponible ? [
                 '/css/home/tutorial-bienvenida.css?v=1.0.3',
