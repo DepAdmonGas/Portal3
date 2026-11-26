@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...(existing || {}), id: productId, tipo_articulo: 'calcomania',
                 sku: formData.get('sku'), nombre: formData.get('nombre'),
                 dimension: formData.get('dimension'), colores_pantone: formData.get('colores_pantone'),
-                acabado: formData.get('acabado'), reproduccion: formData.get('reproduccion'),
+                acabado: formData.get('acabado'), reproduccion: formData.get('reproduccion'), norma: formData.get('norma'),
                 notas_calcomania: formData.get('notas'), descripcion: formData.get('notas'),
                 medida: formData.get('dimension'), categoria: 'Calcomanías', existencia: 0,
                 unidad_medida: 'Pieza', imagen: response.imagen || existing?.imagen || '',
@@ -489,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 set('[data-detail-pantone]', product.colores_pantone);
                 set('[data-detail-finish]', product.acabado);
                 set('[data-detail-reproduction]', product.reproduccion);
+                set('[data-detail-norma]', String(product.norma || '').trim() || 'Sin información');
                 set('[data-detail-notes]', String(product.notas_calcomania || '').trim() || 'Sin información');
             } else {
                 set('[data-detail-measure]', product.medida);
@@ -517,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
             form.dataset.editing = '1';
             form.querySelector('[data-product-id]').value = product.id;
             const editableFields = isCalcomania
-                ? ['sku', 'nombre', 'dimension', 'colores_pantone', 'acabado', 'reproduccion', 'notas']
+                ? ['sku', 'nombre', 'dimension', 'colores_pantone', 'acabado', 'reproduccion', 'norma', 'notas']
                 : ['sku', 'nombre', 'medida', 'modelo', 'marca', 'categoria', 'unidad_medida', 'stock_minimo', 'costo_unitario'];
             editableFields.forEach((field) => {
                 const input = form.elements.namedItem(field);
@@ -536,6 +537,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileInput.toggleAttribute('data-required', !product.imagen);
             }
             form.querySelector('[data-current-image-help]')?.classList.toggle('d-none', !product.imagen);
+            const currentImageContainer = form.querySelector('[data-current-image-container]');
+            const currentImage = form.querySelector('[data-current-image]');
+            const currentImageError = form.querySelector('[data-current-image-error]');
+            if (currentImageContainer && currentImage) {
+                currentImageContainer.classList.toggle('d-none', !product.imagen);
+                currentImage.classList.remove('d-none');
+                currentImageError?.classList.add('d-none');
+                currentImage.onerror = () => { currentImage.classList.add('d-none'); currentImageError?.classList.remove('d-none'); };
+                if (product.imagen) { currentImage.src = imageUrl(product); currentImage.alt = `Imagen actual de ${product.nombre || product.sku}`; }
+                else currentImage.removeAttribute('src');
+            }
             const formTitle = form.querySelector('[data-product-form-title]');
             if (formTitle) formTitle.innerHTML = isCalcomania ? '<i class="ti ti-sticker me-1"></i>Editar calcomanía' : '<i class="ti ti-package me-1"></i>Editar producto';
             const submitLabel = form.querySelector('[data-product-submit-label]');
@@ -558,6 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitLabel = form.querySelector('[data-product-submit-label]');
             if (submitLabel) submitLabel.textContent = 'Guardar';
             form.querySelector('[data-current-image-help]')?.classList.add('d-none');
+            form.querySelector('[data-current-image-container]')?.classList.add('d-none');
+            form.querySelector('[data-current-image]')?.removeAttribute('src');
             const fileInput = form.elements.namedItem('imagen');
             if (fileInput) fileInput.setAttribute('data-required', '');
             form.querySelectorAll('.is-invalid').forEach((control) => control.classList.remove('is-invalid'));

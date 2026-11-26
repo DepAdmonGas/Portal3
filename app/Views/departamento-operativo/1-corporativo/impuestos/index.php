@@ -52,8 +52,8 @@ x-data="impuestosComponent()">
 </th>
 </tr>
 </template>
-<template x-for="item in items" :key="item.producto">
-<tr class="pointer" :class="{ selected: selectedItem === item.producto }" @click="seleccionarFila(item.producto)">
+<template x-for="(item, index) in items" :key="index">
+<tr class="pointer" :class="{ selected: selectedItem === index }" @click="seleccionarFila(index)">
 <th class="align-middle text-center" x-text="item.producto"></th>
 <td class="align-middle text-center" x-text="'$ ' + formatNum(item.precio_litro)"></td>
 <td class="align-middle text-center" x-text="'$ ' + formatNum(item.ieps)"></td>

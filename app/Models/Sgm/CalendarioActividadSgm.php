@@ -3,6 +3,7 @@
 namespace App\Models\Sgm;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CalendarioActividadSgm extends Model
 {
@@ -34,4 +35,9 @@ class CalendarioActividadSgm extends Model
         'fecha_termino' => 'date:Y-m-d',
         'estado' => 'integer',
     ];
+
+    public function actividad(): BelongsTo
+    {
+        return $this->belongsTo(SgmActividad::class, 'id_actividad');
+    }
 }

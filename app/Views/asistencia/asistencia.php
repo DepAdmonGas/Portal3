@@ -189,12 +189,19 @@ x-init='Object.assign($data, <?= htmlspecialchars(json_encode([
 
                 <td class="text-center align-middle" x-text="item.fecha"></td>
 
-                <td class="text-center">
+                <td class="text-center" x-data="{ evidenciaDisponible: !!item.url }">
 
-                    <img
-                        :src="'/uploads' + item.url"
-                        width="80"
-                    >
+                    <template x-if="evidenciaDisponible">
+                        <img
+                            :src="item.url"
+                            @error="evidenciaDisponible = false"
+                            width="80"
+                            alt="Evidencia de asistencia"
+                        >
+                    </template>
+                    <template x-if="!evidenciaDisponible">
+                        <i class="ti ti-file-off text-muted fs-6" title="Archivo no disponible" aria-label="Archivo no disponible"></i>
+                    </template>
 
                 </td>
 
