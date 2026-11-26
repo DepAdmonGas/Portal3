@@ -113,5 +113,11 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
         </div>
     </section>
     <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button></div></div></div></div>
-    <div class="accordion" id="pin-history-accordion"><div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pin-history" aria-expanded="false" aria-controls="pin-history">Historial de autorizaciones</button></h2><div id="pin-history" class="accordion-collapse collapse" data-bs-parent="#pin-history-accordion"><div class="accordion-body"><?php $administrativePinReturnTo = 'acceso-temporal'; $administrativePinFeedback = null; $administrativePinHistoryOnly = true; require __DIR__ . '/workspace-administrative-pin.php'; ?></div></div></div></div>
+    <section class="card" id="pin-history" aria-labelledby="pin-history-heading">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+            <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-history fs-5"></i></span>
+            <h2 class="h5 mb-0 text-white" id="pin-history-heading">Historial de autorizaciones</h2>
+        </div>
+        <div class="card-body"><?php $administrativePinReturnTo = 'acceso-temporal'; $administrativePinFeedback = null; $administrativePinHistoryOnly = true; require __DIR__ . '/workspace-administrative-pin.php'; ?></div>
+    </section>
 </div>

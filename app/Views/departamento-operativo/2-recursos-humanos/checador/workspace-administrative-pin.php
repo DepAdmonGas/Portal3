@@ -9,7 +9,7 @@ $adminFeedback = is_array($administrativePinFeedback ?? null) ? $administrativeP
 $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
 ?>
             <?php if (($adminPanel['state'] ?? '') !== 'denied'): ?>
-                <section class="border rounded p-3 mt-3" aria-labelledby="m11-admin-pin-heading">
+                <?php if (empty($administrativePinHistoryOnly)): ?><section class="border rounded p-3 mt-3" aria-labelledby="m11-admin-pin-heading"><?php endif; ?>
                     <?php if (empty($administrativePinHistoryOnly)): ?>
                     <h3 class="h6 mb-1" id="m11-admin-pin-heading"><i class="ti ti-shield-lock me-1" aria-hidden="true"></i>PIN de configuración</h3>
                     <p class="small text-muted mb-3">PIN administrativo para autorizar temporalmente la configuración biométrica desde el Lector. Vigencia de cinco minutos.</p>
@@ -73,8 +73,8 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                         </div>
                     <?php endif; ?>
                     <?php endif; ?>
-                    <div class="mt-4">
-                        <h4 class="h6"><i class="ti ti-history me-1" aria-hidden="true"></i>Historial de PIN de configuración</h4>
+                    <div<?= empty($administrativePinHistoryOnly) ? ' class="mt-4"' : '' ?>>
+                        <?php if (empty($administrativePinHistoryOnly)): ?><h4 class="h6"><i class="ti ti-history me-1" aria-hidden="true"></i>Historial de PIN de configuración</h4><?php endif; ?>
                         <?php if (($adminPanel['ok'] ?? false) !== true): ?>
                             <div class="alert alert-warning mb-0" role="status">El historial no está disponible; no se confirma que no existan registros.</div>
                         <?php elseif ($adminHistory === []): ?>
@@ -101,5 +101,5 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                             </tbody></table></div>
                         <?php endif; ?>
                     </div>
-                </section>
+                <?php if (empty($administrativePinHistoryOnly)): ?></section><?php endif; ?>
             <?php endif; ?>
