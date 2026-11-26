@@ -582,17 +582,30 @@ class SgmEvaluacionCumplimientoController extends BaseController
 
         foreach ($revision->asistentes as $asistente) {
 
-            $firma = '';
+            $firma = '<span style="color: #6c757d; font-size: 10px;">Firma no registrada</span>';
+            $nombreArchivo = trim((string) ($asistente->usuario?->firma ?? ''));
+            if ($nombreArchivo !== '') {
+                $directorio = realpath(PUBLIC_PATH . '/uploads/firma-personal');
+                $archivo = basename(str_replace('\\', '/', $nombreArchivo));
+                $ruta = $directorio ? realpath($directorio . DIRECTORY_SEPARATOR . $archivo) : false;
+                $prefijo = $directorio ? rtrim($directorio, '/\\') . DIRECTORY_SEPARATOR : '';
 
-            if ($asistente->usuario?->firma) {
+                if ($ruta && $prefijo !== '' && str_starts_with($ruta, $prefijo) && is_file($ruta) && is_readable($ruta)) {
+                    $imagen = @getimagesize($ruta);
+                    $mime = $imagen['mime'] ?? '';
+                    $contenido = in_array($mime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], true)
+                        ? @file_get_contents($ruta)
+                        : false;
 
-                $ruta = $_ENV['APP_URL'] . '/uploads/firma-personal/' . $asistente->usuario->firma;
-                $firma = '<img width="100" src="' . $ruta . '">';
+                    if ($contenido !== false && $contenido !== '') {
+                        $firma = '<img width="100" alt="Firma del asistente" src="data:' . $mime . ';base64,' . base64_encode($contenido) . '">';
+                    }
+                }
             }
 
             $html .= '
         <tr>
-            <td>' . $asistente->usuario?->nombre . '</td>
+            <td>' . htmlspecialchars((string) ($asistente->usuario?->nombre ?? ''), ENT_QUOTES, 'UTF-8') . '</td>
             <td class="text-center">' . $firma . '</td>
         </tr>';
         }

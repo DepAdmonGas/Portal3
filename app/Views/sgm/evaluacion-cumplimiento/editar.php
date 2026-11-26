@@ -256,12 +256,21 @@
                     <td class="align-middle"
                         x-text="asistente.usuario.nombre"
                     ></td>
-                    <td class="text-center align-middle">
-                        <img
-                            x-show="asistente.usuario.firma"
-                            :src="'<?= $_ENV['APP_URL'] ?>/uploads/firma-personal/' + asistente.usuario.firma"
-                            width="70"
-                        >
+                    <td class="text-center align-middle" x-data="{ firmaDisponible: typeof asistente.usuario?.firma === 'string' && asistente.usuario.firma.trim() !== '' }">
+                        <template x-if="firmaDisponible">
+                            <img
+                                :src="'<?= $_ENV['APP_URL'] ?>/uploads/firma-personal/' + encodeURIComponent(asistente.usuario.firma.trim())"
+                                width="70"
+                                alt="Firma del asistente"
+                                @error="firmaDisponible = false"
+                            >
+                        </template>
+                        <template x-if="!firmaDisponible">
+                            <span class="d-inline-flex flex-column align-items-center text-muted">
+                                <i class="ti ti-signature-off fs-6" aria-hidden="true"></i>
+                                <small>Firma no registrada</small>
+                            </span>
+                        </template>
                     </td>
                     <td class="text-center align-middle">
 

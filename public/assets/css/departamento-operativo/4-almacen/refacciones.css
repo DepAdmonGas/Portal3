@@ -110,3 +110,13 @@ body:has(#refacciones-module) {
         max-height: calc(100dvh - var(--bs-modal-margin) * 2);
     }
 }
+
+/* En calcomanías el formulario crece sólo hasta el alto disponible. */
+#modalRefaccionesCalcomania .modal-dialog-scrollable {
+    height: auto;
+}
+
+#modalRefaccionesCalcomania .modal-dialog-scrollable > .modal-content {
+    height: auto;
+    max-height: calc(100vh - var(--bs-modal-margin) * 2);
+}

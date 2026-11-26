@@ -26,7 +26,7 @@ style="display: none;"></div>
 <div x-show="!cargando" x-cloak>
 <div class="row d-flex justify-content-end mt-3 mb-3">
 <div class="col-12 col-md-auto d-grid">
-<button type="button" class="btn btn-success" @click="abrirTotales()">
+<button type="button" class="btn btn-success" @click="abrirTotales($event)">
 <i class="ti ti ti-file-dollar me-1"></i>Impuestos Totales
 </button>
 
@@ -53,7 +53,7 @@ style="display: none;"></div>
 <i class="ti ti-eye"></i>
 <span x-text="'Detalle (' + detalleFecha + ')'"></span>
 </h4>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="detalleData = null"></button>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
 <div class="modal-body">
 <template x-if="detalleCargando">
@@ -87,8 +87,8 @@ style="display: none;"></div>
 </th>
 </tr>
 </template>
-<template x-for="item in detalleData.items" :key="item.producto">
-<tr class="pointer" :class="{ selected: selectedDetailProduct === item.producto }" @click="selectedDetailProduct = item.producto">
+<template x-for="(item, index) in detalleData.items" :key="index">
+<tr class="pointer" :class="{ selected: selectedDetailProduct === index }" @click="selectedDetailProduct = index">
 <th class="align-middle text-center" x-text="item.producto"></th>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.precio_litro)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.ieps)"></td>
@@ -129,7 +129,7 @@ style="display: none;"></div>
 </div>
 <div class="modal-footer">
     <div class="col-12 col-md-auto d-grid">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="detalleData = null">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
     <i class="ti ti-x"></i> 
 Cerrar</button>
     </div>
@@ -145,7 +145,7 @@ Cerrar</button>
 <h4 class="modal-title text-white">
 <i class="ti ti-presentation"></i>    
 Resumen de Impuestos Totales</h4>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" @click="totalesData = null"></button>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
 <div class="modal-body mb-0">
 <template x-if="totalesCargando">
@@ -179,8 +179,8 @@ Resumen de Impuestos Totales</h4>
 </th>
 </tr>
 </template>
-<template x-for="item in totalesData.items" :key="item.producto">
-<tr class="pointer" :class="{ selected: selectedTotalProduct === item.producto }" @click="selectedTotalProduct = item.producto">
+<template x-for="(item, index) in totalesData.items" :key="index">
+<tr class="pointer" :class="{ selected: selectedTotalProduct === index }" @click="selectedTotalProduct = index">
 <th class="align-middle text-center" x-text="item.producto"></th>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.precio_publico)"></td>
 <td class="align-middle text-end" x-text="'$ ' + formatNum(item.ieps)"></td>
@@ -221,7 +221,7 @@ Resumen de Impuestos Totales</h4>
 </div>
 <div class="modal-footer">
         <div class="col-12 col-md-auto d-grid ms-md-auto mb-2">
-<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" @click="totalesData = null">
+<button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">
    <i class="ti ti-x"></i> 
 Cerrar</button>
         </div>

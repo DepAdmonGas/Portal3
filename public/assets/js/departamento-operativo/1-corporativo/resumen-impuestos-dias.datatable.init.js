@@ -51,7 +51,7 @@ searchable: false,
 render: function (data, type) {
 if (type !== 'display') return '';
 
-return '<a class="btn-detalle" data-id-dia="' + 
+return '<a class="btn-detalle" href="#" aria-label="Ver detalle" data-id-dia="' +
 data.id_dia + 
 '" data-fecha="' + 
 $('<span>').text(data.fecha_formateada).html() + 
@@ -82,6 +82,6 @@ e.preventDefault();
 const idDia = parseInt($(this).data('id-dia'));
 const fecha = $(this).data('fecha');
 document.dispatchEvent(new CustomEvent('abrir-detalle-impuesto', {
-detail: { idDia: idDia, fecha: fecha }
+detail: { idDia: idDia, fecha: fecha, trigger: this }
 }));
 });
