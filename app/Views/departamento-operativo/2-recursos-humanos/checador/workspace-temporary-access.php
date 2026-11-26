@@ -14,6 +14,26 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
     <div class="d-flex justify-content-end mb-3">
         <a class="btn btn-outline-secondary btn-sm" href="/departamento-operativo/recursos-humanos/checador"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Volver al Checador</a>
     </div>
+    <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
+        <div class="col">
+            <section class="card bg-body border rounded-3 shadow-sm card-hover h-100 mb-0" aria-labelledby="personnel-pin-title">
+                <div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">
+                    <span class="rounded-3 bg-primary-subtle text-primary p-3 d-inline-flex align-items-center justify-content-center flex-shrink-0"><i class="ti ti-key fs-9" aria-hidden="true"></i></span>
+                    <div class="d-flex flex-column flex-grow-1 h-100">
+                        <h2 class="card-title fs-6 fw-bolder mb-2" id="personnel-pin-title">PIN de acceso del personal</h2>
+                        <p class="text-body-secondary mb-3">Autoriza marcaciones temporales cuando un trabajador no puede utilizar su huella.</p>
+                        <ul class="list-unstyled d-flex flex-wrap gap-2 mb-3"><li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">15 minutos</span></li><li><span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold px-2 py-1">Una marcación</span></li></ul>
+                        <?php if (($panel['state'] ?? '') === 'success'): ?>
+                            <p class="mb-3">Solicitudes pendientes: <strong><?= count($requests) ?></strong></p>
+                        <?php else: ?>
+                            <p class="text-body-secondary mb-3">Solicitudes pendientes: no disponibles</p>
+                        <?php endif; ?>
+                        <div class="mt-auto"><a class="btn btn-primary" href="#temporary-access-requests"><i class="ti ti-list-details me-1" aria-hidden="true"></i>Administrar solicitudes</a></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
     <section class="card" id="temporary-access-requests" aria-labelledby="temporary-access-workspace-heading">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-key fs-5"></i></span>
