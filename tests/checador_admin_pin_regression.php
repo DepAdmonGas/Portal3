@@ -30,7 +30,7 @@ $assert = static function (bool $ok, string $message): void {
 $request = ['request_uuid'=>'12345678-1234-4234-8234-123456789abc', 'nombre_trabajador'=>'Trabajador <Prueba>', 'dispositivo_nombre'=>'Lector', 'reason'=>'FINGERPRINT_NOT_RECOGNIZED', 'requested_at_utc'=>'2026-11-25 12:00:00', 'request_expires_at_utc'=>'2026-11-25 12:30:00'];
 $queue = $renderTemporary(['state'=>'success', 'requests'=>[$request], 'can_edit'=>true]);
 $assert(str_contains($queue, 'Solicitudes de acceso temporal') && str_contains($queue, 'Trabajador &lt;Prueba&gt;') && str_contains($queue, 'No incluido en esta lectura'), 'attendance PIN request workspace retains its real queue projection');
-$assert(!str_contains($queue, 'PIN de configuración') && !str_contains($queue, 'admin-pin') && !str_contains($queue, 'Historial de autorizaciones'), 'administrative PIN controls and history are removed from attendance PIN workspace');
+$assert(str_contains($queue, 'PIN de configuración') && str_contains($queue, 'PIN de acceso del personal'), 'both PIN cards appear in the temporary access workspace');
 $emptyQueue = $renderTemporary(['state'=>'success', 'requests'=>[]]);
 $assert(str_contains($emptyQueue, 'No hay solicitudes pendientes para esta estación.'), 'successful empty attendance request queue remains distinct');
 $errorQueue = $renderTemporary(['state'=>'error', 'message'=>'Error de consulta', 'requests'=>[]]);
@@ -44,7 +44,7 @@ $assert(str_contains($pending, '/configuracion/admin-pin/12345678-1234-4234-8234
 $activeSession = $renderAdmin(['ok'=>true,'state'=>'ready','can_issue'=>false,'can_revoke'=>true,'secret_configured'=>true,'devices'=>[['device_id'=>2,'device_name'=>'Lector local','device_active'=>true,'credential_active'=>true,'biometric_grant_active'=>true,'pending_pin'=>null,'session'=>['session_id'=>'12345678-1234-4234-8234-123456789abc','state'=>'ACTIVE','expires_at_utc'=>'2026-11-25 12:05:00']]],'history'=>[]]);
 $assert(str_contains($activeSession, '/configuracion/admin-session/12345678-1234-4234-8234-123456789abc/revoke'), 'administrative session revocation uses the configuration route');
 $readOnly = $renderAdmin(['ok'=>true,'state'=>'ready','can_issue'=>false,'can_revoke'=>false,'secret_configured'=>true,'devices'=>$devices,'history'=>[]]);
-$assert(str_contains($readOnly, 'La emisión requiere la capacidad específica del Encargado') && !str_contains($readOnly, 'method="post"'), 'read-only profiles cannot issue or revoke administrative PINs');
+$assert(str_contains($readOnly, 'La emisión requiere permisos de edición') && !str_contains($readOnly, 'method="post"'), 'read-only profiles cannot issue or revoke administrative PINs');
 $unavailable = $renderAdmin(['ok'=>false,'state'=>'unavailable','can_issue'=>false,'devices'=>[],'history'=>[]]);
 $assert(str_contains($unavailable, 'No fue posible consultar el estado') && str_contains($unavailable, 'El historial no está disponible'), 'SQL unavailability is distinguished from successful empty history');
 $historyEmpty = $renderAdmin(['ok'=>true,'state'=>'ready','can_issue'=>false,'can_revoke'=>false,'secret_configured'=>false,'devices'=>[],'history'=>[]]);
@@ -64,11 +64,11 @@ $assert(!str_contains($service, 'DEVICE_BIOMETRIC_ADMIN'), 'administrative PIN p
 $assert(str_contains($service, 'session_last_activity_at_utc') && str_contains($service, "\$sessionState==='ACTIVE'"), 'history derives session expiry from absolute and idle limits');
 $assert(ChecadorV2PermissionService::effectiveGrantDecision(['active'=>1,'granted'=>0],['active'=>1,'granted'=>1]) === false, 'individual denial continues to override position capability');
 $assert(ChecadorV2PermissionService::effectiveGrantDecision(null,['active'=>1,'granted'=>1]) === true, 'position capability applies when no individual decision exists');
-$assert(str_contains($service, 'ChecadorAccessService::authorize($workplaceId)') && str_contains($service, 'station_workplaces') && !str_contains($service, 'authorizeTemporaryAccessInheritedPrepared') && !str_contains($service, 'authorizeTemporaryAccess('), 'administrative PIN authorization is based on Checador locality ACL and independent of attendance PIN ACL');
+$assert(str_contains($service, 'ChecadorAccessService::authorize($workplaceId)') && str_contains($service, 'station_workplaces') && str_contains($service, "authorizeTemporaryAccess(\$workplaceId, 'editar')"), 'administrative PIN authorization inherits Checador edit and locality ACL');
 $configView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/configuration.php') ?: '';
 $assert(str_contains($configView, "require __DIR__ . '/workspace-administrative-pin.php'") && strpos($configView, "id=\"m11-reader-link\"") < strpos($configView, "require __DIR__ . '/workspace-administrative-pin.php'"), 'configuration renders the administrative PIN panel immediately alongside device linking');
 $controller = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
-$assert(str_contains($controller, "'administrativePinPanel' => \$administrativePinPanel") && str_contains($controller, "readForWorkplace(\$user, \$workplaceId)") && str_contains($controller, "'/departamento-operativo/recursos-humanos/checador/configuracion'") && !str_contains($controller, "readForWorkplace(\$currentUser, \$requestedWorkplace)"), 'configuration loads the SQL panel and post handlers redirect to configuration');
+$assert(str_contains($controller, "'administrativePinPanel' => \$administrativePinPanel") && str_contains($controller, "readForWorkplace(\$user, \$workplaceId)") && str_contains($controller, "'/departamento-operativo/recursos-humanos/checador/configuracion'") && str_contains($controller, "readForWorkplace(\$currentUser, \$requestedWorkplace)"), 'both pages load the SQL panel');
 $routes = file_get_contents(__DIR__ . '/../routes/web.php') ?: '';
 $assert(str_contains($routes, '/recursos-humanos/checador/configuracion/admin-pin') && !str_contains($routes, '/recursos-humanos/checador/acceso-temporal/admin-pin'), 'administrative PIN mutations are routed only through Checador configuration');
 

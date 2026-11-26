@@ -251,7 +251,21 @@ final class ChecadorAdministrativePinSqlService
         // The administrative-PIN capability authorizes only this session
         // lifecycle. Biometric enrollment has separate capabilities and is
         // not implemented or granted by this service.
-        return ChecadorV2PermissionService::allows((int)$fresh->id,$position,$specific);
+        $permission = ChecadorAccessService::authorizeTemporaryAccess($workplaceId, 'editar');
+        if (empty($permission['allowed'])) return false;
+        try {
+            $rows = Capsule::connection('default')->table('op_rh_v2_permission_grants')
+                ->where('permission_key', $specific)->where('principal_type', 'USER')
+                ->where('principal_id', (int) $fresh->id)->get(['active', 'granted']);
+            if ($rows->count() > 1) return false;
+            if ($rows->count() === 1) {
+                $row = $rows->first();
+                if ((int) $row->active !== 1 || (int) $row->granted !== 1) return false;
+            }
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     private function assertSchemaReadable():void

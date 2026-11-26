@@ -6,7 +6,7 @@ $panel = is_array($temporaryAccessPanel ?? null) ? $temporaryAccessPanel : [];
 $requests = is_array($panel['requests'] ?? null) ? $panel['requests'] : [];
 $canEdit = ($panel['can_edit'] ?? false) === true
     && ($demoMode ?? false) !== true
-    && ($realApiPostOperationsEnabled ?? false) === true;
+    && ($temporaryAccessPostOperationsEnabled ?? false) === true;
 $cancelableUuid = strtolower((string) ($panel['cancelable_uuid'] ?? ''));
 $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
 ?>
@@ -15,6 +15,13 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
         <a class="btn btn-outline-secondary btn-sm" href="/departamento-operativo/recursos-humanos/checador"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Volver al Checador</a>
     </div>
     <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
+        <div class="col">
+            <section class="card bg-body border rounded-3 shadow-sm card-hover h-100 mb-0" aria-label="PIN de configuración del Lector">
+                <div class="card-body p-3 p-lg-4">
+                    <?php $administrativePinReturnTo = 'acceso-temporal'; require __DIR__ . '/workspace-administrative-pin.php'; ?>
+                </div>
+            </section>
+        </div>
         <div class="col">
             <section class="card bg-body border rounded-3 shadow-sm card-hover h-100 mb-0" aria-labelledby="personnel-pin-title">
                 <div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">

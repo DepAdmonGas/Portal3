@@ -1070,7 +1070,9 @@ final class ChecadorController extends BaseController
                 Session::set('checador_admin_pin_feedback',['type'=>'error','message'=>$message,'user_id'=>(int)$actor->id,'workplace_id'=>$workplaceId,'at'=>time()]);
             }
         }
-        $target='/departamento-operativo/recursos-humanos/checador/configuracion';
+        $target = ($input['return_to'] ?? '') === 'acceso-temporal'
+            ? '/departamento-operativo/recursos-humanos/checador/acceso-temporal'
+            : '/departamento-operativo/recursos-humanos/checador/configuracion';
         if($workplaceId!==null)$target.='?workplace_id='.$workplaceId;
         self::redirect($target);
     }
@@ -1167,6 +1169,7 @@ final class ChecadorController extends BaseController
             && in_array($workplaceId, array_map('intval', array_column($access['station_workplaces'] ?? [], 'id')), true)
             && (ChecadorAccessService::authorizeTemporaryAccess($workplaceId, 'leer')['allowed'] ?? false) === true;
         $currentUser = Auth::user();
+
         $isOperationsDirector = $currentUser instanceof \App\Models\Usuario
             && (int) $currentUser->id_puesto === 13;
         $comodinesRead = $currentUser instanceof \App\Models\Usuario
@@ -1626,6 +1629,16 @@ final class ChecadorController extends BaseController
         $evaluationFeedback = Session::pull('checador_evaluation_feedback', null);
         $temporaryAccessFeedback = Session::pull('checador_temporary_access_feedback', null);
         $currentUser = Auth::user();
+        $administrativePinPanel = ['ok'=>false, 'state'=>'unavailable', 'devices'=>[], 'history'=>[], 'can_issue'=>false, 'can_revoke'=>false];
+        $administrativePinFeedback = null;
+        if ($workspace === 'temporary-access' && !$demoMode && $requestedWorkplace !== null && $currentUser !== null) {
+            $administrativePinPanel = (new ChecadorAdministrativePinSqlService())->readForWorkplace($currentUser, $requestedWorkplace);
+            $feedback = Session::pull('checador_admin_pin_feedback', null);
+            if (is_array($feedback) && (int) ($feedback['user_id'] ?? 0) === (int) $currentUser->id
+                && (int) ($feedback['workplace_id'] ?? 0) === $requestedWorkplace && (int) ($feedback['at'] ?? 0) >= time() - 60) {
+                $administrativePinFeedback = $feedback;
+            }
+        }
         if (!is_array($temporaryAccessFeedback)
             || (int) ($temporaryAccessFeedback['user_id'] ?? 0) !== (int) ($currentUser->id ?? 0)
             || (int) ($temporaryAccessFeedback['workplace_id'] ?? 0) !== (int) ($requestedWorkplace ?? 0)) {
@@ -2292,6 +2305,9 @@ final class ChecadorController extends BaseController
                 'evaluationKeys' => $evaluationKeys,
                 'evaluationFeedback' => $evaluationFeedback,
                 'temporaryAccessPanel' => $workspaceTemporaryAccessPanel,
+                'administrativePinPanel' => $administrativePinPanel,
+                'administrativePinFeedback' => $administrativePinFeedback,
+                'temporaryAccessPostOperationsEnabled' => ChecadorDailyReadService::temporaryAccessApiPostOperationsEnabled(),
                 'temporaryAccessFeedback' => $temporaryAccessFeedback,
                 'canViewTemporaryPin' => $workspace === null
                     ? !empty($temporaryAccessPanel['can_edit'])

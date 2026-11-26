@@ -544,6 +544,13 @@ $login(600);
 $pinOwn = ChecadorAccessService::authorizeTemporaryAccess(201, 'editar');
 $pinForeign = ChecadorAccessService::authorizeTemporaryAccess(204, 'editar');
 $assert(($pinOwn['allowed'] ?? false) && !($pinForeign['allowed'] ?? false), 'PIN Encargado inherits Checador edit without a positive dedicated grant or locality configuration and remains station-scoped');
+$adminPinAcl = new ReflectionMethod(\App\Services\ChecadorAdministrativePinSqlService::class, 'authorized');
+$adminPinService = new \App\Services\ChecadorAdministrativePinSqlService();
+$assert($adminPinAcl->invoke($adminPinService, Auth::user(), 201, 'emitir')
+    && !$adminPinAcl->invoke($adminPinService, Auth::user(), 204, 'emitir'), 'administrative PIN inherits station edit without a positive capability grant');
+$db->table('op_rh_v2_permission_grants')->insert(['permission_key'=>'checador.admin_pin.emitir','principal_type'=>'USER','principal_id'=>600,'granted'=>0,'active'=>1]);
+$assert(!$adminPinAcl->invoke($adminPinService, Auth::user(), 201, 'emitir'), 'administrative PIN explicit individual denial remains effective');
+$db->table('op_rh_v2_permission_grants')->where('permission_key','checador.admin_pin.emitir')->where('principal_id',600)->delete();
 $db->table('tb_usuarios')->insert(['id'=>605, 'id_gas'=>102, 'id_puesto'=>6, 'estatus'=>0]);
 $login(605);
 $pinOther = ChecadorAccessService::authorizeTemporaryAccess(202, 'editar');

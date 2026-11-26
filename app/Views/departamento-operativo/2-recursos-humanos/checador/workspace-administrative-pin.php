@@ -34,7 +34,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                                     <div class="small mb-2">PIN pendiente hasta <?= $esc($adminDevice['pending_pin']['expires_at_utc']) ?> UTC</div>
                                     <?php if (!empty($adminPanel['can_revoke'])): ?>
                                         <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-pin/<?= rawurlencode((string) $adminDevice['pending_pin']['authorization_id']) ?>/revoke" class="mb-2">
-                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>">
+                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><?php if (($administrativePinReturnTo ?? '') === 'acceso-temporal'): ?><input type="hidden" name="return_to" value="acceso-temporal"><?php endif; ?>
                                             <label class="form-check small mb-1"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo revocar el PIN pendiente.</label>
                                             <button type="submit" class="btn btn-sm bg-danger-subtle text-danger"><i class="ti ti-x me-1" aria-hidden="true"></i>Revocar PIN</button>
                                         </form>
@@ -42,7 +42,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                                 <?php endif; ?>
                                 <?php if (!empty($adminDevice['session']) && !empty($adminPanel['can_revoke'])): ?>
                                     <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-session/<?= rawurlencode((string) $adminDevice['session']['session_id']) ?>/revoke">
-                                        <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>">
+                                        <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><?php if (($administrativePinReturnTo ?? '') === 'acceso-temporal'): ?><input type="hidden" name="return_to" value="acceso-temporal"><?php endif; ?>
                                         <label class="form-check small mb-1"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo revocar la sesión.</label>
                                         <button type="submit" class="btn btn-sm bg-danger-subtle text-danger"><i class="ti ti-x me-1" aria-hidden="true"></i>Revocar sesión</button>
                                     </form>
@@ -57,7 +57,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                     <?php $issuableDevices = array_values(array_filter($adminDevices, static fn(array $device): bool => !empty($device['device_active']) && !empty($device['credential_active']) && !empty($device['biometric_grant_active']) && empty($device['session']))); ?>
                     <?php if (!empty($adminPanel['can_issue']) && !empty($adminPanel['secret_configured']) && $issuableDevices !== []): ?>
                         <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-pin" class="mt-3">
-                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>">
+                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><?php if (($administrativePinReturnTo ?? '') === 'acceso-temporal'): ?><input type="hidden" name="return_to" value="acceso-temporal"><?php endif; ?>
                             <label class="form-label" for="admin-pin-device">Dispositivo autorizado</label>
                             <select id="admin-pin-device" name="device_id" class="form-select mb-2" required>
                                 <?php foreach ($issuableDevices as $adminDevice): ?><option value="<?= (int) $adminDevice['device_id'] ?>"><?= $esc($adminDevice['device_name']) ?></option><?php endforeach; ?>
@@ -68,7 +68,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                     <?php else: ?>
                         <div class="mt-3">
                             <button type="button" class="btn btn-primary" disabled><i class="ti ti-lock me-1" aria-hidden="true"></i>Generar PIN de configuración</button>
-                            <p class="small text-body-secondary mt-2 mb-0"><?= empty($adminPanel['can_issue']) ? 'La emisión requiere la capacidad específica del Encargado y el servicio habilitado.' : 'La emisión requiere esquema, secreto compartido, credencial y grant biométrico vigentes, y ausencia de sesión activa.' ?></p>
+                            <p class="small text-body-secondary mt-2 mb-0"><?= empty($adminPanel['can_issue']) ? 'La emisión requiere permisos de edición y el servicio habilitado.' : 'La emisión requiere esquema, secreto compartido, credencial y grant biométrico vigentes, y ausencia de sesión activa.' ?></p>
                         </div>
                     <?php endif; ?>
                     <div class="mt-4">
@@ -86,12 +86,12 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                                     <td><?= $esc($entry['session_state'] ? 'Consumido · sesión ' . $entry['session_state'] : $entry['state']) ?></td>
                                     <td><?php if (($adminPanel['can_revoke'] ?? false) && ($entry['session_state'] ?? '') === 'ACTIVE' && !empty($entry['session_id'])): ?>
                                         <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-session/<?= rawurlencode((string) $entry['session_id']) ?>/revoke">
-                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>">
+                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><?php if (($administrativePinReturnTo ?? '') === 'acceso-temporal'): ?><input type="hidden" name="return_to" value="acceso-temporal"><?php endif; ?>
                                             <label class="form-check small mb-1"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo revocar.</label><button type="submit" class="btn btn-sm bg-danger-subtle text-danger"><i class="ti ti-x me-1" aria-hidden="true"></i>Revocar sesión</button>
                                         </form>
                                     <?php elseif (($adminPanel['can_revoke'] ?? false) && ($entry['state'] ?? '') === 'PENDING'): ?>
                                         <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-pin/<?= rawurlencode((string) $entry['authorization_id']) ?>/revoke">
-                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>">
+                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><?php if (($administrativePinReturnTo ?? '') === 'acceso-temporal'): ?><input type="hidden" name="return_to" value="acceso-temporal"><?php endif; ?>
                                             <label class="form-check small mb-1"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo revocar.</label><button type="submit" class="btn btn-sm bg-danger-subtle text-danger"><i class="ti ti-x me-1" aria-hidden="true"></i>Revocar PIN</button>
                                         </form>
                                     <?php else: ?>—<?php endif; ?></td>

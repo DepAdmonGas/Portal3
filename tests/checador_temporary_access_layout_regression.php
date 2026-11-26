@@ -16,6 +16,6 @@ $assert(str_contains($html, 'PIN de acceso del personal')
     && str_contains($html, 'Administrar solicitudes')
     && str_contains($html, 'Solicitudes pendientes:')
     && str_contains($html, 'href="#temporary-access-requests"'), 'attendance PIN card and request navigation are available again');
-$assert(str_contains($html, 'No hay solicitudes pendientes para esta estación.') && !str_contains($html, 'PIN de configuración'), 'successful empty attendance queue is retained and administrative PIN is absent');
-$assert(!str_contains($html, 'admin-pin') && !str_contains($html, 'Historial de autorizaciones') && !str_contains($html, 'configuration-pin-title'), 'administrative PIN forms, cards and history no longer live in temporary access');
+$assert(str_contains($html, 'No hay solicitudes pendientes para esta estación.') && str_contains($html, 'PIN de configuración'), 'successful empty attendance queue and configuration PIN card are retained');
+$assert(str_contains($html, 'm11-admin-pin-heading') && str_contains($html, 'personnel-pin-title'), 'both PIN cards use existing components');
 echo "RESULT: 4 PASS / 0 FAIL".PHP_EOL;
