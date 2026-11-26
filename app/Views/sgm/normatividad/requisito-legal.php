@@ -309,7 +309,7 @@
                                         <th>Requisito</th>
                                     </tr>
 
-                                    <template x-for="row in matriz" :key="row.fecha_emision">
+                                    <template x-for="row in matriz" :key="row.matrix_id">
                                         <tr class="text-center">
 
                                             <td x-text="row.fecha_emision || 'S/I'"></td>
@@ -317,26 +317,38 @@
 
                                             <!-- ACUSE -->
                                             <td>
-                                                <template x-if="row.acuse">
+                                                <template x-if="row.acuse_registrado && row.acuse_disponible && puede_descargar && Number(row.matrix_id) > 0">
                                                     <a class="pointer" data-action-loader="download" aria-label="Descargar acuse"
-                                                        :href="'/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=acuse'">
+                                                        :href="downloadUrl(row.matrix_id, 'acuse')">
                                                         <i class="ti ti-download text-success fs-6"></i>
                                                     </a>
                                                 </template>
-                                                <template x-if="!row.acuse">
+                                                <template x-if="row.acuse_registrado && row.acuse_disponible && !puede_descargar && Number(row.matrix_id) > 0">
+                                                    <i class="ti ti-download text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                                </template>
+                                                <template x-if="row.acuse_registrado && (!row.acuse_disponible || !(Number(row.matrix_id) > 0))">
+                                                    <i class="ti ti-file-off text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                                </template>
+                                                <template x-if="!row.acuse_registrado">
                                                     <i class="ti ti-x text-danger fs-6"></i>
                                                 </template>
                                             </td>
 
                                             <!-- REQUISITO -->
                                             <td>
-                                                <template x-if="row.requisito">
+                                                <template x-if="row.requisito_registrado && row.requisito_disponible && puede_descargar && Number(row.matrix_id) > 0">
                                                     <a class="pointer" data-action-loader="download" aria-label="Descargar requisito legal"
-                                                        :href="'/sgm/normatividad-aplicable-mediciones/requisitos-legales/download?matrix_id=' + row.id + '&variant=requisito'">
+                                                        :href="downloadUrl(row.matrix_id, 'requisito')">
                                                         <i class="ti ti-download text-success fs-6"></i>
                                                     </a>
                                                 </template>
-                                                <template x-if="!row.requisito">
+                                                <template x-if="row.requisito_registrado && row.requisito_disponible && !puede_descargar && Number(row.matrix_id) > 0">
+                                                    <i class="ti ti-download text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                                </template>
+                                                <template x-if="row.requisito_registrado && (!row.requisito_disponible || !(Number(row.matrix_id) > 0))">
+                                                    <i class="ti ti-file-off text-muted fs-6" aria-label="Descarga no disponible"></i>
+                                                </template>
+                                                <template x-if="!row.requisito_registrado">
                                                     <i class="ti ti-x text-danger fs-6"></i>
                                                 </template>
                                             </td>

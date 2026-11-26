@@ -36,11 +36,7 @@ View::render('departamento-operativo/1-corporativo/estimulo-fiscal/index', [
 'title' => 'Estímulo Fiscal',
 'idEstacion' => $idEstacion,
 'help' => false,
-'links' => [
-'/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css',
-],
 'scripts' => [
-'/assets/libs/datatables.net/js/jquery.dataTables.min.js',
 '/assets/js/departamento-operativo/1-corporativo/estimulo-fiscal.actions.init.js?v=' . time(),
 ],
 ], 'departamento-operativo');

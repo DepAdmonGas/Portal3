@@ -329,13 +329,13 @@ class RefaccionesService
             ->leftJoin('op_refacciones_uniformes as u', 'u.id_refaccion', '=', 'c.id')
             ->leftJoin('op_refacciones_calcomanias as cal', 'cal.id_refaccion', '=', 'c.id')
             ->where('c.activo', 1)
-            ->selectRaw('c.id, c.sku, c.tipo_articulo, c.nombre, c.descripcion, c.medida, c.modelo, c.marca, c.categoria, c.unidad_medida, c.stock_minimo, c.costo_unitario, c.imagen, u.talla, u.color, cal.dimension, cal.colores_pantone, cal.acabado, cal.reproduccion, cal.notas as notas_calcomania, COALESCE(SUM(e.existencia), 0) as existencia');
+            ->selectRaw('c.id, c.sku, c.tipo_articulo, c.nombre, c.descripcion, c.medida, c.modelo, c.marca, c.categoria, c.unidad_medida, c.stock_minimo, c.costo_unitario, c.imagen, u.talla, u.color, cal.dimension, cal.colores_pantone, cal.acabado, cal.reproduccion, cal.norma, cal.notas as notas_calcomania, COALESCE(SUM(e.existencia), 0) as existencia');
 
         if ($tipo !== null && in_array($tipo, ['refaccion', 'uniforme', 'calcomania'], true)) {
             $query->where('c.tipo_articulo', $tipo);
         }
 
-        return $query->groupBy('c.id', 'c.sku', 'c.tipo_articulo', 'c.nombre', 'c.descripcion', 'c.medida', 'c.modelo', 'c.marca', 'c.categoria', 'c.unidad_medida', 'c.stock_minimo', 'c.costo_unitario', 'c.imagen', 'u.talla', 'u.color', 'cal.dimension', 'cal.colores_pantone', 'cal.acabado', 'cal.reproduccion', 'cal.notas')
+        return $query->groupBy('c.id', 'c.sku', 'c.tipo_articulo', 'c.nombre', 'c.descripcion', 'c.medida', 'c.modelo', 'c.marca', 'c.categoria', 'c.unidad_medida', 'c.stock_minimo', 'c.costo_unitario', 'c.imagen', 'u.talla', 'u.color', 'cal.dimension', 'cal.colores_pantone', 'cal.acabado', 'cal.reproduccion', 'cal.norma', 'cal.notas')
             ->orderBy('c.nombre')->get()->map(static fn ($row): array => (array) $row)->all();
     }
 
@@ -1360,10 +1360,11 @@ class RefaccionesService
         $colores = trim((string) ($data['colores_pantone'] ?? ''));
         $acabado = trim((string) ($data['acabado'] ?? ''));
         $reproduccion = trim((string) ($data['reproduccion'] ?? ''));
+        $norma = trim((string) ($data['norma'] ?? ''));
         $notas = trim((string) ($data['notas'] ?? ''));
 
         if ($sku === '' || mb_strlen($sku) > 60 || $nombre === '' || mb_strlen($nombre) > 250
-            || $dimension === '' || mb_strlen($dimension) > 100 || $colores === '' || mb_strlen($colores) > 250
+            || $dimension === '' || mb_strlen($dimension) > 100 || $colores === '' || mb_strlen($colores) > 250 || $norma === '' || mb_strlen($norma) > 250
             || !in_array($acabado, ['Mate', 'Brillante', 'Reflejante'], true)
             || !in_array($reproduccion, ['Estireno', 'Acrílico', 'Trovisel', 'Imán', 'Calcomanía'], true)) {
             return self::respuesta(false, 'Completa los datos de la calcomanía y selecciona un acabado y reproducción válidos.', 422);
@@ -1399,7 +1400,7 @@ class RefaccionesService
         }
 
         try {
-            $id = DB::transaction(static function () use ($sku, $nombre, $dimension, $colores, $acabado, $reproduccion, $notas, $nombreImagen): int {
+            $id = DB::transaction(static function () use ($sku, $nombre, $dimension, $colores, $acabado, $reproduccion, $norma, $notas, $nombreImagen): int {
                 if (DB::table('op_refacciones_catalogo')->where('sku', $sku)->exists()) {
                     throw new InvalidArgumentException('El SKU ya está registrado.');
                 }
@@ -1416,7 +1417,7 @@ class RefaccionesService
                 DB::table('op_refacciones_calcomanias')->insert([
                     'id_refaccion' => $idProducto, 'dimension' => $dimension,
                     'colores_pantone' => $colores, 'acabado' => $acabado,
-                    'reproduccion' => $reproduccion, 'notas' => $notas !== '' ? $notas : null,
+                    'reproduccion' => $reproduccion, 'norma' => $norma, 'notas' => $notas !== '' ? $notas : null,
                 ]);
                 return $idProducto;
             });
@@ -1443,9 +1444,10 @@ class RefaccionesService
         $colores = trim((string) ($data['colores_pantone'] ?? ''));
         $acabado = trim((string) ($data['acabado'] ?? ''));
         $reproduccion = trim((string) ($data['reproduccion'] ?? ''));
+        $norma = trim((string) ($data['norma'] ?? ''));
         $notas = trim((string) ($data['notas'] ?? ''));
         if ($sku === '' || mb_strlen($sku) > 60 || $nombre === '' || mb_strlen($nombre) > 250
-            || $dimension === '' || mb_strlen($dimension) > 100 || $colores === '' || mb_strlen($colores) > 250
+            || $dimension === '' || mb_strlen($dimension) > 100 || $colores === '' || mb_strlen($colores) > 250 || $norma === '' || mb_strlen($norma) > 250
             || !in_array($acabado, ['Mate', 'Brillante', 'Reflejante'], true)
             || !in_array($reproduccion, ['Estireno', 'Acrílico', 'Trovisel', 'Imán', 'Calcomanía'], true)) {
             return self::respuesta(false, 'Completa los datos de la calcomanía y selecciona un acabado y reproducción válidos.', 422);
@@ -1485,7 +1487,7 @@ class RefaccionesService
         }
 
         try {
-            DB::transaction(static function () use ($id, $sku, $nombre, $dimension, $colores, $acabado, $reproduccion, $notas, $imagenNueva): void {
+            DB::transaction(static function () use ($id, $sku, $nombre, $dimension, $colores, $acabado, $reproduccion, $norma, $notas, $imagenNueva): void {
                 $producto = DB::table('op_refacciones_catalogo')->where('id', $id)->where('tipo_articulo', 'calcomania')->where('activo', 1)->lockForUpdate()->first();
                 if (!$producto) throw new InvalidArgumentException('La calcomanía ya no está disponible.');
                 if (DB::table('op_refacciones_catalogo')->where('sku', $sku)->where('id', '<>', $id)->exists()) {
@@ -1499,7 +1501,7 @@ class RefaccionesService
                 DB::table('op_refacciones_catalogo')->where('id', $id)->update($actualizacion);
                 DB::table('op_refacciones_calcomanias')->updateOrInsert(
                     ['id_refaccion' => $id],
-                    ['dimension' => $dimension, 'colores_pantone' => $colores, 'acabado' => $acabado, 'reproduccion' => $reproduccion, 'notas' => $notas !== '' ? $notas : null]
+                    ['dimension' => $dimension, 'colores_pantone' => $colores, 'acabado' => $acabado, 'reproduccion' => $reproduccion, 'norma' => $norma, 'notas' => $notas !== '' ? $notas : null]
                 );
             });
             return self::respuesta(true, 'Calcomanía actualizada.', 200, ['id' => $id, 'imagen' => $imagenNueva]);

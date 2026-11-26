@@ -8,11 +8,26 @@ selectedDetailProduct: null,
 totalesData: null,
 totalesCargando: false,
 selectedTotalProduct: null,
+modalTriggers: {},
 
 init() {
 document.addEventListener('abrir-detalle-impuesto', (e) => {
-this.abrirDetalle(e.detail.idDia, e.detail.fecha);
+this.abrirDetalle(e.detail.idDia, e.detail.fecha, e.detail.trigger);
 });
+for (const [id, property] of [['modalDetalle', 'detalleData'], ['modalTotales', 'totalesData']]) {
+const modal = document.getElementById(id);
+if (!modal) continue;
+modal.addEventListener('hide.bs.modal', () => {
+const active = document.activeElement;
+if (active && modal.contains(active) && typeof active.blur === 'function') active.blur();
+});
+modal.addEventListener('hidden.bs.modal', () => {
+this[property] = null;
+const trigger = this.modalTriggers[id];
+if (trigger?.isConnected && typeof trigger.focus === 'function') trigger.focus();
+delete this.modalTriggers[id];
+});
+}
 },
 
 formatNum(val) {
@@ -22,7 +37,7 @@ maximumFractionDigits: 4
 });
 },
 
-async abrirDetalle(idDia, fecha) {
+async abrirDetalle(idDia, fecha, trigger) {
 this.detalleData = null;
 this.detalleFecha = fecha;
 this.detalleCargando = true;
@@ -30,6 +45,7 @@ this.selectedDetailProduct = null;
 
 const el = document.getElementById('modalDetalle');
 if (!el) return;
+this.modalTriggers.modalDetalle = trigger || document.activeElement;
 const modal = bootstrap.Modal.getOrCreateInstance(el);
 modal.show();
 
@@ -48,7 +64,7 @@ this.detalleCargando = false;
 }
 },
 
-async abrirTotales() {
+async abrirTotales(event) {
 this.totalesData = null;
 this.totalesCargando = true;
 this.selectedTotalProduct = null;
@@ -59,6 +75,7 @@ const idMes = c ? parseInt(c.dataset.idMes) : 0;
 
 const el = document.getElementById('modalTotales');
 if (!el) return;
+this.modalTriggers.modalTotales = event?.currentTarget || document.activeElement;
 const modal = bootstrap.Modal.getOrCreateInstance(el);
 modal.show();
 

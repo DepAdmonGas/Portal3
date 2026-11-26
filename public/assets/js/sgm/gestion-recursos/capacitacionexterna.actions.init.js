@@ -12,7 +12,8 @@ document.addEventListener('alpine:init', () => {
           instructor:'',
           fecha_real:'',
           usuarios: [],
-          personal:[]
+          personal:[],
+          evidencias:[]
       },
 
        year: new Date().getFullYear(),
@@ -214,7 +215,16 @@ document.addEventListener('alpine:init', () => {
             '/sgm/gestion-recursos/programa-capacitacion-externa/detalle/' + id
         );
 
-        this.form = await res.json();
+        if (!res.ok) {
+            throw new Error('No fue posible consultar la capacitación');
+        }
+
+        const detalle = await res.json();
+        if (!detalle || !Array.isArray(detalle.evidencias)) {
+            throw new Error('La respuesta de la capacitación no contiene sus evidencias');
+        }
+
+        this.form = detalle;
 
         this.selectedUsuarios = [];
 

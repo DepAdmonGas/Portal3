@@ -45,8 +45,8 @@ this.idDia = parseInt(c.dataset.idDia);
 this.cargarDatos();
 },
 
-seleccionarFila(producto) {
-this.selectedItem = producto;
+seleccionarFila(index) {
+this.selectedItem = index;
 },
 
 async cargarDatos() {
@@ -57,6 +57,7 @@ const json = await resp.json();
 if (json.success) {
 const d = json.data;
 this.items = d.items || [];
+this.selectedItem = null;
 this.aceitesTotal = d.aceites_total || 0;
 this.aceitesSinIva = d.aceites_sin_iva || 0;
 this.aceitesIva = d.aceites_iva || 0;
