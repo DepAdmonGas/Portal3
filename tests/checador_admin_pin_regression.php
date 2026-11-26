@@ -29,6 +29,7 @@ $assert = static function (bool $ok, string $message): void {
 };
 $request = ['request_uuid'=>'12345678-1234-4234-8234-123456789abc', 'nombre_trabajador'=>'Trabajador <Prueba>', 'dispositivo_nombre'=>'Lector', 'reason'=>'FINGERPRINT_NOT_RECOGNIZED', 'requested_at_utc'=>'2026-11-25 12:00:00', 'request_expires_at_utc'=>'2026-11-25 12:30:00'];
 $queue = $renderTemporary(['state'=>'success', 'requests'=>[$request], 'can_edit'=>true]);
+$assert(str_contains($queue, '15 minutos · Un solo uso'), 'configuration PIN card displays the fifteen-minute validity');
 $assert(str_contains($queue, 'Solicitudes de acceso temporal') && str_contains($queue, 'Trabajador &lt;Prueba&gt;') && str_contains($queue, 'No incluido en esta lectura'), 'attendance PIN request workspace retains its real queue projection');
 $assert(str_contains($queue, 'PIN de configuración') && str_contains($queue, 'PIN de acceso del personal'), 'both PIN cards appear in the temporary access workspace');
 $emptyQueue = $renderTemporary(['state'=>'success', 'requests'=>[]]);
@@ -55,6 +56,11 @@ $denied = $renderAdmin(['ok'=>false,'state'=>'denied','can_issue'=>false,'device
 $assert(trim($denied) === '', 'administrative PIN panel is hidden when Checador role or station authorization is denied');
 
 $service = file_get_contents(__DIR__ . '/../app/Services/ChecadorAdministrativePinSqlService.php') ?: '';
+$assert(str_contains($service, 'self::plusSeconds($now,900)')
+    && str_contains($service, "self::plusSeconds((string)\$readback->issued_at_utc,900)"),
+    'SQL issuance and readback require a fifteen-minute PIN lifetime');
+$temporaryView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-temporary-access.php') ?: '';
+$assert(str_contains($temporaryView, 'Vigencia: quince minutos. Un solo uso.'), 'configuration PIN modal displays the fifteen-minute validity');
 $limitLock = strpos($service, "\$phase='limiter_lock'");
 $pinLock = strpos($service, "\$phase='pending_pin_lock'");
 $sessionLock = strpos($service, "\$phase='session_lock'");
