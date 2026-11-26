@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
         instanciaModal: null,
         capturas: [],
         capturasAnimadas: [],
+        capturasAnimadasAltaCalidad: [],
         capturasConError: [],
 
         init() {
@@ -23,6 +24,12 @@ document.addEventListener('alpine:init', () => {
                 this.capturasAnimadas = Array.isArray(animadas) ? animadas : [];
             } catch (_) {
                 this.capturasAnimadas = [];
+            }
+            try {
+                const altaCalidad = JSON.parse(elemento?.dataset.capturasAnimadasAltaCalidad || '[]');
+                this.capturasAnimadasAltaCalidad = Array.isArray(altaCalidad) ? altaCalidad : [];
+            } catch (_) {
+                this.capturasAnimadasAltaCalidad = [];
             }
             this.pasos = this.crearPasos(
                 elemento?.dataset.multiestacion === '1'
@@ -190,7 +197,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         capturaRuta(clave) {
-            return `/assets/images/tutorial-bienvenida/${clave}.webp`;
+            const version = clave === 'multiestacion' ? 4 : (['navegacion-sidebar', 'cards-componentes', 'breadcrumbs-periodo', 'dropdowns-botones-iconos', 'alertas-notificaciones', 'datatables'].includes(clave) ? 3 : 2);
+            return `/assets/images/tutorial-bienvenida/${clave}.webp?v=${version}`;
         },
 
         capturaAnimadaDisponible(clave) {
@@ -198,8 +206,18 @@ document.addEventListener('alpine:init', () => {
         },
 
         capturaAnimadaRuta(clave) {
-            const version = clave === 'multiestacion' ? '?v=2' : '';
-            return `/assets/images/tutorial-bienvenida/${clave}.gif${version}`;
+            if (clave === 'multiestacion') return '/assets/images/tutorial-bienvenida/multiestacion.gif?v=4';
+            if (this.capturasAnimadasAltaCalidad.includes(clave)) {
+                const version = clave === 'multiestacion' ? 4 : (['navegacion-sidebar', 'cards-componentes', 'breadcrumbs-periodo', 'dropdowns-botones-iconos', 'alertas-notificaciones', 'datatables'].includes(clave) ? 3 : 2);
+                return `/assets/images/tutorial-bienvenida/${clave}.anim.webp?v=${version}`;
+            }
+            return `/assets/images/tutorial-bienvenida/${clave}.gif`;
+        },
+
+        usarAnimacionAlternativa(evento, clave) {
+            if (!this.capturasAnimadasAltaCalidad.includes(clave)) return;
+            this.capturasAnimadasAltaCalidad = this.capturasAnimadasAltaCalidad.filter((item) => item !== clave);
+            evento.target.src = this.capturaAnimadaRuta(clave);
         },
 
         marcarCapturaNoDisponible(clave) {

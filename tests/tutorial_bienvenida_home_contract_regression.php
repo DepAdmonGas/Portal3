@@ -50,7 +50,8 @@ tutorial_home_assert(
 );
 tutorial_home_assert(
     str_contains($tutorialService, 'capturasAnimadas')
-        && str_contains($tutorialService, 'navegacion-sidebar.gif')
+        && str_contains($tutorialService, "'navegacion-sidebar'")
+        && str_contains($tutorialService, "\$slot . '.gif'")
         && str_contains($read('app/Views/home/_tutorial-bienvenida.php'), 'data-capturas-animadas'),
     'Home must discover and pass the animated sidebar capture to the tutorial.'
 );

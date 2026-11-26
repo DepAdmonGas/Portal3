@@ -54,6 +54,16 @@ final class TutorialBienvenidaService
         ));
     }
 
+    public static function capturasAnimadasAltaCalidad(): array
+    {
+        $directorio = PUBLIC_PATH . '/assets/images/tutorial-bienvenida/';
+
+        return array_values(array_filter(
+            self::capturasAnimadas(),
+            static fn (string $slot): bool => is_file($directorio . $slot . '.anim.webp')
+        ));
+    }
+
     public static function estado(int $idUsuario): string
     {
         if ($idUsuario <= 0) {
