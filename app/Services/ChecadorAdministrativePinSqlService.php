@@ -167,7 +167,7 @@ final class ChecadorAdministrativePinSqlService
                     }else throw new \DomainException('active_session_exists');
                 }
                 $db->table(self::PIN_TABLE)->where('device_id',$deviceId)->where('state','PENDING')->update(['state'=>'REVOKED','revoked_at_utc'=>$now]);
-                $expires=self::plusSeconds($now,300);
+                $expires=self::plusSeconds($now,900);
                 $phase='pin_insert';
                 $id=$db->table(self::PIN_TABLE)->insertGetId([
                     'authorization_uuid'=>$uuid,'device_id'=>$deviceId,'credential_id'=>$credentialId,'station_id'=>$stationId,
@@ -180,7 +180,7 @@ final class ChecadorAdministrativePinSqlService
                     ->where('device_id',$deviceId)->where('credential_id',$credentialId)->where('station_id',$stationId)
                     ->where('locality_id',$workplaceId)->where('actor_user_id',(int)$actor->id)->where('state','PENDING')
                     ->first(['id','issued_at_utc','expires_at_utc']);
-                if($readback===null||self::plusSeconds((string)$readback->issued_at_utc,300)!==(string)$readback->expires_at_utc)throw new \RuntimeException('readback_mismatch');
+                if($readback===null||self::plusSeconds((string)$readback->issued_at_utc,900)!==(string)$readback->expires_at_utc)throw new \RuntimeException('readback_mismatch');
                 return ['authorization_id'=>$uuid,'device_id'=>$deviceId,'device_name'=>(string)$device->nombre,
                     'expires_at_utc'=>(string)$readback->expires_at_utc];
             });

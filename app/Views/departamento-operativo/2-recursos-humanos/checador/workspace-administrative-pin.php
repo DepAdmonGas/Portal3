@@ -12,7 +12,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                 <?php if (empty($administrativePinHistoryOnly)): ?><section class="border rounded p-3 mt-3" aria-labelledby="m11-admin-pin-heading"><?php endif; ?>
                     <?php if (empty($administrativePinHistoryOnly)): ?>
                     <h3 class="h6 mb-1" id="m11-admin-pin-heading"><i class="ti ti-shield-lock me-1" aria-hidden="true"></i>PIN de configuración</h3>
-                    <p class="small text-muted mb-3">PIN administrativo para autorizar temporalmente la configuración biométrica desde el Lector. Vigencia de cinco minutos.</p>
+                    <p class="small text-muted mb-3">PIN administrativo para autorizar temporalmente la configuración biométrica desde el Lector. Vigencia de quince minutos.</p>
                     <?php if ($adminFeedback !== null): ?>
                         <div class="alert alert-<?= ($adminFeedback['type'] ?? '') === 'success' ? 'success' : 'warning' ?>" role="status">
                             <?= $esc($adminFeedback['message'] ?? 'La operación del PIN terminó.') ?>
