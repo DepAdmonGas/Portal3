@@ -51,13 +51,16 @@ final class ChecadorRawPunchReadService
         string $direction,
         string $authorizedLocalityName = '',
         string $captureMethod = '',
-        string $processingStatus = ''
+        string $processingStatus = '',
+        array $localIntervals = [],
+        ?int $deviceId = null
     ): array {
         $search = trim($search);
         $authorizedLocalityName = trim($authorizedLocalityName);
         $searchCharacters = preg_match_all('/./us', $search, $unused);
         if ($authorizedLocalityId < 1
             || ($canonicalWorkerId !== null && $canonicalWorkerId < 1)
+            || ($deviceId !== null && $deviceId < 1)
             || !self::isUtcTimestamp($fromUtc)
             || !self::isUtcTimestamp($toUtc)
             || $start < 0
@@ -79,7 +82,7 @@ final class ChecadorRawPunchReadService
             return self::failure('bad_request');
         }
         $rangeSeconds = $to->getTimestamp() - $from->getTimestamp();
-        if ($rangeSeconds <= 0 || $rangeSeconds > self::MAX_RANGE_SECONDS) {
+        if ($rangeSeconds <= 0 || $rangeSeconds > self::MAX_RANGE_SECONDS + ($localIntervals === [] ? 0 : 172800)) {
             return self::failure('bad_request');
         }
 
@@ -97,6 +100,27 @@ final class ChecadorRawPunchReadService
                 $captureMethod,
                 $processingStatus
             );
+            if ($localIntervals !== []) {
+                if (count($localIntervals) > 31) return self::failure('bad_request');
+                $parts = []; $timeBindings = [];
+                foreach ($localIntervals as $interval) {
+                    if (!is_array($interval) || count($interval) !== 2 || !self::isUtcTimestamp($interval[0]) || !self::isUtcTimestamp($interval[1]) || $interval[0] >= $interval[1]) return self::failure('bad_request');
+                    $parts[] = '(punches.ocurrido_at_utc >= ? AND punches.ocurrido_at_utc < ?)';
+                    array_push($timeBindings, $interval[0], $interval[1]);
+                }
+                $baseWhere = '(punches.id_estacion_resuelta = ? AND (' . implode(' OR ', $parts) . ') AND punches.id = (SELECT MIN(duplicate.id) FROM ' . self::TABLE . ' AS duplicate WHERE duplicate.event_uuid = punches.event_uuid AND duplicate.id_estacion_resuelta = punches.id_estacion_resuelta))';
+                $baseBindings = array_merge([$canonicalLocalityId], $timeBindings);
+                if ($canonicalWorkerId !== null) { $baseWhere .= ' AND punches.id_personal_resuelto = ?'; $baseBindings[] = $canonicalWorkerId; }
+                if ($captureMethod !== '') { $baseWhere .= ' AND punches.metodo_captura = ?'; $baseBindings[] = $captureMethod; }
+                if ($processingStatus !== '') { $baseWhere .= ' AND punches.processing_status = ?'; $baseBindings[] = $processingStatus; }
+            }
+            if ($deviceId !== null) {
+                if ($localIntervals === []) return self::failure('bad_request');
+                $deviceScope = 'punches.id_estacion_resuelta = ? AND (' . implode(' OR ', $parts) . ') AND punches.id_dispositivo = ?';
+                $deviceMatch = $connection->selectOne('SELECT punches.id FROM ' . self::TABLE . ' AS punches WHERE ' . $deviceScope . ' LIMIT 1', array_merge([$canonicalLocalityId], $timeBindings, [$deviceId]));
+                if ($deviceMatch === null) return self::failure('device_scope_mismatch');
+                $baseWhere .= ' AND punches.id_dispositivo = ?'; $baseBindings[] = $deviceId;
+            }
             $totalRow = $connection->selectOne(
                 'SELECT COUNT(*) AS total_records FROM ' . self::TABLE . ' AS punches WHERE ' . $baseWhere,
                 $baseBindings
@@ -145,7 +169,21 @@ final class ChecadorRawPunchReadService
                     return self::failure('station_scope_mismatch');
                 }
             }
+            try {
+                $timezoneRows = $connection->select(
+                    'SELECT timezone_iana, valido_desde, valido_hasta FROM op_rh_v2_localidades_zonas_horarias WHERE id_localidad = ?',
+                    [$canonicalLocalityId]
+                );
+                $timezoneVersions = array_map(static fn(object $row): array => (array) $row, $timezoneRows);
+            } catch (Throwable) {
+                $timezoneVersions = [];
+            }
+            $classifications = $this->readPersistedClassifications($connection, $events, $canonicalLocalityId);
             foreach ($events as &$event) {
+                $event['j1_classification'] = $classifications[(int) ($event['id'] ?? 0)] ?? 'unavailable';
+                $event['local_capture'] = $event['ocurrido_at_utc'] === null
+                    ? ['status'=>'unavailable']
+                    : ChecadorPunchReportProjection::localCapture((string)$event['ocurrido_at_utc'], $timezoneVersions);
                 $event['integrity_status'] = 'NOT_VERIFIED_BY_PORTAL3';
                 $event['occurrence_status'] = $event['ocurrido_at_utc'] === null
                     ? 'OCCURRENCE_TIME_UNRESOLVED'
@@ -161,7 +199,7 @@ final class ChecadorRawPunchReadService
                 'start' => $start,
                 'length' => $length,
                 'canonical_locality_id' => $canonicalLocalityId,
-                'timezone_status' => 'UNRESOLVED; UTC ONLY',
+                'timezone_status' => 'HISTORICAL_PER_EVENT',
                 'consistency' => 'LIVE_NON_SNAPSHOT',
             ];
         } catch (Throwable) {
@@ -504,6 +542,105 @@ final class ChecadorRawPunchReadService
         } catch (Throwable) {
             // Do not leak connection details, DSNs, credentials, or SQL errors.
             return self::failure('database_unavailable');
+        }
+    }
+
+    /** Read timezone versions and devices attributed by persisted punches in this locality and period. */
+    public function localReportContext(int $locality, string $from, string $to): array
+    {
+        try {
+            $connection = $this->authorizedReadConnection();
+            if (self::resolveCanonicalLocalityId($connection, $locality) === null) return self::failure('station_mapping_unavailable');
+            $rows = $connection->select('SELECT timezone_iana, valido_desde, valido_hasta FROM op_rh_v2_localidades_zonas_horarias WHERE id_localidad = ?', [$locality]);
+            $resolved = ChecadorPunchReportProjection::localIntervals($from, $to, array_map(static fn(object $row): array => (array)$row, $rows));
+            if (($resolved['status'] ?? '') !== 'resolved') return self::failure('timezone_unresolved');
+            $parts = []; $bindings = [$locality];
+            foreach ($resolved['intervals'] as $interval) { $parts[] = '(p.ocurrido_at_utc >= ? AND p.ocurrido_at_utc < ?)'; array_push($bindings, $interval[0], $interval[1]); }
+            $devices = $connection->select('SELECT DISTINCT d.id, d.nombre FROM op_rh_v2_marcaciones_crudas p JOIN op_rh_v2_dispositivos d ON d.id = p.id_dispositivo WHERE p.id_estacion_resuelta = ? AND (' . implode(' OR ', $parts) . ') ORDER BY d.nombre, d.id', $bindings);
+            return ['ok'=>true,'intervals'=>$resolved['intervals'],'devices'=>array_map(static fn(object $row): array => (array)$row, $devices)];
+        } catch (Throwable) { return self::failure('database_unavailable'); }
+    }
+
+    /** Resolve today's civil date from the locality's persisted timezone. */
+    public function currentLocalDate(int $locality): array
+    {
+        try {
+            $connection = $this->authorizedReadConnection();
+            if (self::resolveCanonicalLocalityId($connection, $locality) === null) return self::failure('station_mapping_unavailable');
+            $rows = $connection->select('SELECT timezone_iana, valido_desde, valido_hasta FROM op_rh_v2_localidades_zonas_horarias WHERE id_localidad = ?', [$locality]);
+            $resolved = ChecadorPunchReportProjection::localCapture(gmdate('Y-m-d H:i:s'), array_map(static fn(object $row): array => (array)$row, $rows));
+            if (($resolved['status'] ?? '') !== 'resolved') return self::failure('timezone_unresolved');
+            return ['ok'=>true,'date'=>substr($resolved['local_datetime'], 0, 10)];
+        } catch (Throwable) { return self::failure('database_unavailable'); }
+    }
+
+    /** Classify only associations on a validated current J1 revision. */
+    private function readPersistedClassifications(Connection $connection, array $events, int $locality): array
+    {
+        $byId = [];
+        foreach ($events as $event) {
+            $id = (int)($event['id'] ?? 0);
+            if ($id > 0) $byId[$id] = $event;
+        }
+        if ($byId === []) return [];
+        $result = array_fill_keys(array_keys($byId), 'pending');
+        try {
+            $associations = $connection->table('op_rh_v2_pareos_marcaciones_asociadas as a')
+                ->join('op_rh_v2_pareos_jornada as p', 'p.id', '=', 'a.id_pareo_jornada')
+                ->leftJoin('op_rh_v2_jornadas_programadas as j', 'j.id', '=', 'p.id_jornada_programada')
+                ->leftJoin('op_rh_v2_pareos_segmentos as s', 's.id', '=', 'a.id_pareo_segmento')
+                ->whereIn('a.id_marcacion_cruda', array_keys($byId))
+                ->get(['a.id_marcacion_cruda','a.rol_marcacion','a.id_pareo_segmento',
+                    'p.id as pairing_id','p.id_jornada_programada','p.id_personal','p.id_estacion','p.fecha_jornada_local',
+                    'j.id as journey_id','j.id_personal as journey_worker','j.id_estacion as journey_locality','j.fecha_jornada_local as journey_date',
+                    's.id_pareo_jornada as segment_pairing','s.id_marcacion_entrada','s.id_marcacion_salida']);
+            $journeys = [];
+            foreach ($associations as $association) $journeys[(int)$association->id_jornada_programada] = true;
+            $revisionsByJourney = [];
+            if ($journeys !== []) {
+                $revisions = $connection->table('op_rh_v2_pareos_jornada')
+                    ->whereIn('id_jornada_programada', array_keys($journeys))
+                    ->get(['id','id_jornada_programada','id_personal','id_estacion','revision_numero','supercedido_por_id']);
+                foreach ($revisions as $revision) $revisionsByJourney[(int)$revision->id_jornada_programada][] = (array)$revision;
+            }
+            $matches = [];
+            foreach ($associations as $association) {
+                $id = (int)$association->id_marcacion_cruda;
+                $event = $byId[$id] ?? null;
+                $journey = (int)$association->id_jornada_programada;
+                if (!$event || (int)($event['id_personal_resuelto'] ?? 0) < 1
+                    || (int)$association->id_personal !== (int)$event['id_personal_resuelto']
+                    || (int)$association->id_estacion !== $locality
+                    || (int)$association->journey_id !== $journey
+                    || (int)$association->journey_worker !== (int)$association->id_personal
+                    || (int)$association->journey_locality !== $locality
+                    || (string)$association->journey_date !== (string)$association->fecha_jornada_local
+                    || ($association->id_pareo_segmento !== null && (int)$association->segment_pairing !== (int)$association->pairing_id)) { $result[$id] = 'ambiguous'; continue; }
+                $versions = $revisionsByJourney[$journey] ?? [];
+                foreach ($versions as $version) {
+                    if ((int)$version['id_personal'] !== (int)$association->id_personal || (int)$version['id_estacion'] !== $locality) {
+                        $result[$id] = 'ambiguous'; continue 2;
+                    }
+                }
+                $current = ChecadorJourneySqlReadService::selectCurrentPairing($versions);
+                if (($current['status'] ?? '') !== 'ready') { $result[$id] = 'ambiguous'; continue; }
+                if ((int)$current['revision']['id'] !== (int)$association->pairing_id) continue;
+                $role = strtoupper((string)$association->rol_marcacion);
+                if (($role === 'ENTRY' && (int)$association->id_marcacion_entrada !== $id)
+                    || ($role === 'EXIT' && (int)$association->id_marcacion_salida !== $id)) { $result[$id] = 'ambiguous'; continue; }
+                $matches[$id][] = match ($role) {
+                    'ENTRY' => 'entry', 'EXIT' => 'exit',
+                    'SURPLUS' => 'surplus', 'UNMATCHED' => 'unmatched', 'AMBIGUOUS' => 'ambiguous',
+                    default => 'unavailable',
+                };
+            }
+            foreach ($matches as $id => $roles) {
+                if ($result[$id] === 'ambiguous') continue;
+                $result[$id] = count($roles) === 1 ? $roles[0] : 'ambiguous';
+            }
+            return $result;
+        } catch (Throwable) {
+            return array_fill_keys(array_keys($byId), 'unavailable');
         }
     }
 

@@ -24,7 +24,15 @@ $user = new Usuario();
 $user->id = 999;
 $base = 'https://checador.test/';
 $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php');
+$m06ServiceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAdministrativeIncidenceSqlService.php');
+$m01M06ReaderSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorM01IncidenceReadService.php');
+$m06ScriptSource = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.incidences.datatable.init.js');
 $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
+$dashboardStart = strpos($controllerSource, 'private function renderDashboardWorkspace(');
+$dashboardEnd = $dashboardStart === false ? false : strpos($controllerSource, 'public function configuration(', $dashboardStart);
+$dashboardReadSource = $dashboardStart !== false && $dashboardEnd !== false
+    ? substr($controllerSource, $dashboardStart, $dashboardEnd - $dashboardStart)
+    : '';
 $viewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php');
 $adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php');
 $portalContract = __DIR__ . '/../docs/v2/CHECADOR_V2_PORTAL3_P3G_INCIDENCE_ADMINISTRATIVE_CONTRACT_V1.0.md';
@@ -120,7 +128,7 @@ $assert(($existingEvaluation['data']['evaluation']['associated_calculation_revis
 $assert(str_contains($controllerSource, '$administrativeIncidences = []') && str_contains($controllerSource, '$administrativeEvaluations = []'), 'P3GA12 administrative state is reset per request');
 $assert(str_contains($controllerSource, '$requestedWorkplace') && (bool) preg_match('/readApplicableIncidences[\\s\\S]{0,500}\\$date,\\s+\\$date/', $controllerSource) && (bool) preg_match('/readAdministrativeEvaluation[\\s\\S]{0,300}\\$date/', $controllerSource), 'P3GA13 selected workplace/date are passed to API reads');
 $assert(!str_contains($viewSource, 'fetch(') && !str_contains($viewSource, 'axios') && !str_contains($viewSource, 'api/v2/'), 'P3GA14 browser has no direct API integration');
-$assert(!preg_match('/Device[-_ ]?Auth|X-Device|device[_-]credential|Id-Dispositivo/i', $serviceSource . $controllerSource . $viewSource), 'P3GA15 device authentication is not used');
+$assert(!preg_match('/Device[-_ ]?Auth|X-Device|device[_-]credential|Id-Dispositivo/i', (string) $m06ServiceSource . (string) $m01M06ReaderSource . (string) $viewSource . (string) $m06ScriptSource), 'P3GA15 the M06-to-M01 SQL read boundary does not use device authentication');
 $unauthorized = $make([new Response(401, [], json_encode(['error' => ['code' => 'UNAUTHORIZED']], JSON_THROW_ON_ERROR))])->readApplicableIncidences($user, 1, 1, '2026-10-12', '2026-10-12');
 $assert(($unauthorized['error']['kind'] ?? '') === 'api_authentication', 'P3GA16 API 401 maps to authentication failure');
 $denied = $make([new Response(403, [], json_encode(['error' => ['code' => 'STATION_SCOPE_DENIED']], JSON_THROW_ON_ERROR))])->readApplicableIncidences($user, 1, 1, '2026-10-12', '2026-10-12');
@@ -130,13 +138,19 @@ $assert(($serverError['error']['kind'] ?? '') === 'api_unavailable', 'P3GA18 API
 $malformed = $make([new Response(200, [], json_encode(['status' => 'success', 'data' => ['worker_id' => 1]], JSON_THROW_ON_ERROR))])->readApplicableIncidences($user, 1, 1, '2026-10-12', '2026-10-12');
 $assert(($malformed['error']['kind'] ?? '') === 'administrative_unavailable', 'P3GA19 malformed administrative envelope fails closed');
 $assert(str_contains($serviceSource, 'API-owned') && !str_contains($serviceSource, 'applyIncidence'), 'P3GA20 no local incidence engine or precedence exists');
-$assert(str_contains($adjustmentViewSource, 'nunca se activa automáticamente')
-    && str_contains($adjustmentViewSource, 'Autorizar FALTA explícitamente')
-    && str_contains($adjustmentViewSource, 'if ($canAuthorizeFalta)'), 'P3GA21 FALTA is only exposed as an explicit separately authorized action');
-$assert(str_contains($viewSource, 'Incidencias e historial') || str_contains($viewSource, 'current_status'), 'P3GA22 read-only administrative context is rendered');
-$assert(str_contains($adjustmentViewSource, 'evaluations/evaluate') && str_contains($serviceSource, 'administrative-evaluations/evaluate'), 'P3GA23 administrative evaluation command is reserved for the P3G-D client boundary');
+$assert(!str_contains($adjustmentViewSource, 'authorize_falta')
+    && !str_contains($adjustmentViewSource, 'Autorizar FALTA')
+    && str_contains($controllerSource, 'authorizeFalta($workplaceId)')
+    && str_contains($controllerSource, "'authorize_falta'"), 'P3GA21 M07 remains read-only while explicit FALTA authorization stays in the separate P3-G handler');
+$assert(str_contains($viewSource, 'data-checador-m06-incidences')
+    && str_contains($viewSource, 'm06-incidence-detail-modal')
+    && str_contains((string) $m06ScriptSource, "data: 'current_status'")
+    && str_contains((string) $m06ScriptSource, 'renderHistory(row)'), 'P3GA22 M06 read-only status and revision context is rendered by the current DataTables/detail flow');
+$assert(!str_contains($adjustmentViewSource, 'evaluations/evaluate')
+    && str_contains($serviceSource, 'administrative-evaluations/evaluate')
+    && str_contains($controllerSource, 'administrativeEvaluation'), 'P3GA23 evaluation remains a separate P3-G command and is not exposed by the read-only M07 view');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $viewSource . $adjustmentViewSource), 'P3GA24 administrative read views do not render payroll amounts or document data');
-$assert(!preg_match('/INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE/i', $serviceSource . $controllerSource), 'P3GA25 no DB/schema mutation is introduced');
+$assert($dashboardReadSource !== '' && !preg_match('/INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE/i', $serviceSource . $dashboardReadSource), 'P3GA25 administrative read flow introduces no DB/schema mutation');
 
 printf("CHECADOR_P3GA_ADMINISTRATIVE_READ_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

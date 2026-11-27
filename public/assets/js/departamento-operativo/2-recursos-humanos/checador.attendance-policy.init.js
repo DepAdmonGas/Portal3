@@ -1,0 +1,228 @@
+document.addEventListener('alpine:init', () => {
+    Alpine.data('attendancePolicyForm', () => ({
+        current: null,
+        next: null,
+        history: [],
+        editModal: null,
+        editorDefaults: null,
+        success: '',
+        error: '',
+        consultUrl: '',
+
+        initialize(element) {
+            const parse = (value, fallback) => {
+                try { return JSON.parse(value || ''); } catch (_) { return fallback; }
+            };
+            const current = parse(element.dataset.currentPolicy, null);
+            const next = parse(element.dataset.nextPolicy, null);
+            const history = parse(element.dataset.policyHistory, []);
+            this.history = Array.isArray(history) ? history : [];
+            const currentDate = element.dataset.currentDate || '';
+            this.current = current && current.id ? current : null;
+            this.next = next && next.id && next.effective_from_local_date > currentDate ? next : null;
+            const editModalElement = element.querySelector('#attendance-policy-edit-modal');
+            const editButton = element.querySelector('#attendance-policy-edit-button');
+            if (editModalElement && window.bootstrap?.Modal) {
+                this.editModal = bootstrap.Modal.getOrCreateInstance(editModalElement);
+                editModalElement.addEventListener('hidden.bs.modal', () => this.resetEditor());
+                editButton?.addEventListener('click', () => this.openEditModal());
+            }
+            element.addEventListener('attendance-policy-error', (event) => {
+                this.error = event.detail?.message || 'No se pudo completar el guardado.';
+                this.consultUrl = event.detail?.consultUrl || '';
+                this.success = '';
+            });
+        },
+
+        openEditModal() {
+            const modalElement = document.getElementById('attendance-policy-edit-modal');
+            const form = modalElement?.querySelector('form');
+            if (!form || !modalElement) {
+                this.error = 'No se pudo abrir el formulario de configuración. Actualiza la página e inténtalo de nuevo.';
+                return;
+            }
+            this.editModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            this.error = '';
+            this.success = '';
+            this.editorDefaults = {
+                effective_from_local_date: form.elements.effective_from_local_date.value,
+                retardo_tolerance_minutes: form.elements.retardo_tolerance_minutes.value,
+                incidence_deadline_days: form.elements.incidence_deadline_days.value,
+                early_entry_allowed_minutes: form.elements.early_entry_allowed_minutes.value,
+                duplicate_punch_window_minutes: form.elements.duplicate_punch_window_minutes.value,
+                exit_priority_window_minutes: form.elements.exit_priority_window_minutes.value,
+            };
+            this.editModal.show();
+        },
+
+        applyReadback(detail) {
+            if (!detail || !detail.policy) return;
+            const policy = detail.policy;
+            const currentDate = detail.current_local_date || '';
+            const next = detail.next_scheduled_policy && detail.next_scheduled_policy.id
+                ? detail.next_scheduled_policy : null;
+
+            if (policy.effective_from_local_date <= currentDate) {
+                this.current = policy;
+            }
+            this.next = next && next.effective_from_local_date > currentDate ? next : null;
+
+            this.history = [policy, ...this.history.filter((item) => String(item.id) !== String(policy.id))]
+                .sort((a, b) => Number(b.policy_version) - Number(a.policy_version)).slice(0, 200);
+
+            this.updateEditorDefaults(next || policy);
+            this.error = '';
+            this.success = detail.message || 'La configuración se guardó y quedó confirmada.';
+        },
+
+        updateEditorDefaults(policy) {
+            const form = this.$el.querySelector('#attendance-policy-edit-modal form');
+            if (!form || !policy) return;
+            const effectiveFrom = this.nextDate(policy.effective_from_local_date);
+            this.editorDefaults = {
+                effective_from_local_date: effectiveFrom,
+                retardo_tolerance_minutes: String(policy.retardo_tolerance_minutes ?? ''),
+                incidence_deadline_days: String(policy.incidence_deadline_days ?? ''),
+                early_entry_allowed_minutes: '10',
+                duplicate_punch_window_minutes: '5',
+                exit_priority_window_minutes: '60',
+            };
+            const date = form.elements.effective_from_local_date;
+            date.min = effectiveFrom;
+            date.value = effectiveFrom;
+            form.elements.retardo_tolerance_minutes.value = this.editorDefaults.retardo_tolerance_minutes;
+            form.elements.incidence_deadline_days.value = this.editorDefaults.incidence_deadline_days;
+            for (const field of ['early_entry_allowed_minutes', 'duplicate_punch_window_minutes', 'exit_priority_window_minutes']) form.elements[field].value = this.editorDefaults[field];
+            form.elements.confirm_policy.checked = false;
+        },
+
+        nextDate(dateValue) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateValue || ''));
+            if (!match) return '';
+            const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + 1));
+            return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+        },
+
+        resetEditor() {
+            const form = this.$el.querySelector('#attendance-policy-edit-modal form');
+            if (!form) return;
+            if (this.editorDefaults) {
+                form.elements.effective_from_local_date.value = this.editorDefaults.effective_from_local_date;
+                form.elements.retardo_tolerance_minutes.value = this.editorDefaults.retardo_tolerance_minutes;
+                form.elements.incidence_deadline_days.value = this.editorDefaults.incidence_deadline_days;
+                for (const field of ['early_entry_allowed_minutes', 'duplicate_punch_window_minutes', 'exit_priority_window_minutes']) form.elements[field].value = this.editorDefaults[field];
+            }
+            form.elements.confirm_policy.checked = false;
+            window.dispatchEvent(new Event('attendance-policy-modal-reset'));
+        },
+    }));
+
+    Alpine.data('attendancePolicyEditor', () => ({
+        loading: false,
+        fieldErrors: {},
+        error: '',
+        consultUrl: '',
+
+        clearFieldError(field) {
+            this.fieldErrors[field] = '';
+            this.error = '';
+        },
+
+        resetForm() {
+            this.fieldErrors = {};
+            this.error = '';
+            this.consultUrl = '';
+            this.loading = false;
+        },
+
+        async submit(event) {
+            const form = event.currentTarget;
+            if (this.loading) return;
+            this.fieldErrors = {};
+            this.error = '';
+            this.consultUrl = '';
+            if (!form.checkValidity()) {
+                const date = form.elements.effective_from_local_date;
+                const toleranceInput = form.elements.retardo_tolerance_minutes;
+                const deadlineInput = form.elements.incidence_deadline_days;
+                const tolerance = Number(toleranceInput.value);
+                const deadline = Number(deadlineInput.value);
+                if (!date.value || date.validity.rangeUnderflow) {
+                    this.fieldErrors.effective_from_local_date = 'Selecciona una fecha de vigencia permitida.';
+                }
+                if (!Number.isInteger(tolerance) || tolerance < 0 || tolerance > 120) {
+                    this.fieldErrors.retardo_tolerance_minutes = 'Usa un número entero de 0 a 120 minutos.';
+                }
+                if (!Number.isInteger(deadline) || deadline < 0 || deadline > 30) {
+                    this.fieldErrors.incidence_deadline_days = 'Usa un número entero de 0 a 30 días.';
+                }
+                if (!form.elements.confirm_policy.checked) {
+                    this.fieldErrors.confirm_policy = 'Confirma los valores para continuar.';
+                }
+                form.reportValidity();
+                return;
+            }
+            const approved = { early_entry_allowed_minutes: '10', duplicate_punch_window_minutes: '5', exit_priority_window_minutes: '60' };
+            if (Object.entries(approved).some(([name, value]) => form.elements[name].value !== value)) {
+                this.error = 'Los rangos propuestos aún requieren aprobación. Usa los valores autorizados 10, 5 y 60.';
+                return;
+            }
+
+            this.loading = true;
+            const submitButton = form.querySelector('[type="submit"]');
+            const cancelButton = form.querySelector('[data-bs-dismiss="modal"]');
+            if (submitButton) submitButton.disabled = true;
+            if (cancelButton) cancelButton.disabled = true;
+            try {
+                const response = await axios.post(form.action, new FormData(form), {
+                    headers: { Accept: 'application/json' },
+                });
+                const body = response.data || {};
+                if (response.status !== 200 || body.ok !== true || !body.policy || !body.policy.id) {
+                    throw { response: { status: response.status, data: body } };
+                }
+                const key = form.elements.idempotency_key;
+                if (key && body.next_idempotency_key) key.value = body.next_idempotency_key;
+                form.elements.confirm_policy.checked = false;
+                form.dispatchEvent(new CustomEvent('attendance-policy-confirmed', {
+                    bubbles: true,
+                    detail: body,
+                }));
+                bootstrap.Modal.getInstance(form.closest('.modal'))?.hide();
+            } catch (failure) {
+                const response = failure && failure.response;
+                let status = Number(response && response.status);
+                const body = response && response.data ? response.data : {};
+                if (status === 200 && response && response.request
+                    && /\/login(?:\?|$)/i.test(String(response.request.responseURL || ''))) status = 401;
+                const messages = {
+                    401: 'Tu sesión expiró. Inicia sesión nuevamente y vuelve a consultar la localidad.',
+                    403: 'No tienes permiso para modificar esta configuración.',
+                    409: 'La configuración entra en conflicto con otra versión. Actualiza la pantalla y revisa los cambios.',
+                    422: body.message || 'Revisa la fecha y los valores permitidos.',
+                    419: 'La protección de sesión venció. Actualiza la página antes de volver a guardar.',
+                };
+                const baseMessage = body.message || messages[status] || (status >= 500
+                    ? 'El servidor no pudo confirmar el guardado. Consulta el estado antes de reintentar.'
+                    : 'No se pudo completar la solicitud. Comprueba tu conexión e inténtalo de nuevo.');
+                const apiDiagnostic = body.api_error_kind
+                    ? ` (API: ${String(body.api_error_code || body.api_error_kind)}; HTTP ${Number(body.api_http_status || status)})`
+                    : '';
+                const message = baseMessage + apiDiagnostic;
+                this.error = message;
+                form.dispatchEvent(new CustomEvent('attendance-policy-error', {
+                    bubbles: true,
+                    detail: {
+                        message,
+                        consultUrl: body.consult_url || '',
+                        outcome: body.outcome || 'rejected',
+                    },
+                }));
+            } finally {
+                this.loading = false;
+                if (submitButton) submitButton.disabled = false;
+                if (cancelButton) cancelButton.disabled = false;
+            }
+        },
+    }));
+});

@@ -36,8 +36,10 @@ if (preg_match('/public function evaluateJourney\([\s\S]*?(?=\n    public functi
     $journeyMethodSource = $journeyMethodMatches[0];
 }
 $auditDetailSource = '';
-if (preg_match('/<details[^>]*id="journey-audit-detail-<\?= \(int\) \$workerId \?>"[^>]*>([\s\S]*?)<\/details>/', $journeyViewSource, $auditDetailMatches) === 1) {
-    $auditDetailSource = $auditDetailMatches[1];
+$auditDetailStart = strpos($journeyViewSource, 'id="journey-audit-detail-<?= (int) $journeyId ?>"');
+$auditDetailEnd = $auditDetailStart === false ? false : strpos($journeyViewSource, '</details>', strpos($journeyViewSource, 'id="journey-audit-events-', $auditDetailStart));
+if ($auditDetailStart !== false && $auditDetailEnd !== false) {
+    $auditDetailSource = substr($journeyViewSource, $auditDetailStart, $auditDetailEnd - $auditDetailStart);
 }
 $contractSource = file_get_contents($portal3Contract);
 
@@ -119,19 +121,26 @@ $assert(!preg_match('/usort|array_multisort|sort\\(\\$evaluatedEvents|array_slic
 $assert(in_array('p3h-2', $extraEventIds, true) && in_array('Marcación adicional', explode("\n", $viewSource), true) || str_contains($viewSource, "'SURPLUS' => 'Marcación adicional'"), 'P3HP11 SURPLUS remains in additional events and is labelled');
 $assert(in_array('p3h-7', $extraEventIds, true) && str_contains($viewSource, "'UNMATCHED' => 'Sin emparejar'"), 'P3HP12 UNMATCHED remains additional and is labelled');
 $assert(array_key_exists('segment_ordinal', $data['evaluated_raw_events'][6] ?? []) && $data['evaluated_raw_events'][6]['segment_ordinal'] === null, 'P3HP13 UNMATCHED null segment ordinal preserved');
-$assert(count($data['evaluated_raw_events'] ?? []) === 7 && str_contains($viewSource, 'Ver todas las marcaciones') && str_contains($journeyViewSource, 'Ver todas las marcaciones ('), 'P3HP14 5+ events and disclosure preserved');
+$assert(count($data['evaluated_raw_events'] ?? []) === 7 && str_contains($viewSource, 'Ver todas las marcaciones')
+    && str_contains($journeyViewSource, 'Marcaciones asociadas al pareo (')
+    && str_contains($journeyViewSource, 'Este conjunto no acredita por sí solo la completitud L2.'), 'P3HP14 M01 preserves events; C01 identifies persisted associations without claiming L2 completeness');
 $assert(str_contains($viewSource, "'journey_href' => \$journeyHref")
     && $auditDetailSource !== ''
-    && str_contains($auditDetailSource, 'Eventos públicos devueltos por la evaluación')
-    && str_contains($auditDetailSource, 'foreach ($auditEvents as $auditEvent)'), 'P3HP14A all-markings link targets the complete audit evidence');
+    && str_contains($auditDetailSource, 'Marcaciones asociadas al pareo')
+    && str_contains($auditDetailSource, 'foreach ($auditEvents as $auditEvent)')
+    && str_contains($auditDetailSource, 'Este conjunto no acredita por sí solo la completitud L2.'), 'P3HP14A journey-specific detail lists persisted associations without claiming full evaluation evidence');
 $assert(isset($data['evaluated_raw_events'][5]['segment_ordinal']) && $data['evaluated_raw_events'][5]['segment_ordinal'] === 3 && str_contains($journeyViewSource, 'segmentos adicionales'), 'P3HP15 segment ordinal 3 and disclosure preserved');
 $assert(count($projection['slots']) === 4 && ($projection['slots']['ENTRY:1']['event']['event_uuid'] ?? '') === 'p3h-1' && str_contains($journeyViewSource, '$additionalSegments'), 'P3HP16 additional segments do not alter primary meanings');
 $assert(!str_contains($projectionSource, "'AMBIGUOUS' =>") && str_contains($journeyViewSource, 'AMBIGUOUS_PAIRING'), 'P3HP17 AMBIGUOUS is not a pairing role');
 $assert(($projection['journey_status'] ?? '') === 'AMBIGUOUS_PAIRING' && str_contains($journeyViewSource, 'ambigüedad'), 'P3HP18 ambiguity remains segment/Journey scoped');
 $assert(str_contains($viewSource, 'Sin dato en esta consulta') && str_contains($viewSource, 'Sin clasificación de ausencia') && str_contains($contractSource, 'EMPTY_SLOT_MEANS_SIN_MARCACION: NO'), 'P3HP19 empty slot is neutral');
-$assert(str_contains($adjustmentViewSource, 'authorize_falta') && str_contains($contractSource, 'FINAL_FALTA_SOURCE: P3G_ADMINISTRATIVE_EVALUATION'), 'P3HP20 FALTA source remains P3-G');
+$assert(str_contains($controllerSource, 'authorizeFalta($workplaceId)')
+    && str_contains($contractSource, 'FINAL_FALTA_SOURCE: P3G_ADMINISTRATIVE_EVALUATION')
+    && !str_contains($adjustmentViewSource, 'authorize_falta'), 'P3HP20 FALTA remains a separate P3-G operation and is absent from read-only M07');
 $assert(!preg_match('/if \\(.*evaluated_raw_event_count.*FALTA|evaluated_raw_events.*FALTA/i', $viewSource), 'P3HP21 zero events do not generate FALTA');
-$assert(!str_contains($viewSource, 'authorize_falta') && str_contains($adjustmentViewSource, 'authorize_falta'), 'P3HP22 administrative overlay remains separate');
+$assert(!str_contains($viewSource, 'authorize_falta')
+    && !str_contains($adjustmentViewSource, 'authorize_falta')
+    && str_contains($controllerSource, "'authorize_falta'"), 'P3HP22 attendance and M07 views expose no FALTA action; the explicit P3-G handler remains separate');
 $assert(str_contains($projectionSource, "format('H:i')") && str_contains($contractSource, 'COMPACT_TIME_FORMAT: HH:mm'), 'P3HP23 compact time is HH:mm');
 $assert(!preg_match("/->format\\(['\"]H:i:s['\"]\\)/", $projectionSource), 'P3HP24 compact seconds are absent');
 $assert(str_contains($contractSource, 'COMPACT_TIMEZONE_ABBREVIATION: NO'), 'P3HP25 timezone abbreviation is absent');
@@ -153,7 +162,7 @@ $assert(!str_contains($serviceSource, 'segundos_trabajados_totales'), 'P3HP35 no
 $assert(!preg_match('/INSERT\\s+INTO|UPDATE\\s+op_rh_v2_/i', $serviceSource . $controllerSource), 'P3HP36 no payroll/database effect');
 $assert(str_contains($viewSource, 'review') || str_contains($viewSource, 'Requiere revisión'), 'P3HP37 review status remains visible');
 $assert(str_contains($viewSource, 'visible') || str_contains($viewSource, 'role="status"'), 'P3HP38 status text/accessibility is present');
-$assert(str_contains($viewSource, 'row-cols-1') && str_contains($viewSource, 'row-cols-sm-2'), 'P3HP39 responsive semantic layout');
+$assert(str_contains($viewSource, 'row-cols-2') && str_contains($viewSource, 'row-cols-lg-4'), 'P3HP39 responsive semantic layout');
 $assert(str_contains($viewSource, 'no se infieren posiciones'), 'P3HP40 fail-closed user-facing message');
 $assert(str_contains($contractSource, 'Every presentation') && str_contains($contractSource, 'No Portal3 runtime behavior'), 'P3HP41 presentation-only authority preserved');
 

@@ -138,8 +138,8 @@ $reportControllerSource = substr($controllerSource, strpos($controllerSource, 'p
 $assert(str_contains($accessSource, 'mapStationIdsToUniqueLocalities')
     && str_contains($accessSource, "where('numlista',")
     && str_contains($accessSource, 'RhLocalidad::query()->where')
-    && str_contains($reportControllerSource, "'source_workplace_id'")
-    && str_contains($reportControllerSource, 'sourceWorkplaceCandidate, array_column($workplaces,')
+    && str_contains($reportControllerSource, '$this->sessionWorkplaceId($access)')
+    && str_contains($reportControllerSource, 'ChecadorAccessService::authorize($selectedWorkplaceForView)')
     && str_contains($reportControllerSource, 'requestedWorkplace !== null'),
     'authorized source station is mapped to a canonical locality by unique numlista and source context is revalidated');
 $assert(str_contains($dailyViewSource, "'source_work_date'")
@@ -170,12 +170,12 @@ $events = [];
 ob_start();
 include __DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/punch-report.php';
 $reportHtml = (string) ob_get_clean();
-$assert(str_contains($reportHtml, 'href="/departamento-operativo/recursos-humanos/checador?workplace_id=14&amp;date=2026-10-19&amp;worker_id=900001"')
-    && str_contains($reportHtml, 'name="source_workplace_id" value="14"')
+$assert(str_contains($reportHtml, 'href="/departamento-operativo/recursos-humanos/checador/asistencia"')
+    && !str_contains($reportHtml, 'name="source_workplace_id"')
     && str_contains($reportHtml, 'name="source_work_date" value="2026-10-19"')
     && str_contains($reportHtml, 'name="source_worker_id" value="900001"')
     && !str_contains($reportHtml, 'id="from_date" name="from_date" type="date" value="2026-10-19"'),
-    'report-to-daily return preserves origin context while keeping its independent UTC date filters empty');
+    'report returns to the clean attendance route and retains source date and worker without trusting URL locality');
 
 $dailyViewVars = [
     'workplaces' => [['id' => 14, 'nombre' => 'Localidad sintética 14']],
@@ -191,7 +191,7 @@ $dailyViewVars = [
         'status' => 'unknown',
     ]],
     'attendanceCoverage' => ['complete' => true],
-    'demoMode' => true,
+    'demoMode' => false,
     'demoScenario' => 'incidence_conflict',
     'state' => 'success',
     'stateMessage' => '',

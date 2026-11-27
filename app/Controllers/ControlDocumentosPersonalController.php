@@ -377,6 +377,11 @@ class ControlDocumentosPersonalController extends BaseController
         }
 
         $data = ControlDocumentosPersonalService::getAcceso($idPersonal);
+        if ($data === null) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'data' => null, 'message' => 'No tienes autorización para consultar este trabajador.']);
+            return;
+        }
         echo json_encode(['success' => true, 'data' => $data]);
         return;
     }
@@ -400,6 +405,7 @@ class ControlDocumentosPersonalController extends BaseController
         }
 
         $result = ControlDocumentosPersonalService::editarPin($idPersonal, $pin);
+        if (($result['code'] ?? 0) === 403) http_response_code(403);
         echo json_encode([
             'success' => $result['success'],
             'message' => $result['message'],

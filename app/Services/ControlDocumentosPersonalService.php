@@ -10,6 +10,7 @@ use App\Models\Operativo\RhPersonalBajaArchivos;
 use App\Models\Operativo\RhPersonalBajaComentarios;
 use App\Models\Operativo\RhPersonalListaNegra;
 use App\Models\Operativo\RhPersonalAcceso;
+use App\Models\Operativo\RhPersonalLocalidadVersion;
 use App\Models\Operativo\RhPersonalAsistencia;
 use App\Models\Operativo\RhPersonalAsistenciaIncidencia;
 use App\Models\Operativo\RhPuestos;
@@ -17,6 +18,7 @@ use App\Models\Operativo\RhLocalidad;
 use App\Models\Operativo\RhListaIncidencias;
 use App\Models\Usuario;
 use App\Models\Estacion;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class ControlDocumentosPersonalService
 {
@@ -63,7 +65,7 @@ return [
 'nombre_puesto' => $nombrePuesto,
 'multiestacion' => $multiestacion,
 'puedeLeer'     => !empty($permisosDb['leer']),
-'puedeCrear'    => $multiestacion && $tienePermisoCrear,
+'puedeCrear'    => ($multiestacion || $idPuesto === 6) && $tienePermisoCrear,
 'puedeEditar'   => $tienePermisoEditar,
 'puedeEliminar' => $multiestacion && $tienePermisoEliminar,
 'puedeEliminarBaja' => $tienePermisoEliminar,
@@ -83,6 +85,47 @@ foreach ($depts as $d) {
 $ids[] = (int)$d['id'];
 }
 return array_values(array_unique($ids));
+}
+
+/** Physical station IDs only; department/locality IDs must not be written to id_estacion. */
+private static function getAllowedPhysicalStationIds(): array
+{
+    $ids = array_values(array_unique(array_filter(array_map(
+        static fn(array $station): int => (int) ($station['id'] ?? 0),
+        ModuleStationService::getAvailableStations('control-documentos-personal')
+    ), static fn(int $id): bool => $id > 0)));
+
+    return array_values(array_filter($ids, static function (int $id): bool {
+        return self::resolveCanonicalWorkplaceForStation($id) !== null;
+    }));
+}
+
+/** Resolve a physical station to exactly one canonical locality through the existing numlista bridge. */
+private static function resolveCanonicalWorkplaceForStation(int $stationId): ?int
+{
+    if ($stationId < 1) return null;
+
+    try {
+        $station = Estacion::query()->whereKey($stationId)->where('estatus', 0)->first();
+        $numlista = (int) ($station->numlista ?? 0);
+        if (!$station || $numlista < 1
+            || Estacion::query()->where('numlista', $numlista)->count() !== 1
+            || RhLocalidad::query()->where('numlista', $numlista)->count() !== 1) {
+            return null;
+        }
+
+        $mapped = MultiestacionService::convertIds(
+            [$stationId], MultiestacionService::TABLA_ESTACIONES, MultiestacionService::TABLA_RH_LOCALIDADES
+        );
+        if (count($mapped) !== 1 || (int) $mapped[0] < 1) return null;
+        $workplaceId = (int) $mapped[0];
+
+        return ChecadorAccessService::resolveActiveStationIdForLocality($workplaceId) === $stationId
+            ? $workplaceId
+            : null;
+    } catch (\Throwable) {
+        return null;
+    }
 }
 
 /** Alcance independiente del módulo de bajas, sin alterar Control de Documentos. */
@@ -419,13 +462,20 @@ return $data;
 
 public static function addPersonal(array $input, array $files): ?int
 {
+if (!Auth::check() || !self::getPermisos()['puedeCrear']) return null;
 $validationErrors = self::validatePersonalInput($input);
 if ($validationErrors) return null;
 
 $ctx = ModuleStationService::getContext('control-documentos-personal');
 $idEstacion = (int)($input['id_estacion'] ?? 0);
 if (!$idEstacion) $idEstacion = (int)($ctx['id_estacion'] ?? $ctx['id_depto'] ?? 0);
-if (!$idEstacion) return null;
+if (!$idEstacion || !in_array($idEstacion, self::getAllowedPhysicalStationIds(), true)) return null;
+$actor = Auth::user();
+if ((int) ($actor->id_puesto ?? 0) === 6 && ((int) ($actor->id_gas ?? 0) < 1 || (int) $actor->id_gas !== $idEstacion)) return null;
+$workplaceId = self::resolveCanonicalWorkplaceForStation($idEstacion);
+if ($workplaceId === null) return null;
+$actorId = (int) ($actor->id ?? 0);
+if ($actorId < 1) return null;
 
 $data = [
 'id_estacion'      => $idEstacion,
@@ -443,7 +493,62 @@ $data[$campo] = '';
 
 $nombrePersonal = $data['nombre_completo'];
 
-$record = RhPersonal::create($data);
+$record = Capsule::connection('default')->transaction(static function () use ($data, $idEstacion, $workplaceId, $actorId) {
+    // Serialize Portal3 personnel registrations at the physical station.
+    $connection = Capsule::connection('default');
+    $station = $connection->table('tb_estaciones')
+        ->where('id', $idEstacion)->where('estatus', 0)->lockForUpdate()->first(['id']);
+    if (!$station || self::resolveCanonicalWorkplaceForStation($idEstacion) !== $workplaceId) return null;
+    $duplicate = RhPersonal::query()->where('id_estacion', $idEstacion)
+        ->where('no_colaborador', $data['no_colaborador'])->where('estado', 1)->exists();
+    if ($duplicate) return null;
+    $personal = RhPersonal::create($data);
+    $effectiveAt = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\\TH:i:s.u\\Z');
+    $membershipId = (new WorkerWorkplaceAssignmentVersionService())->appendVersion(
+        (int) $personal->id, $workplaceId, $effectiveAt, null, $actorId,
+        'Alta desde Control de Documentos del Personal'
+    );
+    $membership = RhPersonalLocalidadVersion::query()->whereKey($membershipId)->first();
+    if (!$membership) throw new \RuntimeException('CANONICAL_MEMBERSHIP_READBACK_FAILED');
+    $recordedAsOf = (new \DateTimeImmutable((string) $membership->recorded_at_utc, new \DateTimeZone('UTC')))
+        ->format('Y-m-d\\TH:i:s.u\\Z');
+    $resolved = (new WorkerWorkplaceAssignmentResolver())->resolveAssignmentsAsRecordedAt(
+        (int) $personal->id,
+        $effectiveAt,
+        $recordedAsOf
+    );
+    if (!$membership || (int) $membership->worker_id !== (int) $personal->id
+        || (int) $membership->workplace_id !== $workplaceId
+        || ($resolved['status'] ?? '') !== 'RESOLVED_SINGLE'
+        || (int) ($resolved['assignments'][0]['workplace_id'] ?? 0) !== $workplaceId) {
+        throw new \RuntimeException('CANONICAL_MEMBERSHIP_READBACK_FAILED');
+    }
+
+    // Match the existing legacy writer: zero means no PIN is provisioned, and
+    // an empty template means no fingerprint has been enrolled.
+    $accessId = $connection->table('op_rh_personal_acceso')->insertGetId([
+        'id_personal' => (int) $personal->id,
+        'huella' => '',
+        'pin' => 0,
+    ]);
+    $accessRows = $connection->table('op_rh_personal_acceso')
+        ->where('id_personal', (int) $personal->id)
+        ->get(['id', 'id_personal', 'huella', 'pin']);
+    if ($accessId < 1 || $accessRows->count() !== 1
+        || (int) $accessRows[0]->id !== (int) $accessId
+        || (int) $accessRows[0]->id_personal !== (int) $personal->id
+        || (string) $accessRows[0]->huella !== ''
+        || (int) $accessRows[0]->pin !== 0) {
+        throw new \RuntimeException('PERSONAL_ACCESS_READBACK_FAILED');
+    }
+
+    $readback = RhPersonal::query()->whereKey((int) $personal->id)
+        ->where('id_estacion', $idEstacion)->where('estado', 1)->first();
+    if (!$readback || (int) $readback->no_colaborador !== (int) $data['no_colaborador']) {
+        throw new \RuntimeException('PERSONAL_READBACK_FAILED');
+    }
+    return $readback;
+});
 if (!$record) return null;
 
 foreach (self::DOCUMENT_TYPES as $campo => $info) {
@@ -639,8 +744,10 @@ return false;
 
 public static function getUploadDir(): string
 {
-$dir = dirname(__DIR__, 2) . '/public/uploads/archivos/documentos-personal/';
-if (!is_dir($dir)) mkdir($dir, 0750, true);
+$dir = dirname(__DIR__, 2) . '/storage/private/documentos-personal/';
+if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
+    throw new \RuntimeException('No fue posible preparar el almacenamiento privado de documentos personales.');
+}
 return $dir;
 }
 
@@ -939,24 +1046,16 @@ error_log('Error notificando control documentos personal: ' . $e->getMessage());
 }
 }
 
-public static function getAcceso(int $idPersonal): array
+public static function getAcceso(int $idPersonal): ?array
 {
+$personal = Auth::check() && self::getPermisos()['puedeLeer'] ? self::findAuthorizedPersonal($idPersonal) : null;
+if (!$personal) return null;
 $acceso = RhPersonalAcceso::where('id_personal', $idPersonal)->first();
-
-if (!$acceso) {
-$acceso = RhPersonalAcceso::create([
-'id_personal' => $idPersonal,
-'huella'      => '',
-'pin'         => 0,
-]);
-}
-
-$personal = self::findAuthorizedPersonal($idPersonal);
 $puesto = $personal ? RhPuestos::find($personal->puesto) : null;
 $nombrePuesto = $puesto ? $puesto->puesto : '';
 
 return [
-'huella'       => $acceso->huella ?? '',
+'huella'       => !empty($acceso->huella),
 'pin_registrado' => !empty($acceso->pin),
 'nombre_puesto' => $nombrePuesto,
 ];
@@ -1616,6 +1715,8 @@ return ['success' => true, 'message' => 'Incidencia registrada correctamente.'];
 
 public static function editarPin(int $idPersonal, string $pin): array
 {
+$personal = Auth::check() && self::getPermisos()['puedeEditar'] ? self::findAuthorizedPersonal($idPersonal) : null;
+if (!$personal) return ['success' => false, 'message' => 'No tienes autorización para modificar el acceso de este trabajador.', 'code' => 403];
 $pinLimpio = trim($pin);
 
 if (strlen($pinLimpio) < 5) {
@@ -1641,7 +1742,6 @@ RhPersonalAcceso::create([
 $acceso->update(['pin' => (int)$pinLimpio]);
 }
 
-$personal = RhPersonal::find($idPersonal);
 if ($personal) {
 self::notify((int)$personal->id_estacion, 'editó PIN', [
 'nombre' => $personal->nombre_completo ?? '',

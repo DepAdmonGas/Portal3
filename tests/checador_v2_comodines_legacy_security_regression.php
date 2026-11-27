@@ -43,8 +43,20 @@ $checadorRoutesIsolated = str_contains($routes, "'/recursos-humanos/checador/rol
     && str_contains($routes, "'/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'requestCoverage'])")
     && str_contains($checadorController, 'public function coverageList(): void')
     && str_contains($checadorController, 'public function requestCoverage(): void')
-    && str_contains($checadorService, 'public const AUTHORIZED_COVERAGE_WORKER_IDS');
+    && str_contains($checadorService, 'public const COVERAGE_WORKER_POSITION_ID = 14');
 $assert($checadorRoutesIsolated, 'new Checador Comodines operations use their own controller and service boundary');
+
+$scopeSafe = str_contains($routes, "'/recursos-humanos/checador/rol-comodines', Route::auth(['ChecadorController', 'rolComodines'])")
+    && str_contains($routes, "'/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'coverageList'])")
+    && str_contains($routes, "'/recursos-humanos/checador/rol-comodines/coberturas', Route::auth(['ChecadorComodinesController', 'requestCoverage'])")
+    && str_contains($routes, "'/recursos-humanos/checador/rol-comodines/trabajadores', Route::auth(['ChecadorComodinesController', 'searchCoverageWorkers'])")
+    && str_contains($checadorController, '$positionId !== 13')
+    && str_contains($checadorController, 'ChecadorV2PermissionService::allowsComodines')
+    && str_contains($checadorController, '!in_array((int) $homeWorkplaceId, $this->authorizedWorkplaceIds(), true)')
+    && str_contains($checadorController, '!in_array((int) ($coverage[\'id_home_workplace\'] ?? 0), $scope, true)')
+    && str_contains($checadorController, '!in_array((int) ($coverage[\'id_coverage_workplace\'] ?? 0), $scope, true)')
+    && str_contains($checadorController, '$this->authorizedWorkplaceIds(),');
+$assert($scopeSafe, 'Checador Comodines routes require auth, CSRF and active department middleware; handlers recheck Dirección permissions and every workplace against server scope');
 
 printf("CHECADOR_V2_COMODINES_LEGACY_ISOLATION: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

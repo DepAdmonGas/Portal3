@@ -6,7 +6,6 @@ $coverageRows = is_array($coverageRows ?? null) ? $coverageRows : [];
 $roles = is_array($roles ?? null) ? $roles : [];
 $coverageReadState = (string) ($coverageReadState ?? 'unavailable');
 $coverageReadMessage = is_string($coverageReadMessage ?? null) ? $coverageReadMessage : '';
-$coverageWriterEnabled = !empty($coverageWriterEnabled);
 $canRequestCoverage = !empty($canRequestCoverage);
 $canReviewCoverage = !empty($canReviewCoverage);
 $canCancelCoverage = !empty($canCancelCoverage);
@@ -32,7 +31,7 @@ foreach ($coverageRows as $coverage) {
     if (!is_array($coverage)) continue;
     $workerId = (int) ($coverage['worker_id'] ?? 0);
     $workerName = trim((string) ($coverage['worker_label'] ?? ''));
-    if ($workerId > 0 && $workerName !== '') $filterWorkers[$workerId] = $workerName;
+    if ($workerId > 0 && $workerName !== '') $filterWorkers[$workerId] = $workerName . ' · ID ' . $workerId;
     foreach ([['home_workplace_id', 'home_label'], ['coverage_workplace_id', 'coverage_label']] as [$idKey, $labelKey]) {
         $id = (int) ($coverage[$idKey] ?? 0);
         $label = trim((string) ($coverage[$labelKey] ?? ''));
@@ -48,14 +47,25 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
 ?>
 <div id="container" class="mt-4 mb-5" data-checador-role-comodines>
     <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-3">
-        <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-search-modal">
-            <i class="ti ti-filter me-1" aria-hidden="true"></i>Buscar / Filtrar
-        </button>
-        <?php if ($canRequestCoverage): ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-create-modal">
-                <i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva cobertura
+        <div class="dropdown d-inline-block">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i>
             </button>
-        <?php endif; ?>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <button class="dropdown-item pointer" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-search-modal">
+                        <i class="ti ti-search me-1" aria-hidden="true"></i>Buscar / Filtrar
+                    </button>
+                </li>
+                <?php if ($canRequestCoverage): ?>
+                    <li>
+                        <button class="dropdown-item pointer" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-create-modal">
+                            <i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva cobertura
+                        </button>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </div>
     </div>
 
     <section class="card mb-3" aria-labelledby="checador-comodines-coverage-heading">
@@ -66,9 +76,6 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
             </div>
         </div>
         <div class="card-body">
-            <?php if (!$coverageWriterEnabled): ?>
-                <div class="alert alert-info py-2" role="status">Las operaciones administrativas de cobertura están desactivadas en este entorno.</div>
-            <?php endif; ?>
             <?php if ($coverageReadState !== 'ready'): ?>
                 <div class="alert alert-warning mb-0" role="status">
                     <?= $esc($coverageReadMessage !== '' ? $coverageReadMessage : 'No fue posible consultar las coberturas canónicas en este momento.') ?>
@@ -98,11 +105,11 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
                                     $validUuid = preg_match('/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/iD', $uuid) === 1;
                                     $statusCode = strtoupper((string) ($coverage['status_code'] ?? ''));
                                     $statusClass = match ($statusCode) {
-                                        'REQUESTED' => 'text-bg-warning',
-                                        'AUTHORIZED' => 'text-bg-success',
-                                        'CANCELLED' => 'text-bg-secondary',
-                                        'REJECTED' => 'text-bg-danger',
-                                        default => 'text-bg-light border',
+                                        'REQUESTED' => 'bg-warning-subtle border border-warning-subtle',
+                                        'AUTHORIZED' => 'bg-success-subtle border border-success-subtle',
+                                        'CANCELLED' => 'bg-body-secondary border',
+                                        'REJECTED' => 'bg-danger-subtle border border-danger-subtle',
+                                        default => 'bg-body-secondary border',
                                     };
                                     $actions = [];
                                     if ($validUuid) {
@@ -121,7 +128,7 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
                                         <td><?= $esc($coverage['home_label'] ?? 'Localidad habitual no disponible') ?></td>
                                         <td><?= $esc($coverage['coverage_label'] ?? 'Localidad de cobertura no disponible') ?></td>
                                         <td data-order="<?= $esc($coverage['from_local'] ?? '') ?>"><?= $esc($coverage['period_label'] ?? 'Periodo no disponible') ?></td>
-                                        <td><span class="badge <?= $esc($statusClass) ?>"><?= $esc($coverage['status_label'] ?? 'Estado no disponible') ?></span></td>
+                                        <td><span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-body-emphasis <?= $esc($statusClass) ?>"><i class="ti ti-info-circle" aria-hidden="true"></i><?= $esc($coverage['status_label'] ?? 'Estado no disponible') ?></span></td>
                                         <td data-order="<?= $esc($coverage['requested_at_utc'] ?? '') ?>"><?= $esc($coverage['requested_at_label'] ?? 'Fecha no disponible') ?></td>
                                         <td class="text-center">
                                             <?php if (count($actions) === 1): ?>
@@ -199,46 +206,46 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
 </div>
 
 <div class="modal fade" id="checador-comodines-search-modal" tabindex="-1" aria-labelledby="checador-comodines-search-heading" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
-        <div class="modal-header"><h2 class="modal-title fs-5" id="checador-comodines-search-heading">Buscar / Filtrar</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="checador-comodines-search-heading"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar / Filtrar</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
         <div class="modal-body">
             <div class="row g-3">
                 <div class="col-md-6"><label class="form-label" for="checador-comodines-filter-from">Periodo desde</label><input class="form-control" type="date" id="checador-comodines-filter-from"></div>
                 <div class="col-md-6"><label class="form-label" for="checador-comodines-filter-to">Periodo hasta (incluido)</label><input class="form-control" type="date" id="checador-comodines-filter-to"></div>
-                <div class="col-12"><label class="form-label" for="checador-comodines-filter-worker">Trabajador</label><div class="select2-modal-field"><select class="form-select" id="checador-comodines-filter-worker"><option value="">Todos los trabajadores</option><?php foreach ($filterWorkers as $id => $name): ?><option value="<?= (int) $id ?>"><?= $esc($name) ?></option><?php endforeach; ?></select></div></div>
-                <div class="col-md-6"><label class="form-label" for="checador-comodines-filter-workplace">Localidad</label><div class="select2-modal-field"><select class="form-select" id="checador-comodines-filter-workplace"><option value="">Todas las localidades autorizadas</option><?php foreach ($filterWorkplaces as $id => $name): ?><option value="<?= (int) $id ?>"><?= $esc($name) ?></option><?php endforeach; ?></select></div></div>
+                <div class="col-12"><label class="form-label" for="checador-comodines-filter-worker">Trabajador</label><div class="select2-modal-field w-100"><select class="form-select w-100" id="checador-comodines-filter-worker"><option value="">Todos los trabajadores</option><?php foreach ($filterWorkers as $id => $name): ?><option value="<?= (int) $id ?>"><?= $esc($name) ?></option><?php endforeach; ?></select></div></div>
+                <div class="col-md-6"><label class="form-label" for="checador-comodines-filter-workplace">Localidad</label><div class="select2-modal-field w-100"><select class="form-select w-100" id="checador-comodines-filter-workplace"><option value="">Todas las localidades autorizadas</option><?php foreach ($filterWorkplaces as $id => $name): ?><option value="<?= (int) $id ?>"><?= $esc($name) ?></option><?php endforeach; ?></select></div></div>
                 <div class="col-md-6"><label class="form-label" for="checador-comodines-filter-status">Estado</label><select class="form-select" id="checador-comodines-filter-status"><option value="">Todos los estados</option><?php foreach ($filterStatuses as $code => $label): ?><option value="<?= $esc($code) ?>"><?= $esc($label) ?></option><?php endforeach; ?></select></div>
             </div>
             <div class="alert d-none mt-3 mb-0" role="status" data-comodines-filter-message></div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-light" data-comodines-filter-clear>Limpiar</button><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-comodines-filter-apply>Consultar</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-comodines-filter-clear><i class="ti ti-eraser me-1" aria-hidden="true"></i>Limpiar</button><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button><button type="button" class="btn btn-primary" data-comodines-filter-apply><i class="ti ti-search me-1" aria-hidden="true"></i>Consultar</button></div>
     </div></div>
 </div>
 
 <?php if ($canRequestCoverage): ?>
 <div class="modal fade" id="checador-comodines-create-modal" tabindex="-1" aria-labelledby="checador-comodines-create-heading" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
         <form id="checador-comodines-create-form" data-create-url="<?= $esc($coverageCreateUrl) ?>" data-workers-url="<?= $esc($coverageWorkersUrl) ?>">
-            <div class="modal-header"><h2 class="modal-title fs-5" id="checador-comodines-create-heading">Nueva cobertura</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <div class="modal-header modal-colored-header bg-primary text-white"><h2 class="modal-title text-white h5" id="checador-comodines-create-heading"><i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva cobertura</h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
             <div class="modal-body">
                 <input type="hidden" id="checador-comodines-membership-id" value="">
                 <input type="hidden" id="checador-comodines-home-workplace-id" value="">
                 <input type="hidden" id="checador-comodines-csrf" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
                 <div class="row g-3">
-                    <div class="col-12"><label class="form-label" for="checador-comodines-worker">Trabajador</label><div class="select2-modal-field"><select class="form-select" id="checador-comodines-worker" data-select2-ajax required><option value="">Busca por nombre, ID o número</option></select></div><div class="form-text" id="checador-comodines-worker-message">Selecciona el periodo para consultar los candidatos activos y su elegibilidad.</div></div>
-                    <div class="col-md-6"><label class="form-label" for="checador-comodines-target">Localidad de cobertura</label><div class="select2-modal-field"><select class="form-select" id="checador-comodines-target" required><option value="">Selecciona una localidad autorizada</option><?php foreach ($coverageWorkplaces as $workplace): ?><option value="<?= (int) ($workplace['id'] ?? 0) ?>"><?= $esc($workplace['nombre'] ?? '') ?></option><?php endforeach; ?></select></div><div class="form-text">La cobertura no modifica la adscripción habitual ni amplía permisos del Encargado.</div></div>
+                    <div class="col-12"><label class="form-label" for="checador-comodines-worker">Trabajador</label><div class="select2-modal-field w-100"><select class="form-select w-100" id="checador-comodines-worker" data-select2-ajax required><option value="">Busca por nombre, ID o número</option></select></div><div class="form-text" id="checador-comodines-worker-message">Busca por nombre, ID o número; las fechas y la adscripción se validan antes de guardar.</div></div>
+                    <div class="col-md-6"><label class="form-label" for="checador-comodines-target">Localidad de cobertura</label><div class="select2-modal-field w-100"><select class="form-select w-100" id="checador-comodines-target" required><option value="">Selecciona una localidad autorizada</option><?php foreach ($coverageWorkplaces as $workplace): ?><option value="<?= (int) ($workplace['id'] ?? 0) ?>"><?= $esc($workplace['nombre'] ?? '') ?></option><?php endforeach; ?></select></div><div class="form-text">La cobertura no modifica la adscripción habitual ni amplía permisos del Encargado.</div></div>
                     <div class="col-md-3"><label class="form-label" for="checador-comodines-from">Desde (incluido)</label><input class="form-control" id="checador-comodines-from" type="date" required></div>
                     <div class="col-md-3"><label class="form-label" for="checador-comodines-to">Hasta (sin incluir)</label><input class="form-control" id="checador-comodines-to" type="date" required></div>
                     <div class="col-12"><label class="form-label" for="checador-comodines-reason">Motivo</label><textarea class="form-control" id="checador-comodines-reason" rows="2" maxlength="500" required></textarea></div>
                     <div class="col-12"><h3 class="h6 mb-2">Patrón semanal</h3><p class="form-text">Elige trabajo con una plantilla/version o descanso explícito para cada día.</p><div class="row g-2">
                         <?php foreach ([['LUNES','Lunes'],['MARTES','Martes'],['MIERCOLES','Miércoles'],['JUEVES','Jueves'],['VIERNES','Viernes'],['SABADO','Sábado'],['DOMINGO','Domingo']] as [$dayCode,$dayName]): ?>
-                            <div class="col-md-6"><label class="form-label" for="checador-comodines-day-<?= $esc($dayCode) ?>"><?= $esc($dayName) ?></label><div class="select2-modal-field"><select class="form-select" id="checador-comodines-day-<?= $esc($dayCode) ?>" data-coverage-day="<?= $esc($dayCode) ?>" required><option value="">Selecciona trabajo o descanso</option><option value="DAY_OFF">Descanso explícito</option><?php foreach ($coverageTemplates as $template): ?><option value="<?= (int) ($template['id'] ?? 0) ?>:<?= (int) ($template['version'] ?? 0) ?>"><?= $esc($template['nombre'] ?? 'Turno') ?> · versión <?= (int) ($template['version'] ?? 0) ?></option><?php endforeach; ?></select></div></div>
+                            <div class="col-md-6"><label class="form-label" for="checador-comodines-day-<?= $esc($dayCode) ?>"><?= $esc($dayName) ?></label><div class="select2-modal-field w-100"><select class="form-select w-100" id="checador-comodines-day-<?= $esc($dayCode) ?>" data-coverage-day="<?= $esc($dayCode) ?>" required><option value="">Selecciona trabajo o descanso</option><option value="DAY_OFF">Descanso explícito</option><?php foreach ($coverageTemplates as $template): ?><option value="<?= (int) ($template['id'] ?? 0) ?>:<?= (int) ($template['version'] ?? 0) ?>"><?= $esc($template['nombre'] ?? 'Turno') ?> · versión <?= (int) ($template['version'] ?? 0) ?></option><?php endforeach; ?></select></div></div>
                         <?php endforeach; ?>
                     </div></div>
                 </div>
                 <div id="checador-comodines-create-message" class="alert d-none mt-3 mb-0" role="status"></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="submit" data-checador-comodines-submit><i class="ti ti-send me-1" aria-hidden="true"></i>Guardar solicitud</button></div>
+            <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancelar</button><button class="btn btn-success" type="submit" data-checador-comodines-submit><i class="ti ti-check me-1" aria-hidden="true"></i>Guardar solicitud</button></div>
         </form>
     </div></div>
 </div>

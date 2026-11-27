@@ -27,6 +27,22 @@ $renderDashboard = static function (?int $workplaceId, string $date, ?int $worke
     $realApiPostOperationsEnabled = false;
     $payrollComparisonAvailable = false;
     $temporaryAccessPanel = ['visible' => false, 'requests' => [], 'can_edit' => false];
+    $buildQueryString = static function (array $params): string {
+        $filtered = array_filter($params, static fn($value): bool => $value !== null && $value !== '');
+        return http_build_query($filtered, '', '&', PHP_QUERY_RFC3986);
+    };
+    $moduleNavigation = [[
+        'label' => 'Programación semanal',
+        'description' => 'Turnos de lunes a domingo.',
+        'utility' => 'Turnos · Asignaciones',
+        'action' => 'Ver programación',
+        'icon' => 'ti-calendar-week',
+        'href' => '/departamento-operativo/recursos-humanos/checador/programacion-semanal',
+        'available' => $canReadScheduling,
+        'unavailable' => 'Disponible con autorización de lectura de programación.',
+    ]];
+    $isModuleDirectory = true;
+    $requiresExplicitWorkplaceSelection = false;
     $events = [];
     $attendanceRows = [];
     $attendanceCoverage = ['complete' => false, 'message' => 'Sin consulta de prueba.'];
@@ -87,14 +103,13 @@ $stationQuery = [];
 if ($stationHref !== null) {
     parse_str((string) parse_url($stationHref, PHP_URL_QUERY), $stationQuery);
 }
-$assert(($stationQuery['schedule_week'] ?? null) === '1'
-    && ($stationQuery['workplace_id'] ?? null) === '1'
-    && ($stationQuery['week_start'] ?? null) === '2026-10-19',
-    'station, weekly flag and Monday derived from the selected labor date are present in the generated URL');
-$assert(is_array($stationAnchor)
-    && str_contains($stationAnchor['raw_href'], '&amp;')
-    && !preg_match('/(?<!&)&(?!amp;)/', $stationAnchor['raw_href']),
-    'query separators are HTML-escaped inside the navigation href');
+$assert(($stationAnchor['href'] ?? '') === '/departamento-operativo/recursos-humanos/checador/programacion-semanal'
+    && !isset($stationQuery['schedule_week']) && !isset($stationQuery['workplace_id']),
+    'weekly navigation uses the clean route and relies on authorized session context');
+$assert(str_contains(file_get_contents(dirname(__DIR__) . '/routes/web.php') ?: '', "'/recursos-humanos/checador/programacion-semanal'")
+    && str_contains(file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '', 'public function scheduleWeek(): void')
+    && str_contains(file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '', 'self::redirect(self::scheduleWeekHref($query))'),
+    'clean GET route is registered and the legacy weekly flag redirects through the week-preserving canonical URL');
 
 $departmentAnchor = $readModuleAnchor($departmentHtml, 'Programación semanal');
 $departmentHref = $departmentAnchor['href'] ?? null;
@@ -102,8 +117,9 @@ $departmentQuery = [];
 if ($departmentHref !== null) {
     parse_str((string) parse_url($departmentHref, PHP_URL_QUERY), $departmentQuery);
 }
-$assert(($departmentQuery['workplace_id'] ?? null) === '9',
-    'canonical department workplace context remains in the generated URL');
+$assert(($departmentHref ?? '') === '/departamento-operativo/recursos-humanos/checador/programacion-semanal'
+    && !isset($departmentQuery['workplace_id']),
+    'weekly navigation does not publish an untrusted locality ID for department context');
 
 $zeroAnchor = $readModuleAnchor($zeroHtml, 'Programación semanal');
 $zeroHref = $zeroAnchor['href'] ?? null;
@@ -111,37 +127,15 @@ $zeroQuery = [];
 if ($zeroHref !== null) {
     parse_str((string) parse_url($zeroHref, PHP_URL_QUERY), $zeroQuery);
 }
-$assert(($zeroQuery['workplace_id'] ?? null) === '0'
+$assert(($zeroHref ?? '') === '/departamento-operativo/recursos-humanos/checador/programacion-semanal'
+    && !isset($zeroQuery['workplace_id'])
     && is_callable($buildQueryString)
     && $buildQueryString(['integer_zero' => 0, 'string_zero' => '0', 'empty' => '', 'missing' => null]) === 'integer_zero=0&string_zero=0',
     'integer and string zero survive filtering while null and empty-string values are omitted');
 
-$historyAnchor = $readModuleAnchor($stationHtml, 'Horarios y turnos');
-$historyQuery = [];
-if ($historyAnchor !== null) {
-    parse_str((string) parse_url($historyAnchor['href'], PHP_URL_QUERY), $historyQuery);
-}
-$assert(($historyQuery['schedule_history'] ?? null) === '1'
-    && ($historyQuery['workplace_id'] ?? null) === '1'
-    && ($historyQuery['date'] ?? null) === '2026-10-19'
-    && ($historyQuery['worker_id'] ?? null) === '558',
-    'authorized schedule-history navigation retains station, worker and labor-date context');
-
-$reportAnchor = $readModuleAnchor($stationHtml, 'Reportes');
-$reportQuery = [];
-if ($reportAnchor !== null) {
-    parse_str((string) parse_url($reportAnchor['href'], PHP_URL_QUERY), $reportQuery);
-}
-$assert(($reportQuery['source_workplace_id'] ?? null) === '1'
-    && ($reportQuery['source_work_date'] ?? null) === '2026-10-19'
-    && ($reportQuery['source_worker_id'] ?? null) === '558'
-    && is_callable($buildQueryString)
-    && $buildQueryString(['period' => 'custom', 'page' => 0, 'order' => '0', 'worker_id' => 558, 'date' => '2026-10-19']) === 'period=custom&page=0&order=0&worker_id=558&date=2026-10-19',
-    'report navigation retains source context and generic query building keeps pagination, order, worker, date and zero values');
-
-$assert(!str_contains($restrictedHtml, 'schedule_week=1')
-    && !str_contains(strip_tags($restrictedHtml), 'Turnos de lunes a domingo'),
-    'weekly navigation is withheld when independent schedule-read authorization is absent');
+$assert(!str_contains($restrictedHtml, 'href="/departamento-operativo/recursos-humanos/checador/programacion-semanal"')
+    && str_contains($restrictedHtml, 'aria-disabled="true"'),
+    'weekly navigation remains unavailable without independent schedule-read authorization');
 
 $assert(str_contains(file_get_contents(dirname(__DIR__) . '/app/Controllers/ChecadorController.php') ?: '', 'ChecadorAccessService::authorize')
     && str_contains(file_get_contents(dirname(__DIR__) . '/app/Services/ChecadorAccessService.php') ?: '', 'authorize(?int $requestedLocalityId'),

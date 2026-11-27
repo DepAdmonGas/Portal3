@@ -44,7 +44,6 @@ $base = [
     'stateMessage' => '',
     'coverageReadState' => 'ready',
     'coverageReadMessage' => '',
-    'coverageWriterEnabled' => true,
     'canRequestCoverage' => false,
     'canReviewCoverage' => false,
     'canCancelCoverage' => false,
@@ -103,6 +102,17 @@ $assert($xpath->query('//*[@id="checador-comodines-search-modal"]')->length === 
     && $xpath->query('//*[@id="checador-comodines-filter-workplace"]')->length === 1
     && $xpath->query('//*[@id="checador-comodines-filter-status"]')->length === 1,
     'search modal offers period, worker, authorized locality, and observed status filters');
+$assert($xpath->query('//select[@id="checador-comodines-filter-worker"]/option[@value="1004" and contains(normalize-space(.),"ID 1004")]')->length === 1,
+    'worker filter identifies existing coverage rows by canonical RH ID without adding unrelated roster options');
+$assert(!str_contains($html, 'coverageWriterEnabled')
+    && !str_contains($html, 'Las operaciones administrativas de cobertura están desactivadas en este entorno.'),
+    'the page does not show an obsolete environment-based writer blocker');
+$assert($xpath->query('//*[@id="checador-comodines-search-modal"]//div[contains(@class,"modal-header") and contains(@class,"bg-primary") and contains(@class,"text-white")]')->length === 1
+    && $xpath->query('//*[@id="checador-comodines-search-modal"]//button[contains(@class,"btn-close-white")]')->length === 1
+    && $xpath->query('//*[@id="checador-comodines-search-modal"]//button[@data-comodines-filter-clear and contains(@class,"btn-light")]')->length === 1
+    && $xpath->query('//*[@id="checador-comodines-search-modal"]//button[@data-bs-dismiss="modal" and contains(@class,"bg-danger-subtle") and contains(@class,"text-danger")]')->length === 1
+    && $xpath->query('//*[@id="checador-comodines-search-modal"]//button[@data-comodines-filter-apply and contains(@class,"btn-primary")]')->length === 1,
+    'search modal uses Portal3 blue header, close, neutral clear, soft-red cancel, and primary search controls');
 
 $requestHtml = $render([
     'canRequestCoverage' => true,
@@ -122,13 +132,23 @@ $assert($requestXPath->query('//*[@id="checador-comodines-create-modal"]')->leng
     && str_contains($requestHtml, 'Descanso explícito')
     && str_contains($requestHtml, 'versión 2'),
     'new coverage modal renders Select2 worker search, authorized destination, seven explicit weekdays, and exact template versions');
+$assert($requestXPath->query('//*[@id="checador-comodines-create-modal"]//div[contains(@class,"modal-header") and contains(@class,"bg-primary") and contains(@class,"text-white")]')->length === 1
+    && $requestXPath->query('//*[@id="checador-comodines-create-modal"]//button[contains(@class,"btn-close-white")]')->length === 1
+    && $requestXPath->query('//*[@id="checador-comodines-create-modal"]//button[@data-bs-dismiss="modal" and contains(@class,"bg-danger-subtle") and contains(@class,"text-danger")]')->length === 1
+    && $requestXPath->query('//*[@id="checador-comodines-create-modal"]//button[@data-checador-comodines-submit and contains(@class,"btn-success")]')->length === 1,
+    'new coverage modal follows Portal3 blue header, close control, and institutional footer button styles');
 $assert($toolbar instanceof DOMElement
-    && $requestXPath->query('.//button[@data-bs-target="#checador-comodines-search-modal"]', $toolbar)->length === 1
+    && $requestXPath->query('.//div[contains(concat(" ", normalize-space(@class), " "), " dropdown ") and contains(concat(" ", normalize-space(@class), " "), " d-inline-block ")]', $toolbar)->length === 1
+    && $requestXPath->query('.//button[@data-bs-toggle="dropdown" and contains(@class,"btn-light") and contains(@class,"dropdown-toggle") and contains(@class,"text-dark")]', $toolbar)->length === 1
+    && $requestXPath->query('.//button[@data-bs-toggle="dropdown"]//i[contains(@class,"ti-dots-vertical") and contains(@class,"fs-4")]', $toolbar)->length === 1
+    && $requestXPath->query('.//button[@data-bs-target="#checador-comodines-search-modal"]//i[contains(@class,"ti-search") and contains(@class,"me-1")]', $toolbar)->length === 1
     && $requestXPath->query('.//button[@data-bs-target="#checador-comodines-create-modal"]', $toolbar)->length === 1
+    && $requestXPath->query('.//ul[contains(@class,"dropdown-menu-end")]//button[contains(@class,"dropdown-item") and contains(@class,"pointer")]', $toolbar)->length === 2
+    && $requestXPath->query('.//button[@data-bs-toggle="dropdown"]//text()[normalize-space()]', $toolbar)->length === 0
     && $requestXPath->query('following-sibling::*[1][self::section and @aria-labelledby="checador-comodines-coverage-heading"]', $toolbar)->length === 1,
-    'both action buttons are right-aligned immediately before the registered-coverages card');
+    'one right-aligned institutional dropdown contains search and authorized create actions before the registered-coverages card');
 $assert($requestXPath->query('//*[@data-bs-target="#checador-comodines-create-modal"]')->length === 1,
-    'the create action appears only when server-side capability permits it');
+    'the create dropdown action appears only when server-side capability permits it');
 
 $emptyHtml = $render(['coverageRows' => [], 'roles' => []]);
 $assert(str_contains($emptyHtml, 'Aún no hay coberturas registradas')

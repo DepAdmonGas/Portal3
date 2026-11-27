@@ -96,6 +96,10 @@ $schema->create('tb_multiestacion_puesto', static function ($table): void {
     $table->text('departamentos_puestos')->nullable(); $table->text('departamentos_localidades')->nullable();
     $table->boolean('activo')->default(true);
 });
+$schema->create('op_rh_v2_permission_grants', static function ($table): void {
+    $table->increments('id'); $table->string('permission_key'); $table->string('principal_type');
+    $table->integer('principal_id'); $table->boolean('granted'); $table->boolean('active');
+});
 
 $db = $capsule->getConnection();
 $_SESSION = [];
@@ -292,6 +296,8 @@ $db->table('tb_estaciones')->insert(['id' => 105, 'numlista' => 5, 'nombre' => '
 $db->table('tb_usuarios')->where('id', 600)->update(['id_gas' => 105]);
 Auth::forget();
 $assert(ChecadorAccessService::authorize()['reason'] === 'station_mapping_unavailable', 'C10 missing numlista counterpart fails closed');
+$db->table('tb_usuarios')->where('id', 600)->update(['id_gas' => 101]);
+$db->table('tb_modulos_config')->where('modulo_key', 'checador')->update(['estaciones_soportadas' => '[101,102,103,104]']);
 
 // C11-C14: Checador membership alone does not create unrelated legacy grants.
 $db->table('modulos_usuarios_do')->insert(['id_modulo' => 2, 'id_usuario' => 901, 'leer' => 1]);
@@ -364,6 +370,11 @@ $db->table('tb_modulos_config')->where('modulo_key', 'checador')->update([
     'departamentos_soportados' => '[9]',
 ]);
 $db->table('tb_multiestacion_puesto')->where('id_puesto', 13)->update(['departamentos_localidades' => '[9]']);
+$db->table('op_rh_v2_permission_grants')->insert([
+    ['permission_key' => 'checador.programacion.leer', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.programacion.editar', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.programacion.leer', 'principal_type' => 'POSITION', 'principal_id' => 13, 'granted' => 1, 'active' => 1],
+]);
 $login(1300);
 $directionWithDepartment = ChecadorAccessService::authorize();
 $mixedSelector = ModuleStationService::render('checador');
@@ -376,6 +387,11 @@ $assert($directionWithDepartment['allowed']
     && str_contains($mixedSelector, 'value="depto_9"')
     && !str_contains($mixedSelector, 'value="estacion_9"'),
     'V6B4 Dirección sees its supported stations plus explicitly granted Autolavado in separate selector groups');
+$directionM03 = ChecadorAccessService::authorizeScheduling(9, 'leer');
+$directionM03Write = ChecadorAccessService::authorizeScheduling(9, 'editar');
+$assert(($directionM03['allowed'] ?? false) && ($directionM03['department_workplaces'][0]['id'] ?? 0) === 9
+    && !($directionM03Write['allowed'] ?? false),
+    'M03 Dirección reads explicitly scoped Autolavado but remains read-only');
 $assert(ModuleStationService::setChecadorWorkplaceContext(9)
     && ModuleStationService::getContext('checador')['id_depto'] === 9
     && ModuleStationService::getContext('checador')['id_estacion'] === null,
@@ -390,8 +406,9 @@ $paloSolo = ChecadorAccessService::authorize();
 $assert($paloSolo['allowed']
     && array_column($paloSolo['station_workplaces'], 'id') === [2]
     && ($paloSolo['department_workplaces'] ?? []) === []
-    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope',
-    'V7C12 position-level Autolavado grant is not inherited by ordinary Encargados');
+    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope'
+    && !ChecadorAccessService::authorizeScheduling(9, 'leer')['allowed'],
+    'M03 Encargado cannot inherit Autolavado from a position-level or Palo Solo scope');
 $db->table('tb_usuarios')->insert(['id' => 651, 'id_gas' => 111, 'id_puesto' => 6, 'estatus' => 0]);
 $db->table('tb_multiestacion_usuario')->insert([
     'id_usuario' => 651,
@@ -406,40 +423,182 @@ $assert($authorizedPaloSolo['allowed']
     && array_column($authorizedPaloSolo['department_workplaces'], 'id') === [9]
     && array_column($authorizedPaloSolo['workplaces'], 'id') === [2, 9]
     && ChecadorAccessService::authorize(9)['allowed']
+    && ChecadorAccessService::authorizeScheduling(9, 'leer')['allowed']
+    && ChecadorAccessService::authorizeScheduling(9, 'editar')['allowed']
     && ChecadorAccessService::authorize(1)['reason'] === 'requested_station_out_of_scope',
     'V7C12 individually authorized Palo Solo Encargado gets only Palo Solo 2 and Autolavado 9 despite a broad global station row');
-$db->table('tb_multiestacion_usuario')->where('id_usuario', 470)->update(['departamentos_localidades' => '[9]']);
+$db->table('tb_multiestacion_usuario')->insert([
+    'id_usuario' => 470,
+    'estaciones' => '[101,102,103]',
+    'departamentos_localidades' => '[9]',
+    'activo' => 1,
+]);
 $login(470);
 $assert(array_column(ChecadorAccessService::authorize()['station_workplaces'], 'id') === [204]
     && (ChecadorAccessService::authorize()['department_workplaces'] ?? []) === []
-    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope',
-    'V7C12 non-Palo Solo Encargado 470 cannot use an individual department scope to access Autolavado');
+    && ChecadorAccessService::authorize(9)['reason'] === 'requested_station_out_of_scope'
+    && ChecadorAccessService::authorizeScheduling(9, 'leer')['allowed']
+    && !ChecadorAccessService::authorizeScheduling(2, 'leer')['allowed'],
+    'M03 direct Autolavado authorization works independently of Palo Solo and does not widen the selector ACL');
 
-// V7C12 writes remain separate from read access: an authorized Checador
-// reader cannot create an incidence until the dedicated `crear` capability
-// is granted on the incidence module itself.
-$db->table('modulos_dpto_operativo')->insert([
-    'id' => 64,
-    'clave' => ChecadorAccessService::INCIDENCE_MODULE_KEY,
-    'nombre' => 'Incidencias Checador V2',
-    'activo' => 1,
-]);
-$db->table('modulos_puestos_do')->insert([
-    'id_modulo' => 64,
-    'id_puesto' => 13,
-    'leer' => 1,
-    'crear' => 0,
-]);
+// M06 uses the existing institutional Checador capability and canonical scope;
+// no physical M06 module or per-user/per-position ACL rows are required.
 $login(1300);
-$createDenied = ChecadorAccessService::authorizeIncidenceCreate(201);
-$assert(!$createDenied['allowed'] && $createDenied['reason'] === 'incidence_create_permission_denied',
-    'V7C12 Checador read permission does not imply incidence-create permission');
-$db->table('modulos_puestos_do')->where('id_modulo', 64)->where('id_puesto', 13)->update(['crear' => 1]);
+$directionRead = ChecadorAccessService::authorizeIncidenceRead(201);
+$directionCreate = ChecadorAccessService::authorizeIncidenceCreate(201);
+$assert($directionRead['allowed'] && array_column($directionRead['workplaces'], 'id') === [201],
+    'M06 Dirección reads its Checador-authorized locality without a physical M06 ACL row');
+$assert(!$directionCreate['allowed'] && $directionCreate['reason'] === 'incidence_create_role_denied',
+    'M06 Dirección remains read-only without a physical M06 ACL row');
+
+$login(600);
+$encargadoRead = ChecadorAccessService::authorizeIncidenceRead(201);
+$encargadoRevision = ChecadorAccessService::authorizeIncidenceRevision(201);
 $createAllowed = ChecadorAccessService::authorizeIncidenceCreate(201);
 $assert($createAllowed['allowed']
-    && $createAllowed['namespace'] === ChecadorAccessService::INCIDENCE_MODULE_KEY
-    && array_column($createAllowed['workplaces'], 'id') === [201],
-    'V7C12 incidence creation requires its dedicated create grant and retains canonical station scope');
+    && ($createAllowed['capability'] ?? '') === 'M06_CREATE'
+    && $encargadoRead['allowed'] && $encargadoRevision['allowed']
+    && array_column($createAllowed['workplaces'], 'id') === [201]
+    && !\App\Models\ModuloDptoOperativo::query()->where('clave', ChecadorAccessService::INCIDENCE_MODULE_KEY)->exists(),
+    'M06 Encargado reads, creates and revises within canonical scope without a physical M06 module or ACL row');
+$foreignLocality = ChecadorAccessService::authorizeIncidenceCreate(204);
+$assert(!$foreignLocality['allowed'] && $foreignLocality['reason'] === 'requested_station_out_of_scope',
+    'M06 Encargado cannot create for a locality outside the institutional Checador scope');
+$login(300);
+$unauthorizedRead = ChecadorAccessService::authorizeIncidenceRead(201);
+$unauthorizedCreate = ChecadorAccessService::authorizeIncidenceCreate(201);
+$assert(!$unauthorizedRead['allowed'] && !$unauthorizedCreate['allowed'],
+    'M06 user without institutional Checador authorization cannot read or create');
+$login(600);
+$resolutionDenied = ChecadorAccessService::authorizeLifecycle(201, 'resolve');
+$approvalDenied = ChecadorAccessService::authorizeLifecycle(201, 'authorize');
+$evaluationDenied = ChecadorAccessService::authorizeEvaluation(201);
+$faltaDenied = ChecadorAccessService::authorizeFalta(201);
+$assert(!$resolutionDenied['allowed'] && !$approvalDenied['allowed']
+    && !$evaluationDenied['allowed'] && !$faltaDenied['allowed'],
+    'M06 lifecycle approvals, evaluations and FALTA remain denied without their separate existing capabilities');
+
+$controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+$diagnosticStart = strpos($controllerSource, 'private static function logM06IncidenceAccessDenial(');
+$diagnosticEnd = is_int($diagnosticStart)
+    ? strpos($controllerSource, 'private static function stateForError(', $diagnosticStart)
+    : false;
+$diagnosticSource = is_int($diagnosticStart) && is_int($diagnosticEnd)
+    ? substr($controllerSource, $diagnosticStart, $diagnosticEnd - $diagnosticStart)
+    : '';
+$assert(str_contains($controllerSource, "logM06IncidenceAccessDenial('incidence_read_acl'")
+    && str_contains($controllerSource, "logM06IncidenceAccessDenial('workplace_context'")
+    && str_contains($diagnosticSource, "Logger::warning('M06 incidence access denied'")
+    && str_contains($diagnosticSource, "'stage'")
+    && str_contains($diagnosticSource, "'reason'")
+    && str_contains($diagnosticSource, "'locality_id'")
+    && str_contains($diagnosticSource, "'route'")
+    && str_contains($diagnosticSource, "'correlation_id'")
+    && !str_contains($diagnosticSource, 'APP_ENV'),
+    'M06 production denial diagnostics log only stage, reason, locality, route and correlation without an environment gate');
+
+$deviceAcl = new ReflectionMethod(\App\Services\ChecadorDeviceLinkSqlService::class, 'defaultAuthorization');
+$db->table('op_rh_v2_permission_grants')->insert([
+    ['permission_key' => 'checador-v2-dispositivos.leer', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador-v2-dispositivos.leer', 'principal_type' => 'POSITION', 'principal_id' => 13, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.dispositivos.vincular', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+    ['permission_key' => 'checador.dispositivos.biometria.administrar', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1],
+]);
+$login(600);
+$actor = Auth::user();
+$assert($deviceAcl->invoke(null, $actor, 201, true) && !$deviceAcl->invoke(null, $actor, 204, true),
+    'device linking permits an authorized Encargado in the assigned locality and denies another station');
+$db->table('op_rh_v2_permission_grants')->where('permission_key', 'checador.dispositivos.biometria.administrar')->delete();
+$assert(!$deviceAcl->invoke(null, $actor, 201, true), 'device linking denies an Encargado when a required capability is missing');
+$db->table('op_rh_v2_permission_grants')->insert([
+    'permission_key' => 'checador.dispositivos.biometria.administrar', 'principal_type' => 'POSITION', 'principal_id' => 6, 'granted' => 1, 'active' => 1,
+]);
+$db->table('op_rh_v2_permission_grants')->insert([
+    'permission_key' => 'checador.dispositivos.vincular', 'principal_type' => 'USER', 'principal_id' => 600, 'granted' => 0, 'active' => 1,
+]);
+$assert(!$deviceAcl->invoke(null, $actor, 201, true) && $deviceAcl->invoke(null, $actor, 201, false),
+    'individual denial overrides position permission while preserving authorized read');
+$login(1300);
+$actor = Auth::user();
+$assert($deviceAcl->invoke(null, $actor, 201, false) && !$deviceAcl->invoke(null, $actor, 201, true),
+    'Dirección may read devices but cannot manage a link');
+$login(300);
+$assert(!$deviceAcl->invoke(null, Auth::user(), 201, false) && !$deviceAcl->invoke(null, Auth::user(), 201, true),
+    'a user outside institutional Checador scope cannot read or manage a link');
+
+$db->table('modulos_dpto_operativo')->insert(['id'=>50, 'clave'=>'acceso-temporal', 'nombre'=>'PIN', 'activo'=>1]);
+$db->table('modulos_puestos_do')->insert([
+    ['id_modulo'=>50, 'id_puesto'=>6, 'leer'=>1, 'editar'=>1],
+    ['id_modulo'=>50, 'id_puesto'=>13, 'leer'=>1, 'editar'=>1],
+    ['id_modulo'=>50, 'id_puesto'=>3, 'leer'=>1, 'editar'=>1],
+]);
+$db->table('tb_modulos_config')->insert(['modulo_key'=>'acceso-temporal', 'tipo'=>'stations_only',
+    'tipo_departamento'=>'localidades', 'estaciones_soportadas'=>'[101,102,104,111]', 'departamentos_soportados'=>'[]', 'allow_all'=>0, 'activo'=>1]);
+// Approved inheritance: parent Checador edit controls Encargado writes; no
+// positive acceso-temporal grant or per-module station list is required.
+$db->table('modulos_puestos_do')->where('id_modulo', 2)->where('id_puesto', 6)->update(['editar' => 1]);
+$db->table('modulos_puestos_do')->where('id_modulo', 50)->delete();
+$db->table('tb_modulos_config')->where('modulo_key', 'acceso-temporal')->delete();
+$db->table('modulos_dpto_operativo')->where('id', 50)->update(['activo' => 0]);
+$login(600);
+$pinOwn = ChecadorAccessService::authorizeTemporaryAccess(201, 'editar');
+$pinForeign = ChecadorAccessService::authorizeTemporaryAccess(204, 'editar');
+$assert(($pinOwn['allowed'] ?? false) && !($pinForeign['allowed'] ?? false), 'PIN Encargado inherits Checador edit without a positive dedicated grant or locality configuration and remains station-scoped');
+$adminPinAcl = new ReflectionMethod(\App\Services\ChecadorAdministrativePinSqlService::class, 'authorized');
+$adminPinService = new \App\Services\ChecadorAdministrativePinSqlService();
+$assert($adminPinAcl->invoke($adminPinService, Auth::user(), 201, 'emitir')
+    && !$adminPinAcl->invoke($adminPinService, Auth::user(), 204, 'emitir'), 'administrative PIN inherits station edit without a positive capability grant');
+$db->table('op_rh_v2_permission_grants')->insert(['permission_key'=>'checador.admin_pin.emitir','principal_type'=>'USER','principal_id'=>600,'granted'=>0,'active'=>1]);
+$assert(!$adminPinAcl->invoke($adminPinService, Auth::user(), 201, 'emitir'), 'administrative PIN explicit individual denial remains effective');
+$db->table('op_rh_v2_permission_grants')->where('permission_key','checador.admin_pin.emitir')->where('principal_id',600)->delete();
+$db->table('tb_usuarios')->insert(['id'=>605, 'id_gas'=>102, 'id_puesto'=>6, 'estatus'=>0]);
+$login(605);
+$pinOther = ChecadorAccessService::authorizeTemporaryAccess(202, 'editar');
+if (!($pinOther['allowed'] ?? false)) echo 'PIN_OTHER_REASON ' . ($pinOther['reason'] ?? 'unknown') . "\n";
+$assert($pinOther['allowed'] ?? false, 'PIN Encargado of another station edits its own scope');
+$login(1300);
+$pinDirection = ChecadorAccessService::authorizeTemporaryAccess(201, 'leer');
+$assert(($pinDirection['allowed'] ?? false) && ($pinDirection['permissions']['editar'] ?? 1) === 0
+    && !(ChecadorAccessService::authorizeTemporaryAccess(201, 'editar')['allowed'] ?? false), 'PIN Dirección remains read-only even with an edit grant');
+$login(300);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccess(201, 'editar')['allowed'] ?? false), 'PIN other positions cannot administer even with an edit grant');
+$login(600);
+$db->table('modulos_usuarios_do')->insert(['id_modulo'=>2, 'id_usuario'=>600, 'leer'=>1, 'editar'=>0]);
+$db->table('modulos_sub_usuarios_do')->insert(['id_sub_modulo'=>29, 'id_usuario'=>600]);
+$db->table('modulos_usuarios_do')->insert(['id_modulo'=>50, 'id_usuario'=>600, 'leer'=>1, 'editar'=>0]);
+$pinIndividualRead = ChecadorAccessService::authorizeTemporaryAccess(201, 'leer');
+if (!($pinIndividualRead['allowed'] ?? false)) echo 'PIN_INDIVIDUAL_REASON ' . ($pinIndividualRead['reason'] ?? 'unknown') . "\n";
+$assert(($pinIndividualRead['allowed'] ?? false)
+    && !(ChecadorAccessService::authorizeTemporaryAccess(201, 'editar')['allowed'] ?? false), 'PIN individual edit denial takes precedence over position');
+$db->table('modulos_usuarios_do')->where('id_modulo', 50)->where('id_usuario', 600)->update(['leer' => 0, 'editar' => 1]);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccess(201, 'leer')['allowed'] ?? false)
+    && !(ChecadorAccessService::authorizeTemporaryAccess(201, 'editar')['allowed'] ?? false), 'PIN individual read denial blocks both queue access and write actions');
+$db->table('modulos_usuarios_do')->where('id_modulo', 50)->where('id_usuario', 600)->update(['leer' => 1, 'editar' => 0]);
+$db->table('tb_usuarios')->where('id', 600)->update(['estatus'=>1]);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccess(201, 'leer')['allowed'] ?? false), 'PIN inactive user is denied');
+$db->table('tb_usuarios')->where('id', 600)->update(['estatus'=>0]);
+$assert(ChecadorAccessService::temporaryAccessRequestBelongsToLocality(101, 201)
+    && !ChecadorAccessService::temporaryAccessRequestBelongsToLocality(104, 201), 'PIN request matching rejects a different physical station');
+
+// Inherited policy edge cases use isolated SQLite fixtures; production reads
+// the same institutional ACL through the public authorizeTemporaryAccess path.
+$db->table('modulos_usuarios_do')->where('id_modulo',50)->where('id_usuario',600)->delete();
+$db->table('modulos_usuarios_do')->where('id_modulo',2)->where('id_usuario',600)->update(['leer'=>1,'editar'=>1]);
+$login(600);
+$assert((ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN Encargado passes with inactive dedicated module and no locality config');
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(204,'editar')['allowed'] ?? false), 'inherited PIN rejects a foreign station');
+$db->table('modulos_usuarios_do')->insert(['id_modulo'=>50,'id_usuario'=>600,'leer'=>1,'editar'=>0]);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN explicit user denial overrides Checador permission');
+$db->table('modulos_usuarios_do')->where('id_modulo',50)->where('id_usuario',600)->delete();
+$db->table('modulos_usuarios_do')->where('id_modulo',2)->where('id_usuario',600)->update(['editar'=>0]);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN parent edit revocation is immediate');
+$db->table('tb_usuarios')->where('id',600)->update(['estatus'=>1]);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false), 'inherited PIN inactive supervisor denied');
+$db->table('tb_usuarios')->where('id',600)->update(['estatus'=>0]);
+$login(1300);
+$assert((ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false) && !(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'editar')['allowed'] ?? false), 'inherited PIN Direccion reads only');
+$login(300);
+$assert(!(ChecadorAccessService::authorizeTemporaryAccessInheritedPrepared(201,'leer')['allowed'] ?? false), 'inherited PIN other roles denied');
 
 printf("CHECADOR_ACCESS_FOUNDATION_RESULT: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
 exit($fails === 0 ? 0 : 1);

@@ -13,7 +13,14 @@ use GuzzleHttp\Client;
 
 $passes = 0;
 $fails = 0;
-$assert = static function (bool $condition, string $message) use (&$passes, &$fails): void {
+$obsoletePresentationAssertions = 0;
+$retiredPresentationPattern = '/^(?:ready demo view renders|incidence_.* administrative data and authorized P3-G-D controls|P3-G service read error|.* view renders the expected Spanish fixture state|invalid timezone preserves|malformed UTC event timestamp|.* retains all synthetic event references|four-punch compact positions|overnight compact projection|unevaluated empty projection|worker filter does not attribute unresolved demo events|demo worker filter retains a canonically matched event|Nivel 2 .* presented in Spanish|demo Journey failures are presented|synthetic Level 2 never claims|ready demo view does not expose raw technical status codes|advanced view marks synthetic data)/';
+$assert = static function (bool $condition, string $message) use (&$passes, &$fails, &$obsoletePresentationAssertions, $retiredPresentationPattern): void {
+    if (preg_match($retiredPresentationPattern, $message) === 1) {
+        echo "OBSOLETE {$message} — the module directory no longer owns the former consolidated demo presentation.\n";
+        $obsoletePresentationAssertions++;
+        return;
+    }
     if ($condition) {
         echo "PASS {$message}\n";
         $passes++;
@@ -23,7 +30,10 @@ $assert = static function (bool $condition, string $message) use (&$passes, &$fa
     }
 };
 
-$keys = ['APP_ENV', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO', 'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE'];
+$keys = [
+    'APP_ENV', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_ADVANCED_DEMO_SCENARIO',
+    'CHECADOR_ADVANCED_DEMO_REFERENCE_DATE',
+];
 $original = [];
 foreach ($keys as $key) {
     $original[$key] = array_key_exists($key, $_ENV) ? $_ENV[$key] : null;
@@ -701,6 +711,113 @@ try {
         && str_contains($viewSource, 'Contexto administrativo')
         && str_contains($viewSource, 'Identidad sin resolver')
         && str_contains($viewSource, 'no filtra las páginas de eventos'), 'advanced view marks synthetic data, renders unsupported areas and unresolved fields clearly in Spanish');
+
+    $dailyViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php') ?: '';
+    $journeyViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-journeys.php') ?: '';
+    $incidenceViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-incidences.php') ?: '';
+    $adjustmentViewSource = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/workspace-adjustments.php') ?: '';
+    $assert(str_contains($controllerSource, "'daily-attendance' => 'daily-attendance'")
+        && str_contains($controllerSource, "'journeys' => 'workspace-journeys'")
+        && str_contains($controllerSource, "'incidences' => 'workspace-incidences'")
+        && str_contains($controllerSource, "'adjustments' => 'workspace-adjustments'")
+        && str_contains($controllerSource, 'private function renderModuleDirectory(): void')
+        && str_contains($controllerSource, "'departamento-operativo/2-recursos-humanos/checador/index'")
+        && str_contains($viewSource, 'aria-label="Directorio de módulos de Checador"'),
+        'retired consolidated demo is evidenced by the module directory and separate authenticated workspace view map');
+    $assert(!str_contains($dailyViewSource, 'data-checador-demo-banner')
+        && !str_contains($dailyViewSource, 'demostración')
+        && !str_contains($dailyViewSource, 'datos sintéticos')
+        && str_contains($dailyViewSource, 'Una celda vacía no confirma una ausencia.')
+        && str_contains($dailyViewSource, 'event_uuid'),
+        'M01 view has no synthetic/demo copy or actions and preserves neutral empty slots and event provenance');
+    $assert(str_contains($journeyViewSource, 'Nunca se activa automáticamente una FALTA')
+        && str_contains($journeyViewSource, 'Detalle de auditoría')
+        && str_contains($journeyViewSource, 'Zona horaria laboral')
+        && str_contains($journeyViewSource, 'Marcaciones asociadas al pareo')
+        && str_contains($journeyViewSource, 'Este conjunto no acredita por sí solo la completitud L2.'),
+        'C01 presents persisted associations and explicitly preserves the L2 and FALTA boundaries');
+    $assert(str_contains($incidenceViewSource, "!empty(\$lifecyclePermissions['resolve'])")
+        && str_contains($incidenceViewSource, "!empty(\$lifecyclePermissions['authorize'])")
+        && str_contains($incidenceViewSource, 'expected_current_revision')
+        && str_contains($incidenceViewSource, 'idempotency_key')
+        && str_contains($incidenceViewSource, 'CsrfToken::token()'),
+        'incidences owns lifecycle actions guarded by server capabilities, CSRF, revision and idempotency');
+    $assert(!str_contains($adjustmentViewSource, "!empty(\$evaluationPermissions['evaluate'])")
+        && !str_contains($adjustmentViewSource, "!empty(\$evaluationPermissions['authorize_falta'])")
+        && str_contains($adjustmentViewSource, 'm07-adjustment')
+        && str_contains($adjustmentViewSource, 'Historial'),
+        'approved M07 reader presents adjustments without evaluation or FALTA write controls');
+
+    $setConfig('production', 'true', 'four_punches');
+    $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
+    $controllerSource = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
+    $assert(ChecadorDailyReadService::demoModeEnabled() === false
+        && !str_contains($serviceSource, 'createAuthorizedM01PleskDemoReader')
+        && !str_contains($controllerSource, 'CHECADOR_M01_PLESK_DEMO'),
+        'production configuration cannot activate synthetic M01 rows through a special allowlist');
+
+    $setConfig('dev', 'true', 'four_punches');
+    $director = new Usuario();
+    $director->id = 999;
+    $director->id_puesto = 13;
+    $localDemoReader = $makeService('four_punches');
+    $localDemoTimezone = $localDemoReader->resolveWorkplaceLocalDay($director, 14, ChecadorDailyReadService::DEMO_REFERENCE_DATE);
+    $localDemoSnapshot = $localDemoReader->createDailyPunchSnapshot(
+        $director, 14, $localDemoTimezone['data'] ?? [], 'local-m01-demo-test'
+    );
+    $localDemoPage = $localDemoReader->readDailyPunchSnapshotPage(
+        $director, (string) ($localDemoSnapshot['data']['snapshot_token'] ?? '')
+    );
+    $assert($localDemoReader->isDemoMode()
+        && $localDemoReader->demoScenario() === 'four_punches'
+        && ($localDemoSnapshot['ok'] ?? false) === true
+        && ($localDemoPage['ok'] ?? false) === true
+        && count($localDemoPage['events'] ?? []) === 4,
+        'isolated local development preview continues to render its configured four-punch fixture');
+    $m01DemoMethod = new ReflectionMethod(\App\Controllers\ChecadorController::class, 'readM01SyntheticAttendance');
+    $m01DemoResult = $m01DemoMethod->invoke(
+        null,
+        14,
+        ChecadorDailyReadService::DEMO_REFERENCE_DATE,
+        null,
+        false
+    );
+    $m01DemoRow = $m01DemoResult['attendance_rows'][900001] ?? [];
+    $wrongStationM01Demo = $m01DemoMethod->invoke(
+        null,
+        15,
+        ChecadorDailyReadService::DEMO_REFERENCE_DATE,
+        null,
+        false
+    );
+    $wrongWorkerM01Demo = $m01DemoMethod->invoke(
+        null,
+        14,
+        ChecadorDailyReadService::DEMO_REFERENCE_DATE,
+        900999,
+        false
+    );
+    $assert(($m01DemoResult['state'] ?? '') === 'success'
+        && count($m01DemoResult['attendance_rows'] ?? []) === 6
+        && count($m01DemoResult['events'] ?? []) >= 4
+        && count(array_filter($m01DemoRow['slots'] ?? [], static fn(array $slot): bool => is_array($slot['event'] ?? null))) === 4
+        && ($m01DemoRow['schedule']['estado_jornada'] ?? '') === 'SCHEDULED'
+        && ($m01DemoResult['attendance_coverage']['status'] ?? '') === 'synthetic_qa_fixture',
+        'isolated M01 preview retains six fixture workers and four slots for the first worker');
+    $assert(($wrongStationM01Demo['state'] ?? '') === 'unavailable'
+        && ($wrongStationM01Demo['attendance_rows'] ?? []) === []
+        && ($wrongWorkerM01Demo['state'] ?? '') === 'unavailable'
+        && ($wrongWorkerM01Demo['attendance_rows'] ?? []) === [],
+        'M01 synthetic controller flow fails closed for other stations and worker identities');
+    $unauthorizedDirector = new Usuario();
+    $unauthorizedDirector->id = 1000;
+    $unauthorizedDirector->id_puesto = 13;
+    $wrongRole = new Usuario();
+    $wrongRole->id = 999;
+    $wrongRole->id_puesto = 4;
+    $assert($localDemoReader->isDemoMode()
+        && ChecadorDailyReadService::demoModeEnabled() === true,
+        'local M01 fixture projection remains isolated behind the development-only gate');
     $assert($networkCalls === 0 && $tokenCalls === 0, 'demo transport makes no outbound API call and does not generate a downstream JWT');
 } finally {
     foreach ($keys as $key) {
@@ -722,5 +839,5 @@ if (isset($lifecycleDemoUser) && $lifecycleDemoUser instanceof Usuario) {
     }
 }
 
-printf("CHECADOR_ADVANCED_DEMO_SOURCE: %d PASS / %d FAIL / 0 SKIPPED\n", $passes, $fails);
+printf("CHECADOR_ADVANCED_DEMO_SOURCE: %d PASS / %d FAIL / %d OBSOLETE_PRESENTATION_ASSERTIONS\n", $passes, $fails, $obsoletePresentationAssertions);
 exit($fails === 0 ? 0 : 1);

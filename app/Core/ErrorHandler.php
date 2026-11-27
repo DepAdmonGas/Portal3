@@ -2,39 +2,23 @@
 namespace App\Core;
 
 use Throwable;
-use Whoops\Run;
-use Whoops\Handler\PrettyPageHandler;
-use Whoops\Handler\JsonResponseHandler;
 
 class ErrorHandler
 {
-    public static function register()
+    private static bool $responseSent = false;
+
+    public static function register(): void
     {
-        // SECURITY: Usar valor por defecto 'prod' si no existe APP_ENV (Vulnerabilidad #10)
-        $appEnv = $_ENV['APP_ENV'] ?? 'prod';
-        
-        if ($appEnv === 'dev') {
-            // --- Modo desarrollo: página bonita de error ---
-            $whoops = new Run;
+        // Development errors must use the same safe response as production.
+        // Whoops' debug page includes request/session/environment details.
+        ini_set('display_errors', '0');
+        ini_set('display_startup_errors', '0');
+        ini_set('html_errors', '0');
+        error_reporting(E_ALL);
 
-            // Handler visual (HTML)
-            $pageHandler = new PrettyPageHandler();
-            $pageHandler->setPageTitle("🚧 Error en " . ($_ENV['APP_NAME'] ?? 'Portal3'));
-
-            // Si es API (acepta JSON), usa el handler JSON automáticamente
-            if (self::isJsonRequest()) {
-                $whoops->pushHandler(new JsonResponseHandler());
-            } else {
-                $whoops->pushHandler($pageHandler);
-            }
-
-            $whoops->register();
-        } else {
-            // --- Modo producción: solo logs, nunca exponer detalles ---
-            set_error_handler([self::class, 'handleError']);
-            set_exception_handler([self::class, 'handleException']);
-            register_shutdown_function([self::class, 'handleShutdown']);
-        }
+        set_error_handler([self::class, 'handleError']);
+        set_exception_handler([self::class, 'handleException']);
+        register_shutdown_function([self::class, 'handleShutdown']);
     }
 
     private static function isJsonRequest(): bool
@@ -52,41 +36,79 @@ class ErrorHandler
 
     public static function handleError($errno, $errstr, $errfile, $errline)
     {
-        Logger::error('PHP runtime error', [
-            'error_code' => $errno,
-            'file' => $errfile,
-            'line' => $errline,
-        ]);
-        return false;
+        if (!(error_reporting() & $errno)) {
+            return false;
+        }
+
+        try {
+            Logger::error('PHP runtime error', [
+                'error_code' => $errno,
+                'file' => basename((string) $errfile),
+                'line' => $errline,
+            ]);
+        } catch (Throwable) {
+            error_log('Portal3 could not write a PHP runtime diagnostic.');
+        }
+
+        // Consume the error so PHP's native handler cannot print its details.
+        return true;
     }
 
     public static function handleException(Throwable $exception)
     {
-        Logger::critical($exception);
-
-        http_response_code(500);
-        
-        // Si es solicitud JSON, responder con formato consistente
-        if (self::isJsonRequest()) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Ha ocurrido un error. Contacte al administrador.'
-            ]);
-        } else {
-            echo "<h1>Error interno del servidor</h1>";
+        try {
+            Logger::critical($exception);
+        } catch (Throwable) {
+            error_log('Portal3 could not write an unhandled exception diagnostic.');
         }
+        self::sendGenericResponse();
     }
 
     public static function handleShutdown()
     {
         $error = error_get_last();
-        if ($error !== null) {
-            Logger::critical('Fatal runtime error', [
-                'error_type' => $error['type'],
-                'file' => $error['file'],
-                'line' => $error['line'],
-            ]);
+        $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
+        if (is_array($error) && in_array((int) ($error['type'] ?? 0), $fatalTypes, true)) {
+            try {
+                Logger::critical('Fatal runtime error', [
+                    'error_type' => $error['type'],
+                    'file' => basename((string) ($error['file'] ?? '')),
+                    'line' => $error['line'],
+                ]);
+            } catch (Throwable) {
+                error_log('Portal3 could not write a fatal runtime diagnostic.');
+            }
+            self::sendGenericResponse();
         }
+    }
+
+    private static function sendGenericResponse(): void
+    {
+        if (self::$responseSent) {
+            return;
+        }
+        self::$responseSent = true;
+
+        while (ob_get_level() > 0) {
+            if (!@ob_end_clean()) {
+                break;
+            }
+        }
+
+        if (headers_sent()) {
+            return;
+        }
+
+        http_response_code(500);
+        if (self::isJsonRequest()) {
+            header('Content-Type: application/json; charset=utf-8');
+            header('X-Content-Type-Options: nosniff');
+            echo '{"success":false,"message":"Ha ocurrido un error. Contacte al administrador."}';
+            return;
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+        echo '<!doctype html><html lang="es"><meta charset="utf-8"><title>Error</title><h1>Error interno del servidor</h1><p>No fue posible completar la solicitud.</p></html>';
     }
 }

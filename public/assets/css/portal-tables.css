@@ -118,6 +118,25 @@ body table > tbody > tr.selected .dropdown [data-bs-toggle="dropdown"] .ti {
   color: var(--portal-table-selection-color) !important;
 }
 
+/* M01 status chips keep the theme's text contrast on their own subtle background. */
+html[data-bs-theme] body table.table#checador-daily-attendance-table > tbody > tr.selected .checador-attendance-status-badge,
+html[data-bs-theme] body table.table#checador-daily-attendance-table > tbody > tr.selected .checador-attendance-status-badge .ti {
+  color: var(--bs-emphasis-color) !important;
+  -webkit-text-fill-color: var(--bs-emphasis-color) !important;
+}
+
+html[data-bs-theme] body table.table#checador-role-comodines-canonical-table > tbody > tr.selected .checador-status-badge,
+html[data-bs-theme] body table.table#checador-role-comodines-canonical-table > tbody > tr.selected .checador-status-badge .ti,
+html[data-bs-theme] body table.table#m04-template-table > tbody > tr.selected .checador-status-badge,
+html[data-bs-theme] body table.table#m04-template-table > tbody > tr.selected .checador-status-badge .ti,
+html[data-bs-theme] body table.table#m06-incidences-table > tbody > tr.selected .checador-status-badge,
+html[data-bs-theme] body table.table#m06-incidences-table > tbody > tr.selected .checador-status-badge .ti,
+html[data-bs-theme] body table.table#checador-punch-table > tbody > tr.selected .checador-status-badge,
+html[data-bs-theme] body table.table#checador-punch-table > tbody > tr.selected .checador-status-badge .ti {
+  color: var(--bs-emphasis-color) !important;
+  -webkit-text-fill-color: var(--bs-emphasis-color) !important;
+}
+
 .impuestos-seleccionable > tbody > tr.selected > * *,
 .clientes-seleccionable > tbody > tr.selected > * *,
 .clientes-lista-seleccionable > tbody > tr.selected > * * {

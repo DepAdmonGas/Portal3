@@ -7,6 +7,7 @@ namespace App\Core;
 use Throwable;
 use Monolog\Logger as MonoLogger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Handler\ErrorLogHandler;
 use Monolog\Formatter\LineFormatter;
 
 final class Logger
@@ -48,26 +49,30 @@ final class Logger
                 $logPath = dirname(__DIR__, 2) . '/' . ltrim($logPath, '/');
             }
 
-            // Crear directorio si no existe
+            // Crear directorio si no existe. En instalaciones donde el proceso
+            // web no puede escribir dentro del checkout, usar el log de PHP
+            // para que un fallo de logging no interrumpa la petición.
             $directory = dirname($logPath);
 
-            if (!is_dir($directory)) {
-                mkdir($directory, 0775, true);
+            if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+                $handler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, MonoLogger::DEBUG);
+            } elseif (!is_writable($directory) || (file_exists($logPath) && !is_writable($logPath))) {
+                $handler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, MonoLogger::DEBUG);
+            } else {
+                $handler = new StreamHandler(
+                    $logPath,
+                    MonoLogger::DEBUG
+                );
+
+                $handler->setFormatter(
+                    new LineFormatter(
+                        "[%datetime%] %level_name%: %message% %context%\n",
+                        "Y-m-d H:i:s",
+                        false,
+                        true
+                    )
+                );
             }
-
-            $handler = new StreamHandler(
-                $logPath,
-                MonoLogger::DEBUG
-            );
-
-            $handler->setFormatter(
-                new LineFormatter(
-                    "[%datetime%] %level_name%: %message% %context%\n",
-                    "Y-m-d H:i:s",
-                    false,
-                    true
-                )
-            );
 
             $logger->pushHandler($handler);
 

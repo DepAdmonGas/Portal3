@@ -6,11 +6,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var filterModal = document.getElementById('punch-report-filter-modal');
     var filterForm = document.getElementById('punch-report-filter-form');
     var workerFilter = document.getElementById('punch-report-worker');
+    var periodWorkerValue = document.getElementById('punch-report-worker-value');
 
     if (workerFilter && window.jQuery && jQuery.fn && jQuery.fn.select2
         && !jQuery(workerFilter).hasClass('select2-hidden-accessible')) {
         jQuery(workerFilter).select2({
             width: '100%',
+            dropdownParent: filterModal ? jQuery(filterModal) : jQuery(document.body),
             dropdownCssClass: 'punch-report-worker-dropdown',
             placeholder: 'Todos los colaboradores',
             allowClear: true,
@@ -67,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
         syncPeriodControls();
         periodSelect.addEventListener('change', syncPeriodControls);
         periodForm.addEventListener('submit', function (event) {
+            if (periodWorkerValue && workerFilter) periodWorkerValue.value = workerFilter.value;
             if (periodSelect.value === 'custom') {
                 event.preventDefault();
                 openCustomRange();
@@ -79,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var monthInput = document.getElementById('punch-report-month');
             var year = Number(yearInput && yearInput.value);
             var month = Number(monthInput && monthInput.value);
-            if (!Number.isInteger(year) || year < 2000 || year > new Date().getUTCFullYear()
+            if (!Number.isInteger(year) || year < 2000 || year > 9999
                 || !Number.isInteger(month) || month < 1 || month > 12) {
                 if (yearInput && typeof yearInput.reportValidity === 'function') yearInput.reportValidity();
                 return;
@@ -101,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var clearFiltersButton = filterForm.querySelector('[data-checador-clear-filters]');
         if (clearFiltersButton) {
             clearFiltersButton.addEventListener('click', function () {
-                ['from_date', 'to_date', 'worker_id', 'capture_method', 'processing_status'].forEach(function (name) {
+                ['from_date', 'to_date', 'worker_id', 'capture_method', 'processing_status', 'device_id'].forEach(function (name) {
                     var input = filterForm.querySelector('[name="' + name + '"]');
                     if (input) input.value = '';
                 });
@@ -193,6 +196,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return parts ? parts.date : 'No disponible';
     }
 
+    function rowLocalDate(row) {
+        var local = row && row.local_capture || {};
+        return escapeHtml(local.status === 'resolved' ? formatUtcDate(local.local_datetime) : 'No disponible');
+    }
+
     function showRequestError() {
         if (errorElement) errorElement.classList.remove('d-none');
         if (tableWrap) tableWrap.classList.add('d-none');
@@ -256,9 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
             statusElement.textContent = '';
             var badge = document.createElement('span');
             var knownBadgeClasses = ['text-bg-info', 'text-bg-warning', 'text-bg-danger', 'text-bg-secondary'];
-            badge.className = 'badge ' + (knownBadgeClasses.indexOf(row.processing_status_class) !== -1
-                ? row.processing_status_class
-                : 'text-bg-secondary');
+            badge.className = 'badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis ' + ({'text-bg-info':'bg-info-subtle border-info-subtle','text-bg-warning':'bg-warning-subtle border-warning-subtle','text-bg-danger':'bg-danger-subtle border-danger-subtle','text-bg-secondary':'bg-body-secondary'}[row.processing_status_class] || 'bg-body-secondary');
             badge.textContent = row.processing_status || 'Estado no disponible';
             statusElement.appendChild(badge);
             if (row.processing_explanation) {
@@ -311,6 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 request.worker_id = workerFilter ? workerFilter.value : '';
                 request.capture_method = document.getElementById('capture_method').value;
                 request.processing_status = document.getElementById('processing_status').value;
+                request.device_id = document.getElementById('device_id').value;
             },
             dataSrc: function (json) {
                 if (!json || !Array.isArray(json.data)
@@ -339,21 +346,23 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             {
                 data: 'event_time_display',
-                title: 'Fecha (UTC)',
+                title: 'Fecha local de captura',
                 className: 'align-middle',
                 render: function (value, type) {
                     if (type !== 'display') return value;
-                    return escapeHtml(formatUtcDate(value));
+                    return rowLocalDate(arguments[2]);
                 }
             },
             {
                 data: 'event_time_display',
-                title: 'Hora (UTC)',
+                title: 'Hora local de captura',
                 className: 'align-middle',
                 render: function (value, type, row) {
                     if (type !== 'display') return value;
-                    var html = '<span>' + escapeHtml(formatUtcTime12Hour(value)) + '</span>';
-                    if (!row.occurrence_available) html += '<span class="d-block small text-muted">Hora no determinada; se muestra la fecha y hora de recepción.</span>';
+                    var local = row.local_capture || {};
+                    var html = '<span>' + escapeHtml(local.status === 'resolved' ? formatUtcTime12Hour(local.local_datetime) : 'No disponible') + '</span>';
+                    if (local.status === 'resolved') html += '<span class="d-block small text-muted">' + escapeHtml(local.timezone + ' ' + local.offset) + '</span>';
+                    if (!row.occurrence_available) html += '<span class="d-block small text-muted">Hora de captura no determinada; consulta la recepción en el detalle.</span>';
                     return html;
                 }
             },
@@ -385,7 +394,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     var badgeClass = classes.indexOf(row.processing_status_class) !== -1
                         ? row.processing_status_class
                         : 'text-bg-secondary';
-                    return '<span class="badge ' + badgeClass + '">' + escapeHtml(row.processing_status) + '</span>';
+                    var labels = {entry:'Entrada', exit:'Salida', surplus:'Marcación adicional', unmatched:'Sin pareja', ambiguous:'Clasificación ambigua', pending:'Pendiente de clasificación', unavailable:'Clasificación no disponible'};
+                    var classification = labels[row.j1_classification] || labels.unavailable;
+                    return '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis ' + ({'text-bg-info':'bg-info-subtle border-info-subtle','text-bg-warning':'bg-warning-subtle border-warning-subtle','text-bg-danger':'bg-danger-subtle border-danger-subtle','text-bg-secondary':'bg-body-secondary'}[badgeClass] || 'bg-body-secondary') + '"><i class="ti ti-info-circle" aria-hidden="true"></i>' + escapeHtml(row.processing_status) + '</span><span class="d-block small">' + escapeHtml(classification) + '</span>';
                 }
             },
             {

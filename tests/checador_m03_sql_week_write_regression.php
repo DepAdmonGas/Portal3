@@ -1,0 +1,314 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Models\Usuario;
+use App\Services\ChecadorWeeklyScheduleSqlWriteService;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Schema\Blueprint;
+
+$passes = 0; $fails = 0;
+$assert = static function (bool $ok, string $message) use (&$passes, &$fails): void {
+    echo ($ok ? 'PASS ' : 'FAIL ') . $message . "\n";
+    $ok ? $passes++ : $fails++;
+};
+$capsule = new Capsule();
+$capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
+$capsule->setAsGlobal(); $capsule->bootEloquent();
+
+Capsule::schema()->create('op_rh_personal', static function (Blueprint $t): void { $t->increments('id'); $t->integer('estado'); });
+Capsule::schema()->create('op_rh_v2_turnos_plantillas', static function (Blueprint $t): void {
+    $t->increments('id'); $t->string('clave'); $t->integer('version'); $t->string('nombre');
+    $t->string('tipo_turno'); $t->string('scope'); $t->integer('id_estacion')->nullable(); $t->integer('es_activo');
+});
+Capsule::schema()->create('op_rh_v2_turnos_segmentos', static function (Blueprint $t): void {
+    $t->increments('id'); $t->integer('id_plantilla'); $t->integer('ordinal'); $t->string('tipo_segmento');
+    $t->string('hora_inicio_local'); $t->string('hora_fin_local'); $t->integer('dia_offset_inicio'); $t->integer('dia_offset_fin');
+});
+Capsule::schema()->create('op_rh_v2_turnos_asignaciones', static function (Blueprint $t): void {
+    $t->increments('id'); $t->integer('id_personal'); $t->integer('id_estacion'); $t->integer('id_plantilla')->nullable();
+    $t->string('tipo_asignacion'); $t->string('dia_semana'); $t->date('valido_desde'); $t->date('valido_hasta')->nullable();
+    $t->integer('es_activo'); $t->dateTime('creado_at'); $t->dateTime('registrado_at_utc');
+    $t->integer('creado_por_usuario_id')->nullable(); $t->integer('actualizado_por_usuario_id')->nullable(); $t->string('motivo')->nullable();
+});
+Capsule::schema()->create('op_rh_v2_turnos_audit_log', static function (Blueprint $t): void {
+    $t->increments('id'); $t->string('entity_type'); $t->integer('entity_id'); $t->string('operacion');
+    $t->integer('id_usuario_actor'); $t->integer('id_estacion'); $t->integer('id_personal')->nullable();
+    $t->string('tipo_asignacion')->nullable(); $t->date('valido_desde')->nullable(); $t->date('valido_hasta')->nullable();
+    $t->integer('id_plantilla')->nullable(); $t->integer('version_plantilla')->nullable(); $t->text('detalle_json')->nullable();
+    $t->dateTime('recorded_at_utc');
+});
+Capsule::schema()->create('op_rh_v2_localidades_zonas_horarias', static function (Blueprint $t): void {
+    $t->increments('id'); $t->integer('id_localidad'); $t->date('valido_desde');
+    $t->date('valido_hasta')->nullable(); $t->string('timezone_iana', 64);
+});
+Capsule::schema()->create('op_rh_v2_jornadas_programadas', static function (Blueprint $t): void {
+    $t->increments('id'); $t->integer('id_personal'); $t->integer('id_estacion'); $t->date('fecha_jornada_local');
+});
+Capsule::table('op_rh_personal')->insert(array_map(static fn(int $id): array => ['id' => $id, 'estado' => 1], [40, 41, 42, 43, 44, 45, 46, 47, 478, 558]));
+Capsule::table('op_rh_v2_localidades_zonas_horarias')->insert([
+    'id_localidad' => 9, 'valido_desde' => '2020-01-01', 'valido_hasta' => null,
+    'timezone_iana' => 'America/Mexico_City',
+]);
+Capsule::table('op_rh_v2_turnos_plantillas')->insert([
+    ['id' => 10, 'clave' => 'LOCAL10', 'version' => 2, 'nombre' => 'Tarde', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+    ['id' => 20, 'clave' => 'FOREIGN', 'version' => 1, 'nombre' => 'Fuera', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 2, 'es_activo' => 1],
+    ['id' => 30, 'clave' => 'TODAY-FUTURE', 'version' => 1, 'nombre' => 'Prueba hoy 11:00', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+    ['id' => 31, 'clave' => 'TODAY-PAST', 'version' => 1, 'nombre' => 'Prueba hoy 08:00', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+    ['id' => 32, 'clave' => 'TODAY-0900-1800', 'version' => 1, 'nombre' => 'Asistente 09:00–18:00', 'tipo_turno' => 'REGULAR', 'scope' => 'STATION', 'id_estacion' => 9, 'es_activo' => 1],
+]);
+Capsule::table('op_rh_v2_turnos_segmentos')->insert([
+    ['id_plantilla' => 10, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '22:00:00', 'hora_fin_local' => '06:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 1],
+    ['id_plantilla' => 20, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00', 'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
+    ['id_plantilla' => 30, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '11:00:00', 'hora_fin_local' => '19:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
+    ['id_plantilla' => 31, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '08:00:00', 'hora_fin_local' => '16:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
+    ['id_plantilla' => 32, 'ordinal' => 1, 'tipo_segmento' => 'WORK', 'hora_inicio_local' => '09:00:00', 'hora_fin_local' => '18:00:00', 'dia_offset_inicio' => 0, 'dia_offset_fin' => 0],
+]);
+putenv('APP_ENV=dev');
+putenv('CHECADOR_ADVANCED_DEMO_ENABLED=0');
+putenv('CHECADOR_M03_SQL_WRITES_ENABLED=0');
+putenv('CHECADOR_M03_API_WRITER_DISABLED=0');
+putenv('CHECADOR_M03_SCHEMA_PREFLIGHT_OK=0');
+$membership = static fn(int $workerId, int $workplaceId, string $from, string $to): array =>
+    ($workplaceId === 9 && in_array($workerId, [40, 41, 42, 43, 44, 45, 46, 47, 478, 558], true)
+        && !($workerId === 44 && $from === '2026-11-25'))
+        ? ['ok' => true, 'valid_to' => null] : ['ok' => false, 'error' => 'membership_unverified'];
+$service = new ChecadorWeeklyScheduleSqlWriteService(
+    static fn(Usuario $actor, int $place): bool => $actor->id === 77 && $place === 9,
+    $membership,
+    static fn(string $lock): bool => true,
+    static fn(): \DateTimeImmutable => new \DateTimeImmutable('2026-11-18T12:00:00Z', new \DateTimeZone('UTC'))
+);
+$actor = new Usuario(); $actor->id = 77;
+
+$restInput = ['workplace_id' => 9, 'worker_id' => 40, 'week_start' => '2026-11-23', 'target_date' => '2026-11-23',
+    'effective_start_date' => '2026-11-23', 'tipo_asignacion' => 'HABITUAL', 'template_id' => 'REST',
+    'idempotency_key' => 'rest-key-0000000000000001'];
+$rest = $service->create($actor, $restInput);
+$assert(($rest['ok'] ?? false) && array_key_exists('id_plantilla', $rest['assignment'] ?? []) && $rest['assignment']['id_plantilla'] === null,
+    'explicit rest uses the real nullable id_plantilla representation and SQL readback');
+$restAudit = Capsule::table('op_rh_v2_turnos_audit_log')->where('entity_id', $rest['assignment']['id'] ?? 0)->first();
+$restAuditDetail = is_object($restAudit) ? json_decode((string) $restAudit->detalle_json, true) : null;
+$assert(is_array($restAuditDetail)
+    && hash_equals(hash('sha256', $restInput['idempotency_key']), (string) ($restAuditDetail['idempotency_key_hash'] ?? ''))
+    && preg_match('/\A[a-f0-9]{64}\z/', (string) ($restAuditDetail['payload_fingerprint'] ?? '')) === 1,
+    'idempotency key hash and payload fingerprint persist durably in the same audit record as the assignment');
+$replay = $service->create($actor, $restInput);
+$assert(($replay['ok'] ?? false) && ($replay['replayed'] ?? false) && $replay['assignment']['id'] === $rest['assignment']['id'],
+    'same idempotency key replays the persisted assignment without duplication');
+$conflictKey = $restInput; $conflictKey['motivo'] = 'different payload';
+$assert(($service->create($actor, $conflictKey)['error'] ?? '') === 'idempotency_conflict',
+    'same idempotency key with a different payload is rejected');
+
+$scheduled = $service->create($actor, $restInput + []);
+$assert(($scheduled['ok'] ?? false) && count(Capsule::table('op_rh_v2_turnos_audit_log')->get()) === 1,
+    'duplicate create cannot create a second row or audit event');
+$turnInput = ['workplace_id' => 9, 'worker_id' => 41, 'week_start' => '2026-11-23', 'target_date' => '2026-11-23',
+    'effective_start_date' => '2026-11-23', 'tipo_asignacion' => 'HABITUAL', 'template_id' => '10',
+    'idempotency_key' => 'night-key-0000000000000001'];
+$turn = $service->create($actor, $turnInput);
+$assert(($turn['ok'] ?? false) && ($turn['assignment']['id_plantilla'] ?? 0) === 10,
+    'station-local overnight template is accepted only with persisted WORK segments');
+$foreign = $turnInput; $foreign['worker_id'] = 40; $foreign['week_start'] = '2026-11-30'; $foreign['target_date'] = '2026-12-01'; $foreign['effective_start_date'] = '2026-12-01'; $foreign['template_id'] = '20'; $foreign['idempotency_key'] = 'foreign-key-000000000000001';
+$assert(($service->create($actor, $foreign)['error'] ?? '') === 'template_not_allowed',
+    'template from Palo Solo cannot be assigned to Autolavado');
+
+$closeInput = ['workplace_id' => 9, 'worker_id' => 41, 'assignment_id' => $turn['assignment']['id'],
+    'effective_close_date' => '2026-11-30', 'expected_valido_desde' => '2026-11-23', 'expected_valido_hasta' => null,
+    'idempotency_key' => 'close-key-0000000000000001'];
+$closed = $service->close($actor, $closeInput);
+$assert(($closed['ok'] ?? false) && (int) $closed['assignment']['es_activo'] === 0
+    && $closed['assignment']['valido_hasta'] === '2026-11-30', 'close updates validity, audits, and confirms its SQL readback');
+
+$replaceSource = $service->create($actor, array_replace($turnInput, ['worker_id' => 41, 'week_start' => '2026-12-07', 'target_date' => '2026-12-07', 'effective_start_date' => '2026-12-07', 'idempotency_key' => 'source-key-000000000000001']));
+$replaceInput = ['workplace_id' => 9, 'worker_id' => 41, 'assignment_id' => $replaceSource['assignment']['id'] ?? 0,
+    'effective_close_date' => '2026-12-14', 'expected_valido_desde' => '2026-12-07', 'expected_valido_hasta' => null,
+    'replacement_valido_hasta' => '2026-12-21', 'replacement_template_id' => 'REST',
+    'idempotency_key' => 'replace-key-000000000000001'];
+$replaced = $service->replace($actor, $replaceInput);
+$assert(($replaced['ok'] ?? false) && (int) $replaced['assignment']['es_activo'] === 1
+    && $replaced['assignment']['valido_desde'] === '2026-12-14', 'replace is atomic and returns the persisted replacement readback');
+$replaceAuditCount = Capsule::table('op_rh_v2_turnos_audit_log')->count();
+$replaceReplay = $service->replace($actor, $replaceInput);
+$assert(($replaceReplay['ok'] ?? false) && ($replaceReplay['replayed'] ?? false)
+    && ($replaceReplay['assignment']['id'] ?? 0) === ($replaced['assignment']['id'] ?? -1)
+    && Capsule::table('op_rh_v2_turnos_audit_log')->count() === $replaceAuditCount,
+    'replace idempotency replays the durable successor audit snapshot without a second close or assignment');
+
+$thursdayDates = array_map(static fn(string $day): ?string => App\Services\ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter($day, '2026-11-19'),
+    ['JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES']);
+$assert($thursdayDates === ['2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22', '2026-11-23', '2026-11-24', '2026-11-25'],
+    'Thursday 2026-11-19 maps to the seven consecutive weekday occurrences through Wednesday 2026-11-25');
+$patternSchedule = ['JUEVES' => '10', 'VIERNES' => 'REST', 'SABADO' => '10', 'DOMINGO' => 'REST',
+    'LUNES' => '10', 'MARTES' => '10', 'MIERCOLES' => '10'];
+$patternInput = ['workplace_id' => 9, 'worker_id' => 42, 'week_start' => '2026-11-16',
+    'effective_start_date' => '2026-11-19', 'schedule' => $patternSchedule,
+    'idempotency_key' => 'habitual-pattern-thu-000001'];
+$pattern = $service->createHabitualPattern($actor, $patternInput);
+$patternRows = Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 42)->where('id_estacion', 9)
+    ->where('tipo_asignacion', 'HABITUAL')->orderBy('valido_desde')->get()->map(static fn($row): array => (array) $row)->all();
+$assert(($pattern['ok'] ?? false) && count($pattern['assignments'] ?? []) === 7 && count($patternRows) === 7
+    && array_column($patternRows, 'valido_desde') === $thursdayDates
+    && count(Capsule::table('op_rh_v2_turnos_audit_log')->where('id_personal', 42)->get()) === 7,
+    'habitual pattern from Thursday creates and reads back all seven dates and audits inside one batch');
+$patternAuditCount = Capsule::table('op_rh_v2_turnos_audit_log')->where('id_personal', 42)->count();
+$patternReplay = $service->createHabitualPattern($actor, $patternInput);
+$assert(($patternReplay['ok'] ?? false) && ($patternReplay['replayed'] ?? false)
+    && count($patternReplay['assignments'] ?? []) === 7
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 42)->count() === 7
+    && Capsule::table('op_rh_v2_turnos_audit_log')->where('id_personal', 42)->count() === $patternAuditCount,
+    'weekly pattern idempotency replays seven persisted rows without duplicates');
+$novemberWeek = array_map(static fn(string $day): ?string => App\Services\ChecadorWeeklyScheduleService::firstWeekdayOnOrAfter($day, '2026-11-23'),
+    ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO']);
+$fullWeek = $service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 43, 'week_start' => '2026-11-23', 'effective_start_date' => '2026-11-23',
+    'schedule' => array_fill_keys(['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'], '10'),
+    'idempotency_key' => 'habitual-pattern-mon-000001',
+]);
+$fullWeekDates = Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 43)->orderBy('valido_desde')->pluck('valido_desde')->all();
+$assert($novemberWeek === ['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27', '2026-11-28', '2026-11-29']
+    && ($fullWeek['ok'] ?? false) && count($fullWeekDates) === 7 && $fullWeekDates === $novemberWeek,
+    'full Monday 2026-11-23 pattern writes and reads back all dates through Sunday 2026-11-29');
+
+$sameDayService = new ChecadorWeeklyScheduleSqlWriteService(
+    static fn(Usuario $actor, int $place): bool => $actor->id === 77 && $place === 9,
+    $membership,
+    static fn(string $lock): bool => true,
+    static fn(): \DateTimeImmutable => new \DateTimeImmutable('2026-11-24T15:00:00Z', new \DateTimeZone('UTC'))
+);
+$sameDayInput = ['workplace_id' => 9, 'worker_id' => 558, 'week_start' => '2026-11-23', 'target_date' => '2026-11-24',
+    'effective_start_date' => '', 'tipo_asignacion' => 'TEMPORAL', 'template_id' => '30',
+    'idempotency_key' => 'same-day-future-shift-558'];
+$sameDay = $sameDayService->create($actor, $sameDayInput);
+$assert(($sameDay['ok'] ?? false) && (int) ($sameDay['assignment']['id_personal'] ?? 0) === 558
+    && ($sameDay['assignment']['valido_desde'] ?? '') === '2026-11-24'
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id', $sameDay['assignment']['id'] ?? 0)->exists(),
+    'same-day assignment for worker 558 persists and reads back even though the selected turn starts later that morning');
+$sameDayAudit = Capsule::table('op_rh_v2_turnos_audit_log')->where('entity_id', $sameDay['assignment']['id'] ?? 0)->first();
+$sameDayAuditDetail = is_object($sameDayAudit) ? json_decode((string) $sameDayAudit->detalle_json, true) : null;
+$assert(is_object($sameDayAudit) && (int) $sameDayAudit->id_usuario_actor === 77
+    && trim((string) $sameDayAudit->recorded_at_utc) !== ''
+    && ($sameDayAuditDetail['writer'] ?? '') === 'portal3_m03_sql_v1',
+    'same-day assignment audit persists the authenticated actor and UTC creation timestamp');
+
+$beforePastDateRows = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$pastDate = array_replace($sameDayInput, [
+    'worker_id' => 47, 'target_date' => '2026-11-23', 'effective_start_date' => '',
+    'idempotency_key' => 'reject-date-before-local-today-0001',
+]);
+$pastDateResult = $sameDayService->create($actor, $pastDate);
+$assert(($pastDateResult['error'] ?? '') === 'invalid_effective_date'
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $beforePastDateRows,
+    'ordinary assignment still rejects a date before the locality current day without writing');
+
+$atEightService = new ChecadorWeeklyScheduleSqlWriteService(
+    static fn(Usuario $actor, int $place): bool => $actor->id === 77 && $place === 9,
+    $membership,
+    static fn(string $lock): bool => true,
+    static fn(): \DateTimeImmutable => new \DateTimeImmutable('2026-11-24T14:00:00Z', new \DateTimeZone('UTC'))
+);
+$atEight = array_replace($sameDayInput, ['worker_id' => 40, 'template_id' => '32', 'idempotency_key' => 'same-day-0800-0900-start']);
+$atEightResult = $atEightService->create($actor, $atEight);
+$assert(($atEightResult['ok'] ?? false) && ($atEightResult['assignment']['valido_desde'] ?? '') === '2026-11-24',
+    'an 08:00 local assignment for a 09:00–18:00 shift is persisted and read back');
+$beforeConflict = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$conflictingSameDay = array_replace($atEight, ['template_id' => '30', 'idempotency_key' => 'same-day-temporal-conflict']);
+$assert(($atEightService->create($actor, $conflictingSameDay)['error'] ?? '') === 'assignment_conflict'
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $beforeConflict,
+    'a second incompatible temporary assignment for the same day is rejected without an extra row');
+
+$at1022Service = new ChecadorWeeklyScheduleSqlWriteService(
+    static fn(Usuario $actor, int $place): bool => $actor->id === 77 && $place === 9,
+    $membership,
+    static fn(string $lock): bool => true,
+    static fn(): \DateTimeImmutable => new \DateTimeImmutable('2026-11-24T16:22:00Z', new \DateTimeZone('UTC'))
+);
+$at1022 = array_replace($sameDayInput, ['worker_id' => 478, 'template_id' => '32', 'idempotency_key' => 'worker478-1022-shift-09-18']);
+$at1022Result = $at1022Service->create($actor, $at1022);
+$assert(($at1022Result['ok'] ?? false) && (int) ($at1022Result['assignment']['id_personal'] ?? 0) === 478
+    && ($at1022Result['assignment']['valido_desde'] ?? '') === '2026-11-24',
+    'worker 478 can be assigned at 10:22 local to the 09:00–18:00 shift and receives persisted readback');
+
+$afterExitService = new ChecadorWeeklyScheduleSqlWriteService(
+    static fn(Usuario $actor, int $place): bool => $actor->id === 77 && $place === 9,
+    $membership,
+    static fn(string $lock): bool => true,
+    static fn(): \DateTimeImmutable => new \DateTimeImmutable('2026-11-25T01:05:00Z', new \DateTimeZone('UTC'))
+);
+$afterExit = array_replace($sameDayInput, ['worker_id' => 46, 'template_id' => '32', 'idempotency_key' => 'same-day-after-exit-0900-1800']);
+$afterExitResult = $afterExitService->create($actor, $afterExit);
+$assert(($afterExitResult['ok'] ?? false) && ($afterExitResult['assignment']['valido_desde'] ?? '') === '2026-11-24',
+    'same-day assignment remains allowed after the scheduled 18:00 exit when no Motor journey exists');
+
+$sameDayPattern = $at1022Service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 41, 'week_start' => '2026-11-23', 'effective_start_date' => '2026-11-24',
+    'schedule' => ['MARTES' => '32'], 'idempotency_key' => 'same-day-pattern-558-past-start',
+]);
+$assert(($sameDayPattern['ok'] ?? false) && count($sameDayPattern['assignments'] ?? []) === 1
+    && ($sameDayPattern['assignments'][0]['valido_desde'] ?? '') === '2026-11-24',
+    'same-day habitual assignment is allowed after the 09:00 shift start and returns persisted readback');
+
+$journeyBeforeMaterializedCheck = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+Capsule::table('op_rh_v2_jornadas_programadas')->insert([
+    'id_personal' => 41, 'id_estacion' => 9, 'fecha_jornada_local' => '2026-11-24',
+]);
+$materialized = $sameDayInput;
+$materialized['worker_id'] = 41; $materialized['idempotency_key'] = 'already-materialized-date-41';
+$materializedResult = $sameDayService->create($actor, $materialized);
+$assert(($materializedResult['error'] ?? '') === 'journey_already_materialized'
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $journeyBeforeMaterializedCheck,
+    'assignment is blocked when the Motor already persisted a journey for that worker, locality, and date');
+$controller = (string) file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php');
+$browserJs = (string) file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.habitual-schedule.init.js');
+$assert(str_contains($controller, "'journey_already_materialized' => 'Ya existe una jornada persistida")
+    && str_contains($controller, "'membership_unverified' => 'No se confirmó la adscripción")
+    && str_contains($controller, "'template_not_allowed' => 'El turno no pertenece al catálogo")
+    && str_contains($controller, "'database_write_failed' => 'No fue posible guardar la programación"),
+    'server returns specific messages for materialized journeys, membership, template and SQL failures');
+$assert(str_contains($browserJs, 'assignmentErrorMessage(responseData?.code)')
+    && str_contains($browserJs, 'journey_already_materialized:'),
+    'M03 browser displays specific known assignment errors rather than falling through to its generic message');
+
+$beforeBatchRollbackRows = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$beforeBatchRollbackAudits = Capsule::table('op_rh_v2_turnos_audit_log')->count();
+$batchRollback = $service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 44, 'week_start' => '2026-11-16', 'effective_start_date' => '2026-11-19',
+    'schedule' => $patternSchedule, 'idempotency_key' => 'habitual-pattern-rollback-0001',
+]);
+$assert(!($batchRollback['ok'] ?? false)
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $beforeBatchRollbackRows
+    && Capsule::table('op_rh_v2_turnos_audit_log')->count() === $beforeBatchRollbackAudits
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 44)->count() === 0,
+    'failure on the seventh canonical membership check rolls back the first six SQL rows and all audit events');
+
+Capsule::statement("CREATE TRIGGER corrupt_habitual_readback AFTER INSERT ON op_rh_v2_turnos_asignaciones WHEN NEW.id_personal = 45 BEGIN UPDATE op_rh_v2_turnos_asignaciones SET valido_desde = '2026-11-24' WHERE id = NEW.id; END");
+$beforeReadbackRollbackRows = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$beforeReadbackRollbackAudits = Capsule::table('op_rh_v2_turnos_audit_log')->count();
+$readbackRollback = $service->createHabitualPattern($actor, [
+    'workplace_id' => 9, 'worker_id' => 45, 'week_start' => '2026-11-23', 'effective_start_date' => '2026-11-23',
+    'schedule' => ['LUNES' => '10'], 'idempotency_key' => 'habitual-pattern-readback-fail-01',
+]);
+$assert(!($readbackRollback['ok'] ?? false) && ($readbackRollback['error'] ?? '') === 'readback_mismatch'
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $beforeReadbackRollbackRows
+    && Capsule::table('op_rh_v2_turnos_audit_log')->count() === $beforeReadbackRollbackAudits
+    && Capsule::table('op_rh_v2_turnos_asignaciones')->where('id_personal', 45)->count() === 0,
+    'persisted readback mismatch is detected before commit and rolls back assignment plus audit');
+Capsule::statement('DROP TRIGGER corrupt_habitual_readback');
+
+Capsule::statement("CREATE TRIGGER fail_m03_audit BEFORE INSERT ON op_rh_v2_turnos_audit_log BEGIN SELECT RAISE(ABORT, 'audit failure'); END");
+$before = Capsule::table('op_rh_v2_turnos_asignaciones')->count();
+$rollbackInput = ['workplace_id' => 9, 'worker_id' => 40, 'week_start' => '2026-11-23', 'target_date' => '2026-11-24',
+    'effective_start_date' => '2026-11-24', 'tipo_asignacion' => 'HABITUAL', 'template_id' => 'REST',
+    'idempotency_key' => 'rollback-key-0000000000001'];
+$failed = $service->create($actor, $rollbackInput);
+$assert(!($failed['ok'] ?? false) && Capsule::table('op_rh_v2_turnos_asignaciones')->count() === $before,
+    'audit failure rolls back assignment write without partial persistence');
+
+$assert(ChecadorWeeklyScheduleSqlWriteService::enabled(),
+    'M03 SQL writer availability does not depend on manual environment flags outside demo mode');
+
+foreach (['APP_ENV', 'CHECADOR_ADVANCED_DEMO_ENABLED', 'CHECADOR_M03_SQL_WRITES_ENABLED', 'CHECADOR_M03_API_WRITER_DISABLED', 'CHECADOR_M03_SCHEMA_PREFLIGHT_OK'] as $env) putenv($env);
+echo "RESULT: {$passes} PASS / {$fails} FAIL (isolated SQLite; not MariaDB concurrency evidence)\n";
+exit($fails === 0 ? 0 : 1);

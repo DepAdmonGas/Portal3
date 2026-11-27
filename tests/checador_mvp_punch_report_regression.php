@@ -117,13 +117,13 @@ $handler = $resolved[1] ?? null;
 $config = $handler instanceof Closure ? (new ReflectionFunction($handler))->getStaticVariables() : [];
 $assert(($resolved[0] ?? null) === \FastRoute\Dispatcher::FOUND
     && $handler instanceof Closure
-    && ($config['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($config['middlewares'] ?? null) === ['auth', 'csrf', 'dpto-operativo-activo']
     && ($config['handler'] ?? null) === ['ChecadorController', 'punchReport'], 'report route retains existing authentication and CSRF middleware');
 $dataRoute = $routeDispatcher->dispatch('GET', '/departamento-operativo/recursos-humanos/checador/reporte/data');
 $dataHandler = $dataRoute[1] ?? null;
 $dataConfig = $dataHandler instanceof Closure ? (new ReflectionFunction($dataHandler))->getStaticVariables() : [];
 $assert(($dataRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
-    && ($dataConfig['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($dataConfig['middlewares'] ?? null) === ['auth', 'csrf', 'dpto-operativo-activo']
     && ($dataConfig['handler'] ?? null) === ['ChecadorController', 'punchReportData'], 'DataTables JSON route is protected by the existing authenticated middleware');
 $workerRoute = $routeDispatcher->dispatch('GET', '/departamento-operativo/recursos-humanos/checador/reporte/colaboradores');
 $workerHandler = $workerRoute[1] ?? null;
@@ -132,21 +132,29 @@ $workerStart = strpos($controller, 'public function punchReportWorkers(): void')
 $workerEnd = strpos($controller, 'public function punchReportData(): void', $workerStart === false ? 0 : $workerStart);
 $workerMethod = $workerStart !== false && $workerEnd !== false ? substr($controller, $workerStart, $workerEnd - $workerStart) : '';
 $assert(($workerRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
-    && ($workerConfig['middlewares'] ?? null) === ['auth', 'csrf']
+    && ($workerConfig['middlewares'] ?? null) === ['auth', 'csrf', 'dpto-operativo-activo']
     && ($workerConfig['handler'] ?? null) === ['ChecadorController', 'punchReportWorkers']
     && str_contains($workerMethod, 'ChecadorAccessService::authorize(null)')
     && str_contains($workerMethod, 'ModuleStationService::getContext'), 'name search route is authenticated and derives its locality from authorized server context');
-$assert(str_contains($view, 'Horas en UTC')
+$assert(str_contains($view, 'Fecha local · detalle UTC')
     && str_contains($formatter, 'Integridad no verificada por Portal3')
     && str_contains($controller, "'ocurrido_at_utc' =>"), 'view and JSON projection explain UTC and integrity remains explicitly unverified by Portal3');
+$assert(str_contains($view, 'class="card-header bg-primary text-white')
+    && str_contains($view, 'aria-label="Opciones del reporte"')
+    && str_contains($view, 'ti ti-dots-vertical')
+    && str_contains($view, 'Buscar marcaciones')
+    && str_contains($view, 'data-bs-target="#punch-report-filter-modal"'), 'report uses the institutional blue card header and three-dot search dropdown');
+$assert(str_contains($view, 'id="punch-report-worker" name="worker_id"')
+    && str_contains($datatableJs, 'dropdownParent: filterModal ? jQuery(filterModal) : jQuery(document.body)')
+    && str_contains($datatableJs, 'periodWorkerValue.value = workerFilter.value'), 'worker Select2 lives in the search modal and its selection persists in both query paths');
 $assert(str_contains($view, 'name="worker_id"') && !str_contains($view, 'name="workplace_id"')
     && str_contains($view, 'from_date') && str_contains($view, 'to_date')
     && str_contains($reportMethod, '$this->sessionWorkplaceId($access)'), 'view filters by canonical worker and UTC range while locality comes from authorized session');
 $assert(str_contains($view, 'if (!empty($canDownload))') && str_contains($datatableJs, 'pageLength: 25') && str_contains($datatableJs, 'lengthMenu: [10, 25, 50, 100]'), 'CSV control follows download permission and DataTables provides the only page-size/pagination controls');
 $assert(str_contains($datatableJs, "url: '/assets/libs/datatables.net/js/es-ES.json'")
     && str_contains($view, 'un periodo sin resultados no confirma ausencia laboral'), 'empty results reuse the institutional Spanish language file while the report explains the evidence limit');
-$assert(str_contains($view, 'no convierte la hora del dispositivo')
-    && str_contains($datatableJs, 'Hora de marcación no determinada')
+$assert(str_contains($view, 'Los eventos sin instante de captura confirmado no se incluyen')
+    && str_contains($datatableJs, 'Hora de captura no determinada')
     && str_contains($controller, "'ocurrido_at_utc' =>")
     && !str_contains($datatableJs, '_occurred_local'), 'report does not fabricate local time and labels unresolved occurrence time');
 $assert(str_contains($view, 'class="datatables"')
@@ -154,7 +162,7 @@ $assert(str_contains($view, 'class="datatables"')
     && str_contains($view, 'class="table table-striped table-bordered mb-0 text-nowrap align-middle" width="100%"')
     && str_contains($datatableJs, "title: 'Estación'")
     && !str_contains($view, '<thead'), 'report reuses the Día Doble table HTML structure and institutional responsive classes');
-$assert(str_contains($view, 'id="checador-punch-detail-modal"') && str_contains($view, 'modal-dialog-scrollable') && str_contains($view, 'aria-labelledby') && str_contains($datatableJs, 'bootstrap.Modal.getOrCreateInstance'), 'each event detail uses the shared accessible Bootstrap modal');
+$assert(str_contains($view, 'id="checador-punch-detail-modal"') && str_contains($view, 'modal-dialog-scrollable') && str_contains($view, 'aria-labelledby') && str_contains($view, 'modal-colored-header bg-primary text-white') && str_contains($view, 'btn bg-danger-subtle text-danger') && str_contains($datatableJs, 'bootstrap.Modal.getOrCreateInstance'), 'each event detail uses the shared accessible Portal3 modal and close style');
 $assert(str_contains($view, 'Hora original informada por el dispositivo') && str_contains($view, 'Fecha y hora de marcación (UTC)') && str_contains($view, 'Fecha y hora de recepción (UTC)') && str_contains($view, 'Dispositivo'), 'detail view distinguishes device, occurrence, receipt, and device fields in Spanish');
 $assert(str_contains($view, 'data-endpoint="/departamento-operativo/recursos-humanos/checador/reporte/data"')
     && str_contains($datatableJs, 'serverSide: true')

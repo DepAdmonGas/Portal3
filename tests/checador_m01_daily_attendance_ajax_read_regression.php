@@ -10,11 +10,21 @@ $view = $read('app/Views/departamento-operativo/2-recursos-humanos/checador/dail
 $filters = $read('public/assets/js/departamento-operativo/2-recursos-humanos/checador.filters.init.js');
 $table = $read('public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance.datatable.init.js');
 $rosterService = $read('app/Services/ChecadorAttendanceRosterService.php');
+$accessService = $read('app/Services/ChecadorAccessService.php');
 $handlerStart = strpos($controller, 'public function dailyAttendance(): void');
 $handlerEnd = strpos($controller, 'public function rolComodines(): void', $handlerStart ?: 0);
 $dailyHandler = $handlerStart !== false && $handlerEnd !== false ? substr($controller, $handlerStart, $handlerEnd - $handlerStart) : '';
 $dashboardStart = strpos($controller, 'function renderDashboardWorkspace(');
 $dashboard = $dashboardStart === false ? '' : substr($controller, $dashboardStart);
+$dailyRosterLookup = strpos($dashboard, '->workersForAttendanceFilter(');
+$dailyReaderInitialization = strpos($dashboard, '$rawAttendance = self::readDailySqlAttendance(');
+$fallbackPolicyStart = strpos($controller, 'private static function canDisplayAttendanceRosterFallback');
+$fallbackPolicyEnd = $fallbackPolicyStart === false
+    ? false
+    : strpos($controller, 'private static function readDailySqlAttendance', $fallbackPolicyStart);
+$fallbackPolicy = $fallbackPolicyStart !== false && $fallbackPolicyEnd !== false
+    ? substr($controller, $fallbackPolicyStart, $fallbackPolicyEnd - $fallbackPolicyStart)
+    : '';
 
 $checks = [
     'GET and POST use the existing authenticated attendance route' =>
@@ -35,10 +45,16 @@ $checks = [
         str_contains($view, 'data-checador-attendance-results')
         && str_contains($view, 'data-attendance-state="<?= $esc($state) ?>"')
         && str_contains($view, 'data-checador-search-action="search"')
-        && str_contains($view, 'data-checador-search-action="clear"')
+        && str_contains($view, 'data-bs-dismiss="modal"><i class="ti ti-x')
+        && !str_contains($view, 'Limpiar filtros')
         && str_contains($view, 'data-workplace-id="<?= $selectedWorkplaceId ?? \'\' ?>"')
         && !str_contains($view, 'name="workplace_id"')
         && str_contains($filters, 'currentResults.replaceWith(nextResults)')
+        && str_contains($view, 'data-attendance-roster-fallback=')
+        && str_contains($view, 'data-checador-filter-controls')
+        && str_contains($view, 'data-checador-context-date')
+        && str_contains($filters, "currentContextDate.textContent = nextContextDate.textContent")
+        && str_contains($filters, "nextResults.dataset.attendanceRosterFallback === 'true'")
         && str_contains($filters, "nextResults.dataset.attendanceState !== 'success'")
         && str_contains($filters, 'nextResults.dataset.workplaceId !== currentResults.dataset.workplaceId')
         && str_contains($filters, 'clearResultsForUnverifiedContext')
@@ -51,20 +67,46 @@ $checks = [
         && str_contains($controller, "\$workerSelectOptions = array_values(array_filter(")
         && str_contains($view, 'foreach ($workerSelectOptions as $workerOption)')
         && str_contains($filters, 'workerInput.replaceChildren.apply'),
-    'a successful empty API snapshot still renders the active authorized roster, while failed reads remain errors' =>
+    'department roster fallback requires an explicit active Checador locality allowlist' =>
+        str_contains($accessService, 'function isDepartmentLocality(int $localityId): bool')
+        && str_contains($accessService, "->where('modulo_key', self::MODULE_KEY)")
+        && str_contains($accessService, "'stations_and_departments'")
+        && str_contains($accessService, "'localidades'")
+        && str_contains($accessService, 'positiveIdList($moduleConfig->departamentos_soportados)')
+        && str_contains($accessService, 'RhLocalidad::query()->whereKey($localityId)->exists()'),
+    'a successful empty SQL event read still renders the active authorized roster, while failed reads remain errors' =>
         str_contains($dashboard, "if (!\$readResult['ok'])")
         && str_contains($dashboard, "\$state = 'success';")
         && strpos($dashboard, "\$state = 'success';") < strpos($dashboard, 'ChecadorAttendanceRosterService())->currentRoster(')
         && str_contains($dashboard, "\$eventsByWorker[(int) \$workerId] ?? []")
         && str_contains($rosterService, "where('estado', 1)")
-        && str_contains($view, "if (\$state === 'success')")
+        && str_contains($view, 'data-attendance-roster-fallback=')
+        && str_contains($view, 'if ($viewRows === [])')
         && str_contains($view, 'No hay colaboradores atribuibles dentro de la información disponible')
-        && str_contains($view, 'La tabla estará disponible cuando la consulta se complete.'),
+        && str_contains($view, 'El padrón no está disponible y no se muestran personas sin una membresía autorizada verificable.'),
+    'verified roster and M01 SQL reader are independent from the shared API read client' =>
+        $dailyRosterLookup !== false
+        && $dailyReaderInitialization !== false
+        && $dailyRosterLookup < $dailyReaderInitialization
+        && str_contains($dashboard, 'self::readDailySqlAttendance(')
+        && !str_contains($controller, 'private static function readDailyRawAttendance(')
+        && str_contains($view, '$attendanceRosterFallbackAllowed')
+        && str_contains($fallbackPolicy, 'current_active_roster')
+        && str_contains($fallbackPolicy, "in_array(\$status, ['current_roster_only', 'ready'], true)")
+        && str_contains($fallbackPolicy, 'historical_versioned_membership')
+        && !str_contains($fallbackPolicy, "'incomplete'"),
+    'unexpected daily-read exceptions are logged safely and preserve only the verified roster reference' =>
+        str_contains($dashboard, 'catch (\\Throwable $exception)')
+        && str_contains($dashboard, "Logger::error('Checador dashboard workspace read failed'")
+        && str_contains($dashboard, 'self::readDailySqlAttendance(')
+        && str_contains($dashboard, "Logger::error('Checador attendance roster fallback failed'")
+        && str_contains($dashboard, '$attendanceRosterFallbackAllowed = true;')
+        && str_contains($view, 'no confirma pertenencia histórica, asistencia ni horario'),
     'errors preserve visible results and the DataTable can be reinitialized after replacement' =>
         str_contains($filters, 'currentResults.replaceWith(nextResults)')
         && str_contains($filters, "catch (error)")
         && str_contains($table, 'window.initChecadorAttendanceDataTable = function (root)')
-        && str_contains($table, "resultsRoot.dataset.attendanceState !== 'success'")
+        && str_contains($table, "resultsRoot.dataset.attendanceRosterFallback === 'true'")
         && str_contains($table, 'body.removeChild(body.rows[0])')
         && str_contains($table, 'return true;'),
     'filter flow does not navigate or mutate attendance data' =>

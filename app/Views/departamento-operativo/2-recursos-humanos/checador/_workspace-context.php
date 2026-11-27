@@ -9,5 +9,4 @@ $workspaceEsc = static fn(mixed $value): string => htmlspecialchars((string) $va
         <?php if (($selectedWorkerId ?? null) !== null): ?><span><strong>Colaborador:</strong> <?= (int) $selectedWorkerId ?></span><?php endif; ?>
         <?php if (($demoMode ?? false) === true): ?><span class="badge rounded-pill text-bg-secondary" title="Respuestas locales no operativas">Demo</span><?php endif; ?>
     </div>
-    <a class="btn btn-outline-secondary btn-sm" href="<?= $workspaceEsc($dashboardHref ?? '/departamento-operativo/recursos-humanos/checador') ?>">Volver a asistencia diaria</a>
 </div>

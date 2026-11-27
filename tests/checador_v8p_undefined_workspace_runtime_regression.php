@@ -16,10 +16,17 @@ namespace App\Core {
     {
         public static array $queryParams = ['workplace_id' => '1'];
 
+        public static function method(): string { return 'GET'; }
+
         public static function query(): array
         {
             return self::$queryParams;
         }
+    }
+
+    final class Auth
+    {
+        public static function user(): ?\App\Models\Usuario { return null; }
     }
 
     final class Breadcrumb

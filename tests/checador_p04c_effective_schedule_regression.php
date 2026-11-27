@@ -143,11 +143,20 @@ $assert($effectiveScheduleMethodSource !== ''
     && !preg_match('/early.?departure|salida anticipada/i', $effectiveScheduleMethodSource), 'P4C21 effective-schedule client does not calculate early departure');
 $assert(!preg_match('/overtime|tiempo extra|horas extra/i', $controllerSource . $serviceSource . $viewSource), 'P4C22 overtime is not calculated');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P4C23 SIN MARCACIÓN is not inferred');
-$assert(stripos($adjustmentsViewSource, 'nunca se activa automáticamente') !== false && str_contains($controllerSource, 'authorizeFalta'), 'P4C24 FALTA is not inferred');
+$assert(!str_contains($viewSource, 'FALTA')
+    && !str_contains($adjustmentsViewSource, 'authorize_falta')
+    && str_contains($controllerSource, 'authorizeFalta($workplaceId)'), 'P4C24 schedule/M07 do not infer or expose FALTA; separate P3-G authorization remains');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $effectiveScheduleMethodSource . $viewSource), 'P4C25 schedule view does not render payroll amounts or document data');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus') && str_contains($controllerSource, '$level2Meta'), 'P4C26 P04B Level 2 remains authoritative and separate');
+$syntheticMethodStart = strpos($controllerSource, 'private static function readM01SyntheticAttendance(');
+$syntheticMethodEnd = $syntheticMethodStart === false ? false : strpos($controllerSource, 'private static function', $syntheticMethodStart + 1);
+$syntheticMethod = $syntheticMethodStart === false ? '' : substr($controllerSource, $syntheticMethodStart, ($syntheticMethodEnd ?: strlen($controllerSource)) - $syntheticMethodStart);
 $assert(str_contains($p04aSource, 'createDailyPunchSnapshot')
-    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P4C27 snapshot service remains available while GET workspaces do not request creation');
+    && !str_contains($syntheticMethod, 'createDailyPunchSnapshot(')
+    && str_contains($syntheticMethod, '$workplaceId !== 14')
+    && str_contains($syntheticMethod, 'demoReferenceDate()')
+    && str_contains($controllerSource, "if (\$workspace === 'daily-attendance' && \$m01DemoMode)")
+    && str_contains($controllerSource, 'self::readDailySqlAttendance('), 'P4C27 synthetic M01 fixtures stay context-limited and daily attendance does not create API snapshots');
 $assert(str_contains($p03Source, 'readObservedPunches'), 'P4C28 P03 raw-read behavior remains intact');
 $assert(($make([new Response(500, [], json_encode(['status' => 'SERVER_ERROR'], JSON_THROW_ON_ERROR))])->getEffectiveSchedule($user, 105, 12, '2026-11-02')['error']['kind'] ?? '') === 'api_unavailable'
     && ($make([$schedulePayload('UNKNOWN')])->getEffectiveSchedule($user, 105, 12, '2026-11-02')['data']['estado_jornada'] ?? '') === 'UNKNOWN', 'P4C29 transport failure remains distinct from schedule UNKNOWN');

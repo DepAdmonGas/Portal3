@@ -8,6 +8,13 @@
 - Protege autenticación, permisos y alcance en el servidor; no confíes en identificadores o controles sólo porque vienen de la interfaz. Mantén etiquetas, errores, estados vacíos y diseño adaptable coherentes con Portal3.
 - Ejecuta pruebas focalizadas y validación de sintaxis pertinentes. Distingue resultados simulados, locales reales y remotos reales; nunca presentes fixtures como verificación de una fuente real.
 
+## Checador V2 — decisión expresa de transporte de datos (2026-11-18)
+
+- **PROHIBIDO proponer o implementar HTTP Portal3 → API V2 para consultar o administrar el Checador.** El flujo operativo elegido es Lector → API V2 → MariaDB; Portal3 backend accede por SQL institucional a fuentes persistidas **autorizadas**. El navegador sólo interactúa con Portal3.
+- Consulta primero `docs/architecture/CHECADOR_V2_PORTAL3_SQL_ACCESS_OWNER_DIRECTIVE_20261118.md`. Verifica fuente, esquema real, permisos y escritura antes de implementar. No propongas Guzzle/JWT/endpoint API como solución predeterminada a una lectura fallida.
+- **Atención a contratos congelados contradictorios:** P3-G V1.0 §12 ordena `Portal3 backend → API only`; no lo interpretes como autorización para crear más HTTP ni lo reescribas sin addendum/versionado aprobado. Detén las operaciones en conflicto y presenta conciliación concreta, manteniendo API/Lector/J1/J2 intactos.
+- No confundir la nueva regla documental con una migración ya completada: código HTTP existente requiere remediación autorizada y pruebas por módulo.
+
 ## Límites
 
 - Preserva cambios preexistentes del worktree. No limpies, restaures, prepares ni confirmes cambios ajenos a la tarea.

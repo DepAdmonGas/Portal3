@@ -102,6 +102,8 @@ class View
             $placeholder = $viewData['moduleStationPlaceholder'] ?? null;
             $stationLabelOverrides = $viewData['moduleStationLabelOverrides'] ?? [];
             $extraDepartments = $viewData['moduleStationExtraDepartments'] ?? [];
+            $forceSelector = !empty($viewData['moduleStationForceSelector']);
+            $requireExplicitSelection = !empty($viewData['moduleStationRequireExplicitSelection']);
             $html = ModuleStationService::render(
                 $moduleKey,
                 $pendientesData,
@@ -109,7 +111,9 @@ class View
                 $nombreBadge,
                 $placeholder,
                 $stationLabelOverrides,
-                $extraDepartments
+                $extraDepartments,
+                $forceSelector,
+                $requireExplicitSelection
             );
 
             // Si el módulo está bloqueado (Para id_gas = 8), solo muestra el mensaje de bloqueo.

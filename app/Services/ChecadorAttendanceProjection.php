@@ -11,6 +11,41 @@ use Throwable;
 /** Projects only the API's explicit P3-H role and segment metadata. */
 final class ChecadorAttendanceProjection
 {
+    /**
+     * Present only the persisted P1/P2 outcome. P1 completeness/review states
+     * take precedence over a calculated P2 row so a partial pairing is never
+     * shown as an unqualified successful evaluation.
+     */
+    public static function persistedJourneyStatus(array $journey): string
+    {
+        $pairing = strtoupper(trim((string) ($journey['p1_status'] ?? '')));
+        $calculation = strtoupper(trim((string) ($journey['p2_status'] ?? '')));
+        $pairingCurrent = strtolower(trim((string) ($journey['pairing_current_status'] ?? '')));
+
+        if (in_array($pairing, ['AMBIGUOUS_PAIRING'], true) || $calculation === 'AMBIGUOUS') {
+            return 'ambiguous';
+        }
+        if ($pairing === 'PENDING_REVIEW' || $calculation === 'PENDING_REVIEW') return 'pending_review';
+        if (in_array($pairing, ['WORKPLACE_MISMATCH', 'REVIEW_REQUIRED'], true)
+            || in_array($calculation, ['WORKPLACE_MISMATCH', 'REVIEW_REQUIRED'], true)) {
+            return 'review';
+        }
+        if (in_array($pairing, [
+            'PARTIAL_MISSING_IN', 'PARTIAL_MISSING_OUT', 'UNMATCHED_NO_PUNCHES', 'PENDING_SYNC_COMPLETION',
+        ], true) || in_array($calculation, [
+            'PARTIAL_DATA', 'PENDING_SYNC', 'PENDING_SYNC_COMPLETION', 'UNKNOWN_SCHEDULE',
+            'PARTIAL_MISSING_IN', 'PARTIAL_MISSING_OUT', 'UNSCHEDULED_RECORDED', 'UNMATCHED_NO_PUNCHES',
+        ], true)) {
+            return 'incomplete';
+        }
+        if ($calculation === 'DAY_OFF_RECORDED') return 'day_off_recorded';
+        if ($calculation === 'CALCULATED') return 'evaluated';
+        if ($pairingCurrent === 'missing') return 'journey_not_evaluated';
+        if ($calculation === '') return 'calculation_unavailable';
+
+        return 'unknown';
+    }
+
     /** @return array<string,mixed> */
     public static function workerRow(array $profile, array $events, ?array $journey, ?string $timezone): array
     {
@@ -23,6 +58,11 @@ final class ChecadorAttendanceProjection
         $duplicates = [];
         $extra = [];
         $classifiedIds = [];
+        $slotEvents = is_array($journey['persisted_pairing_events'] ?? null)
+            ? $journey['persisted_pairing_events']
+            : (is_array($journey['evaluated_raw_events'] ?? null)
+            ? $journey['evaluated_raw_events']
+            : []);
         $evaluatedEvents = is_array($journey['evaluated_raw_events'] ?? null)
             ? $journey['evaluated_raw_events']
             : [];
@@ -35,19 +75,19 @@ final class ChecadorAttendanceProjection
             if (!is_array($event)) continue;
             $sourceEvents[self::eventKey($event, 'raw-' . $index)] = $event;
         }
-        foreach ($evaluatedEvents as $index => $event) {
+        foreach ($slotEvents as $index => $event) {
             if (!is_array($event)) continue;
-            $sourceEvents[self::eventKey($event, 'journey-' . $index)] ??= $event;
+            $sourceEvents[self::eventKey($event, 'pairing-' . $index)] ??= $event;
         }
 
-        foreach ($evaluatedEvents as $event) {
+        foreach ($slotEvents as $event) {
             if (!is_array($event)) {
                 continue;
             }
             $role = $event['pairing_role'] ?? null;
             $ordinal = $event['segment_ordinal'] ?? null;
             $key = is_string($role) && is_int($ordinal) && $ordinal > 0 ? $role . ':' . $ordinal : null;
-            $eventKey = self::eventKey($event, 'journey-' . count($classifiedIds));
+            $eventKey = self::eventKey($event, 'pairing-' . count($classifiedIds));
             if ($key !== null && array_key_exists($key, $slots)) {
                 if ($slots[$key] === null) {
                     $slots[$key] = $event;
@@ -67,14 +107,25 @@ final class ChecadorAttendanceProjection
         $journeyStatus = (string) ($journey['journey_status'] ?? 'UNKNOWN');
         if ($journey === null) {
             $status = $observedCount === 0 ? 'no_observed_event' : 'classification_pending';
-        } elseif (count($duplicates) > 0 || $journeyStatus === 'AMBIGUOUS_PAIRING') {
+        } elseif (count($duplicates) > 0 || $journeyStatus === 'AMBIGUOUS_PAIRING'
+            || (is_array($journey) && self::persistedJourneyStatus($journey) === 'ambiguous')) {
             $status = 'ambiguous';
-        } elseif ($journeyStatus === 'REVIEW_REQUIRED') {
+        } elseif ($journeyStatus === 'REVIEW_REQUIRED'
+            || (is_array($journey) && self::persistedJourneyStatus($journey) === 'review')) {
             $status = 'review';
-        } elseif ($journeyStatus === 'EVALUATED' && $observedCount > 0) {
+        } elseif (is_array($journey)
+            && (array_key_exists('p1_status', $journey)
+                || array_key_exists('p2_status', $journey)
+                || array_key_exists('pairing_current_status', $journey))) {
+            $status = self::persistedJourneyStatus($journey);
+        } elseif (in_array($journeyStatus, ['CALCULATED', 'EVALUATED'], true) && $observedCount > 0) {
             $status = 'evaluated';
-        } elseif ($journeyStatus === 'DATA_INCOMPLETE') {
+        } elseif (in_array($journeyStatus, ['DATA_INCOMPLETE', 'PARTIAL_DATA', 'PENDING_SYNC', 'UNKNOWN_SCHEDULE', 'UNSCHEDULED_RECORDED', 'UNMATCHED_NO_PUNCHES'], true)) {
             $status = 'incomplete';
+        } elseif (in_array($journeyStatus, ['AMBIGUOUS', 'AMBIGUOUS_PAIRING'], true)) {
+            $status = 'ambiguous';
+        } elseif (in_array($journeyStatus, ['WORKPLACE_MISMATCH', 'REVIEW_REQUIRED'], true)) {
+            $status = 'review';
         } else {
             $status = 'unknown';
         }

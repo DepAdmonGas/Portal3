@@ -139,21 +139,25 @@ $assert($journeyMethodSource !== ''
 $assert($journeyMethodSource !== ''
     && !preg_match('/early.?departure|salida anticipada/i', $journeyMethodSource), 'P4D31 Journey client does not calculate early departure');
 $assert(!preg_match('/overtime|tiempo extra|horas extra/i', $serviceSource . $controllerSource . $viewSource), 'P4D32 Portal3 does not calculate overtime');
-$assert(str_contains($adjustmentViewSource, 'Autorizar FALTA explícitamente') && str_contains($controllerSource, 'authorizeFalta'), 'P4D33 final FALTA authorization remains an explicit administrative action');
+$assert(!str_contains($adjustmentViewSource, 'authorize_falta') && str_contains($controllerSource, 'ChecadorAccessService::authorizeFalta($workplaceId)'), 'P4D33 FALTA authorization remains a separate explicit ACL outside read-only M07');
 $assert(!preg_match('/\b(?:importe_total|total_percepciones|total_deducciones|descuento|nomina_original|doc_nomina(?:_firma|_aguinaldo)?)\b/i', $viewSource), 'P4D34 Journey view does not render payroll amounts or document data');
 $failed = $make([new Response(500, [], json_encode(['status' => 'SERVER_ERROR'], JSON_THROW_ON_ERROR))])->evaluateJourney($user, 1, 1, '2026-10-12');
 $assert(($failed['error']['kind'] ?? '') === 'api_unavailable', 'P4D35 HTTP failure is distinct from Journey UNKNOWN');
 $assert(str_contains($controllerSource, '$journeys = []') && str_contains($controllerSource, '$journeyErrors = []'), 'P4D36 stale Journey is cleared before refresh');
 $assert(str_contains($controllerSource, 'getEffectiveSchedule') && str_contains($serviceSource, 'api/v2/workers/'), 'P4D37 P04C schedule integration is preserved');
 $assert(str_contains($controllerSource, 'getLevel2WindowStatus'), 'P4D38 P04B Level 2 integration is preserved');
-$assert(str_contains($serviceSource, 'createDailyPunchSnapshot')
-    && str_contains($serviceSource, 'readDailyPunchSnapshotPage')
-    && str_contains($controllerSource, 'readDailyPunchSnapshotPage')
-    && str_contains($controllerSource, 'readDailyRawAttendance')
-    && !str_contains($controllerSource, 'createDailyPunchSnapshot('), 'P4D39 explicit snapshot service and read-only attendance paths are preserved');
+$m01SqlStart = strpos($controllerSource, 'private static function readDailySqlAttendance(');
+$m01SqlEnd = $m01SqlStart === false ? false : strpos($controllerSource, 'private static function readPersistedDailyJourneys(', $m01SqlStart);
+$m01SqlMethod = $m01SqlStart !== false && $m01SqlEnd !== false
+    ? substr($controllerSource, $m01SqlStart, $m01SqlEnd - $m01SqlStart)
+    : '';
+$assert($m01SqlMethod !== ''
+    && str_contains($m01SqlMethod, 'ChecadorDailyAttendanceSqlReadService')
+    && !str_contains($m01SqlMethod, 'ChecadorDailyReadService')
+    && !str_contains($m01SqlMethod, 'ChecadorRawPunchReadService'), 'P4D39 approved M01 SQL reader does not call HTTP or widen the shared report reader');
 $administrativeStateCode = 'RESOLVED_PENDING_AUTHORIZATION';
-$assert(!str_contains($incidenceViewSource, $administrativeStateCode)
-    && str_contains($incidenceViewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')
+$assert(str_contains($incidenceViewSource, "'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta · pendiente de autorización'")
+    && str_contains(file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.incidences.datatable.init.js'), "RESOLVED_PENDING_AUTHORIZATION: 'Resuelta · pendiente de autorización'")
     && str_contains($formatterSource, "'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta; pendiente de autorización'")
     && !preg_match('/\\bJWT\\b|\\bAuthorization\\b|snapshot_token|\\bsecret\\b/i', $incidenceViewSource), 'P4D40 administrative state is rendered through its Spanish formatter and credential names remain absent from the view template');
 
