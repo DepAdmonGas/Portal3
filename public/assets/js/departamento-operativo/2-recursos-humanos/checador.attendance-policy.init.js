@@ -2,6 +2,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('attendancePolicyForm', () => ({
         current: null,
         next: null,
+        history: [],
         editModal: null,
         editorDefaults: null,
         success: '',
@@ -14,6 +15,8 @@ document.addEventListener('alpine:init', () => {
             };
             const current = parse(element.dataset.currentPolicy, null);
             const next = parse(element.dataset.nextPolicy, null);
+            const history = parse(element.dataset.policyHistory, []);
+            this.history = Array.isArray(history) ? history : [];
             const currentDate = element.dataset.currentDate || '';
             this.current = current && current.id ? current : null;
             this.next = next && next.id && next.effective_from_local_date > currentDate ? next : null;
@@ -45,6 +48,9 @@ document.addEventListener('alpine:init', () => {
                 effective_from_local_date: form.elements.effective_from_local_date.value,
                 retardo_tolerance_minutes: form.elements.retardo_tolerance_minutes.value,
                 incidence_deadline_days: form.elements.incidence_deadline_days.value,
+                early_entry_allowed_minutes: form.elements.early_entry_allowed_minutes.value,
+                duplicate_punch_window_minutes: form.elements.duplicate_punch_window_minutes.value,
+                exit_priority_window_minutes: form.elements.exit_priority_window_minutes.value,
             };
             this.editModal.show();
         },
@@ -61,6 +67,9 @@ document.addEventListener('alpine:init', () => {
             }
             this.next = next && next.effective_from_local_date > currentDate ? next : null;
 
+            this.history = [policy, ...this.history.filter((item) => String(item.id) !== String(policy.id))]
+                .sort((a, b) => Number(b.policy_version) - Number(a.policy_version)).slice(0, 200);
+
             this.updateEditorDefaults(next || policy);
             this.error = '';
             this.success = detail.message || 'La configuración se guardó y quedó confirmada.';
@@ -74,12 +83,16 @@ document.addEventListener('alpine:init', () => {
                 effective_from_local_date: effectiveFrom,
                 retardo_tolerance_minutes: String(policy.retardo_tolerance_minutes ?? ''),
                 incidence_deadline_days: String(policy.incidence_deadline_days ?? ''),
+                early_entry_allowed_minutes: '10',
+                duplicate_punch_window_minutes: '5',
+                exit_priority_window_minutes: '60',
             };
             const date = form.elements.effective_from_local_date;
             date.min = effectiveFrom;
             date.value = effectiveFrom;
             form.elements.retardo_tolerance_minutes.value = this.editorDefaults.retardo_tolerance_minutes;
             form.elements.incidence_deadline_days.value = this.editorDefaults.incidence_deadline_days;
+            for (const field of ['early_entry_allowed_minutes', 'duplicate_punch_window_minutes', 'exit_priority_window_minutes']) form.elements[field].value = this.editorDefaults[field];
             form.elements.confirm_policy.checked = false;
         },
 
@@ -97,6 +110,7 @@ document.addEventListener('alpine:init', () => {
                 form.elements.effective_from_local_date.value = this.editorDefaults.effective_from_local_date;
                 form.elements.retardo_tolerance_minutes.value = this.editorDefaults.retardo_tolerance_minutes;
                 form.elements.incidence_deadline_days.value = this.editorDefaults.incidence_deadline_days;
+                for (const field of ['early_entry_allowed_minutes', 'duplicate_punch_window_minutes', 'exit_priority_window_minutes']) form.elements[field].value = this.editorDefaults[field];
             }
             form.elements.confirm_policy.checked = false;
             window.dispatchEvent(new Event('attendance-policy-modal-reset'));
@@ -146,6 +160,11 @@ document.addEventListener('alpine:init', () => {
                     this.fieldErrors.confirm_policy = 'Confirma los valores para continuar.';
                 }
                 form.reportValidity();
+                return;
+            }
+            const approved = { early_entry_allowed_minutes: '10', duplicate_punch_window_minutes: '5', exit_priority_window_minutes: '60' };
+            if (Object.entries(approved).some(([name, value]) => form.elements[name].value !== value)) {
+                this.error = 'Los rangos propuestos aún requieren aprobación. Usa los valores autorizados 10, 5 y 60.';
                 return;
             }
 

@@ -47,14 +47,25 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
 ?>
 <div id="container" class="mt-4 mb-5" data-checador-role-comodines>
     <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-3">
-        <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-search-modal">
-            <i class="ti ti-filter me-1" aria-hidden="true"></i>Buscar / Filtrar
-        </button>
-        <?php if ($canRequestCoverage): ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-create-modal">
-                <i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva cobertura
+        <div class="dropdown d-inline-block">
+            <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i>
             </button>
-        <?php endif; ?>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <button class="dropdown-item pointer" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-search-modal">
+                        <i class="ti ti-search me-1" aria-hidden="true"></i>Buscar / Filtrar
+                    </button>
+                </li>
+                <?php if ($canRequestCoverage): ?>
+                    <li>
+                        <button class="dropdown-item pointer" type="button" data-bs-toggle="modal" data-bs-target="#checador-comodines-create-modal">
+                            <i class="ti ti-plus me-1" aria-hidden="true"></i>Nueva cobertura
+                        </button>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </div>
     </div>
 
     <section class="card mb-3" aria-labelledby="checador-comodines-coverage-heading">

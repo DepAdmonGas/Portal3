@@ -30,12 +30,13 @@ $assert = static function (bool $ok, string $message): void {
 $request = ['request_uuid'=>'12345678-1234-4234-8234-123456789abc', 'nombre_trabajador'=>'Trabajador <Prueba>', 'dispositivo_nombre'=>'Lector', 'reason'=>'FINGERPRINT_NOT_RECOGNIZED', 'requested_at_utc'=>'2026-11-25 12:00:00', 'request_expires_at_utc'=>'2026-11-25 12:30:00'];
 $queue = $renderTemporary(['state'=>'success', 'requests'=>[$request], 'can_edit'=>true]);
 $assert(str_contains($queue, '15 minutos · Un solo uso'), 'configuration PIN card displays the fifteen-minute validity');
-$assert(str_contains($queue, 'Solicitudes de acceso temporal') && str_contains($queue, 'Trabajador &lt;Prueba&gt;') && str_contains($queue, 'No incluido en esta lectura'), 'attendance PIN request workspace retains its real queue projection');
+$assert(str_contains($queue, 'Solicitudes de acceso temporal') && str_contains($queue, 'Trabajador &lt;Prueba&gt;')
+    && str_contains($queue, 'Vencimiento de solicitud (UTC)') && !str_contains($queue, 'No incluido en esta lectura'), 'attendance PIN request workspace renders the contract-backed queue fields without an invented status');
 $assert(str_contains($queue, 'PIN de configuración') && str_contains($queue, 'PIN de acceso del personal'), 'both PIN cards appear in the temporary access workspace');
 $emptyQueue = $renderTemporary(['state'=>'success', 'requests'=>[]]);
-$assert(str_contains($emptyQueue, 'No hay solicitudes pendientes para esta estación.'), 'successful empty attendance request queue remains distinct');
+$assert(str_contains($emptyQueue, 'No se devolvieron solicitudes para esta estación.'), 'successful empty attendance request queue remains distinct');
 $errorQueue = $renderTemporary(['state'=>'error', 'message'=>'Error de consulta', 'requests'=>[]]);
-$assert(str_contains($errorQueue, 'Error de consulta') && !str_contains($errorQueue, 'No hay solicitudes pendientes para esta estación.'), 'attendance PIN read failure remains visible and is not represented as empty');
+$assert(str_contains($errorQueue, 'Error de consulta') && !str_contains($errorQueue, 'No se devolvieron solicitudes para esta estación.'), 'attendance PIN read failure remains visible and is not represented as empty');
 
 $devices = [['device_id'=>2,'device_name'=>'Lector local','device_active'=>true,'credential_active'=>true,'biometric_grant_active'=>true,'pending_pin'=>null,'session'=>null]];
 $ready = $renderAdmin(['ok'=>true,'state'=>'ready','can_issue'=>true,'can_revoke'=>true,'secret_configured'=>true,'devices'=>$devices,'history'=>[]]);

@@ -203,6 +203,7 @@ $readerProfileItemsJson = htmlspecialchars(
         @attendance-policy-error.window="error = $event.detail.message; consultUrl = $event.detail.consultUrl || ''; success = ''"
         data-current-policy="<?= $policyJson(($attendancePolicyState['status'] ?? '') === 'VERSIONED' ? $activeAttendancePolicy : []) ?>"
         data-next-policy="<?= $policyJson($nextAttendancePolicy) ?>"
+        data-policy-history="<?= $policyJson(is_array($policyData['history'] ?? null) ? $policyData['history'] : []) ?>"
         data-current-date="<?= $esc($attendancePolicy['current_local_date'] ?? '') ?>">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-3">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-clock-hour-4 fs-5"></i></span>
@@ -250,6 +251,11 @@ $readerProfileItemsJson = htmlspecialchars(
                                     </div>
                                 </div>
                                 <p class="small text-muted mt-2 mb-0" x-show="current?.timezone_id">Zona horaria: <span x-text="current?.timezone_id"></span></p>
+                                <div class="mt-3"><h3 class="h6">Clasificación automática de marcaciones</h3>
+                                    <p class="small mb-1">Entrada anticipada permitida: <span x-text="current?.early_entry_allowed_minutes == null ? 'No configurado' : current.early_entry_allowed_minutes + ' min'"></span></p>
+                                    <p class="small mb-1">Intervalo de repetición: <span x-text="current?.duplicate_punch_window_minutes == null ? 'No configurado' : current.duplicate_punch_window_minutes + ' min'"></span></p>
+                                    <p class="small mb-0">Ventana prioritaria de salida: <span x-text="current?.exit_priority_window_minutes == null ? 'No configurado' : current.exit_priority_window_minutes + ' min'"></span></p>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -275,6 +281,11 @@ $readerProfileItemsJson = htmlspecialchars(
                                     </div>
                                 </div>
                                 <p class="small text-muted mt-2 mb-0" x-show="next?.timezone_id">Zona horaria: <span x-text="next?.timezone_id"></span></p>
+                                <div class="mt-3"><h3 class="h6">Clasificación automática de marcaciones</h3>
+                                    <p class="small mb-1">Entrada anticipada permitida: <span x-text="next?.early_entry_allowed_minutes == null ? 'No configurado' : next.early_entry_allowed_minutes + ' min'"></span></p>
+                                    <p class="small mb-1">Intervalo de repetición: <span x-text="next?.duplicate_punch_window_minutes == null ? 'No configurado' : next.duplicate_punch_window_minutes + ' min'"></span></p>
+                                    <p class="small mb-0">Ventana prioritaria de salida: <span x-text="next?.exit_priority_window_minutes == null ? 'No configurado' : next.exit_priority_window_minutes + ' min'"></span></p>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -300,6 +311,9 @@ $readerProfileItemsJson = htmlspecialchars(
                         <span class="small text-muted align-self-center">La edición no está disponible en este entorno.</span>
                     <?php endif; ?>
                 </div>
+                <div class="table-responsive mt-3" x-show="history.length" x-cloak><h3 class="h6">Historial de versiones (hasta 200)</h3><table class="table table-striped table-bordered align-middle"><thead><tr><th>Versión</th><th>Vigencia</th><th>Tolerancia</th><th>Incidencias</th><th>Entrada anticipada</th><th>Repetición</th><th>Salida prioritaria</th></tr></thead><tbody>
+                    <template x-for="item in history" :key="item.id"><tr><td x-text="item.policy_version"></td><td x-text="item.effective_from_local_date"></td><td x-text="item.retardo_tolerance_minutes"></td><td x-text="item.incidence_deadline_days"></td><td x-text="item.early_entry_allowed_minutes ?? 'No configurado'"></td><td x-text="item.duplicate_punch_window_minutes ?? 'No configurado'"></td><td x-text="item.exit_priority_window_minutes ?? 'No configurado'"></td></tr></template>
+                </tbody></table></div>
             <?php endif; ?>
 
             <?php if (!empty($canEditAttendancePolicy) && !empty($attendancePolicyPostEnabled) && ($demoMode ?? false) !== true): ?>
@@ -316,6 +330,7 @@ $readerProfileItemsJson = htmlspecialchars(
                                 <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
                                 <input type="hidden" name="idempotency_key" value="<?= $esc(($attendancePolicyFeedback['retry_idempotency_key'] ?? '') ?: ($attendancePolicyIdempotencyKey ?? '')) ?>">
                                 <div class="modal-body">
+                                    <p class="small text-muted">Localidad: <?= $esc($selectedWorkplaceName ?? '') ?> · Zona horaria: <?= $esc($attendancePolicy['timezone_id'] ?? 'No disponible') ?></p>
                                     <div class="alert alert-danger py-2" x-show="error" x-cloak role="alert" x-text="error"></div>
                                     <p x-show="consultUrl" x-cloak class="small mb-2" role="status"><a :href="consultUrl">Consultar estado antes de reintentar</a></p>
                                     <div class="row g-3">
@@ -333,6 +348,12 @@ $readerProfileItemsJson = htmlspecialchars(
                                             <label class="form-label" for="attendance-policy-deadline">Plazo de incidencias (días naturales)</label>
                                             <input class="form-control" :class="fieldErrors.incidence_deadline_days ? 'is-invalid' : ''" :aria-invalid="fieldErrors.incidence_deadline_days ? 'true' : 'false'" type="number" id="attendance-policy-deadline" name="incidence_deadline_days" min="0" max="30" step="1" value="<?= $esc($attendancePolicyFormValues['incidence_deadline_days'] ?? '') ?>" required>
                                             <div class="invalid-feedback" x-show="fieldErrors.incidence_deadline_days" x-text="fieldErrors.incidence_deadline_days" role="status"></div>
+                                        </div>
+                                        <div class="col-12"><h5 class="h6">Clasificación automática de marcaciones para la nueva versión</h5>
+                                            <p class="small text-muted">Por ahora sólo está autorizada la combinación 10, 5 y 60; los rangos propuestos requieren ratificación.</p>
+                                            <label class="form-label" for="policy-early">Entrada anticipada permitida (minutos)</label><input id="policy-early" class="form-control" type="number" min="0" max="10" step="1" name="early_entry_allowed_minutes" value="10" required><p class="small text-muted mb-2">Minutos antes del horario en que el trabajador puede registrar su entrada.</p>
+                                            <label class="form-label" for="policy-duplicate">Intervalo de repetición (minutos)</label><input id="policy-duplicate" class="form-control" type="number" min="1" max="10" step="1" name="duplicate_punch_window_minutes" value="5" required><p class="small text-muted mb-2">Minutos utilizados para identificar posibles marcaciones repetidas.</p>
+                                            <label class="form-label" for="policy-exit">Ventana prioritaria de salida (minutos)</label><input id="policy-exit" class="form-control" type="number" min="30" max="120" step="1" name="exit_priority_window_minutes" value="60" required><p class="small text-muted mb-0">Minutos anteriores al término del turno utilizados para priorizar la clasificación de salida.</p>
                                         </div>
                                         <div class="col-12">
                                             <div class="form-check">

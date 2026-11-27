@@ -64,6 +64,8 @@ $renderTemplateAdmin = static function (array $catalog, bool $authorized, bool $
         }
     }
     unset($template);
+    $globalScheduleTemplates = array_values(array_filter($scheduleTemplates, static fn(array $template): bool => ($template['scope'] ?? '') === 'GLOBAL'));
+    $scheduleTemplates = array_values(array_filter($scheduleTemplates, static fn(array $template): bool => ($template['scope'] ?? '') === 'STATION'));
     $canManageStationTemplates = $authorized;
     $templateWritesEnabled = $writesEnabled;
     $templateCatalogStatus = ($catalog['status'] ?? '') === 'ready' ? 'received' : 'unavailable';

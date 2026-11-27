@@ -39,6 +39,7 @@ $schema->create('op_rh_localidades', static function (Blueprint $table): void { 
 $schema->create('op_rh_v2_evaluaciones_administrativas', static function (Blueprint $table): void {
     $table->bigIncrements('id'); $table->unsignedBigInteger('id_jornada_programada'); $table->unsignedBigInteger('id_calculo_jornada');
     $table->integer('id_personal'); $table->integer('id_estacion'); $table->date('fecha_jornada_local'); $table->unsignedInteger('revision_numero');
+    $table->string('version_algoritmo_admin'); $table->string('version_politica');
     $table->string('estado_evaluacion'); $table->string('estado_revision_humana'); $table->dateTime('creado_at_utc');
 });
 $schema->create('op_rh_v2_evaluaciones_ajustes', static function (Blueprint $table): void {
@@ -52,7 +53,7 @@ Capsule::table('op_rh_v2_ajustes_administrativos')->insert([
     ['id' => 61, 'uuid_ajuste' => 'adj-rev-1', 'uuid_ajuste_logico' => 'adj-logical', 'revision_numero' => 1, 'estado_ajuste' => 'SUPERSEDED', 'id_ajuste_anterior' => null, 'id_jornada_programada' => 41, 'id_calculo_jornada' => 51, 'tipo_ajuste' => 'OVERRIDE_STATUS', 'hora_interpretada_entrada_utc' => null, 'hora_interpretada_salida_utc' => null, 'motivo_ajuste' => 'Motivo inicial', 'creado_por_usuario_id' => 7, 'aprobado_por_usuario_id' => 8, 'creado_at_utc' => '2026-11-19 17:00:00'],
     ['id' => 62, 'uuid_ajuste' => 'adj-rev-2', 'uuid_ajuste_logico' => 'adj-logical', 'revision_numero' => 2, 'estado_ajuste' => 'ACTIVE', 'id_ajuste_anterior' => 61, 'id_jornada_programada' => 41, 'id_calculo_jornada' => 51, 'tipo_ajuste' => 'OVERRIDE_STATUS', 'hora_interpretada_entrada_utc' => null, 'hora_interpretada_salida_utc' => null, 'motivo_ajuste' => 'Motivo vigente', 'creado_por_usuario_id' => 7, 'aprobado_por_usuario_id' => 8, 'creado_at_utc' => '2026-11-19 18:00:00'],
 ]);
-Capsule::table('op_rh_v2_evaluaciones_administrativas')->insert(['id' => 71, 'id_jornada_programada' => 41, 'id_calculo_jornada' => 51, 'id_personal' => 23, 'id_estacion' => 1, 'fecha_jornada_local' => '2026-11-19', 'revision_numero' => 1, 'estado_evaluacion' => 'REVIEW_REQUIRED', 'estado_revision_humana' => 'PENDING', 'creado_at_utc' => '2026-11-19 19:00:00']);
+Capsule::table('op_rh_v2_evaluaciones_administrativas')->insert(['id' => 71, 'id_jornada_programada' => 41, 'id_calculo_jornada' => 51, 'id_personal' => 23, 'id_estacion' => 1, 'fecha_jornada_local' => '2026-11-19', 'revision_numero' => 1, 'version_algoritmo_admin' => 'j1-v1.1', 'version_politica' => 'policy-v7', 'estado_evaluacion' => 'REVIEW_REQUIRED', 'estado_revision_humana' => 'PENDING', 'creado_at_utc' => '2026-11-19 19:00:00']);
 Capsule::table('op_rh_v2_evaluaciones_ajustes')->insert(['id_evaluacion_administrativa' => 71, 'id_ajuste_administrativo' => 62, 'creado_at_utc' => '2026-11-19 19:00:00']);
 $actor = new Usuario(); $actor->id = 7;
 $resolver = static fn(int $workerId, string $effectiveAt, string $recordedAsOf): array => [
@@ -67,7 +68,9 @@ $assert(($group['current']['uuid'] ?? '') === 'adj-rev-2' && ($group['current'][
 $assert(($group['current']['worker_id'] ?? 0) === 23 && ($group['current']['workplace_id'] ?? 0) === 1
     && ($group['current']['worker_name'] ?? '') === 'Trabajadora de ajuste', 'identity and locality are derived through matching Journey and calculation joins');
 $assert(count($group['current']['evaluation_links'] ?? []) === 1
-    && ($group['current']['evaluation_links'][0]['status'] ?? '') === 'REVIEW_REQUIRED', 'only evaluation links with matching journey, calculation, worker, locality, and date are exposed');
+    && ($group['current']['evaluation_links'][0]['status'] ?? '') === 'REVIEW_REQUIRED'
+    && ($group['current']['evaluation_links'][0]['algorithm_version'] ?? '') === 'j1-v1.1'
+    && ($group['current']['evaluation_links'][0]['policy_version'] ?? '') === 'policy-v7', 'only matching evaluation links and their persisted algorithm/policy provenance are exposed');
 $otherService = new ChecadorAdjustmentSqlReadService(static fn(Usuario $user, int $workplace): bool => false, $resolver);
 $denied = $otherService->listForWorkplace($actor, 1, ['start_date' => '2026-11-19', 'end_date' => '2026-11-19']);
 $assert(($denied['error'] ?? '') === 'permission_denied', 'locality authorization is enforced before querying adjustment records');
@@ -114,8 +117,9 @@ $tablePosition = strpos($rendered, '</table>');
 $modalPosition = strpos($rendered, 'id="m07-adjustment-62"');
 $assert($tablePosition !== false && $modalPosition !== false && $modalPosition > $tablePosition
     && str_contains($rendered, 'Motivo vigente') && str_contains($rendered, 'Historial (2)')
-    && str_contains($rendered, 'adj-rev-2') && str_contains($rendered, 'Evaluaciones relacionadas'),
-    'fixture rendering places complete detail/history modals outside the DataTable and shows persisted references');
+    && str_contains($rendered, 'adj-rev-2') && str_contains($rendered, 'Evaluaciones relacionadas')
+    && str_contains($rendered, 'j1-v1.1') && str_contains($rendered, 'policy-v7'),
+    'fixture rendering places full detail/history outside the DataTable and displays persisted evaluation provenance');
 $assert(str_contains($rendered, 'data-adjustment-tab="history"')
     && str_contains($rendered, 'm07-adjustment-62-history-tab')
     && str_contains($rendered, 'btn bg-danger-subtle text-danger'), 'history action opens its Bootstrap tab and modal close follows the Portal3 style');

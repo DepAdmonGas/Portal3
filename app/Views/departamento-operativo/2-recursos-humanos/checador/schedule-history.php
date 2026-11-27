@@ -204,6 +204,41 @@
             <?php endif; ?>
         </div>
 
+        <?php if (!empty($globalScheduleTemplates) || !empty($globalTemplateError)): ?>
+            <div class="card-body border-top">
+                <h3 class="h6">Plantillas globales</h3>
+                <?php if (!empty($globalTemplateError)): ?><p class="text-warning-emphasis" role="alert"><?= htmlspecialchars((string) $globalTemplateError, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+                <?php if (!empty($globalScheduleTemplates)): ?>
+                    <div class="table-responsive"><table id="m04-global-template-table" class="table table-sm table-striped table-bordered align-middle mb-0 w-100">
+                        <thead><tr><th>Turno global</th><th>Estado</th><?php if (!empty($canManageStationTemplates)): ?><th>Acciones</th><?php endif; ?></tr></thead>
+                        <tbody><?php foreach ($globalScheduleTemplates as $global): ?>
+                            <?php
+                                $copy = $global['station_customization']['template'] ?? null;
+                                $payload = null;
+                                $action = '';
+                                if (is_array($copy) && strtoupper((string) ($copy['scope'] ?? '')) === 'STATION'
+                                    && (int) ($copy['id_estacion'] ?? 0) === (int) ($selectedWorkplaceId ?? 0)
+                                    && is_array($copy['edit_fields'] ?? null)) {
+                                    $payload = ['key' => (string) $copy['clave'], 'version' => (int) $copy['version'], 'name' => (string) $copy['nombre'], 'type' => (string) ($copy['tipo_turno'] ?? 'REGULAR'), 'fields' => $copy['edit_fields']];
+                                    $action = 'edit';
+                                } elseif (empty($global['station_customization']) && (int) ($global['es_activo'] ?? 0) === 1 && is_array($global['customize_fields'] ?? null)) {
+                                    $payload = ['key' => (string) $global['clave'], 'version' => (int) $global['version'], 'name' => (string) $global['nombre'], 'fields' => $global['customize_fields'], 'segments' => $global['segmentos'] ?? []];
+                                    $action = 'customize';
+                                }
+                                $json = $payload === null ? '' : json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+                            ?>
+                            <tr><td><?= htmlspecialchars((string) ($global['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td><td><?= !empty($global['station_customization']) ? 'Personalizada para esta estación' : 'Global' ?></td>
+                                <?php if (!empty($canManageStationTemplates)): ?><td>
+                                    <?php if ($action === 'customize'): ?><a class="dropdown-item pointer" href="#" data-m04-customize-template="<?= htmlspecialchars((string) $json, ENT_QUOTES, 'UTF-8') ?>">Personalizar</a>
+                                    <?php elseif ($action === 'edit'): ?><a class="dropdown-item pointer" href="#" data-m04-edit-template="<?= htmlspecialchars((string) $json, ENT_QUOTES, 'UTF-8') ?>">Editar personalización</a><?php endif; ?>
+                                </td><?php endif; ?>
+                            </tr>
+                        <?php endforeach; ?></tbody>
+                    </table></div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (!empty($canManageStationTemplates)): ?>
             <div class="modal fade" id="m04-create-template-modal" tabindex="-1" aria-labelledby="m04-create-template-modal-title" aria-hidden="true"
                 data-bs-backdrop="static" data-bs-keyboard="false">

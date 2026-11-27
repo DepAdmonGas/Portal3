@@ -17,6 +17,7 @@ use Throwable;
 final class ChecadorAttendancePolicyStoreService
 {
     private const SOURCE = 'PORTAL3_ADMIN';
+    private const CLASSIFICATION = ['early_entry_allowed_minutes' => 10, 'duplicate_punch_window_minutes' => 5, 'exit_priority_window_minutes' => 60];
 
     /** @var callable():DateTimeImmutable */
     private $clock;
@@ -86,6 +87,7 @@ final class ChecadorAttendancePolicyStoreService
                 'policy' => $effective?->toPolicyArray(),
                 'next_scheduled_policy' => $next?->toPolicyArray(),
                 'latest_scheduled_policy' => $latest?->toPolicyArray(),
+                'history' => AttendancePolicyVersion::query()->where('workplace_id', $workplaceId)->orderByDesc('policy_version')->limit(200)->get()->map(static fn($row): array => $row->toPolicyArray())->all(),
             ]];
         } catch (Throwable) {
             return ['ok' => false, 'error' => 'attendance_policy_read_failed'];
@@ -123,7 +125,8 @@ final class ChecadorAttendancePolicyStoreService
                     if ((int) $byKey->actor_portal_user_id !== (int) $actor->id
                         || (string) $byKey->effective_from_local_date !== $effectiveDate
                         || (int) $byKey->retardo_tolerance_minutes !== $toleranceValue
-                        || (int) $byKey->incidence_deadline_days !== $deadlineValue) {
+                        || (int) $byKey->incidence_deadline_days !== $deadlineValue
+                        || !self::hasApprovedClassification($byKey)) {
                         throw new DomainException('idempotency_conflict');
                     }
                     return ['policy' => $byKey->toPolicyArray(), 'created' => false];
@@ -133,7 +136,8 @@ final class ChecadorAttendancePolicyStoreService
                     ->where('effective_from_local_date', $effectiveDate)->lockForUpdate()->first();
                 if ($sameDate !== null) {
                     if ((int) $sameDate->retardo_tolerance_minutes !== $toleranceValue
-                        || (int) $sameDate->incidence_deadline_days !== $deadlineValue) {
+                        || (int) $sameDate->incidence_deadline_days !== $deadlineValue
+                        || !self::hasApprovedClassification($sameDate)) {
                         throw new DomainException('policy_date_conflict');
                     }
                     return ['policy' => $sameDate->toPolicyArray(), 'created' => false];
@@ -155,6 +159,7 @@ final class ChecadorAttendancePolicyStoreService
                     'timezone_id' => $timezone,
                     'retardo_tolerance_minutes' => $toleranceValue,
                     'incidence_deadline_days' => $deadlineValue,
+                    ...self::CLASSIFICATION,
                     'actor_portal_user_id' => (int) $actor->id,
                     'source' => self::SOURCE,
                     'idempotency_key' => $idempotencyKey,
@@ -167,6 +172,7 @@ final class ChecadorAttendancePolicyStoreService
                     || (string) $readback->timezone_id !== $timezone
                     || (int) $readback->retardo_tolerance_minutes !== $toleranceValue
                     || (int) $readback->incidence_deadline_days !== $deadlineValue
+                    || !self::hasApprovedClassification($readback)
                     || (int) $readback->actor_portal_user_id !== (int) $actor->id
                     || (string) $readback->idempotency_key !== $idempotencyKey) {
                     throw new DomainException('policy_readback_mismatch');
@@ -183,7 +189,8 @@ final class ChecadorAttendancePolicyStoreService
                 || (int) ($persisted['policy_version'] ?? 0) !== (int) ($createdOrExisting['policy']['policy_version'] ?? -1)
                 || (string) ($persisted['effective_from_local_date'] ?? '') !== $effectiveDate
                 || (int) ($persisted['retardo_tolerance_minutes'] ?? -1) !== $toleranceValue
-                || (int) ($persisted['incidence_deadline_days'] ?? -1) !== $deadlineValue) {
+                || (int) ($persisted['incidence_deadline_days'] ?? -1) !== $deadlineValue
+                || !self::hasApprovedClassification($persisted)) {
                 return ['ok' => false, 'error' => 'policy_readback_mismatch'];
             }
             $current = $this->readCurrent($workplaceId);
@@ -224,6 +231,15 @@ final class ChecadorAttendancePolicyStoreService
             'action' => 'CREATE_VERSION',
             'created_at_utc' => ($this->clock)()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
         ]);
+    }
+
+    private static function hasApprovedClassification(mixed $policy): bool
+    {
+        foreach (self::CLASSIFICATION as $key => $expected) {
+            $value = is_array($policy) ? ($policy[$key] ?? null) : ($policy->$key ?? null);
+            if (self::strictInteger($value) !== $expected) return false;
+        }
+        return true;
     }
 
     private static function strictInteger(mixed $value): ?int

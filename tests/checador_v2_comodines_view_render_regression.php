@@ -138,12 +138,17 @@ $assert($requestXPath->query('//*[@id="checador-comodines-create-modal"]//div[co
     && $requestXPath->query('//*[@id="checador-comodines-create-modal"]//button[@data-checador-comodines-submit and contains(@class,"btn-success")]')->length === 1,
     'new coverage modal follows Portal3 blue header, close control, and institutional footer button styles');
 $assert($toolbar instanceof DOMElement
-    && $requestXPath->query('.//button[@data-bs-target="#checador-comodines-search-modal"]', $toolbar)->length === 1
+    && $requestXPath->query('.//div[contains(concat(" ", normalize-space(@class), " "), " dropdown ") and contains(concat(" ", normalize-space(@class), " "), " d-inline-block ")]', $toolbar)->length === 1
+    && $requestXPath->query('.//button[@data-bs-toggle="dropdown" and contains(@class,"btn-light") and contains(@class,"dropdown-toggle") and contains(@class,"text-dark")]', $toolbar)->length === 1
+    && $requestXPath->query('.//button[@data-bs-toggle="dropdown"]//i[contains(@class,"ti-dots-vertical") and contains(@class,"fs-4")]', $toolbar)->length === 1
+    && $requestXPath->query('.//button[@data-bs-target="#checador-comodines-search-modal"]//i[contains(@class,"ti-search") and contains(@class,"me-1")]', $toolbar)->length === 1
     && $requestXPath->query('.//button[@data-bs-target="#checador-comodines-create-modal"]', $toolbar)->length === 1
+    && $requestXPath->query('.//ul[contains(@class,"dropdown-menu-end")]//button[contains(@class,"dropdown-item") and contains(@class,"pointer")]', $toolbar)->length === 2
+    && $requestXPath->query('.//button[@data-bs-toggle="dropdown"]//text()[normalize-space()]', $toolbar)->length === 0
     && $requestXPath->query('following-sibling::*[1][self::section and @aria-labelledby="checador-comodines-coverage-heading"]', $toolbar)->length === 1,
-    'both action buttons are right-aligned immediately before the registered-coverages card');
+    'one right-aligned institutional dropdown contains search and authorized create actions before the registered-coverages card');
 $assert($requestXPath->query('//*[@data-bs-target="#checador-comodines-create-modal"]')->length === 1,
-    'the create action appears only when server-side capability permits it');
+    'the create dropdown action appears only when server-side capability permits it');
 
 $emptyHtml = $render(['coverageRows' => [], 'roles' => []]);
 $assert(str_contains($emptyHtml, 'Aún no hay coberturas registradas')

@@ -86,23 +86,25 @@ $slotDefinitions = [
     'EXIT:2' => 'Salida 2',
 ];
 $statusPresentation = static fn(string $status): array => match ($status) {
-    'evaluated' => ['Evaluación disponible', 'text-bg-success'],
-    'review' => ['Requiere revisión', 'text-bg-warning'],
-    'ambiguous' => ['Registros por revisar', 'text-bg-warning'],
-    'incomplete' => ['Información insuficiente', 'text-bg-info'],
-    'classification_pending' => ['Pendiente de clasificación', 'text-bg-secondary'],
-    'no_observed_event' => ['Sin marcación observada', 'text-bg-light border text-body-secondary'],
-    'punches_unavailable' => ['Marcaciones no disponibles', 'text-bg-warning'],
-    'journey_unavailable' => ['Resultado de Jornada no disponible', 'text-bg-warning'],
-    'journey_not_evaluated' => ['Jornada sin evaluación persistida', 'text-bg-secondary'],
-    'calculation_unavailable' => ['Cálculo P2 no disponible', 'text-bg-warning'],
-    'day_off_recorded' => ['Descanso persistido', 'text-bg-light border text-body-secondary'],
-    default => ['No determinado', 'text-bg-light border text-body-secondary'],
+    'evaluated' => ['Evaluación disponible', 'bg-transparent border text-success-emphasis'],
+    'review' => ['Requiere revisión', 'bg-transparent border text-warning-emphasis'],
+    'ambiguous' => ['Registros por revisar', 'bg-transparent border text-warning-emphasis'],
+    'incomplete' => ['Información insuficiente', 'bg-transparent border text-info-emphasis'],
+    'pending_review' => ['Pendiente de revisión', 'bg-transparent border text-warning-emphasis'],
+    'classification_pending' => ['Pendiente de clasificación', 'bg-transparent border text-secondary'],
+    'no_observed_event' => ['Sin marcación observada', 'bg-transparent border text-body-secondary'],
+    'punches_unavailable' => ['Marcaciones no disponibles', 'bg-transparent border text-warning-emphasis'],
+    'journey_unavailable' => ['Resultado de Jornada no disponible', 'bg-transparent border text-warning-emphasis'],
+    'journey_not_evaluated' => ['Jornada pendiente de evaluación', 'bg-transparent border text-secondary'],
+    'calculation_unavailable' => ['Cálculo P2 no disponible', 'bg-transparent border text-warning-emphasis'],
+    'day_off_recorded' => ['Descanso persistido', 'bg-transparent border text-body-secondary'],
+    default => ['No determinado', 'bg-transparent border text-body-secondary'],
 };
 $scheduleStatusLabel = static fn(string $status): string => match ($status) {
     'DAY_OFF' => 'Descanso programado',
-    'UNSCHEDULED' => 'Sin horario asignado',
+    'UNSCHEDULED', 'UNSCHEDULED_DAY' => 'Sin horario asignado',
     'UNKNOWN' => 'Horario no determinado',
+    'INCOMPLETE', 'DATA_INCOMPLETE' => 'Horario no concluyente',
     'SCHEDULED' => 'Horario disponible',
     default => 'Horario no disponible',
 };
@@ -144,15 +146,25 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
                 . ((int) ($segment['dia_offset_fin'] ?? 0) > 0 ? ' (día siguiente)' : '');
         }
         if ($segmentLabels !== []) {
-            $scheduleText = (($schedule['source'] ?? '') === 'assigned'
-                ? trim((string) ($schedule['nombre'] ?? 'Turno')) . ' · Horario asignado: '
-                : 'Horario histórico: ') . implode('; ', $segmentLabels);
+            $scheduleSource = (string) ($schedule['source'] ?? '');
+            $schedulePrefix = match ($scheduleSource) {
+                'persisted_coverage' => 'Cobertura autorizada persistida · ' . trim((string) ($schedule['nombre'] ?? 'Turno')) . ' · Horario: ',
+                'assigned' => trim((string) ($schedule['nombre'] ?? 'Turno')) . ' · Horario asignado: ',
+                default => 'Horario histórico: ',
+            };
+            $scheduleText = $schedulePrefix . implode('; ', $segmentLabels);
         }
+    } elseif ($schedule !== null && ($schedule['source'] ?? '') === 'persisted_coverage'
+        && $scheduleStatus === 'DAY_OFF') {
+        $scheduleText = 'Descanso de cobertura autorizada persistida';
     } elseif ($schedule === null && ($attendanceRow['schedule_error'] ?? null) !== null) {
         $scheduleText = match ($attendanceRow['schedule_error']) {
             'unassigned' => 'Sin programación asignada',
             'ambiguous' => 'Conflicto de asignaciones',
             'membership_unverified' => 'Adscripción no confirmada',
+            'coverage_conflict' => 'Cobertura no concluyente',
+            'coverage_unavailable' => 'Cobertura no disponible',
+            'assignment_read_failed' => 'Programación no disponible',
             default => 'Horario no disponible',
         };
     }
@@ -230,6 +242,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         : null;
     $incidenceList = is_array($administrativeIncidences[$workerId] ?? null) ? $administrativeIncidences[$workerId] : null;
     $incidenceError = array_key_exists($workerId, $administrativeErrors);
+    $incidenceAccessDenied = (string) ($administrativeErrors[$workerId] ?? '') === 'not_authorized';
     $canCreateIncidence = ($incidenceCreateAllowed ?? false) === true
         && is_array($incidenceCreateKeys ?? null)
         && is_string($incidenceCreateKeys[$workerId] ?? null)
@@ -250,6 +263,7 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         'incidence_count' => is_int($attendanceRow['incidence_count'] ?? null) ? $attendanceRow['incidence_count'] : null,
         'incidences' => $incidenceList,
         'incidence_error' => $incidenceError,
+        'incidence_access_denied' => $incidenceAccessDenied,
         'can_create_incidence' => $canCreateIncidence,
         'journey_href' => $journeyHref,
         'incidence_href' => $incidenceHref,
@@ -354,7 +368,7 @@ if ($rosterFallbackDisplayed) {
                                         <?php $time = $slot['time_local']; $slotValue = $slot['value']; ?>
                                         <td>
                                             <?php if (($slotValue['ambiguous'] ?? false) === true): ?>
-                                                <span class="badge text-bg-warning">Requiere revisión</span>
+                                                <span class="badge bg-transparent border text-warning-emphasis">Requiere revisión</span>
                                             <?php elseif ($time !== null): ?>
                                                 <time datetime="<?= $esc((string) ($time['utc'] ?? '')) ?>" title="Hora local<?= (($time['date'] ?? $selectedDate) !== $selectedDate) ? ' · ' . $esc((string) ($time['date'] ?? '')) : '' ?>">
                                                     <?= $esc((string) ($time['time'] ?? '—')) ?>
@@ -376,7 +390,7 @@ if ($rosterFallbackDisplayed) {
                                     </td>
                                     <td>
                                         <?php if ($viewRow['incidence_count'] !== null): ?>
-                                            <span class="badge text-bg-light border"><?= (int) $viewRow['incidence_count'] ?></span>
+                                            <span class="badge bg-transparent border text-body-secondary"><?= (int) $viewRow['incidence_count'] ?></span>
                                             <span class="visually-hidden"><?= $viewRow['incidence_count'] === 1 ? 'incidencia registrada' : 'incidencias registradas' ?></span>
                                         <?php else: ?><span class="text-muted">No disponible</span><?php endif; ?>
                                     </td>
@@ -403,8 +417,11 @@ if ($rosterFallbackDisplayed) {
                                                 <?php else: ?>
                                                     <button type="button" class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#<?= $esc($viewRow['modal_id']) ?>"><i class="ti ti-eye me-1" aria-hidden="true"></i> Ver detalle</button>
                                                     <a class="dropdown-item pointer" href="<?= $esc($viewRow['journey_href']) ?>"><i class="ti ti-calendar-time me-1" aria-hidden="true"></i> Jornada</a>
-                                                    <a class="dropdown-item pointer" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="ti ti-alert-circle me-1" aria-hidden="true"></i> Incidencias</a>
-                                                    <?php if ($viewRow['can_create_incidence']): ?><a class="dropdown-item pointer" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="ti ti-plus me-1" aria-hidden="true"></i> Registrar incidencia</a><?php endif; ?>
+                                                    <?php if ($viewRow['report_href'] !== null): ?><a class="dropdown-item pointer" href="<?= $esc($viewRow['report_href']) ?>"><i class="ti ti-list-details me-1" aria-hidden="true"></i> Marcaciones</a><?php endif; ?>
+                                                    <?php if (!$viewRow['incidence_access_denied']): ?>
+                                                        <a class="dropdown-item pointer" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="ti ti-alert-circle me-1" aria-hidden="true"></i> Incidencias</a>
+                                                        <?php if ($viewRow['can_create_incidence']): ?><a class="dropdown-item pointer" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="ti ti-plus me-1" aria-hidden="true"></i> Registrar incidencia</a><?php endif; ?>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -517,7 +534,11 @@ if ($rosterFallbackDisplayed) {
                         <section class="border rounded p-3" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-incidences-title">
                         <h3 class="h6 mb-2" id="<?= $esc($viewRow['modal_id']) ?>-incidences-title">Incidencias relacionadas<?php if (!$viewRow['incidence_error'] && $viewRow['incidences'] !== null): ?> (<?= count($viewRow['incidences']) ?>)<?php endif; ?></h3>
                         <?php if ($viewRow['incidence_error']): ?>
-                            <p class="alert alert-warning py-2" role="status">La consulta de incidencias no está disponible; no se confirma un resultado vacío.</p>
+                            <?php if ($viewRow['incidence_access_denied']): ?>
+                                <p class="text-muted" role="status">No cuentas con permiso para consultar incidencias en esta localidad.</p>
+                            <?php else: ?>
+                                <p class="alert alert-warning py-2" role="status">La consulta de incidencias no está disponible; no se confirma un resultado vacío.</p>
+                            <?php endif; ?>
                         <?php elseif ($viewRow['incidences'] === null): ?>
                             <p class="text-muted">No hay una lectura de incidencias disponible para este colaborador.</p>
                         <?php elseif ($viewRow['incidences'] === []): ?>
@@ -543,8 +564,16 @@ if ($rosterFallbackDisplayed) {
                         </section>
                     </div>
                     <div class="modal-footer">
-                        <?php if (!$syntheticDetailPreviewMode): ?><a class="btn btn-outline-secondary" href="<?= $esc($viewRow['incidence_href']) ?>">Ver incidencias</a><?php endif; ?>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <div class="row g-0 ms-auto w-100 justify-content-end">
+                            <div class="col-12 col-md-auto d-grid me-0 me-md-2 mb-1 mb-md-0">
+                                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button>
+                            </div>
+                            <?php if (!$syntheticDetailPreviewMode): ?>
+                                <div class="col-12 col-md-auto d-grid">
+                                    <?php if (!$viewRow['incidence_access_denied']): ?><a class="btn btn-primary" href="<?= $esc($viewRow['incidence_href']) ?>"><i class="ti ti-alert-circle me-1" aria-hidden="true"></i>Ver incidencias</a><?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -614,10 +643,10 @@ if ($rosterFallbackDisplayed) {
                 <div class="modal-footer">
                     <div class="row g-0 ms-auto w-100 justify-content-end">
                         <div class="col-12 col-md-auto d-grid me-0 me-md-2 mb-1 mb-md-0">
-                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x" aria-hidden="true"></i> Cancelar</button>
+                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i> Cancelar</button>
                         </div>
                         <div class="col-12 col-md-auto d-grid">
-                            <button type="button" class="btn btn-primary" data-checador-search-action="search"><i class="ti ti-search" aria-hidden="true"></i> Buscar</button>
+                            <button type="button" class="btn btn-primary" data-checador-search-action="search"><i class="ti ti-search me-1" aria-hidden="true"></i> Buscar</button>
                         </div>
                     </div>
                 </div>

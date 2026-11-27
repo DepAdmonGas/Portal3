@@ -210,16 +210,14 @@ $serviceCallAt = strpos($controllerSource, '$reader->lifecycleAction(');
 $readbackAt = is_int($serviceCallAt)
     ? strpos($controllerSource, '$reader->readIncidence($user, $uuidIncidencia)', $serviceCallAt)
     : false;
-$assert(is_int($authGuardAt) && is_int($serviceCallAt) && $authGuardAt < $serviceCallAt
-    && str_contains($viewSource, "!empty(\$lifecyclePermissions['resolve'])")
-    && str_contains($viewSource, 'Demostración sintética: estas acciones sólo cambian el historial local')
-    && str_contains($viewSource, 'ChecadorPresentationFormatter::incidenceStatusLabel')
-    && str_contains($formatterSource, "'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta; pendiente de autorización'")
-    && str_contains($controllerSource, 'Acción confirmada en el historial sintético')
-    && is_int($readbackAt) && $serviceCallAt < $readbackAt,
-    'real per-action ACL remains before the provider, successful actions require canonical readback, and demo outcomes are labelled in Spanish');
-$assert(str_contains(file_get_contents(__DIR__ . '/../app/Core/Route.php'), "['auth', 'csrf']")
-    && str_contains(file_get_contents(__DIR__ . '/../app/Middleware/CsrfMiddleware.php'), "\$_POST['_csrf_token']"), 'existing CSRF middleware and form-token handling remain in the established route boundary');
+$sqlSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorAdministrativeIncidenceSqlService.php');
+$assert(str_contains($controllerSource, 'm06AdministrativeIncidenceSqlService()->transition(')
+    && str_contains($sqlSource, 'ChecadorAccessService::authorizeLifecycle($workplaceId, $action)')
+    && str_contains($viewSource, 'name="expected_current_revision"')
+    && !str_contains($viewSource, 'Demostración sintética: estas acciones sólo cambian el historial local'),
+    'M06 uses its authorized SQL lifecycle and revision guard without restoring retired demo controls');
+$assert(str_contains(file_get_contents(__DIR__ . '/../app/Core/Route.php'), "['auth', 'csrf', 'dpto-operativo-activo']")
+    && str_contains(file_get_contents(__DIR__ . '/../app/Middleware/CsrfMiddleware.php'), "array_key_exists('_csrf_token', \$_POST)"), 'existing CSRF middleware and form-token handling remain in the established route boundary');
 $assert(str_contains($serviceSource, "\$headers['Idempotency-Key']")
     && str_contains($serviceSource, "'expected_current_revision' => \$expectedCurrentRevision")
     && str_contains($controllerSource, 'confirm_action'), 'the existing CSRF confirmation, expected revision and idempotency contract remain intact');

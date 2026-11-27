@@ -356,7 +356,8 @@ final class ChecadorAdjustmentSqlReadService
             ->orderBy('ea.id_ajuste_administrativo')->orderBy('e.revision_numero')
             ->get(['ea.id_ajuste_administrativo', 'e.id as evaluation_id', 'e.id_jornada_programada',
                 'e.id_calculo_jornada', 'e.id_personal', 'e.id_estacion', 'e.fecha_jornada_local',
-                'e.revision_numero', 'e.estado_evaluacion', 'e.estado_revision_humana', 'e.creado_at_utc']);
+                'e.revision_numero', 'e.version_algoritmo_admin', 'e.version_politica',
+                'e.estado_evaluacion', 'e.estado_revision_humana', 'e.creado_at_utc']);
         $result = [];
         foreach ($rows as $row) {
             $result[(int) $row->id_ajuste_administrativo][] = [
@@ -367,6 +368,8 @@ final class ChecadorAdjustmentSqlReadService
                 'workplace_id' => (int) $row->id_estacion,
                 'work_date' => (string) $row->fecha_jornada_local,
                 'revision' => (int) $row->revision_numero,
+                'algorithm_version' => (string) $row->version_algoritmo_admin,
+                'policy_version' => (string) $row->version_politica,
                 'status' => (string) $row->estado_evaluacion,
                 'human_review_status' => (string) $row->estado_revision_humana,
                 'created_at_utc' => (string) $row->creado_at_utc,

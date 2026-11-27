@@ -45,7 +45,7 @@ $checks = [
         str_contains($view, 'data-checador-attendance-results')
         && str_contains($view, 'data-attendance-state="<?= $esc($state) ?>"')
         && str_contains($view, 'data-checador-search-action="search"')
-        && str_contains($view, 'data-bs-dismiss="modal"><i class="ti ti-x"')
+        && str_contains($view, 'data-bs-dismiss="modal"><i class="ti ti-x')
         && !str_contains($view, 'Limpiar filtros')
         && str_contains($view, 'data-workplace-id="<?= $selectedWorkplaceId ?? \'\' ?>"')
         && !str_contains($view, 'name="workplace_id"')

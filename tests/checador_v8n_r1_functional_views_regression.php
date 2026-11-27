@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+\App\Core\Session::init();
 
 $passes = 0;
 $fails = 0;
@@ -60,8 +61,10 @@ $assert(str_contains($controller, "'schedule-history' : (\$scheduleWeekMode ? 's
     && str_contains($controller, "'adjustments' => 'workspace-adjustments'")
     && str_contains($controller, "'temporary-access' => 'workspace-temporary-access'"), 'daily, weekly, history and four operational modules dispatch to distinct views');
 $temporaryReadCall = 'authorizeTemporaryAccess($requestedWorkplace, \'leer\')';
+$temporarySqlCall = 'listForLocality($currentUser, $requestedWorkplace)';
 $assert(str_contains($controller, $temporaryReadCall)
-    && strpos($controller, $temporaryReadCall) < strpos($controller, 'listTemporaryAccessRequests($currentUser)'), 'temporary-access GET rechecks its independent read grant before queue retrieval');
+    && str_contains($controller, $temporarySqlCall)
+    && strpos($controller, $temporaryReadCall) < strpos($controller, $temporarySqlCall), 'temporary-access GET rechecks its read grant before SQL queue retrieval');
 
 $journey = $render('workspace-journeys.php', $common + [
     'state' => 'success',
@@ -95,37 +98,30 @@ $assert($tableEnd !== false && $detailModal !== false && $tableEnd < $detailModa
     'journey detail modal is rendered after the table, outside DataTables rows');
 
 $incidences = $render('workspace-incidences.php', $common + [
-    'administrativeIncidences' => [558 => [[
-        'uuid_incidencia' => 'inc-1', 'category' => 'VACATION', 'current_status' => 'ACTIVE', 'current_revision' => 2,
-        'date_range' => ['start_date' => '2026-10-19', 'end_date' => '2026-10-20'],
-        'summary_reason' => 'Motivo de prueba', 'summary_evidence_reference' => 'EVID-1',
-        'revisions' => [['revision_number' => 1, 'status' => 'ACTIVE', 'reason' => 'Motivo inicial', 'created_by_user_id' => 7, 'created_at_utc' => '2026-10-18T12:00:00Z']],
-    ]]],
-    'administrativeErrors' => [],
-    'administrativeEvaluations' => [],
-    'administrativeEvaluationErrors' => [],
+    'incidenceState' => 'ready', 'incidenceCanCreate' => false,
+    'incidenceCanRevise' => false, 'incidenceLifecyclePermissions' => [],
 ]);
-$assert(str_contains($incidences, 'Incidencias e historial')
-    && str_contains($incidences, 'Vacaciones')
-    && str_contains($incidences, 'Activa')
-    && str_contains($incidences, 'Motivo inicial')
-    && !str_contains($incidences, '<form'), 'incidence workspace renders revision history as read-only and escapes dynamic values');
+$assert(str_contains($incidences, 'Incidencias del personal')
+    && str_contains($incidences, 'data-m06-data-url="/departamento-operativo/recursos-humanos/checador/incidencias/data"')
+    && str_contains($incidences, 'm06-incidence-history-pane')
+    && !str_contains($incidences, 'm06-incidence-create-modal'),
+    'M06 renders the authorized read-only AJAX table and history without granting creation');
 
 $adjustments = $render('workspace-adjustments.php', $common + [
-    'administrativeEvaluations' => [558 => ['work_date' => '2026-10-19', 'evaluation_exists' => true, 'evaluation' => [
-        'revision_number' => 3,
-        'linked_adjustments' => [[
-            'uuid_ajuste' => 'adjustment-1', 'uuid_ajuste_logico' => 'logical-1', 'adjustment_type' => 'OVERRIDE_STATUS', 'revision_number' => 2, 'adjustment_status' => 'ACTIVE',
-        ]],
-    ]]],
-    'administrativeEvaluationErrors' => [],
+    'adjustmentState' => 'ready',
+    'adjustmentItems' => [[
+        'current' => ['id'=>62, 'uuid'=>'adjustment-1', 'logical_uuid'=>'logical-1', 'worker_name'=>'Trabajadora de prueba', 'type'=>'OVERRIDE_STATUS', 'status'=>'ACTIVE', 'revision'=>2],
+        'revisions' => [['revision'=>1, 'type'=>'OVERRIDE_STATUS', 'status'=>'ACTIVE', 'reason'=>'Motivo inicial']],
+    ]],
+    'adjustmentTypes' => ['OVERRIDE_STATUS'=>'Ajuste administrativo de estado'],
+    'adjustmentStatuses' => ['ACTIVE'=>'Vigente'],
 ]);
 $assert(str_contains($adjustments, 'Ajustes administrativos')
     && str_contains($adjustments, 'Ajuste administrativo de estado')
-    && str_contains($adjustments, 'Vigente')
-    && str_contains($adjustments, 'adjustment-1')
-    && str_contains($adjustments, 'Portal3 no determina faltas')
-    && !str_contains($adjustments, '<form'), 'adjustment workspace shows only linked read references and states its boundary');
+    && str_contains($adjustments, 'Vigente') && str_contains($adjustments, 'adjustment-1')
+    && str_contains($adjustments, 'Motivo inicial')
+    && !str_contains($adjustments, 'authorize_falta'),
+    'M07 renders current and historical read-only SQL projections without FALTA writes');
 
 $temporary = $render('workspace-temporary-access.php', $common + [
     'temporaryAccessPanel' => [
@@ -138,10 +134,11 @@ $temporary = $render('workspace-temporary-access.php', $common + [
 ]);
 $assert(str_contains($temporary, 'Solicitudes de acceso temporal')
     && str_contains($temporary, 'Colaborador de prueba')
-    && str_contains($temporary, 'No incluido en esta lectura')
-    && !str_contains($temporary, 'PIN de configuración')
-    && !str_contains($temporary, 'admin-pin')
-    && !str_contains($temporary, '<form'), 'temporary-access workspace renders only queue data and does not expose write controls or a PIN');
+    && str_contains($temporary, 'Vencimiento de solicitud (UTC)')
+    && !str_contains($temporary, 'No incluido en esta lectura')
+    && str_contains($temporary, 'PIN de configuración')
+    && !str_contains($temporary, '/authorize"')
+    && !str_contains($temporary, 'name="device_id"'), 'M08 retains both cards and shows no write action or PIN without the required grants');
 $oneTimePin = $render('workspace-temporary-access.php', $common + [
     'canViewTemporaryPin' => true,
     'temporaryAccessFeedback' => ['type' => 'success', 'message' => 'Solicitud autorizada.', 'temporary_pin' => '482915', 'pin_expires_at_utc' => '2026-10-19T12:05:00Z'],
@@ -171,8 +168,9 @@ $workspaceReadGate = strpos($controller, 'if ($workspace !== \'temporary-access\
 $journeyReadGate = strpos($controller, '$workspace !== \'journeys\' && !$workspaceSnapshotMissing');
 $journeyReadBlock = strpos($controller, 'persisted_read_contract_unavailable');
 $snapshotCreateCall = strpos($controller, 'createDailyPunchSnapshot(');
-$assert($workspaceReadGate !== false && $journeyReadGate !== false && $journeyReadBlock !== false && $snapshotCreateCall !== false && $workspaceReadGate < $snapshotCreateCall
-    && str_contains($controller, "'daily-attendance' => 'daily-attendance'"), 'secondary workspaces avoid creating daily snapshots on direct load and require the stable reference for linked reads');
+$assert($workspaceReadGate !== false && $journeyReadGate !== false && $journeyReadBlock !== false && $snapshotCreateCall === false
+    && str_contains($controller, "'daily-attendance' => 'daily-attendance'")
+    && str_contains($controller, 'readDailySqlAttendance('), 'current M01 uses authorized SQL and does not create API snapshots on direct loads');
 $moduleStart = strpos($controller, '$entries = [', strpos($controller, 'private function buildModuleNavigation'));
 $moduleEnd = $moduleStart === false ? false : strpos($controller, '];', $moduleStart);
 $moduleSource = $moduleStart !== false && $moduleEnd !== false ? substr($controller, $moduleStart, $moduleEnd - $moduleStart) : '';

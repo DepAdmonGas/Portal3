@@ -73,6 +73,65 @@ $schema->create('op_rh_personal_localidad_version', static function ($table): vo
     $table->dateTime('valid_to_utc')->nullable();
     $table->dateTime('recorded_at_utc');
 });
+$schema->create('op_rh_v2_worker_workplace_coverage_versions', static function ($table): void {
+    $table->integer('id')->primary();
+    $table->string('coverage_uuid');
+    $table->integer('revision_no');
+    $table->integer('supersedes_id')->nullable();
+    $table->integer('id_personal');
+    $table->integer('id_home_workplace');
+    $table->integer('id_home_membership_version');
+    $table->integer('id_coverage_workplace');
+    $table->date('fecha_desde_local');
+    $table->date('fecha_hasta_local_exclusiva');
+    $table->string('timezone_iana');
+    $table->text('proposed_schedule_json');
+    $table->string('status');
+    $table->dateTime('requested_at_utc');
+});
+$schema->create('op_rh_v2_turnos_asignaciones', static function ($table): void {
+    $table->integer('id')->primary();
+    $table->integer('id_personal');
+    $table->integer('id_estacion');
+    $table->integer('id_plantilla')->nullable();
+    $table->string('tipo_asignacion');
+    $table->string('dia_semana');
+    $table->date('valido_desde');
+    $table->date('valido_hasta')->nullable();
+    $table->integer('es_activo');
+    $table->integer('id_cobertura_version')->nullable();
+    $table->integer('creado_por_usuario_id')->nullable();
+});
+$schema->create('op_rh_v2_turnos_audit_log', static function ($table): void {
+    $table->integer('id')->primary();
+    $table->string('entity_type');
+    $table->integer('entity_id');
+    $table->string('operacion');
+    $table->integer('id_estacion')->nullable();
+    $table->integer('id_personal')->nullable();
+    $table->string('tipo_asignacion')->nullable();
+    $table->date('valido_desde')->nullable();
+    $table->date('valido_hasta')->nullable();
+    $table->integer('id_plantilla')->nullable();
+    $table->integer('version_plantilla')->nullable();
+    $table->text('detalle_json')->nullable();
+});
+$schema->create('op_rh_v2_turnos_plantillas', static function ($table): void {
+    $table->integer('id')->primary();
+    $table->integer('version');
+    $table->string('nombre');
+    $table->string('scope');
+    $table->integer('id_estacion')->nullable();
+});
+$schema->create('op_rh_v2_turnos_segmentos', static function ($table): void {
+    $table->integer('id_plantilla');
+    $table->integer('ordinal');
+    $table->string('tipo_segmento');
+    $table->string('hora_inicio_local');
+    $table->string('hora_fin_local');
+    $table->integer('dia_offset_inicio');
+    $table->integer('dia_offset_fin');
+});
 
 Capsule::table('op_rh_localidades')->insert([
     ['id' => 1, 'numlista' => 2, 'localidad' => 'Interlomas'],
@@ -175,6 +234,79 @@ $assert(str_contains($serviceSource, "'bd_admongas_v2_preprod'")
 $positive = $authorizedReader->readDay(1, '2026-11-23', [1]);
 $assert(($positive['ok'] ?? false) === true && count($positive['events'] ?? []) === 1,
     'positive fixture reads only persisted events for the authorized canonical locality');
+$coverageWithoutRows = $authorizedReader->readPersistedCoverageForDate(1, '2026-11-23', [1]);
+$assert(($coverageWithoutRows['ok'] ?? false) === true
+    && ($coverageWithoutRows['data']['status'] ?? '') === 'none'
+    && ($coverageWithoutRows['data']['by_worker'] ?? null) === [],
+    'isolated empty coverage tables produce no coverage without fabricating a persisted assignment');
+$coverageDenied = $authorizedReader->readPersistedCoverageForDate(2, '2026-11-23', [1]);
+$assert(($coverageDenied['error']['kind'] ?? '') === 'locality_not_authorized',
+    'persisted coverage reader rejects a locality outside the server-derived allowlist');
+$coverageUuid = 'ea2fdf8d-ea83-5df2-9a2a-cf547c63e7a8';
+$coverageFrom = '2026-11-23';
+$coverageUntil = '2026-11-24';
+$coverageWorkerId = 900003;
+$connection->table('op_rh_personal')->insert([
+    'id' => $coverageWorkerId, 'id_estacion' => 10, 'nombre_completo' => 'Fixture Cobertura M01',
+    'no_colaborador' => 'FIX-COV-M01', 'estado' => 1,
+]);
+$schedule = [];
+$weekdays = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+foreach ($weekdays as $dayIndex => $weekday) {
+    $schedule[] = $weekday === 'LUNES'
+        ? ['dia_semana' => $weekday, 'tipo' => 'WORK', 'id_plantilla' => 8, 'version_plantilla' => 1]
+        : ['dia_semana' => $weekday, 'tipo' => 'DAY_OFF'];
+}
+Capsule::table('op_rh_personal_localidad_version')->insert([
+    'id' => 7001, 'worker_id' => $coverageWorkerId, 'workplace_id' => 1,
+    'valid_from_utc' => '2026-11-01 00:00:00', 'valid_to_utc' => null,
+    'recorded_at_utc' => '2026-11-01 00:00:00',
+]);
+Capsule::table('op_rh_v2_worker_workplace_coverage_versions')->insert([
+    'id' => 7101, 'coverage_uuid' => $coverageUuid, 'revision_no' => 1, 'supersedes_id' => null,
+    'id_personal' => $coverageWorkerId, 'id_home_workplace' => 1, 'id_home_membership_version' => 7001,
+    'id_coverage_workplace' => 1, 'fecha_desde_local' => $coverageFrom,
+    'fecha_hasta_local_exclusiva' => $coverageUntil, 'timezone_iana' => 'America/Mexico_City',
+    'proposed_schedule_json' => json_encode($schedule, JSON_THROW_ON_ERROR), 'status' => 'AUTHORIZED',
+    'requested_at_utc' => '2026-11-22 00:00:00',
+]);
+Capsule::table('op_rh_v2_turnos_plantillas')->insert([
+    'id' => 8, 'version' => 1, 'nombre' => 'Turno aislado', 'scope' => 'GLOBAL', 'id_estacion' => null,
+]);
+Capsule::table('op_rh_v2_turnos_segmentos')->insert([
+    'id_plantilla' => 8, 'ordinal' => 1, 'tipo_segmento' => 'WORK',
+    'hora_inicio_local' => '06:00:00', 'hora_fin_local' => '14:00:00',
+    'dia_offset_inicio' => 0, 'dia_offset_fin' => 0,
+]);
+foreach ($schedule as $index => $entry) {
+    $templateId = ($entry['tipo'] ?? '') === 'WORK' ? 8 : null;
+    $assignmentId = 7201 + $index;
+    Capsule::table('op_rh_v2_turnos_asignaciones')->insert([
+        'id' => $assignmentId, 'id_personal' => $coverageWorkerId, 'id_estacion' => 1, 'id_plantilla' => $templateId,
+        'tipo_asignacion' => 'TEMPORAL', 'dia_semana' => $entry['dia_semana'],
+        'valido_desde' => $coverageFrom, 'valido_hasta' => $coverageUntil, 'es_activo' => 1,
+        'id_cobertura_version' => 7101, 'creado_por_usuario_id' => 7,
+    ]);
+    Capsule::table('op_rh_v2_turnos_audit_log')->insert([
+        'id' => 7301 + $index, 'entity_type' => 'WORKPLACE_COVERAGE', 'entity_id' => 7101,
+        'operacion' => 'COVERAGE_ASSIGN', 'id_estacion' => 1, 'id_personal' => $coverageWorkerId,
+        'tipo_asignacion' => 'TEMPORAL', 'valido_desde' => $coverageFrom, 'valido_hasta' => $coverageUntil,
+        'id_plantilla' => $templateId, 'version_plantilla' => $templateId === null ? null : 1,
+        'detalle_json' => json_encode([
+            'coverage_revision_id' => 7101, 'coverage_uuid' => $coverageUuid,
+            'assignment_id' => $assignmentId, 'source' => 'WORKPLACE_COVERAGE',
+        ], JSON_THROW_ON_ERROR),
+    ]);
+}
+$coveragePositive = $authorizedReader->readPersistedCoverageForDate(1, '2026-11-23', [1]);
+$assert(($coveragePositive['ok'] ?? false) === true
+    && ($coveragePositive['data']['by_worker'][$coverageWorkerId]['status'] ?? '') === 'authorized'
+    && ($coveragePositive['data']['by_worker'][$coverageWorkerId]['template']['segmentos'][0]['hora_inicio_local'] ?? '') === '06:00:00',
+    'isolated authorized coverage requires the exact linked assignment, full-week audit, membership and template');
+$coverageExclusiveEnd = $authorizedReader->readPersistedCoverageForDate(1, '2026-11-24', [1]);
+$assert(($coverageExclusiveEnd['ok'] ?? false) === true
+    && ($coverageExclusiveEnd['data']['by_worker'] ?? []) === [],
+    'coverage interval end is exclusive and is not applied on the first date after expiry');
 $assert(($positive['events'][0]['id_personal_resuelto'] ?? null) === 900001
     && ($positive['events'][0]['integrity_seal_present'] ?? false) === true
     && ($positive['events'][0]['integrity_verification_status'] ?? '') === 'NOT_VERIFIED_BY_PORTAL3',
@@ -326,7 +458,7 @@ $assert(str_contains($syntheticMethod, 'm01SyntheticDetailPreviewRows(')
     && !preg_match('/evaluateJourney\(|createDailyPunchSnapshot\(|readDailyPunchSnapshotPage\(|getEffectiveSchedule\(/', $syntheticMethod),
     'isolated M01 fixtures are local-only and do not call API, resolve schedules, or execute the Motor');
 $assert(str_contains($controller, "\$empty['observed_only_events'] = \$unrosteredEvents;")
-    && str_contains($controller, 'if (isset($rosterById[$workerId]) && $belongsToLocalityAtEvent)')
+    && str_contains($controller, 'isset($rosterById[$workerId]) && ($belongsToLocalityAtEvent || $hasAuthorizedCoverage)')
     && str_contains($controller, 'WorkerWorkplaceAssignmentResolver')
     && str_contains($controller, '($membership[\'status\'] ?? \'\') === \'RESOLVED_SINGLE\'')
     && str_contains($controller, '$unrosteredEvents[] = [')

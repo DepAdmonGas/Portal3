@@ -97,18 +97,18 @@ try {
     $dashboardView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/index.php') ?: '';
     $assert(str_contains($controller, 'ChecadorDailyReadService::demoReferenceDate()')
         && str_contains($controller, "? 'month' : 'today'")
-        && str_contains($reportView, "'year' => 'Año en curso · mensual'")
-        && str_contains($reportView, 'Registros originales · consulta de solo lectura')
+        && str_contains($reportView, "'specific' => 'Mes y año específicos'")
+        && str_contains($reportView, 'Consulta registros originales por fecha local de captura')
         && str_contains($reportView, 'name="export" value="csv"'), 'controller defaults and report periods preserve role defaults, source boundary and CSV action');
     $dailyAttendanceView = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/daily-attendance.php') ?: '';
     $controller = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
     $assert(str_contains($controller, '$this->renderModuleDirectory();')
         && str_contains($controller, "renderDashboardWorkspace('daily-attendance')")
-        && str_contains($dailyAttendanceView, '<table class="table table-striped table-bordered text-nowrap align-middle mb-0"')
+        && str_contains($dailyAttendanceView, 'id="checador-daily-attendance-table"')
         && str_contains($dailyAttendanceView, 'Asistencia del día')
-        && str_contains($dailyAttendanceView, '>Demo</span>'), 'module directory and separate operational daily workspace remain available with a discreet demo marker');
+        && !str_contains($dailyAttendanceView, '>Demo</span>'), 'module directory and operational daily workspace remain available without a demo marker');
     $moduleLabels = [
-        'Asistencia del día', 'Programación semanal', 'Horarios y turnos', 'Jornadas laborales', 'Incidencias',
+        'Asistencia del día', 'Rol de comodines', 'Programación semanal', 'Horarios y turnos', 'Jornadas laborales', 'Incidencias',
         'Ajustes administrativos', 'PIN temporal', 'Reportes', 'Comparación con Nómina', 'Configuración',
     ];
     $moduleDirectoryStart = strpos($controller, '$entries = [', strpos($controller, 'private function buildModuleNavigation'));
@@ -116,12 +116,12 @@ try {
     $moduleDirectory = $moduleDirectoryStart !== false && $moduleDirectoryEnd !== false
         ? substr($controller, $moduleDirectoryStart, $moduleDirectoryEnd - $moduleDirectoryStart)
         : '';
-    $assert(substr_count($moduleDirectory, "'label' =>") === 10
+    $assert(substr_count($moduleDirectory, "'label' =>") === 11
         && array_reduce($moduleLabels, static fn(bool $allFound, string $label): bool => $allFound && str_contains($moduleDirectory, "'label' => '{$label}'"), true)
         && substr_count($dashboardView, 'aria-label="Módulos de Checador"') === 1,
-        'the module directory presents one consistent navigation for ten registered modules');
+        'the module directory presents one consistent navigation for eleven registered modules');
     $assert(str_contains($dashboardView, 'row-cols-1 row-cols-md-2 row-cols-xl-3')
-        && str_contains($dailyAttendanceView, '<table class="table table-striped table-bordered text-nowrap align-middle mb-0"')
+        && str_contains($dailyAttendanceView, 'id="checador-daily-attendance-table"')
         && str_contains($dailyAttendanceView, 'Entrada 1') && str_contains($dailyAttendanceView, 'Salida 1')
         && str_contains($dailyAttendanceView, 'Entrada 2') && str_contains($dailyAttendanceView, 'Salida 2')
         && !str_contains($dailyAttendanceView, 'Almuerzo') && !str_contains($dailyAttendanceView, 'Comida'),

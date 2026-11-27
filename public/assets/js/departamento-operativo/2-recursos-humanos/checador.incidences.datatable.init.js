@@ -226,10 +226,10 @@
                 processing: true,
                 serverSide: true,
                 stateSave: false,
-                order: [[4, 'desc']],
+                order: [[6, 'desc']],
                 pageLength: 25,
                 lengthMenu: [10, 25, 50, 100],
-                columnDefs: [{ targets: 5, orderable: false, searchable: false }],
+                columnDefs: [{ targets: [1, 4, 7], orderable: false, searchable: false }],
                 language: {
                     url: lang,
                     emptyTable: '', zeroRecords: '',
@@ -244,10 +244,21 @@
                 columns: [
                     { data: 'worker_name', render: function (value, type, row) {
                         if (type !== 'display') return value;
-                        return '<span class="fw-semibold">' + escapeHtml(value || 'Nombre no disponible') + '</span><span class="d-block small text-muted">ID ' + (Number(row.worker_id) || 0) + '</span>';
+                        const employeeNumber = row.employee_number ? ' · No. ' + row.employee_number : '';
+                        return '<span class="fw-semibold">' + escapeHtml(value || 'Nombre no disponible') + '</span><span class="d-block small text-muted">ID ' + (Number(row.worker_id) || 0) + escapeHtml(employeeNumber) + '</span>';
+                    } },
+                    { data: null, render: function (_value, type) {
+                        const name = table.dataset.m06WorkplaceName || 'Localidad no disponible';
+                        return type === 'display' ? escapeHtml(name) : name;
                     } },
                     { data: 'category', render: function (value, type) { return type === 'display' ? escapeHtml(categoryLabel(value)) : value; } },
                     { data: 'start_date', render: function (value, type, row) { return type === 'display' ? '<span class="text-nowrap">' + escapeHtml(value) + ' — ' + escapeHtml(row.end_date) + '</span>' : value; } },
+                    { data: 'reason', render: function (value, type) {
+                        const reason = String(value || 'Sin motivo registrado');
+                        if (type !== 'display') return reason;
+                        const excerpt = reason.length > 160 ? reason.slice(0, 157) + '…' : reason;
+                        return '<span class="text-break" title="' + escapeHtml(reason) + '">' + escapeHtml(excerpt) + '</span>';
+                    } },
                     { data: 'current_status', render: function (value, type) { return type === 'display' ? '<span class="badge ' + (value === 'PENDING_APPROVAL' ? 'text-bg-warning' : 'text-bg-secondary') + '">' + escapeHtml(statusLabel(value)) + '</span>' : value; } },
                     { data: 'created_at_utc', render: function (value, type) { return type === 'display' ? '<span class="text-nowrap">' + escapeHtml(value || 'No disponible') + '</span>' : value; } },
                     { data: null, className: 'text-center', defaultContent: '', render: function (_value, type, row) { return type === 'display' ? renderActions(row, table) : ''; } }

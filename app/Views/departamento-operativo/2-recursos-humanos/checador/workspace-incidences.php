@@ -68,7 +68,8 @@ $canManageIncidences = ($incidenceCanCreate ?? false) === true || $canReviseInci
                            data-m06-data-url="/departamento-operativo/recursos-humanos/checador/incidencias/data">
                         <caption class="visually-hidden">Incidencias administrativas de <?= $esc($selectedWorkplaceName ?? 'la localidad seleccionada') ?></caption>
                         <thead><tr>
-                            <th scope="col">Trabajador</th><th scope="col">Tipo</th><th scope="col">Periodo</th>
+                            <th scope="col">Trabajador / número de empleado</th><th scope="col">Localidad</th>
+                            <th scope="col">Tipo</th><th scope="col">Periodo</th><th scope="col">Motivo</th>
                             <th scope="col">Estado</th><th scope="col">Registro UTC</th>
                             <th scope="col" class="text-center"><span class="visually-hidden">Acciones</span><i class="ti ti-dots-vertical" aria-hidden="true"></i></th>
                         </tr></thead><tbody></tbody>

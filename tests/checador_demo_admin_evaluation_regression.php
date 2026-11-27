@@ -164,12 +164,10 @@ $assert($evaluationGuardPosition !== false && $faltaGuardPosition !== false
     && str_contains($controllerSource, "!== '1'")
     && str_contains($controllerSource, 'authorizeFalta ?'),
     'real Portal3 action ACLs and explicit human confirmation remain ahead of the command and separate by action');
-$assert(str_contains($viewSource, 'name="_csrf_token"')
-    && str_contains($viewSource, 'name="confirm_evaluation" value="1" required')
-    && str_contains($viewSource, "!empty(\$evaluationPermissions['evaluate'])")
-    && str_contains($viewSource, "!empty(\$evaluationPermissions['authorize_falta'])")
-    && str_contains($viewSource, 'Demostración sintética: la respuesta está predefinida'),
-    'demo forms retain CSRF, separate real ACL gates, confirmation and Spanish synthetic disclosure');
+$assert(!str_contains($viewSource, 'name="confirm_evaluation"')
+    && !str_contains($viewSource, 'Demostración sintética: la respuesta está predefinida')
+    && str_contains($viewSource, 'evaluation_links'),
+    'M07 presents persisted evaluation links without restoring retired demo evaluation controls');
 $assert(str_contains($routeSource, "'/recursos-humanos/checador/evaluations/evaluate'")
     && str_contains($serviceSource, "'api/v2/administrative-evaluations/evaluate'")
     && !str_contains($serviceSource, 'evaluateCalculation'),

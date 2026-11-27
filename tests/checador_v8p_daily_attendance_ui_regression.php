@@ -13,6 +13,7 @@ $dashboardWorkspaceSource = $dashboardWorkspaceStart !== false && $configuration
     ? substr($controllerSource, $dashboardWorkspaceStart, $configurationMethodStart - $dashboardWorkspaceStart)
     : '';
 $attendanceDataTableSource = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance.datatable.init.js') ?: '';
+$portalTableStyles = file_get_contents(__DIR__ . '/../public/assets/css/portal-tables.css') ?: '';
 $dataTablesRuntime = file_get_contents(__DIR__ . '/../public/assets/libs/datatables.net/js/jquery.dataTables.min.js') ?: '';
 $render = static function (array $vars) use ($viewPath): string {
     extract($vars, EXTR_SKIP);
@@ -120,6 +121,8 @@ $assert(str_contains($html, 'data-bs-target="#checador-filter-modal"')
     && str_contains($html, 'data-checador-ajax')
     && !str_contains($html, 'name="workplace_id"')
     && str_contains($html, 'data-checador-search-action="search"')
+    && str_contains($html, 'row g-0 ms-auto w-100 justify-content-end')
+    && str_contains($html, 'ti ti-x me-1')
     && str_contains($html, 'Cancelar') && str_contains($html, 'Buscar')
     && !str_contains($html, 'Limpiar filtros'), 'filter modal retains only Cancel and Search, with server-derived station scope');
 $assert(count(array_filter($renderedIds, static fn(int $count): bool => $count > 1)) === 0
@@ -131,6 +134,56 @@ $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP
 $assert(str_contains($mainTable, 'Pendiente de clasificación')
     && str_contains($mainTable, 'Marcaciones observadas: 19:06, 20:11'),
     'additional observed times appear beside the neutral status without filling entry or exit slots');
+$assert(str_contains($mainTable, 'badge bg-transparent border text-secondary')
+    && str_contains($mainTable, 'badge bg-transparent border text-body-secondary')
+    && !str_contains($mainTable, 'text-bg-light')
+    && str_contains($portalTableStyles, 'tr.selected > * *:not(.dropdown-menu)')
+    && str_contains($portalTableStyles, '--portal-table-selection-color: #fff'),
+    'status labels and incidence counters remain legible on the shared blue selected-row background');
+$noObservedVars = $vars;
+$noObservedVars['attendanceRows'][0]['status'] = 'no_observed_event';
+$noObservedVars['attendanceRows'][0]['journey_message'] = 'Jornada pendiente de evaluación.';
+$noObservedHtml = $render($noObservedVars);
+$assert(str_contains($noObservedHtml, 'badge bg-transparent border text-body-secondary">Sin marcación observada')
+    && str_contains($noObservedHtml, 'Jornada pendiente de evaluación'),
+    'neutral attendance and pending-evaluation states use transparent badges');
+$notEvaluatedVars = $vars;
+$notEvaluatedVars['attendanceRows'][0]['status'] = 'journey_not_evaluated';
+$notEvaluatedHtml = $render($notEvaluatedVars);
+$assert(str_contains($notEvaluatedHtml, 'badge bg-transparent border text-secondary">Jornada pendiente de evaluación'),
+    'persisted journey-not-evaluated status uses the requested neutral label');
+$detailFooter = '';
+if (preg_match('/<div class="modal-footer">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/', $html, $footerMatches) === 1) {
+    $detailFooter = $footerMatches[1];
+}
+$closePosition = strpos($detailFooter, 'Cerrar');
+$incidencePosition = strpos($detailFooter, 'Ver incidencias');
+$assert($detailFooter !== '' && $closePosition !== false && $incidencePosition !== false
+    && $closePosition < $incidencePosition
+    && str_contains($detailFooter, 'btn bg-danger-subtle text-danger')
+    && str_contains($detailFooter, 'ti ti-x me-1')
+    && str_contains($detailFooter, 'btn btn-primary')
+    && str_contains($detailFooter, 'ti ti-alert-circle me-1')
+    && str_contains($detailFooter, 'row g-0 ms-auto w-100 justify-content-end')
+    && str_contains($detailFooter, 'col-12 col-md-auto d-grid'),
+    'detail modal uses ordered institutional buttons and responsive footer layout');
+$p1PendingVars = $vars;
+$p1PendingVars['attendanceRows'][0]['status'] = 'incomplete';
+$p1PendingVars['attendanceRows'][0]['journey_message'] = 'P1: completitud de sincronización pendiente · P2: cálculo persistido';
+$p1PendingHtml = $render($p1PendingVars);
+preg_match('/<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $p1PendingHtml, $p1PendingTableMatch);
+$p1PendingTable = $p1PendingTableMatch[0] ?? '';
+$assert(str_contains($p1PendingTable, 'Información insuficiente')
+    && str_contains($p1PendingTable, 'completitud de sincronización pendiente'),
+    'persisted P1 incompleteness remains visible when P2 is calculated');
+$scheduleStateVars = $vars;
+$scheduleStateVars['attendanceRows'][0]['schedule']['estado_jornada'] = 'UNSCHEDULED_DAY';
+$scheduleStateHtml = $render($scheduleStateVars);
+preg_match('/<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $scheduleStateHtml, $scheduleStateTableMatch);
+$scheduleStateTable = $scheduleStateTableMatch[0] ?? '';
+$assert(str_contains($scheduleStateTable, 'Sin horario asignado')
+    && !str_contains($scheduleStateTable, 'Descanso programado'),
+    'UNSCHEDULED_DAY remains distinct from explicit DAY_OFF');
 $assert(str_contains($html, 'table-responsive overflow-x-auto overflow-y-hidden pb-4')
     && str_contains($mainTable, 'dropdown-menu dropdown-menu-end')
     && str_contains($mainTable, 'data-worker-id="900001"')
@@ -206,10 +259,15 @@ $assert(str_contains($mainTable, 'Ver detalle')
     && str_contains($html, 'Registro adicional') && str_contains($html, 'Registro sin emparejar')
     && str_contains($html, '2026-10-23 19:06') && str_contains($html, '2026-10-23 20:11')
     && str_contains($html, 'Integridad no verificada por Portal3'), 'detail modal preserves local/UTC event provenance and additional/unmatched events');
+$temporaryScriptsStart = strpos($dashboardWorkspaceSource, "...(\$workspace === 'temporary-access' ? [");
+$temporaryScriptsEnd = $temporaryScriptsStart === false ? false : strpos($dashboardWorkspaceSource, "] : []),", $temporaryScriptsStart);
+$dailyWorkspaceSources = $temporaryScriptsStart !== false && $temporaryScriptsEnd !== false
+    ? substr_replace($dashboardWorkspaceSource, '', $temporaryScriptsStart, $temporaryScriptsEnd + strlen('] : []),') - $temporaryScriptsStart)
+    : $dashboardWorkspaceSource;
 $assert(str_contains($html, '<div class="datatables">')
     && str_contains($controllerSource, "\$workspace === 'daily-attendance'")
     && str_contains($controllerSource, 'jquery.dataTables.min.js')
-    && !str_contains($dashboardWorkspaceSource, 'dataTables.bootstrap5.min.js')
+    && !str_contains($dailyWorkspaceSources, 'dataTables.bootstrap5.min.js')
     && str_contains($controllerSource, '/assets/libs/select2/dist/js/select2.full.min.js')
     && str_contains($controllerSource, '/assets/libs/select2/dist/css/select2.min.css')
     && str_contains($attendanceDataTableSource, 'serverSide: false')

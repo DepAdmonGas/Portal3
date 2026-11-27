@@ -98,6 +98,41 @@ $service = new ChecadorAdministrativeIncidenceSqlService(
     authorizeLifecycle: static fn(Usuario $user, int $workplace, string $action): bool => (int) $user->id === 7 && $workplace === 1
         && in_array($action, ['resolve', 'authorize', 'reject', 'revoke'], true)
 );
+$policyForPeriodMethod = new ReflectionMethod(ChecadorAdministrativeIncidenceSqlService::class, 'policyForPeriod');
+$policyForPeriodMethod->setAccessible(true);
+$policyDatesRead = [];
+$historicalPolicyService = new ChecadorAdministrativeIncidenceSqlService(
+    readPolicy: static function (int $workplace, string $date) use (&$policyDatesRead): array {
+        $policyDatesRead[] = $date;
+        return ['ok' => true, 'data' => [
+            'status' => 'VERSIONED', 'timezone_id' => 'America/Mexico_City',
+            'policy' => ['incidence_deadline_days' => $date < '2026-11-27' ? 7 : 10],
+        ]];
+    },
+    clock: static fn(): DateTimeImmutable => new DateTimeImmutable('2026-11-27 05:59:59.999999', new DateTimeZone('UTC'))
+);
+$historicalPolicyResult = $policyForPeriodMethod->invoke($historicalPolicyService, 1, '2026-11-19', '2026-11-19');
+$assert(($historicalPolicyResult['ok'] ?? false) === true && $policyDatesRead === ['2026-11-19'],
+    'M06 reads the policy version effective on the incident end date, not a later configuration');
+$inclusiveCutoffService = new ChecadorAdministrativeIncidenceSqlService(
+    readPolicy: $policy,
+    clock: static fn(): DateTimeImmutable => new DateTimeImmutable('2026-11-27 05:59:59.999999', new DateTimeZone('UTC'))
+);
+$afterCutoffService = new ChecadorAdministrativeIncidenceSqlService(
+    readPolicy: $policy,
+    clock: static fn(): DateTimeImmutable => new DateTimeImmutable('2026-11-27 06:00:00', new DateTimeZone('UTC'))
+);
+$assert(($policyForPeriodMethod->invoke($inclusiveCutoffService, 1, '2026-11-19', '2026-11-19')['ok'] ?? false) === true
+    && ($policyForPeriodMethod->invoke($afterCutoffService, 1, '2026-11-19', '2026-11-19')['error'] ?? '') === 'registration_deadline_expired',
+    'M06 deadline is inclusive through the end of the last authorized local calendar day');
+$unversionedPolicyService = new ChecadorAdministrativeIncidenceSqlService(
+    readPolicy: static fn(int $workplace, string $date): array => ['ok' => true, 'data' => [
+        'status' => 'UNVERSIONED', 'timezone_id' => 'America/Mexico_City', 'policy' => ['incidence_deadline_days' => 7],
+    ]],
+    clock: $clock
+);
+$assert(($policyForPeriodMethod->invoke($unversionedPolicyService, 1, '2026-11-19', '2026-11-19')['error'] ?? '') === 'policy_unavailable',
+    'M06 fails closed when no versioned historical M11 policy exists');
 
 $assert($service->writeReadiness()['ready'] === true, 'isolated test writer can exercise the reviewed preflight path');
 $closedByDefault = (new ChecadorAdministrativeIncidenceSqlService())->writeReadiness();
@@ -157,6 +192,7 @@ $assert(($read['ok'] ?? false) === true && count($read['data']['items'] ?? []) =
     && ($read['data']['pagination']['records_total'] ?? 0) === 1,
     'SQL list returns the selected locality and complete revision history');
 $searchRead = $service->listForWorkplace($actor, 1, ['search' => 'Trabajador Uno'], 1, 10);
+$searchReason = $service->listForWorkplace($actor, 1, ['search' => 'Solicitud de vacaciones'], 1, 10);
 $searchCategory = $service->listForWorkplace($actor, 1, ['search' => 'Vacaciones'], 1, 10);
 $searchStatus = $service->listForWorkplace($actor, 1, ['search' => 'Pendiente de autorización'], 1, 10);
 $searchMiss = $service->listForWorkplace($actor, 1, ['search' => 'No existe'], 1, 10);
@@ -170,6 +206,7 @@ $assert(($searchRead['ok'] ?? false) === true && count($searchRead['data']['item
     && ($searchRead['data']['pagination']['total_records'] ?? 0) === 1
     && ($searchCategory['data']['pagination']['total_records'] ?? 0) === 1
     && ($searchStatus['data']['pagination']['total_records'] ?? 0) === 1
+    && ($searchReason['data']['pagination']['total_records'] ?? 0) === 1
     && ($rawAxiosEmpty['ok'] ?? false) === true
     && ($rawAxiosWorker['ok'] ?? false) === true
     && ($searchMiss['ok'] ?? false) === true && ($searchMiss['data']['pagination']['records_total'] ?? 0) === 1
@@ -181,7 +218,7 @@ $m06PayloadNormalizer->setAccessible(true);
 $baseDataTablePayload = [
     'draw' => 1, 'workplace_id' => 1, 'start' => 0, 'length' => 25,
     'worker_id' => '', 'category' => '', 'status' => '', 'start_date' => '', 'end_date' => '',
-    'search' => ['value' => '', 'regex' => false], 'order' => [['column' => 4, 'dir' => 'desc']],
+    'search' => ['value' => '', 'regex' => false], 'order' => [['column' => 6, 'dir' => 'desc']],
 ];
 $payloadCases = [
     'initial' => $baseDataTablePayload,
@@ -195,7 +232,7 @@ $payloadCases = [
     ]),
     'clear' => $baseDataTablePayload,
     'page and order' => array_replace($baseDataTablePayload, [
-        'start' => 25, 'order' => [['column' => 2, 'dir' => 'asc']],
+        'start' => 25, 'order' => [['column' => 3, 'dir' => 'asc']],
     ]),
 ];
 $payloadCasesOk = true;
@@ -402,6 +439,14 @@ $assert(str_contains($view, 'm06-incidence-search-modal')
     && str_contains($moduleJs, 'Ver historial')
     && !str_contains($view, 'INCAPACITY') && !str_contains($view, 'JUSTIFICATION'),
     'Portal3-native search, new-incidence modal, table, detail/history and canonical categories are rendered');
+$assert(str_contains($view, '<th scope="col">Trabajador / número de empleado</th>')
+    && str_contains($view, '<th scope="col">Localidad</th>')
+    && str_contains($view, '<th scope="col">Motivo</th>')
+    && str_contains($moduleJs, 'row.employee_number')
+    && str_contains($moduleJs, "data: 'reason'")
+    && str_contains($moduleJs, 'table.dataset.m06WorkplaceName')
+    && str_contains($serviceSource, "->orWhere('r.motivo', 'like', \$like)"),
+    'M06 table presents employee number, authorized locality and current revision reason, with server-side reason search');
 $assert(str_contains($moduleJs, "lifecycle('revision'")
     && str_contains($moduleJs, "lifecycle('resolve'")
     && str_contains($moduleJs, "lifecycle('authorize'")

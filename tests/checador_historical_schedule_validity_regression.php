@@ -137,6 +137,7 @@ $assert(($invalidQuery['error']['kind'] ?? '') === 'bad_request' && $invalidQuer
 $controller = file_get_contents(__DIR__ . '/../app/Controllers/ChecadorController.php') ?: '';
 $routes = file_get_contents(__DIR__ . '/../routes/web.php') ?: '';
 $service = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
+$templateWriter = file_get_contents(__DIR__ . '/../app/Services/ChecadorShiftTemplateSqlWriteService.php') ?: '';
 $view = file_get_contents(__DIR__ . '/../app/Views/departamento-operativo/2-recursos-humanos/checador/schedule-history.php') ?: '';
 $templateAdminView = $view;
 $historyScript = file_get_contents(__DIR__ . '/../public/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js') ?: '';
@@ -195,10 +196,10 @@ $assert(str_contains($controller, 'scheduleHistoryQueryParameters')
     && str_contains($weeklyView, '/checador/horarios-turnos?')
     && !str_contains($weeklyView, 'schedule_history='), 'V8C20A canonical history filters, pagination and weekly links do not use screen-selection flags');
 $assert(str_contains($templateAdminView, 'Turnos disponibles') && str_contains($templateAdminView, 'id="m04-template-table"')
-    && str_contains($controller, 'new ChecadorShiftTemplateSqlReadService()')
+    && str_contains($controller, 'new ChecadorShiftTemplateSqlReadService(null, ChecadorShiftTemplateSqlWriteService::CONNECTION_NAME)')
     && str_contains($controller, 'getShiftTemplates($currentUser, $workplaceId, 1, 200)')
     && str_contains($controller, 'getShiftTemplateVersion(')
-    && str_contains($templateScript, 'pageLength: 25'), 'V8C20B original schedule catalog is rendered from authorized, locality-scoped SQL reads with its original DataTable');
+    && str_contains($templateScript, 'pageLength: 25'), 'V8C20B schedule catalog is rendered from authorized, locality-scoped SQL reads with its current DataTable');
 $assert(str_contains($weeklyView, 'Ver historial')
     && str_contains($weeklyView, "'worker_id' => \$workerId, 'date' => (string) \$weekStart")
     && str_contains($weeklyView, '/checador/horarios-turnos?'), 'V8C20C each weekly worker row links directly to the clean, selected-worker history route');
@@ -219,9 +220,10 @@ $assert(str_contains($templateScript, 'buildSegmentsFrom(')
     && str_contains($templateScript, 'async saveEdit()')
     && str_contains($templateScript, "operation: 'version'")
     && str_contains($templateScript, "operation: 'customize'")
-    && str_contains($controller, 'customizeGlobalShiftTemplate(')
-    && str_contains($service, "'scope' => 'STATION', 'derived_from_global' => ['clave' => \$sourceKey, 'version' => \$sourceVersion]")
-    && str_contains($templateScript, "operation: 'create'"), 'V8C20F the original form builds V2 segments and posts through the verified create, customization and version operations');
+    && str_contains($controller, '(new ChecadorShiftTemplateSqlWriteService())->write($user, $workplaceId, $writeInput)')
+    && str_contains($templateWriter, "['create', 'version', 'customize']")
+    && str_contains($templateWriter, "'source_template_key'")
+    && str_contains($templateScript, "operation: 'create'"), 'V8C20F the form uses the authorized SQL writer for create, customization and version operations');
 $assert(!str_contains($view, 'Historial de programación'), 'V8C20G removed redundant schedule-history heading');
 $assert(str_contains($controller, "'historyItems' => \$historyItems")
     && !str_contains($view, 'Historial de asignaciones')

@@ -18,6 +18,7 @@ $sourceLabel = static function (string $status): string {
         'not_queried' => 'No consultado',
         'no_persisted_journeys' => 'Sin jornadas persistidas para los filtros consultados',
         'no_persisted_journey_snapshot' => 'Sin jornada persistida; no se resolvió un horario para esta fecha',
+        'ambiguous_journey_snapshot' => 'Varias jornadas persistidas para esta fecha; no se seleccionó un horario',
         'persisted_journey_snapshot' => 'Snapshot persistido de Jornada C01',
         'partial_persisted_journey_snapshots' => 'Snapshots C01 parciales; no se resolvió el resto del periodo',
         'schema_unavailable' => 'Proyección de jornadas no disponible',
@@ -94,7 +95,7 @@ $filters = is_array($filters ?? null) ? $filters : [];
             <div class="dropdown ms-auto">
                 <button type="button" class="btn btn-light dropdown-toggle text-dark" id="payroll-comparison-options" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones de comparación"><i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i></button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="payroll-comparison-options">
-                    <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#payroll-comparison-search" <?= empty($selectedWorkplaceId) ? 'disabled' : '' ?>><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar comparación</button></li>
+                    <li><button type="button" class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#payroll-comparison-search" <?= empty($selectedWorkplaceId) ? 'disabled' : '' ?>><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar comparación</button></li>
                 </ul>
             </div>
         </div>

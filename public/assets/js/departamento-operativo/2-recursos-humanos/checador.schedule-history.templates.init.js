@@ -536,6 +536,11 @@
                         window.location.reload();
                         return;
                     }
+                    if (document.getElementById('m04-global-template-table')) {
+                        this.editModal?.hide();
+                        window.location.reload();
+                        return;
+                    }
                     this.success = 'La versión ' + body.template.version + ' del turno «' + body.template.nombre + '» fue guardada y confirmada.';
                     this.editModal?.hide();
                 } catch (failure) {
@@ -645,6 +650,12 @@
                         return;
                     }
 
+                    if (this.customizationSource) {
+                        this.refreshWarning = 'La personalización se guardó y confirmó. Se actualizará el catálogo; no la guardes nuevamente.';
+                        this.modal?.hide();
+                        window.location.reload();
+                        return;
+                    }
                     const colTurno = this.escapeHtml(confirmed.nombre || name);
                     if (!this.table) {
                         this.table = initDataTable();
@@ -656,16 +667,6 @@
                         this.modal?.hide();
                         window.location.reload();
                         return;
-                    }
-                    if (this.customizationSource && this.table) {
-                        const sourceNode = this.table.rows().nodes().toArray().find(node => node.dataset.templateKey === this.customizationSource.key);
-                        if (sourceNode?.children?.[6]) {
-                            const localFields = this.projectEditableFields(confirmedSegments);
-                            const editPayload = this.escapeHtml(JSON.stringify({ key: confirmed.clave, version: Number(confirmed.version), name: this.cleanTemplateName(confirmed.nombre),
-                                type: confirmed.tipo_turno, fields: localFields }));
-                            sourceNode.children[6].innerHTML = '<div class="dropdown dropstart"><a class="pointer" data-bs-toggle="dropdown" aria-label="Opciones del turno" aria-expanded="false" role="button" tabindex="0"><i class="ti ti-dots-vertical fs-6"></i></a><ul class="dropdown-menu"><li><a class="dropdown-item pointer" href="#" data-m04-edit-template="' + editPayload + '"><i class="ti ti-edit"></i> Editar personalización</a></li></ul></div>';
-                            this.table.row(sourceNode).invalidate('dom').draw(false);
-                        }
                     }
                     this.success = this.customizationSource
                         ? `La personalización local de «${confirmed.nombre || name}» fue confirmada en ${String(this.rootElement?.dataset.workplaceName || 'la localidad seleccionada')}.`

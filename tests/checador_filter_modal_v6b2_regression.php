@@ -31,15 +31,16 @@ $assert(str_contains($daily, 'id="checador-filter-modal"')
 $assert(str_contains($report, 'id="punch-report-filter-modal"')
     && str_contains($report, 'id="from_date" name="from_date" type="date"')
     && str_contains($report, 'id="to_date" name="to_date" type="date"')
-    && str_contains($report, 'type="hidden" id="worker_id" name="worker_id"')
+    && str_contains($report, 'type="hidden" id="punch-report-worker-value" name="worker_id"')
     && str_contains($report, 'id="punch-report-worker" name="worker_id"')
-    && str_contains($report, 'data-search-url="/departamento-operativo/recursos-humanos/checador/reporte/colaboradores"'), 'raw report modal and Select2 retain the UTC range and canonical collaborator filter');
+    && str_contains($report, 'data-search-url="/departamento-operativo/recursos-humanos/checador/reporte/colaboradores"')
+    && str_contains($report, 'Fecha inicial local') && str_contains($report, 'Fecha final local'), 'raw report modal retains the authorized local-date range and canonical collaborator filter');
 $assert(substr_count($daily, 'id="checador-filter-modal"') === 1
     && substr_count($report, 'id="punch-report-filter-modal"') === 1
     && substr_count($daily, 'data-bs-target="#checador-filter-modal"') >= 1
     && substr_count($report, 'data-bs-target="#punch-report-filter-modal"') === 1
-    && str_contains($daily, 'Filtros')
-    && str_contains($report, 'Filtros'), 'both screens reuse one Bootstrap filter modal; dashboard navigation may open the same filter dialog');
+    && str_contains($daily, 'Buscar')
+    && str_contains($report, 'Buscar marcaciones'), 'both screens retain one Bootstrap filter modal and an explicit search action');
 $assert(substr_count($report, 'data-checador-filter-form') === 1
     && str_contains($report, 'type="submit"')
     && substr_count($report, 'data-checador-clear-filters') === 1

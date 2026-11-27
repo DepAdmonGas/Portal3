@@ -730,22 +730,23 @@ try {
         && str_contains($dailyViewSource, 'Una celda vacía no confirma una ausencia.')
         && str_contains($dailyViewSource, 'event_uuid'),
         'M01 view has no synthetic/demo copy or actions and preserves neutral empty slots and event provenance');
-    $assert(str_contains($journeyViewSource, 'No se activa automáticamente una falta')
+    $assert(str_contains($journeyViewSource, 'Nunca se activa automáticamente una FALTA')
         && str_contains($journeyViewSource, 'Detalle de auditoría')
         && str_contains($journeyViewSource, 'Zona horaria laboral')
-        && str_contains($journeyViewSource, 'Marcaciones evaluadas'),
-        'journeys owns schedule, timezone, evidence provenance and explicit no-absence inference');
+        && str_contains($journeyViewSource, 'Marcaciones asociadas al pareo')
+        && str_contains($journeyViewSource, 'Este conjunto no acredita por sí solo la completitud L2.'),
+        'C01 presents persisted associations and explicitly preserves the L2 and FALTA boundaries');
     $assert(str_contains($incidenceViewSource, "!empty(\$lifecyclePermissions['resolve'])")
         && str_contains($incidenceViewSource, "!empty(\$lifecyclePermissions['authorize'])")
         && str_contains($incidenceViewSource, 'expected_current_revision')
         && str_contains($incidenceViewSource, 'idempotency_key')
         && str_contains($incidenceViewSource, 'CsrfToken::token()'),
         'incidences owns lifecycle actions guarded by server capabilities, CSRF, revision and idempotency');
-    $assert(str_contains($adjustmentViewSource, "!empty(\$evaluationPermissions['evaluate'])")
-        && str_contains($adjustmentViewSource, "!empty(\$evaluationPermissions['authorize_falta'])")
-        && str_contains($adjustmentViewSource, 'idempotency_key')
-        && str_contains($adjustmentViewSource, 'CsrfToken::token()'),
-        'adjustments owns evaluation controls behind effective permissions, CSRF and idempotency');
+    $assert(!str_contains($adjustmentViewSource, "!empty(\$evaluationPermissions['evaluate'])")
+        && !str_contains($adjustmentViewSource, "!empty(\$evaluationPermissions['authorize_falta'])")
+        && str_contains($adjustmentViewSource, 'm07-adjustment')
+        && str_contains($adjustmentViewSource, 'Historial'),
+        'approved M07 reader presents adjustments without evaluation or FALTA write controls');
 
     $setConfig('production', 'true', 'four_punches');
     $serviceSource = file_get_contents(__DIR__ . '/../app/Services/ChecadorDailyReadService.php') ?: '';
@@ -776,8 +777,6 @@ try {
     $m01DemoMethod = new ReflectionMethod(\App\Controllers\ChecadorController::class, 'readM01SyntheticAttendance');
     $m01DemoResult = $m01DemoMethod->invoke(
         null,
-        $localDemoReader,
-        $director,
         14,
         ChecadorDailyReadService::DEMO_REFERENCE_DATE,
         null,
@@ -786,8 +785,6 @@ try {
     $m01DemoRow = $m01DemoResult['attendance_rows'][900001] ?? [];
     $wrongStationM01Demo = $m01DemoMethod->invoke(
         null,
-        $localDemoReader,
-        $director,
         15,
         ChecadorDailyReadService::DEMO_REFERENCE_DATE,
         null,
@@ -795,20 +792,18 @@ try {
     );
     $wrongWorkerM01Demo = $m01DemoMethod->invoke(
         null,
-        $localDemoReader,
-        $director,
         14,
         ChecadorDailyReadService::DEMO_REFERENCE_DATE,
-        900002,
+        900999,
         false
     );
     $assert(($m01DemoResult['state'] ?? '') === 'success'
-        && count($m01DemoResult['attendance_rows'] ?? []) === 1
-        && count($m01DemoResult['events'] ?? []) === 4
+        && count($m01DemoResult['attendance_rows'] ?? []) === 6
+        && count($m01DemoResult['events'] ?? []) >= 4
         && count(array_filter($m01DemoRow['slots'] ?? [], static fn(array $slot): bool => is_array($slot['event'] ?? null))) === 4
         && ($m01DemoRow['schedule']['estado_jornada'] ?? '') === 'SCHEDULED'
         && ($m01DemoResult['attendance_coverage']['status'] ?? '') === 'synthetic_qa_fixture',
-        'M01 controller projection renders one fake worker, four synthetic punch slots and the configured schedule');
+        'isolated M01 preview retains six fixture workers and four slots for the first worker');
     $assert(($wrongStationM01Demo['state'] ?? '') === 'unavailable'
         && ($wrongStationM01Demo['attendance_rows'] ?? []) === []
         && ($wrongWorkerM01Demo['state'] ?? '') === 'unavailable'

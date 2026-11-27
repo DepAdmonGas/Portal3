@@ -207,19 +207,25 @@ final class ChecadorPayrollComparisonReadService
             1,
             100
         );
+        if (!empty($journeyResult['ok'])
+            && (int) ($journeyResult['data']['pagination']['total_records'] ?? 0)
+                > count($journeyResult['data']['journeys'] ?? [])) {
+            $journeyResult = ['ok' => false, 'error' => 'result_limit_exceeded'];
+        }
         if (!empty($journeyResult['ok'])) {
             $journeys = array_values($journeyResult['data']['journeys'] ?? []);
             $journeysByDate = [];
             foreach ($journeys as $journey) {
                 if (!is_array($journey)) continue;
                 $date = (string) ($journey['context']['fecha_local'] ?? '');
-                if ($date !== '') $journeysByDate[$date] = $journey;
+                if ($date !== '') $journeysByDate[$date][] = $journey;
             }
             $periodDates = self::dateRange($period['start_date'], $period['end_date']);
             $timezoneDays = [];
             $scheduleDays = [];
             foreach ($periodDates as $date) {
-                $journey = $journeysByDate[$date] ?? null;
+                $matchingJourneys = $journeysByDate[$date] ?? [];
+                $journey = self::uniqueJourneySnapshot($matchingJourneys);
                 $context = is_array($journey['context'] ?? null) ? $journey['context'] : [];
                 $schedule = is_array($journey['schedule'] ?? null) ? $journey['schedule'] : [];
                 $timezone = trim((string) ($context['timezone'] ?? ''));
@@ -228,7 +234,8 @@ final class ChecadorPayrollComparisonReadService
                 }
                 $scheduleDays[] = [
                     'date' => $date,
-                    'status' => $journey === null ? 'no_persisted_journey_snapshot' : 'persisted_journey_snapshot',
+                    'status' => count($matchingJourneys) > 1 ? 'ambiguous_journey_snapshot'
+                        : ($journey === null ? 'no_persisted_journey_snapshot' : 'persisted_journey_snapshot'),
                     'timezone' => $timezone,
                     'segments_snapshot_json' => $schedule['payload_segmentos_json'] ?? null,
                 ];
@@ -477,6 +484,12 @@ final class ChecadorPayrollComparisonReadService
             && $requestedLocalityId > 0
             && $requestedWorkerId === $canonicalWorkerId
             && $requestedLocalityId === $canonicalWorkerLocalityId;
+    }
+
+    /** Only one persisted journey may supply a daily schedule snapshot. */
+    public static function uniqueJourneySnapshot(array $journeys): ?array
+    {
+        return count($journeys) === 1 && is_array($journeys[0] ?? null) ? $journeys[0] : null;
     }
 
     /** @return array{status:string,references:array<int,array<string,mixed>>} */

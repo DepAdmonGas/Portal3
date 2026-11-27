@@ -118,7 +118,7 @@ $assert(($unknownWithVerifiedDimension['data']['window_level2_status'] ?? '') ==
 // P3B15-P3B20: zero events/completeness are not attendance or payroll conclusions.
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P3B15 zero events + UNKNOWN does not produce SIN MARCACIÓN');
 $assert(!str_contains($viewSource, 'SIN MARCACIÓN'), 'P3B16 zero events + INCOMPLETE does not produce SIN MARCACIÓN');
-$assert(str_contains($administrativeViewSource, 'nunca se activa automáticamente'), 'P3B17 zero events + VERIFIED does not produce automatic FALTA');
+$assert(!str_contains($administrativeViewSource, 'authorize_falta') && str_contains($viewSource, 'Sin clasificación de ausencia'), 'P3B17 empty events do not grant or infer FALTA in SQL-backed presentation');
 $assert(!str_contains($viewSource, 'has_zero_governed_events') || !str_contains($viewSource, 'AUSENTE'), 'P3B18 has_zero_governed_events does not produce absence');
 $assert(!str_contains($viewSource, 'RETARDO'), 'P3B19 no RETARDO inference is rendered');
 $assert(!preg_match('/n[oó]mina|payroll|descuento/i', $viewSource), 'P3B20 no payroll conclusion is rendered');
@@ -136,16 +136,14 @@ $assert(str_contains($controllerSource, '$level2Meta = null') && str_contains($c
 
 // P3B26-P3B30: preserve P04A/P03 and keep scope/token details server-side.
 $m01SqlStart = strpos($controllerSource, 'private static function readDailySqlAttendance(');
-$m01SqlEnd = $m01SqlStart === false ? false : strpos($controllerSource, 'private static function m06AdministrativeIncidenceSqlService(', $m01SqlStart);
+$m01SqlEnd = $m01SqlStart === false ? false : strpos($controllerSource, 'private static function readPersistedDailyJourneys(', $m01SqlStart);
 $m01SqlMethod = $m01SqlStart !== false && $m01SqlEnd !== false
     ? substr($controllerSource, $m01SqlStart, $m01SqlEnd - $m01SqlStart)
     : '';
-$assert(str_contains($p04aSource, 'createDailyPunchSnapshot')
-    && str_contains($controllerSource, 'readDailyPunchSnapshotPage')
-    && str_contains($controllerSource, 'createDailyPunchSnapshot(')
-    && $m01SqlMethod !== ''
+$assert($m01SqlMethod !== ''
+    && str_contains($m01SqlMethod, 'ChecadorDailyAttendanceSqlReadService')
     && !str_contains($m01SqlMethod, 'ChecadorDailyReadService')
-    && !str_contains($m01SqlMethod, 'ChecadorRawPunchReadService'), 'P3B26 snapshot operations remain available while attendance rendering uses read-only SQL paths');
+    && !str_contains($m01SqlMethod, 'ChecadorRawPunchReadService'), 'P3B26 approved M01 read uses its dedicated SQL reader without HTTP snapshot creation');
 $assert(str_contains($serviceSource, 'readObservedPunches'), 'P3B27 P03 raw-read behavior remains intact');
 $assert(str_contains($controllerSource, 'authorize($requestedWorkplace)') && str_contains($controllerSource, 'selectedWorkplaceId'), 'P3B28 client input cannot broaden workplace scope');
 $assert(!preg_match('/\bmanifest_digest\b/', $viewSource) && !preg_match('/(?<!level2_)evaluation_ref\b/', $viewSource), 'P3B29 internal evidence is not unnecessarily exposed to normal UI');

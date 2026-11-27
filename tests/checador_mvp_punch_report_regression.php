@@ -136,7 +136,7 @@ $assert(($workerRoute[0] ?? null) === \FastRoute\Dispatcher::FOUND
     && ($workerConfig['handler'] ?? null) === ['ChecadorController', 'punchReportWorkers']
     && str_contains($workerMethod, 'ChecadorAccessService::authorize(null)')
     && str_contains($workerMethod, 'ModuleStationService::getContext'), 'name search route is authenticated and derives its locality from authorized server context');
-$assert(str_contains($view, 'Horas en UTC')
+$assert(str_contains($view, 'Fecha local · detalle UTC')
     && str_contains($formatter, 'Integridad no verificada por Portal3')
     && str_contains($controller, "'ocurrido_at_utc' =>"), 'view and JSON projection explain UTC and integrity remains explicitly unverified by Portal3');
 $assert(str_contains($view, 'class="card-header bg-primary text-white')
@@ -153,8 +153,8 @@ $assert(str_contains($view, 'name="worker_id"') && !str_contains($view, 'name="w
 $assert(str_contains($view, 'if (!empty($canDownload))') && str_contains($datatableJs, 'pageLength: 25') && str_contains($datatableJs, 'lengthMenu: [10, 25, 50, 100]'), 'CSV control follows download permission and DataTables provides the only page-size/pagination controls');
 $assert(str_contains($datatableJs, "url: '/assets/libs/datatables.net/js/es-ES.json'")
     && str_contains($view, 'un periodo sin resultados no confirma ausencia laboral'), 'empty results reuse the institutional Spanish language file while the report explains the evidence limit');
-$assert(str_contains($view, 'no convierte la hora del dispositivo')
-    && str_contains($datatableJs, 'Hora de marcación no determinada')
+$assert(str_contains($view, 'Los eventos sin instante de captura confirmado no se incluyen')
+    && str_contains($datatableJs, 'Hora de captura no determinada')
     && str_contains($controller, "'ocurrido_at_utc' =>")
     && !str_contains($datatableJs, '_occurred_local'), 'report does not fabricate local time and labels unresolved occurrence time');
 $assert(str_contains($view, 'class="datatables"')

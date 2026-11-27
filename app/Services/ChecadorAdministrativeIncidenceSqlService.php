@@ -795,6 +795,7 @@ final class ChecadorAdministrativeIncidenceSqlService
             $query->where(static function ($searchQuery) use ($like, $categoryMatches, $statusMatches): void {
                 $searchQuery->where('p.nombre_completo', 'like', $like)
                     ->orWhere('p.no_colaborador', 'like', $like)
+                    ->orWhere('r.motivo', 'like', $like)
                     ->orWhere('m.id_personal', 'like', $like)
                     ->orWhere('m.tipo_incidencia', 'like', $like)
                     ->orWhere('m.estado_actual', 'like', $like)

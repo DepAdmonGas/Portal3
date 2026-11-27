@@ -814,7 +814,7 @@ final class ChecadorController extends BaseController
         if (strlen($searchValue) > 120) return ['ok' => false, 'error' => 'invalid_search', 'draw' => $draw];
         $filters['search'] = $searchValue === '' ? null : $searchValue;
 
-        $sortColumns = [0 => 'worker_name', 1 => 'category', 2 => 'start_date', 3 => 'status', 4 => 'created_at'];
+        $sortColumns = [0 => 'worker_name', 2 => 'category', 3 => 'start_date', 5 => 'status', 6 => 'created_at'];
         $sortBy = 'created_at';
         $sortDirection = 'desc';
         $order = $payload['order'] ?? [];
@@ -1655,6 +1655,20 @@ final class ChecadorController extends BaseController
             'message' => '',
             'cancelable_uuid' => null,
         ];
+        $temporaryAccessHistory = null;
+        $temporaryAccessHistoryFilters = [];
+        if ($workspace === 'temporary-access' && !$demoMode && $requestedWorkplace !== null && $currentUser !== null) {
+            foreach (['status', 'search', 'worker_id', 'from', 'to', 'sort', 'direction'] as $key) {
+                $value = $query['history_'.$key] ?? '';
+                $temporaryAccessHistoryFilters[$key] = is_string($value) ? $value : '';
+            }
+            $temporaryAccessHistoryFilters['sort'] = $temporaryAccessHistoryFilters['sort'] ?: 'date';
+            $temporaryAccessHistoryFilters['direction'] = $temporaryAccessHistoryFilters['direction'] ?: 'desc';
+            $historyPage = self::positiveInteger($query['history_page'] ?? 1) ?? 1;
+            $temporaryAccessHistory = (new \App\Services\ChecadorTemporaryAccessSqlService())->historyForLocality(
+                $currentUser, $requestedWorkplace, $temporaryAccessHistoryFilters, $historyPage
+            );
+        }
         $state = 'idle';
         $stateMessage = '';
         $workspaceNeedsExistingSnapshot = in_array($workspace, ['journeys', 'incidences', 'adjustments'], true);
@@ -1733,6 +1747,8 @@ final class ChecadorController extends BaseController
                         $effectiveSchedules = $rawAttendance['effective_schedules'];
                         $effectiveScheduleErrors = $rawAttendance['effective_schedule_errors'];
                         $observedOnlyEvents = $rawAttendance['observed_only_events'];
+                        $administrativeIncidences = $rawAttendance['administrative_incidences'] ?? [];
+                        $administrativeErrors = $rawAttendance['administrative_errors'] ?? [];
                     } else {
                     $reader = new ChecadorDailyReadService();
                     $snapshotState = null;
@@ -2140,8 +2156,8 @@ final class ChecadorController extends BaseController
                     $temporaryAccessPanel['message'] = 'La sesión ya no es válida. Inicia sesión nuevamente.';
                 } else {
                     try {
-                        $temporaryReader = new ChecadorDailyReadService();
-                        $queueResult = $temporaryReader->listTemporaryAccessRequests($currentUser);
+                        $temporaryReader = new \App\Services\ChecadorTemporaryAccessSqlService();
+                        $queueResult = $temporaryReader->listForLocality($currentUser, $requestedWorkplace);
                     } catch (\Throwable) {
                         $queueResult = ['ok' => false, 'error' => ['kind' => 'api_unavailable', 'status' => 503]];
                     }
@@ -2306,6 +2322,8 @@ final class ChecadorController extends BaseController
                 'evaluationKeys' => $evaluationKeys,
                 'evaluationFeedback' => $evaluationFeedback,
                 'temporaryAccessPanel' => $workspaceTemporaryAccessPanel,
+                'temporaryAccessHistory' => $temporaryAccessHistory,
+                'temporaryAccessHistoryFilters' => $temporaryAccessHistoryFilters,
                 'administrativePinPanel' => $administrativePinPanel,
                 'administrativePinFeedback' => $administrativePinFeedback,
                 'temporaryAccessPostOperationsEnabled' => ChecadorDailyReadService::temporaryAccessApiPostOperationsEnabled(),
@@ -2322,9 +2340,16 @@ final class ChecadorController extends BaseController
                         '/assets/libs/select2/dist/css/select2.min.css',
                         '/assets/css/select2-modal.css',
                     ]
-                    : [],
+                    : ($workspace === 'temporary-access'
+                        ? ['/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css']
+                        : []),
                 'scripts' => [
-                    ...($workspace === 'temporary-access' ? ['/assets/js/departamento-operativo/2-recursos-humanos/checador.temporary-access.init.js?v=20261125-1'] : []),
+                    ...($workspace === 'temporary-access' ? [
+                        '/assets/js/vendor.min.js',
+                        '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
+                        '/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js',
+                        '/assets/js/departamento-operativo/2-recursos-humanos/checador.temporary-access.init.js?v=20261126-1',
+                    ] : []),
                     ...(in_array($workspace, ['daily-attendance', 'journeys'], true) ? [
                         '/assets/js/vendor.min.js',
                         '/assets/libs/select2/dist/js/select2.full.min.js',
@@ -2484,7 +2509,7 @@ final class ChecadorController extends BaseController
                     '/assets/js/vendor.min.js',
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                     '/assets/js/core/module-station-selector.js',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js?v=20261118-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.attendance-policy.init.js?v=20261126-1',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-positions.init.js?v=20261103-4',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-reader-profile.init.js?v=20261103-2',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.m11-device-link.init.js?v=20261124-2',
@@ -3223,6 +3248,11 @@ final class ChecadorController extends BaseController
         $effectiveDate = is_string($input['effective_from_local_date'] ?? null) ? trim($input['effective_from_local_date']) : '';
         $tolerance = $input['retardo_tolerance_minutes'] ?? null;
         $deadline = $input['incidence_deadline_days'] ?? null;
+        $approvedClassification = ['early_entry_allowed_minutes' => '10', 'duplicate_punch_window_minutes' => '5', 'exit_priority_window_minutes' => '60'];
+        $classificationValid = true;
+        foreach ($approvedClassification as $field => $expected) {
+            if (array_key_exists($field, $input) && (!is_scalar($input[$field]) || (string) $input[$field] !== $expected)) $classificationValid = false;
+        }
         $idempotencyKey = is_string($input['idempotency_key'] ?? null) ? trim($input['idempotency_key']) : '';
         $redirect = self::configurationHref($workplaceId);
         $jsonFail = static function (int $status, string $code, string $message, array $metadata = []): never {
@@ -3235,6 +3265,11 @@ final class ChecadorController extends BaseController
             self::redirect($redirect);
         }
 
+        if (!$classificationValid) {
+            if ($wantsJson) $jsonFail(422, 'classification_range_not_approved', 'Los rangos propuestos aún requieren aprobación; utiliza 10, 5 y 60.');
+            self::configurationFeedback('error', 'Los rangos propuestos aún requieren aprobación; utiliza 10, 5 y 60.', $workplaceId);
+            self::redirect($redirect);
+        }
         if ($workplaceId === null || !self::isCivilDate($effectiveDate)
             || !is_scalar($tolerance) || !is_scalar($deadline)
             || !preg_match('/\A[A-Za-z0-9._:-]{1,64}\z/', $idempotencyKey)
@@ -3339,6 +3374,8 @@ final class ChecadorController extends BaseController
         $validityCheck = null;
         $currentUser = Auth::user();
         $scheduleTemplates = [];
+        $globalScheduleTemplates = [];
+        $globalTemplateError = null;
         $templateCatalogStatus = 'not_requested';
         $templateCatalogMessage = '';
         $m04AutolavadoAdmin = ChecadorAccessService::authorizeStationTemplateAdministration(
@@ -3429,6 +3466,32 @@ final class ChecadorController extends BaseController
                         $template['edit_fields'] = self::editableScheduleTemplateFields($template['segmentos'] ?? null);
                     }
                     unset($template);
+                    if (($templateCatalogAccess['include_global_templates'] ?? false) === true) {
+                        $globalCatalog = $templateReader->getShiftTemplates($currentUser, $workplaceId, 1, 200, 'GLOBAL');
+                        if (($globalCatalog['ok'] ?? false) !== true) {
+                            $globalTemplateError = 'No se pudo consultar el catálogo global autorizado.';
+                        } else {
+                            $globalItems = $globalCatalog['data']['items'] ?? [];
+                            if (count($globalItems) > 50) $globalTemplateError = 'El catálogo global puede estar incompleto.';
+                            $localByKey = array_column($scheduleTemplates, null, 'clave');
+                            foreach (array_slice($globalItems, 0, 50) as $globalItem) {
+                                if (($globalItem['scope'] ?? '') !== 'GLOBAL' || ($globalItem['id_estacion'] ?? null) !== null) {
+                                    $globalTemplateError = 'No se pudo verificar una plantilla global.';
+                                    continue;
+                                }
+                                $detail = $templateReader->getShiftTemplateVersion($currentUser, (string) $globalItem['clave'], (int) $globalItem['version'], $workplaceId, (int) $globalItem['id'], 'GLOBAL', null);
+                                if (($detail['ok'] ?? false) !== true) {
+                                    $globalTemplateError = 'No se pudo consultar el detalle de todas las plantillas globales.';
+                                    continue;
+                                }
+                                $global = array_merge($globalItem, $detail['data']);
+                                $global['customize_fields'] = self::editableScheduleTemplateFields($global['segmentos'] ?? null);
+                                $localKey = $global['station_customization']['clave'] ?? null;
+                                if (is_string($localKey) && isset($localByKey[$localKey])) $global['station_customization']['template'] = $localByKey[$localKey];
+                                $globalScheduleTemplates[] = $global;
+                            }
+                        }
+                    }
                     if ($templateCatalogStatus === 'database_error') {
                         $templateCatalogMessage = 'Ocurrió un error SQL al leer el detalle de los horarios. Revisa el registro técnico.';
                     } elseif ($templateCatalogStatus === 'permission_denied') {
@@ -3506,6 +3569,8 @@ final class ChecadorController extends BaseController
                 'dateAssignmentsTruncated' => $dateAssignmentsTruncated,
                 'validityCheck' => $validityCheck,
                 'scheduleTemplates' => $scheduleTemplates,
+                'globalScheduleTemplates' => $globalScheduleTemplates,
+                'globalTemplateError' => $globalTemplateError,
                 'templateCatalogStatus' => $templateCatalogStatus,
                 'templateCatalogMessage' => $templateCatalogMessage,
                 'feedback' => $templateFeedback,
@@ -3527,7 +3592,7 @@ final class ChecadorController extends BaseController
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
                     '/assets/js/core/module-station-selector.js',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261021-1',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js?v=20261119-1',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.schedule-history.templates.init.js?v=20261127-1',
                 ],
                 'help' => false,
                 'moduleStationKey' => ChecadorAccessService::MODULE_KEY,
@@ -3905,6 +3970,9 @@ final class ChecadorController extends BaseController
         $workerId = $workerIdInput === '' ? null : self::positiveInteger($workerIdInput);
         $captureMethodInput = is_string($query['capture_method'] ?? null) ? trim($query['capture_method']) : '';
         $processingStatusInput = is_string($query['processing_status'] ?? null) ? trim($query['processing_status']) : '';
+        $deviceInput = is_string($query['device_id'] ?? null) ? trim($query['device_id']) : '';
+        $deviceId = $deviceInput === '' ? null : self::positiveInteger($deviceInput);
+        $deviceOptions = [];
         $sourceWorkDateCandidate = is_string($query['source_work_date'] ?? null) ? trim($query['source_work_date']) : '';
         $sourceWorkerCandidate = self::positiveInteger($query['source_worker_id'] ?? null);
         $sort = ($query['dt_order_direction'] ?? $query['sort'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
@@ -3959,17 +4027,27 @@ final class ChecadorController extends BaseController
         $periodYearInput = self::positiveInteger($query['year'] ?? null);
         $periodMonthInput = self::positiveInteger($query['month'] ?? null);
         $periodError = false;
+        $periodTimezoneError = false;
         $periodPreset = 'custom';
         $periodLabel = 'Rango personalizado (UTC)';
         $periodYear = (int) $nowUtc->format('Y');
         $periodMonth = (int) $nowUtc->format('n');
         $hasExplicitDateRange = $fromDate !== '' || $toDate !== '';
         if (!$hasExplicitDateRange && $selectedWorkplaceForView !== null) {
+            $localToday = (new ChecadorRawPunchReadService())->currentLocalDate($selectedWorkplaceForView);
+            if (!($localToday['ok'] ?? false)) {
+                $periodError = true;
+                $periodTimezoneError = true;
+            } else {
+                $nowUtc = new \DateTimeImmutable($localToday['date'] . ' 00:00:00', new \DateTimeZone('UTC'));
+                $periodYear = (int)$nowUtc->format('Y');
+                $periodMonth = (int)$nowUtc->format('n');
+            }
             $currentUserForPeriod = Auth::user();
             $periodPreset = $periodInput !== ''
                 ? $periodInput
                 : ((int) ($currentUserForPeriod->id_puesto ?? 0) === 13 ? 'month' : 'today');
-            if (!in_array($periodPreset, ['today', 'last7', 'month', 'year'], true)) {
+            if ($periodError || !in_array($periodPreset, ['today', 'last7', 'month', 'year'], true)) {
                 $periodError = true;
             } else {
                 $periodRange = ChecadorOperationalPeriod::reportRange(
@@ -3983,7 +4061,7 @@ final class ChecadorController extends BaseController
                 } else {
                     $fromDate = $periodRange['from_date'];
                     $toDate = $periodRange['to_date'];
-                    $periodLabel = $periodRange['label'];
+                    $periodLabel = str_replace('UTC', 'fecha local', $periodRange['label']);
                     $periodYear = $periodRange['year'];
                     $periodMonth = $periodRange['month'];
                 }
@@ -4068,12 +4146,16 @@ final class ChecadorController extends BaseController
         } elseif ($hasAnyFilter) {
             if ($periodError) {
                 $state = 'error';
-                $stateMessage = 'El periodo solicitado no es válido. El año en curso se consulta por segmentos mensuales y no permite seleccionar meses futuros.';
+                $stateMessage = $periodTimezoneError
+                    ? 'No se pudo resolver la zona horaria histórica de la localidad.'
+                    : 'El periodo solicitado no es válido. El año en curso se consulta por segmentos mensuales y no permite seleccionar meses futuros.';
             } elseif ($requestedWorkplace === null
                 || !self::isCivilDate($fromDate)
                 || !self::isCivilDate($toDate)
                 || $fromDate > $toDate
                 || ($workerIdInput !== '' && $workerId === null)
+                || (array_key_exists('device_id', $query) && !is_string($query['device_id']))
+                || ($deviceInput !== '' && $deviceId === null)
                 || ($captureMethodInput !== '' && !in_array($captureMethodInput, ChecadorRawPunchReadService::CAPTURE_METHOD_FILTERS, true))
                 || ($processingStatusInput !== '' && !in_array($processingStatusInput, ChecadorRawPunchReadService::PROCESSING_STATUS_FILTERS, true))) {
                 $state = 'error';
@@ -4090,13 +4172,19 @@ final class ChecadorController extends BaseController
                         $toBoundary = \DateTimeImmutable::createFromFormat('!Y-m-d', $toDate, $utc);
                         if ($fromBoundary === false || $toBoundary === false) {
                             $state = 'error';
-                            $stateMessage = 'El rango de fechas UTC no es válido.';
+                            $stateMessage = 'El rango de fechas locales no es válido.';
                         } else {
-                            $fromUtc = $fromBoundary->format('Y-m-d H:i:s');
-                            $toUtc = $toBoundary->modify('+1 day')->format('Y-m-d H:i:s');
-                            if (self::utcRangeSeconds($fromUtc, $toUtc) > 2678400) {
+                            $reader = new ChecadorRawPunchReadService();
+                            $localContext = $reader->localReportContext($requestedWorkplace, $fromDate, $toDate);
+                            if (!($localContext['ok'] ?? false)) throw new \RuntimeException('local_context_unavailable');
+                            $localIntervals = $localContext['intervals'];
+                            $deviceOptions = $localContext['devices'];
+                            if ($deviceId !== null && !in_array($deviceId, array_map(static fn(array $device): int => (int)$device['id'], $deviceOptions), true)) throw new \RuntimeException('device_scope_mismatch');
+                            $fromUtc = $localIntervals[0][0];
+                            $toUtc = $localIntervals[count($localIntervals)-1][1];
+                            if ((int)$fromBoundary->diff($toBoundary)->days > 30) {
                                 $state = 'error';
-                                $stateMessage = 'El rango excede el límite de 31 días UTC.';
+                                $stateMessage = 'El rango excede el límite de 31 días locales.';
                             } else {
                                 if ($exportCsv) {
                                     // Re-resolve current scope and effective download grant at export time.
@@ -4128,7 +4216,9 @@ final class ChecadorController extends BaseController
                                         $sort,
                                         $selectedWorkplaceName,
                                         $captureMethodInput,
-                                        $processingStatusInput
+                                        $processingStatusInput,
+                                        $localIntervals,
+                                        $deviceId
                                     );
                                     if (!($result['ok'] ?? false)) {
                                         $kind = (string) ($result['error']['kind'] ?? 'database_unavailable');
@@ -4153,16 +4243,18 @@ final class ChecadorController extends BaseController
                                             $tableOrderColumn,
                                             $sort,
                                             $captureMethodInput,
-                                            $processingStatusInput
+                                            $processingStatusInput,
+                                            $localIntervals,
+                                            $deviceId
                                         );
                                         return;
                                     }
                                 }
                             }
                         }
-                    } catch (\Throwable) {
+                    } catch (\Throwable $exception) {
                         $state = 'error';
-                        $stateMessage = 'La consulta de marcaciones no está disponible; no se puede confirmar si hay registros.';
+                        $stateMessage = $exception->getMessage() === 'device_scope_mismatch' ? 'El dispositivo no pertenece a las marcaciones autorizadas de esta localidad y periodo.' : 'No se pudo resolver la zona horaria histórica o consultar las marcaciones para este periodo.';
                     }
                 }
             }
@@ -4182,6 +4274,8 @@ final class ChecadorController extends BaseController
                 'workerId' => $selectedWorkerForView,
                 'selectedWorkerOption' => $selectedWorkerOption,
                 'captureMethod' => $captureMethodInput,
+                'deviceId' => $deviceId,
+                'deviceOptions' => $deviceOptions,
                 'processingStatus' => $processingStatusInput,
                 'captureMethodOptions' => array_combine(
                     ChecadorRawPunchReadService::CAPTURE_METHOD_FILTERS,
@@ -4221,7 +4315,7 @@ final class ChecadorController extends BaseController
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.module-station.init.js?v=20261113-2',
                     '/assets/js/departamento-operativo/2-recursos-humanos/checador.filters.init.js?v=20261116-6',
                     '/assets/libs/datatables.net/js/jquery.dataTables.min.js',
-                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.datatable.init.js?v=20261106-6',
+                    '/assets/js/departamento-operativo/2-recursos-humanos/checador.datatable.init.js?v=20261126-2',
                 ],
                 'help' => false,
             ],
@@ -4299,6 +4393,8 @@ final class ChecadorController extends BaseController
         $workerId = $workerInput === '' ? null : self::positiveInteger($workerInput);
         $captureMethod = is_string($query['capture_method'] ?? null) ? trim($query['capture_method']) : '';
         $processingStatus = is_string($query['processing_status'] ?? null) ? trim($query['processing_status']) : '';
+        $deviceInput = is_string($query['device_id'] ?? null) ? trim($query['device_id']) : '';
+        $deviceId = $deviceInput === '' ? null : self::positiveInteger($deviceInput);
         $start = self::nonNegativeInteger($query['start'] ?? null);
         $length = self::positiveInteger($query['length'] ?? null);
         $searchInput = $query['search'] ?? [];
@@ -4342,6 +4438,8 @@ final class ChecadorController extends BaseController
             || $fromDate > $toDate
             || (array_key_exists('worker_id', $query) && !is_string($query['worker_id']))
             || ($workerInput !== '' && $workerId === null)
+            || (array_key_exists('device_id', $query) && !is_string($query['device_id']))
+            || ($deviceInput !== '' && $deviceId === null)
             || $start === null
             || $length === null
             || !in_array($length, ChecadorRawPunchReadService::DATATABLE_PAGE_SIZES, true)
@@ -4360,13 +4458,16 @@ final class ChecadorController extends BaseController
         $fromBoundary = \DateTimeImmutable::createFromFormat('!Y-m-d', $fromDate, $utc);
         $toBoundary = \DateTimeImmutable::createFromFormat('!Y-m-d', $toDate, $utc);
         if ($fromBoundary === false || $toBoundary === false) {
-            self::punchReportJsonError(422, 'El rango de fechas UTC no es válido.', $draw);
+            self::punchReportJsonError(422, 'El rango de fechas locales no es válido.', $draw);
         }
-        $fromUtc = $fromBoundary->format('Y-m-d H:i:s');
-        $toUtc = $toBoundary->modify('+1 day')->format('Y-m-d H:i:s');
-        if (self::utcRangeSeconds($fromUtc, $toUtc) > 2678400) {
-            self::punchReportJsonError(422, 'El rango excede el límite de 31 días UTC.', $draw);
-        }
+        if ((int)$fromBoundary->diff($toBoundary)->days > 30) self::punchReportJsonError(422, 'El rango excede 31 días locales.', $draw);
+        $reader = new ChecadorRawPunchReadService();
+        $localContext = $reader->localReportContext($requestedWorkplace, $fromDate, $toDate);
+        if (!($localContext['ok'] ?? false)) self::punchReportJsonError(503, 'No se pudo resolver la zona horaria histórica de la localidad.', $draw);
+        $localIntervals = $localContext['intervals'];
+        if ($deviceId !== null && !in_array($deviceId, array_map(static fn(array $device): int => (int)$device['id'], $localContext['devices']), true)) self::punchReportJsonError(403, 'El dispositivo no pertenece a esta localidad y periodo.', $draw);
+        $fromUtc = $localIntervals[0][0];
+        $toUtc = $localIntervals[count($localIntervals)-1][1];
 
         if ($workerId !== null) {
             $roster = self::punchReportAuthorizedRoster($requestedWorkplace);
@@ -4389,7 +4490,7 @@ final class ChecadorController extends BaseController
             }
         }
 
-        $result = (new ChecadorRawPunchReadService())->readDataTablePage(
+        $result = $reader->readDataTablePage(
             $requestedWorkplace,
             $fromUtc,
             $toUtc,
@@ -4401,7 +4502,9 @@ final class ChecadorController extends BaseController
             $direction,
             (string) ($selectedWorkplace['nombre'] ?? ''),
             $captureMethod,
-            $processingStatus
+            $processingStatus,
+            $localIntervals,
+            $deviceId
         );
         if (!($result['ok'] ?? false)) {
             $kind = (string) ($result['error']['kind'] ?? 'database_unavailable');
@@ -4429,6 +4532,8 @@ final class ChecadorController extends BaseController
                     ? $occurredUtc . ' UTC'
                     : ($receivedUtc !== '' ? $receivedUtc . ' UTC' : 'No disponible'),
                 'occurrence_available' => $occurredUtc !== null,
+                'local_capture' => $event['local_capture'] ?? ['status' => 'unavailable'],
+                'j1_classification' => $event['j1_classification'] ?? 'unavailable',
                 'collaborator' => (string) ($event['collaborator_display'] ?? ChecadorPresentationFormatter::collaboratorLabel($resolvedWorkerId)),
                 'capture_method' => ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null),
                 'processing_status' => ChecadorPresentationFormatter::processingStatusLabel($event['processing_status'] ?? null),
@@ -4754,11 +4859,16 @@ final class ChecadorController extends BaseController
             && (int) ($cancelMarker['workplace_id'] ?? 0) === $workplaceId
             && (int) ($cancelMarker['expires_at'] ?? 0) > time();
 
+        $writerMode = \App\Services\ChecadorTemporaryAccessSqlService::writerMode();
+        if ($writerMode === 'INVALID') {
+            $feedback('error', 'La configuración del escritor de acceso temporal no es válida.');
+            self::redirect($redirect);
+        }
         try {
-            $reader = new ChecadorDailyReadService();
-            $queue = $reader->listTemporaryAccessRequests($user);
+            $sqlReader = new \App\Services\ChecadorTemporaryAccessSqlService();
+            $queue = $sqlReader->listForLocality($user, $workplaceId);
         } catch (\Throwable) {
-            $queue = ['ok' => false, 'error' => ['kind' => 'api_unavailable', 'status' => 503]];
+            $queue = ['ok' => false, 'error' => ['kind' => 'sql_unavailable', 'status' => 503]];
         }
         if (($queue['ok'] ?? false) !== true) {
             $feedback('error', 'No fue posible verificar que la solicitud pertenezca a la cola y al centro seleccionado. No se ejecutó la acción.');
@@ -4809,7 +4919,15 @@ final class ChecadorController extends BaseController
             ]);
         }
 
-        $result = $reader->temporaryAccessAction($user, $requestUuid, $action);
+        if ($writerMode === 'PORTAL3') {
+            $result = $sqlReader->action($user, $workplaceId, $requestUuid, $action);
+        } else {
+            try {
+                $result = (new ChecadorDailyReadService())->temporaryAccessAction($user, $requestUuid, $action);
+            } catch (\Throwable) {
+                $result = ['ok' => false, 'error' => ['kind' => 'api_unavailable']];
+            }
+        }
         if (($result['ok'] ?? false) === true) {
             $data = $result['data'];
             if ($action === 'authorize') {
@@ -4832,8 +4950,8 @@ final class ChecadorController extends BaseController
                     Session::remove('checador_temporary_access_cancelable');
                 }
                 $feedback('success', $action === 'reject'
-                    ? 'La solicitud fue rechazada por la API.'
-                    : 'La solicitud fue cancelada por la API.');
+                    ? 'La solicitud fue rechazada.'
+                    : 'La solicitud fue cancelada.');
             }
             self::redirect($redirect);
         }
@@ -4847,6 +4965,11 @@ final class ChecadorController extends BaseController
             Session::remove('checador_temporary_access_cancelable');
         }
         $message = match ($kind) {
+            'scope', 'permission_denied' => 'La solicitud, el trabajador o el dispositivo no están autorizados para este centro.',
+            'invalid_state' => 'La solicitud venció o ya cambió de estado. Actualiza la cola.',
+            'not_found' => 'La solicitud ya no está disponible.',
+            'conflict' => 'La solicitud cambió durante la operación. Actualiza la cola.',
+            'writer_disabled' => 'El escritor SQL de acceso temporal está deshabilitado.',
             'api_authentication' => 'La autenticación con el servicio no está disponible.',
             'api_authorization' => 'La API no autoriza esta acción o el centro seleccionado.',
             'bad_request' => 'La solicitud no cumple el contrato de acceso temporal.',
@@ -4941,9 +5064,11 @@ final class ChecadorController extends BaseController
             return;
         }
 
+        $currentStatus = (string) ($result['data']['incidence']['current_status'] ?? '');
+        $statusLabel = ChecadorPresentationFormatter::incidenceStatusLabel($currentStatus);
         $storeFeedback('success', !empty($result['data']['replayed'])
-            ? 'La incidencia existente coincide con este reintento y fue confirmada mediante lectura SQL.'
-            : 'La incidencia quedó guardada y confirmada mediante lectura SQL.');
+            ? 'La incidencia existente coincide con este reintento y fue confirmada mediante lectura SQL. Estado actual: ' . $statusLabel . '.'
+            : 'La incidencia quedó guardada y confirmada mediante lectura SQL. Estado actual: ' . $statusLabel . '.');
         self::redirect($redirect);
     }
 
@@ -5117,13 +5242,8 @@ final class ChecadorController extends BaseController
             return;
         }
         $incidence = is_array($result['data']['incidence'] ?? null) ? $result['data']['incidence'] : [];
-        $label = match ((string) ($incidence['current_status'] ?? '')) {
-            'RESOLVED_PENDING_AUTHORIZATION' => 'Resuelta, pendiente de autorización',
-            'ACTIVE' => 'Activa',
-            'REJECTED' => 'Rechazada',
-            'CANCELLED' => 'Cancelada',
-            default => 'Estado actualizado',
-        };
+        $currentStatus = (string) ($incidence['current_status'] ?? '');
+        $label = ChecadorPresentationFormatter::incidenceStatusLabel($currentStatus);
         $store('success', !empty($result['data']['replayed'])
             ? 'La misma acción ya estaba registrada y se confirmó mediante lectura SQL. Estado actual: ' . $label . '.'
             : 'La acción quedó registrada y confirmada mediante lectura SQL. Estado actual: ' . $label . '.');
@@ -5242,7 +5362,9 @@ final class ChecadorController extends BaseController
         int $orderColumn,
         string $direction,
         string $captureMethod = '',
-        string $processingStatus = ''
+        string $processingStatus = '',
+        array $localIntervals = [],
+        ?int $deviceId = null
     ): void {
         $stream = fopen('php://output', 'wb');
         if (!is_resource($stream)) {
@@ -5286,7 +5408,9 @@ final class ChecadorController extends BaseController
                 $direction,
                 $workplaceName,
                 $captureMethod,
-                $processingStatus
+                $processingStatus,
+                $localIntervals,
+                $deviceId
             );
             if (!($result['ok'] ?? false)
                 || ($result['records_total'] ?? -1) !== $expectedTotal
@@ -5337,6 +5461,7 @@ final class ChecadorController extends BaseController
             'Estación', 'Identificador del registro', 'Colaborador', 'Dispositivo',
             'Hora original informada por el dispositivo', 'Zona horaria informada por el dispositivo',
             'Fecha y hora de marcación (UTC)', 'Fecha y hora de recepción (UTC)',
+            'Fecha y hora local de captura', 'Zona horaria histórica', 'Clasificación J1',
             'Método de registro', 'Estado de la marcación', 'Disponibilidad de la hora de marcación',
             'Integridad del registro',
         ], ',', '"', '');
@@ -5355,13 +5480,20 @@ final class ChecadorController extends BaseController
                 self::csvText($event['source_timezone_reported'] ?? ''),
                 self::csvText($event['ocurrido_at_utc'] ?? ''),
                 self::csvText($event['recibido_at_utc'] ?? ''),
+                self::csvText(($event['local_capture']['status'] ?? '') === 'resolved' ? ($event['local_capture']['local_datetime'] ?? '') : 'No disponible'),
+                self::csvText(($event['local_capture']['status'] ?? '') === 'resolved' ? ($event['local_capture']['timezone'] ?? '') : 'No disponible'),
+                self::csvText(match ($event['j1_classification'] ?? 'unavailable') {
+                    'entry' => 'Entrada', 'exit' => 'Salida', 'surplus' => 'Marcación adicional',
+                    'unmatched' => 'Sin pareja', 'ambiguous' => 'Clasificación ambigua',
+                    'pending' => 'Pendiente de clasificación', default => 'Clasificación no disponible',
+                }),
                 self::csvText(ChecadorPresentationFormatter::captureMethodLabel($event['metodo_captura'] ?? null)),
                 self::csvText(ChecadorPresentationFormatter::processingStatusLabel($event['processing_status'] ?? null)),
                 self::csvText(($event['ocurrido_at_utc'] ?? null) === null
                     ? 'Hora no determinada; se muestra la fecha y hora de recepción'
-                    : (ChecadorPresentationFormatter::eventLocalDateTime($event) === null
+                    : (($event['local_capture']['status'] ?? '') !== 'resolved'
                         ? 'Hora de marcación disponible (UTC; zona efectiva no resuelta)'
-                        : 'Hora de marcación convertida para presentación usando la zona efectiva registrada por V2')),
+                        : 'Hora de marcación convertida usando la zona histórica de la localidad')),
                 ChecadorPresentationFormatter::integrityLabel(),
             ], ',', '"', '');
         }
@@ -6006,7 +6138,8 @@ final class ChecadorController extends BaseController
             return $unavailable('El filtro de colaborador no es válido.');
         }
 
-        $fixtureRows = self::m01SyntheticDetailPreviewRows($date);
+        $fixturePreview = self::m01SyntheticDetailPreviewRows($date);
+        $fixtureRows = $fixturePreview['attendance_rows'] ?? [];
         if ($requestedWorkerId !== null && !isset($fixtureRows[$requestedWorkerId])) {
             return $unavailable('El colaborador solicitado no pertenece al escenario sintético.');
         }
@@ -6106,6 +6239,10 @@ final class ChecadorController extends BaseController
             'observed_only_events' => [],
             'effective_schedules' => [],
             'effective_schedule_errors' => [],
+            'coverage_read_status' => 'unavailable',
+            'coverage_by_worker' => [],
+            'administrative_incidences' => [],
+            'administrative_errors' => [],
             'journey_evaluation_state' => 'not_evaluated',
         ];
         $catalogWorkers = is_array($workerCatalog['workers'] ?? null) ? $workerCatalog['workers'] : [];
@@ -6220,6 +6357,30 @@ final class ChecadorController extends BaseController
             if ($id !== null) $rosterById[$id] = $profile;
         }
 
+        $coverageRead = (new ChecadorDailyAttendanceSqlReadService())->readPersistedCoverageForDate(
+            $workplaceId,
+            $date,
+            $authorizedWorkplaceIds,
+            $requestedWorkerId
+        );
+        $coverageReadStatus = ($coverageRead['ok'] ?? false) === true
+            ? (string) ($coverageRead['data']['status'] ?? 'ready')
+            : 'unavailable';
+        $coverageByWorker = is_array($coverageRead['data']['by_worker'] ?? null)
+            ? $coverageRead['data']['by_worker'] : [];
+        foreach ($coverageByWorker as $coverageWorkerId => $coverage) {
+            if (!is_array($coverage) || ($coverage['status'] ?? '') !== 'authorized') continue;
+            $profile = is_array($coverage['worker_profile'] ?? null) ? $coverage['worker_profile'] : [];
+            $profileId = self::positiveInteger($profile['worker_id'] ?? null);
+            $profileName = trim((string) ($profile['full_name'] ?? ''));
+            if ($profileId !== (int) $coverageWorkerId || $profileName === '' || $profileName === 'Nombre no disponible') {
+                $coverageByWorker[$coverageWorkerId] = ['status' => 'conflict'];
+                continue;
+            }
+            // Keyed union prevents a worker from appearing twice when already in the locality roster.
+            $rosterById[$profileId] = $rosterById[$profileId] ?? $profile;
+        }
+
         $persistedJourneyRead = self::readPersistedDailyJourneys(
             $workplaceId,
             $date,
@@ -6256,7 +6417,9 @@ final class ChecadorController extends BaseController
             $belongsToLocalityAtEvent = ($membership['status'] ?? '') === 'RESOLVED_SINGLE'
                 && count($assignments) === 1
                 && (int) ($assignments[0]['workplace_id'] ?? 0) === $workplaceId;
-            if (isset($rosterById[$workerId]) && $belongsToLocalityAtEvent) {
+            $hasAuthorizedCoverage = ($coverageByWorker[$workerId]['status'] ?? '') === 'authorized'
+                && (int) ($coverageByWorker[$workerId]['effective_workplace_id'] ?? 0) === $workplaceId;
+            if (isset($rosterById[$workerId]) && ($belongsToLocalityAtEvent || $hasAuthorizedCoverage)) {
                 $eventsByRosterWorker[$workerId][] = $event;
                 continue;
             }
@@ -6335,6 +6498,39 @@ final class ChecadorController extends BaseController
                 $assignmentReadOk = true;
             }
         }
+        foreach ($rosterById as $workerId => $_profile) {
+            $coverage = is_array($coverageByWorker[$workerId] ?? null) ? $coverageByWorker[$workerId] : null;
+            if (($coverage['status'] ?? '') === 'authorized') {
+                $template = is_array($coverage['template'] ?? null) ? $coverage['template'] : null;
+                $assignmentCells[$workerId] = [
+                    'status' => ($coverage['schedule_kind'] ?? '') === 'DAY_OFF' ? 'rest' : 'assigned',
+                    'label' => ($coverage['schedule_kind'] ?? '') === 'DAY_OFF'
+                        ? 'Descanso con cobertura autorizada'
+                        : (string) ($template['nombre'] ?? 'Turno'),
+                    'assignment_type' => 'TEMPORAL',
+                    'template' => $template,
+                ];
+                continue;
+            }
+
+            $cell = $assignmentCells[$workerId] ?? null;
+            if (is_array($cell) && ($cell['assignment_type'] ?? '') === 'TEMPORAL') {
+                $assignmentCells[$workerId] = [
+                    'status' => 'coverage_unverified',
+                    'label' => 'Asignación temporal sin cobertura confirmada',
+                    'assignment' => null,
+                    'template' => null,
+                ];
+            }
+            if (($coverage['status'] ?? '') === 'conflict') {
+                $assignmentCells[$workerId] = [
+                    'status' => 'coverage_conflict',
+                    'label' => 'Cobertura no concluyente',
+                    'assignment' => null,
+                    'template' => null,
+                ];
+            }
+        }
         $attendanceRows = [];
         foreach ($rosterById as $workerId => $profile) {
             if ($requestedWorkerId !== null && $requestedWorkerId !== $workerId) continue;
@@ -6356,14 +6552,22 @@ final class ChecadorController extends BaseController
                 $row['schedule'] = null;
                 $cell = $assignmentCells[$workerId] ?? null;
                 $cellStatus = (string) ($cell['status'] ?? 'unavailable');
-                if ($assignmentReadOk && $cellStatus === 'assigned') {
+                $coverageAuthorized = ($coverageByWorker[$workerId]['status'] ?? '') === 'authorized';
+                if (($assignmentReadOk || $coverageAuthorized) && $cellStatus === 'assigned') {
                     $template = $cell['template'];
                     $row['schedule'] = ['estado_jornada'=>'SCHEDULED', 'nombre'=>(string) ($template['nombre'] ?? ''),
-                        'source'=>'assigned', 'horario_local'=>['timezone'=>$timezone, 'segmentos'=>$template['segmentos'] ?? []]];
+                        'source'=>$coverageAuthorized ? 'persisted_coverage' : 'assigned',
+                        'horario_local'=>['timezone'=>$timezone, 'segmentos'=>$template['segmentos'] ?? []],
+                        'coverage'=>$coverageAuthorized ? ($cell['coverage'] ?? null) : null];
                     $row['schedule_error'] = null;
-                } elseif ($assignmentReadOk && $cellStatus === 'rest') {
-                    $row['schedule'] = ['estado_jornada'=>'DAY_OFF', 'source'=>'assigned'];
+                } elseif (($assignmentReadOk || $coverageAuthorized) && $cellStatus === 'rest') {
+                    $row['schedule'] = ['estado_jornada'=>'DAY_OFF', 'source'=>$coverageAuthorized ? 'persisted_coverage' : 'assigned',
+                        'coverage'=>$coverageAuthorized ? ($cell['coverage'] ?? null) : null];
                     $row['schedule_error'] = null;
+                } elseif ($cellStatus === 'coverage_conflict') {
+                    $row['schedule_error'] = 'coverage_conflict';
+                } elseif ($cellStatus === 'coverage_unverified') {
+                    $row['schedule_error'] = 'coverage_unavailable';
                 } else {
                     $row['schedule_error'] = $assignmentReadOk ? $cellStatus : 'assignment_read_failed';
                 }
@@ -6373,20 +6577,7 @@ final class ChecadorController extends BaseController
                 $row['p1_status'] = $journey['p1_status'] ?? null;
                 $row['p2_status'] = $journey['p2_status'] ?? null;
                 $row['journey_message'] = self::persistedJourneyStatusMessage($journey);
-                if (($journey['pairing_current_status'] ?? '') === 'missing') {
-                    $row['status'] = 'journey_not_evaluated';
-                } elseif (($journey['p2_status'] ?? null) === null) {
-                    $row['status'] = 'calculation_unavailable';
-                } else {
-                    $row['status'] = match ((string) $journey['p2_status']) {
-                        'CALCULATED' => 'evaluated',
-                        'AMBIGUOUS' => 'ambiguous',
-                        'PARTIAL_DATA', 'PENDING_SYNC', 'UNKNOWN_SCHEDULE', 'UNSCHEDULED_RECORDED', 'UNMATCHED_NO_PUNCHES' => 'incomplete',
-                        'WORKPLACE_MISMATCH' => 'review',
-                        'DAY_OFF_RECORDED' => 'day_off_recorded',
-                        default => $row['status'],
-                    };
-                }
+                $row['status'] = \App\Services\ChecadorAttendanceProjection::persistedJourneyStatus($journey);
             }
             $row['worked_seconds'] = is_int($journey['calculation']['segundos_trabajados_totales'] ?? null)
                 ? $journey['calculation']['segundos_trabajados_totales']
@@ -6395,19 +6586,45 @@ final class ChecadorController extends BaseController
             $row['incidence_count'] = null;
             $attendanceRows[$workerId] = $row;
         }
+
+        $administrativeIncidences = [];
+        $administrativeErrors = [];
+        $actor = Auth::user();
+        if ($actor !== null) {
+            $incidenceReader = new \App\Services\ChecadorM01IncidenceReadService();
+            foreach (array_keys($attendanceRows) as $attendanceWorkerId) {
+                $incidenceRead = $incidenceReader->readForWorker(
+                    $actor,
+                    $workplaceId,
+                    $date,
+                    (int) $attendanceWorkerId,
+                    $authorizedWorkplaceIds
+                );
+                if (($incidenceRead['ok'] ?? false) === true) {
+                    $administrativeIncidences[(int) $attendanceWorkerId] = $incidenceRead['data']['items'] ?? [];
+                    $attendanceRows[(int) $attendanceWorkerId]['incidence_count'] = (int) ($incidenceRead['data']['count'] ?? 0);
+                } else {
+                    $administrativeErrors[(int) $attendanceWorkerId] = (string) ($incidenceRead['error']['kind'] ?? 'read_unavailable');
+                    $attendanceRows[(int) $attendanceWorkerId]['incidence_count'] = null;
+                }
+            }
+        }
         $unrosteredEvents = array_values(array_filter($unrosteredEvents, static function (array $item) use ($requestedWorkerId): bool {
             return $requestedWorkerId === null || (int) ($item['worker_id'] ?? 0) === $requestedWorkerId;
         }));
 
-        $scheduledComodines = ['status' => 'not_queried', 'workers' => [], 'message' => ''];
-        $programmingRead = ChecadorRolComodinesService::authorizeCanonicalProgramming($workplaceId, 'read');
-        if (!empty($programmingRead['allowed'])) {
-            $scheduledComodines = ChecadorRolComodinesService::getCanonicalScheduledWorkersForDate(
-                $workplaceId,
-                $date,
-                $programmingRead['station_workplace_ids'] ?? $authorizedWorkplaceIds
-            );
-        }
+        $scheduledComodines = [
+            'status' => $coverageReadStatus,
+            'workers' => array_values(array_map(static fn(array $coverage): array => [
+                'worker_id' => (int) ($coverage['worker_id'] ?? 0),
+                'effective_workplace_id' => (int) ($coverage['effective_workplace_id'] ?? 0),
+                'schedule_kind' => (string) ($coverage['schedule_kind'] ?? ''),
+                'template_name' => (string) ($coverage['template']['nombre'] ?? ''),
+            ], array_filter($coverageByWorker, static fn(array $coverage): bool => ($coverage['status'] ?? '') === 'authorized'))),
+            'message' => $coverageReadStatus === 'unavailable'
+                ? 'No se pudo confirmar la cobertura persistida.'
+                : '',
+        ];
         $eventCount = count($events);
         $empty['state'] = 'success';
         $empty['state_message'] = '';
@@ -6429,6 +6646,10 @@ final class ChecadorController extends BaseController
         $empty['selected_worker_id'] = $requestedWorkerId;
         $empty['scheduled_comodines'] = $scheduledComodines;
         $empty['attendance_rows'] = $attendanceRows;
+        $empty['coverage_read_status'] = $coverageReadStatus;
+        $empty['coverage_by_worker'] = $coverageByWorker;
+        $empty['administrative_incidences'] = $administrativeIncidences;
+        $empty['administrative_errors'] = $administrativeErrors;
         $empty['observed_only_events'] = $unrosteredEvents;
         $empty['effective_schedules'] = [];
         $empty['effective_schedule_errors'] = array_fill_keys(array_keys($rosterById), 'persisted_schedule_projection_unavailable');
@@ -6539,6 +6760,7 @@ final class ChecadorController extends BaseController
             'PENDING_SYNC_COMPLETION' => 'completitud de sincronización pendiente',
             'AMBIGUOUS_PAIRING' => 'pareo ambiguo', 'PARTIAL_MISSING_IN' => 'entrada de segmento no disponible',
             'PARTIAL_MISSING_OUT' => 'salida de segmento no disponible', 'REVIEW_REQUIRED' => 'requiere revisión',
+            'PENDING_REVIEW' => 'pendiente de revisión',
         ];
         $parts = [];
         foreach (['p1_status' => 'P1', 'p2_status' => 'P2'] as $field => $prefix) {

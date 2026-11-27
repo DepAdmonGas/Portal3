@@ -12,10 +12,10 @@ if (($sourceWorkplaceId ?? null) !== null && ($sourceWorkDate ?? '') !== '') {
 }
 $periodYear = (int) ($periodYear ?? gmdate('Y'));
 $periodMonth = (int) ($periodMonth ?? gmdate('n'));
-$periodSummaryLabel = (string) ($periodLabel ?? 'Rango personalizado (UTC)');
+$periodSummaryLabel = (string) ($periodLabel ?? 'Rango personalizado (fecha local)');
 if ($periodUiPreset === 'year') {
     $monthNames = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'];
-    $periodSummaryLabel = ($monthNames[$periodMonth] ?? 'Mes') . ' ' . $periodYear . ' (UTC)';
+    $periodSummaryLabel = ($monthNames[$periodMonth] ?? 'Mes') . ' ' . $periodYear . ' (fecha local)';
 }
 $previousPeriodHref = null;
 try {
@@ -53,10 +53,11 @@ try {
                 <h1 class="h5 mb-0 text-white" id="punch-report-title">Reporte de marcaciones</h1>
                 <span class="small text-white-50"><?= htmlspecialchars((string) (($selectedWorkplaceName ?? '') !== '' ? $selectedWorkplaceName : 'Selecciona una localidad autorizada'), ENT_QUOTES, 'UTF-8') ?></span>
             </div>
-            <div class="dropdown">
-                <button type="button" class="btn btn-light btn-sm text-primary" id="punch-report-options" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del reporte"><i class="ti ti-dots-vertical" aria-hidden="true"></i></button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="punch-report-options">
-                    <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#punch-report-filter-modal"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar marcaciones</button></li>
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn btn-light dropdown-toggle text-dark" id="punch-report-options" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del reporte"><i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i></button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="punch-report-options">
+                    <li><button type="button" class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#punch-report-filter-modal"><i class="ti ti-search me-1" aria-hidden="true"></i>Buscar marcaciones</button></li>
+                    <?php if ($sourceDailyContext !== []): ?><li><a class="dropdown-item pointer" href="/departamento-operativo/recursos-humanos/checador/asistencia"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Volver a Asistencia</a></li><?php endif; ?>
                 </ul>
             </div>
         </div>
@@ -80,7 +81,7 @@ try {
         </div>
         <div class="col-6 col-sm-3 col-lg-2 <?= ($periodUiPreset ?? '') === 'year' ? '' : 'd-none' ?>" data-period-year>
             <label class="form-label mb-1" for="punch-report-year">Año</label>
-            <input class="form-control" type="number" id="punch-report-year" name="year" min="2000" max="<?= (int) gmdate('Y') ?>" value="<?= $periodYear ?>" inputmode="numeric">
+            <input class="form-control" type="number" id="punch-report-year" name="year" min="2000" max="9999" value="<?= $periodYear ?>" inputmode="numeric">
         </div>
         <div class="col-12 col-lg-auto d-flex flex-wrap gap-2">
             <button type="submit" class="btn btn-primary"><i class="ti ti-search me-1" aria-hidden="true"></i>Consultar</button>
@@ -88,6 +89,7 @@ try {
         </div>
         <input type="hidden" name="capture_method" value="<?= htmlspecialchars((string) ($captureMethod ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="processing_status" value="<?= htmlspecialchars((string) ($processingStatus ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="device_id" value="<?= htmlspecialchars((string) ($deviceId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" id="punch-report-worker-value" name="worker_id" value="<?= htmlspecialchars((string) ($workerId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
         <?php if ($sourceDailyContext !== []): ?>
             <input type="hidden" name="source_work_date" value="<?= htmlspecialchars((string) $sourceWorkDate, ENT_QUOTES, 'UTF-8') ?>">
@@ -96,7 +98,7 @@ try {
     </form>
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-live="polite">
         <span class="small text-muted"><?= htmlspecialchars($periodSummaryLabel, ENT_QUOTES, 'UTF-8') ?></span>
-        <?php if (($fromDate ?? '') !== '' && ($toDate ?? '') !== ''): ?><span class="badge text-bg-light border">UTC <?= htmlspecialchars((string) $fromDate, ENT_QUOTES, 'UTF-8') ?> – <?= htmlspecialchars((string) $toDate, ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
+        <?php if (($fromDate ?? '') !== '' && ($toDate ?? '') !== ''): ?><span class="badge text-bg-light border">Local <?= htmlspecialchars((string) $fromDate, ENT_QUOTES, 'UTF-8') ?> – <?= htmlspecialchars((string) $toDate, ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
         <?php if (($captureMethod ?? '') !== ''): ?><span class="badge text-bg-light border"><?= htmlspecialchars((string) ($captureMethodOptions[$captureMethod] ?? 'Método filtrado'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
         <?php if (($processingStatus ?? '') !== ''): ?><span class="badge text-bg-light border"><?= htmlspecialchars((string) ($processingStatusOptions[$processingStatus] ?? 'Estado filtrado'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
     </div>
@@ -125,9 +127,10 @@ try {
                             <span class="visually-hidden" id="punch-report-worker-help">Busca por nombre o apellido; el identificador se conserva de forma interna.</span>
                         </div>
                         <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-6"><label class="form-label" for="from_date">Fecha inicial (UTC)</label><input class="form-control" id="from_date" name="from_date" type="date" value="<?= htmlspecialchars((string) ($fromDate ?? ''), ENT_QUOTES, 'UTF-8') ?>" required></div>
-                            <div class="col-12 col-md-6"><label class="form-label" for="to_date">Fecha final (UTC)</label><input class="form-control" id="to_date" name="to_date" type="date" value="<?= htmlspecialchars((string) ($toDate ?? ''), ENT_QUOTES, 'UTF-8') ?>" required></div>
+                            <div class="col-12 col-md-6"><label class="form-label" for="from_date">Fecha inicial local</label><input class="form-control" id="from_date" name="from_date" type="date" value="<?= htmlspecialchars((string) ($fromDate ?? ''), ENT_QUOTES, 'UTF-8') ?>" required></div>
+                            <div class="col-12 col-md-6"><label class="form-label" for="to_date">Fecha final local</label><input class="form-control" id="to_date" name="to_date" type="date" value="<?= htmlspecialchars((string) ($toDate ?? ''), ENT_QUOTES, 'UTF-8') ?>" required></div>
                         </div>
+                        <div class="mt-3"><label class="form-label" for="device_id">Dispositivo</label><select class="form-select" id="device_id" name="device_id" aria-describedby="device_id_help"><option value="">Todos los dispositivos</option><?php foreach (($deviceOptions ?? []) as $device): ?><option value="<?= (int)$device['id'] ?>" <?= (int)($deviceId ?? 0) === (int)$device['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string)$device['nombre'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select><div id="device_id_help" class="form-text">Dispositivos con marcaciones observadas en la localidad y el periodo consultado.</div></div>
                         <div class="mt-3">
                             <label class="form-label" for="capture_method">Método de captura</label>
                             <select class="form-select" id="capture_method" name="capture_method">
@@ -172,7 +175,7 @@ try {
     </div>
 
     <?php if ($state === 'idle'): ?>
-        <section class="card mb-4" aria-labelledby="punch-report-results-title"><div class="card-header bg-primary text-white d-flex align-items-center gap-2"><span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-fingerprint fs-5"></i></span><h2 class="h5 mb-0 text-white" id="punch-report-results-title">Marcaciones registradas</h2><span class="badge rounded-pill bg-white text-primary ms-auto">Horas en UTC</span></div><div class="card-body"><div class="text-muted small" role="note">Consulta de registros originales. La integridad no está verificada por Portal3; el reporte no evalúa jornadas.</div><p class="mb-0 mt-3">Selecciona una localidad autorizada y consulta el periodo.</p></div></section>
+        <section class="card mb-4" aria-labelledby="punch-report-results-title"><div class="card-header bg-primary text-white d-flex align-items-center gap-2"><span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-fingerprint fs-5"></i></span><h2 class="h5 mb-0 text-white" id="punch-report-results-title">Marcaciones registradas</h2><span class="badge rounded-pill bg-white text-primary ms-auto">Fecha local · detalle UTC</span></div><div class="card-body"><div class="text-muted small" role="note">Consulta de registros originales. La integridad no está verificada por Portal3; el reporte no evalúa jornadas.</div><p class="mb-0 mt-3">Selecciona una localidad autorizada y consulta el periodo.</p></div></section>
     <?php elseif ($state === 'error' || $state === 'unavailable'): ?>
         <div class="alert alert-danger" role="alert">
             <i class="ti ti-alert-circle me-1" aria-hidden="true"></i>
@@ -186,7 +189,7 @@ try {
                         <h2 class="h5 mb-0 text-white" id="punch-report-results-title">Resultados de marcaciones</h2>
                     <span class="small text-white-50"><?= htmlspecialchars((string) ($selectedWorkplaceName ?: 'Localidad no disponible'), ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
-                <span class="badge rounded-pill bg-white text-primary ms-auto">Horas en UTC</span>
+                <span class="badge rounded-pill bg-white text-primary ms-auto">Fecha local · detalle UTC</span>
                 <?php if (!empty($canDownload)): ?>
                     <form id="punch-report-csv-form" method="get" action="/departamento-operativo/recursos-humanos/checador/reporte" class="ms-md-2" data-checador-csv-form>
                         <input type="hidden" name="from_date" value="<?= htmlspecialchars((string) ($fromDate ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -194,6 +197,7 @@ try {
                         <input type="hidden" name="worker_id" value="<?= htmlspecialchars((string) ($workerId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="capture_method" value="<?= htmlspecialchars((string) ($captureMethod ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="processing_status" value="<?= htmlspecialchars((string) ($processingStatus ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="device_id" value="<?= htmlspecialchars((string) ($deviceId ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="dt_search" value="<?= htmlspecialchars((string) ($tableSearch ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="dt_order_column" value="<?= (int) ($tableOrderColumn ?? 1) ?>">
                         <input type="hidden" name="dt_order_direction" value="<?= ($sort ?? 'asc') === 'desc' ? 'desc' : 'asc' ?>">
@@ -203,7 +207,7 @@ try {
                 <?php endif; ?>
             </div>
             <div class="card-body">
-                <p class="small text-muted mb-3">Consulta registros originales en UTC; no convierte la hora del dispositivo ni evalúa jornadas. La integridad no está verificada por Portal3 y un periodo sin resultados no confirma ausencia laboral.</p>
+                <p class="small text-muted mb-3">Consulta registros originales por fecha local de captura. Los eventos sin instante de captura confirmado no se incluyen en este filtro. La integridad no está verificada por Portal3 y un periodo sin resultados no confirma ausencia laboral.</p>
                 <div id="punch-report-ajax-error" class="alert alert-danger d-none" role="alert" aria-live="assertive">
                     La consulta no está disponible; no se interpreta como ausencia de marcaciones. Vuelve a consultar o inicia sesión nuevamente.
                 </div>

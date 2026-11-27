@@ -29,7 +29,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
         <div class="col"><section class="card bg-body border rounded-3 shadow-sm h-100 mb-0"><div class="card-body d-flex align-items-center gap-3 p-3 p-lg-4">
             <span class="rounded-3 bg-primary-subtle text-primary p-3 flex-shrink-0"><i class="ti ti-key fs-9" aria-hidden="true"></i></span>
             <div><h2 class="card-title fs-6 fw-bolder mb-2" id="personnel-pin-title">PIN de acceso del personal</h2><p class="text-body-secondary mb-2">Autoriza una marcación cuando no se puede usar la huella.</p>
-            <p class="small mb-3">15 minutos · Una marcación<?php if (($panel['state'] ?? '') === 'success'): ?> · Pendientes: <?= count($requests) ?><?php endif; ?></p><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#personnel-pin-modal">Administrar PIN</button></div>
+            <p class="small mb-3">15 minutos · Una marcación<?php if (($panel['state'] ?? '') === 'success'): ?> · Solicitudes: <?= count($requests) ?><?php endif; ?></p><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#personnel-pin-modal">Administrar PIN</button></div>
         </div></section></div>
     </div>
     <div class="modal fade" id="configuration-pin-modal" tabindex="-1" aria-labelledby="configuration-pin-heading" aria-hidden="true" <?= $adminFeedback !== null ? 'data-show-feedback="1"' : '' ?>>
@@ -69,39 +69,41 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
             <?php elseif (($panel['state'] ?? '') === 'error'): ?>
                 <div class="alert alert-warning" role="status"><?= $esc($panel['message'] ?? 'La lectura de solicitudes no está disponible; no se confirma que la cola esté vacía.') ?></div>
             <?php elseif (($panel['state'] ?? '') === 'success' && $requests === []): ?>
-                <p class="text-body-secondary text-center py-3 mb-0" role="status"><i class="ti ti-info-circle text-primary me-1" aria-hidden="true"></i>No hay solicitudes pendientes para esta estación.</p>
+                <p class="text-body-secondary text-center py-3 mb-0" role="status"><i class="ti ti-info-circle text-primary me-1" aria-hidden="true"></i>No se devolvieron solicitudes para esta estación.</p>
             <?php elseif ($requests !== []): ?>
-                <div class="table-responsive"><table class="table table-striped table-bordered align-middle mb-0"><caption class="visually-hidden">Solicitudes de acceso temporal devueltas para el centro autorizado</caption><thead><tr><th scope="col">Trabajador</th><th scope="col">Dispositivo</th><th scope="col">Motivo</th><th scope="col">Estado informado</th><th scope="col">Solicitud UTC</th><th scope="col">Vencimiento UTC</th><th scope="col">Acciones</th></tr></thead><tbody>
+                <div class="table-responsive"><table class="table table-striped table-bordered align-middle mb-0" id="temporary-access-requests-table"><caption class="visually-hidden">Solicitudes de acceso temporal devueltas para el centro autorizado</caption><thead><tr><th scope="col">Trabajador</th><th scope="col">Dispositivo</th><th scope="col">Motivo</th><th scope="col">Fecha de solicitud (UTC)</th><th scope="col">Vencimiento de solicitud (UTC)</th><th scope="col">Acciones</th></tr></thead><tbody>
                     <?php foreach ($requests as $request): $requestUuid = strtolower((string) ($request['request_uuid'] ?? '')); ?><tr>
-                        <th scope="row"><?= $esc($request['nombre_trabajador'] ?? 'No disponible') ?></th>
+                        <th scope="row"><?= $esc($request['nombre_trabajador'] ?? 'No disponible') ?><?php if ((int) ($request['id_personal_resuelto'] ?? 0) > 0): ?><span class="d-block small text-body-secondary">ID RH: <?= (int) $request['id_personal_resuelto'] ?></span><?php endif; ?></th>
                         <td><?= $esc($request['dispositivo_nombre'] ?? 'No disponible') ?></td>
                         <td><?= $esc($request['reason'] ?? 'No disponible') ?></td>
-                        <td>No incluido en esta lectura</td>
                         <td><?= $esc($request['requested_at_utc'] ?? 'No disponible') ?></td>
                         <td><?= $esc($request['request_expires_at_utc'] ?? 'No disponible') ?></td>
                         <td>
                             <?php if ($canEdit && preg_match('/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/i', $requestUuid)): ?>
-                                <div class="d-flex flex-wrap gap-1">
-                                    <?php foreach (['authorize' => 'Autorizar', 'reject' => 'Rechazar'] as $action => $label): ?>
-                                        <form method="post" action="/departamento-operativo/recursos-humanos/checador/acceso-temporal/<?= rawurlencode($requestUuid) ?>/<?= $action ?>">
-                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                                            <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                                            <input type="hidden" name="worker_id" value="<?= (int) ($request['id_personal_resuelto'] ?? 0) ?>">
-                                            <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
-                                            <label class="form-check small mb-1"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo <?= strtolower($label) ?> esta solicitud.</label>
-                                            <button type="submit" class="btn btn-sm btn-outline-<?= $action === 'authorize' ? 'success' : 'danger' ?>"><?= $esc($label) ?></button>
-                                        </form>
-                                    <?php endforeach; ?>
-                                    <?php if ($cancelableUuid !== '' && hash_equals($cancelableUuid, $requestUuid)): ?>
-                                        <form method="post" action="/departamento-operativo/recursos-humanos/checador/acceso-temporal/<?= rawurlencode($requestUuid) ?>/cancel">
-                                            <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
-                                            <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
-                                            <input type="hidden" name="worker_id" value="<?= (int) ($request['id_personal_resuelto'] ?? 0) ?>">
-                                            <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
-                                            <label class="form-check small mb-1"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo cancelar esta autorización temporal.</label>
-                                            <button type="submit" class="btn btn-sm btn-outline-warning">Cancelar autorización</button>
-                                        </form>
-                                    <?php endif; ?>
+                                <div class="dropdown d-inline-block">
+                                    <button type="button" class="btn btn-light dropdown-toggle text-dark" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false" aria-label="Acciones de solicitud"><i class="ti ti-dots-vertical fs-4" aria-hidden="true"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                        <?php foreach (['authorize' => ['Autorizar', 'ti-check', 'success'], 'reject' => ['Rechazar', 'ti-x', 'danger']] as $action => [$label, $icon, $tone]): ?>
+                                            <li><form method="post" action="/departamento-operativo/recursos-humanos/checador/acceso-temporal/<?= rawurlencode($requestUuid) ?>/<?= $action ?>" class="px-3 py-2">
+                                                <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
+                                                <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
+                                                <input type="hidden" name="worker_id" value="<?= (int) ($request['id_personal_resuelto'] ?? 0) ?>">
+                                                <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
+                                                <label class="form-check small mb-2"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo <?= strtolower($label) ?> esta solicitud.</label>
+                                                <button type="submit" class="dropdown-item text-<?= $tone ?> px-0"><i class="ti <?= $icon ?> me-1" aria-hidden="true"></i><?= $esc($label) ?></button>
+                                            </form></li>
+                                        <?php endforeach; ?>
+                                        <?php if ($cancelableUuid !== '' && hash_equals($cancelableUuid, $requestUuid)): ?>
+                                            <li><form method="post" action="/departamento-operativo/recursos-humanos/checador/acceso-temporal/<?= rawurlencode($requestUuid) ?>/cancel" class="px-3 py-2">
+                                                <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>">
+                                                <input type="hidden" name="workplace_id" value="<?= (int) ($selectedWorkplaceId ?? 0) ?>">
+                                                <input type="hidden" name="worker_id" value="<?= (int) ($request['id_personal_resuelto'] ?? 0) ?>">
+                                                <input type="hidden" name="date" value="<?= $esc($selectedDate ?? '') ?>">
+                                                <label class="form-check small mb-2"><input class="form-check-input" type="checkbox" name="confirm_action" value="1" required> Confirmo cancelar esta autorización temporal.</label>
+                                                <button type="submit" class="dropdown-item text-warning px-0"><i class="ti ti-ban me-1" aria-hidden="true"></i>Cancelar autorización</button>
+                                            </form></li>
+                                        <?php endif; ?>
+                                    </ul>
                                 </div>
                             <?php else: ?><span class="small text-muted">No disponible para este perfil o ambiente.</span><?php endif; ?>
                         </td>
@@ -113,6 +115,32 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
         </div>
     </section>
     <div class="modal-footer"><button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"><i class="ti ti-x me-1" aria-hidden="true"></i>Cerrar</button></div></div></div></div>
+    <?php if (is_array($temporaryAccessHistory ?? null)): $historyFilters = $temporaryAccessHistoryFilters ?? []; ?>
+    <section class="card mb-3" aria-labelledby="attendance-pin-history-heading">
+        <div class="card-header bg-primary text-white"><h2 class="h5 mb-0 text-white" id="attendance-pin-history-heading">Solicitudes de PIN de asistencia</h2></div>
+        <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>">
+                <div class="col-md-3"><label class="form-label" for="history-search">Buscar</label><input class="form-control" id="history-search" name="history_search" value="<?= $esc($historyFilters['search'] ?? '') ?>" maxlength="100"></div>
+                <div class="col-md-2"><label class="form-label" for="history-worker">ID RH</label><input class="form-control" id="history-worker" name="history_worker_id" type="number" min="1" value="<?= $esc($historyFilters['worker_id'] ?? '') ?>"></div>
+                <div class="col-md-2"><label class="form-label" for="history-status">Estado</label><select class="form-select" id="history-status" name="history_status"><option value="">Todos</option><?php foreach (['PENDING','AUTHORIZED','REJECTED','CANCELLED','EXPIRED','USED','LOCKED'] as $historyState): ?><option value="<?= $esc($historyState) ?>" <?= ($historyFilters['status'] ?? '') === $historyState ? 'selected' : '' ?>><?= $esc($historyState) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-2"><label class="form-label" for="history-from">Desde (UTC)</label><input class="form-control" id="history-from" name="history_from" type="date" value="<?= $esc($historyFilters['from'] ?? '') ?>"></div>
+                <div class="col-md-2"><label class="form-label" for="history-to">Hasta (UTC)</label><input class="form-control" id="history-to" name="history_to" type="date" value="<?= $esc($historyFilters['to'] ?? '') ?>"></div>
+                <div class="col-md-2"><label class="form-label" for="history-sort">Ordenar por</label><select class="form-select" id="history-sort" name="history_sort"><?php foreach (['date'=>'Fecha','worker'=>'Trabajador','status'=>'Estado'] as $value=>$label): ?><option value="<?= $esc($value) ?>" <?= ($historyFilters['sort'] ?? 'date') === $value ? 'selected' : '' ?>><?= $esc($label) ?></option><?php endforeach; ?></select></div>
+                <div class="col-md-2"><label class="form-label" for="history-direction">Orden</label><select class="form-select" id="history-direction" name="history_direction"><option value="desc" <?= ($historyFilters['direction'] ?? 'desc') === 'desc' ? 'selected' : '' ?>>Descendente</option><option value="asc" <?= ($historyFilters['direction'] ?? '') === 'asc' ? 'selected' : '' ?>>Ascendente</option></select></div>
+                <div class="col-md-1 d-flex align-items-end"><button class="btn btn-primary" type="submit">Buscar</button></div>
+            </form>
+            <?php if (empty($temporaryAccessHistory['ok'])): ?><div class="alert alert-warning" role="status"><?= ($temporaryAccessHistory['error']['kind'] ?? '') === 'invalid_filter' ? 'Los filtros del historial no son válidos.' : 'El historial de solicitudes no está disponible.' ?></div>
+            <?php elseif (empty($temporaryAccessHistory['items'])): ?><p class="text-body-secondary">No se encontraron solicitudes.</p>
+            <?php else: ?><div class="table-responsive"><table class="table table-striped table-bordered align-middle"><thead><tr><th>Trabajador</th><th>Dispositivo</th><th>Motivo</th><th>Solicitud UTC</th><th>Estado persistido</th><th>Vencimiento PIN UTC</th></tr></thead><tbody>
+                <?php foreach ($temporaryAccessHistory['items'] as $item): ?><tr><td><?= $esc($item['nombre_trabajador'] ?? 'No disponible') ?></td><td><?= $esc($item['dispositivo_nombre'] ?? '') ?></td><td><?= $esc($item['reason'] ?? '') ?></td><td><?= $esc($item['requested_at_utc'] ?? '') ?></td><td><?= $esc($item['status'] ?? '') ?></td><td><?= $esc($item['pin_expires_at_utc'] ?? '—') ?></td></tr><?php endforeach; ?>
+            </tbody></table></div><?php endif; ?>
+            <?php if (!empty($temporaryAccessHistory['ok'])): $historyPage = (int)$temporaryAccessHistory['page']; $historyTotal = (int)$temporaryAccessHistory['total']; $historyPages = max(1,(int)ceil($historyTotal / (int)$temporaryAccessHistory['per_page'])); $historyParams = ['workplace_id'=>$selectedWorkplace]; foreach ($historyFilters as $key=>$value) { if ($value !== '') $historyParams['history_'.$key] = $value; } ?>
+                <p class="small">Solicitudes: <?= $historyTotal ?> · Página <?= $historyPage ?> de <?= $historyPages ?></p><nav aria-label="Páginas del historial"><?php if ($historyPage > 1): $historyParams['history_page']=$historyPage-1; ?><a class="btn btn-outline-primary btn-sm" href="?<?= $esc(http_build_query($historyParams)) ?>">Anterior</a><?php endif; ?> <?php if ($historyPage < $historyPages): $historyParams['history_page']=$historyPage+1; ?><a class="btn btn-outline-primary btn-sm" href="?<?= $esc(http_build_query($historyParams)) ?>">Siguiente</a><?php endif; ?></nav>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php endif; ?>
     <section class="card" id="pin-history" aria-labelledby="pin-history-heading">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
             <span class="rounded-circle bg-white text-primary d-inline-flex align-items-center justify-content-center p-2" aria-hidden="true"><i class="ti ti-history fs-5"></i></span>
