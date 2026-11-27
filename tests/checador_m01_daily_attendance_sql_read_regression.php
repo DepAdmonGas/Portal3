@@ -481,7 +481,7 @@ $assert(str_contains($view, 'journey_message') && str_contains($view, 'journey_u
 $assert(str_contains($view, '$successfulM01SqlRead = $state === \'success\' && ($m01SqlReadSuccessful ?? false) === true;')
     && str_contains($view, 'elseif (!$successfulM01SqlRead && ($attendanceCoverage[\'complete\'] ?? false) !== true)')
     && str_contains($view, 'if (!$successfulM01SqlRead):')
-    && str_contains($view, 'Sin marcación observada'),
+    && str_contains($view, "'no_observed_event' => ['Sin marcación',"),
     'only successful SQL reads suppress repetitive coverage notices while preserving neutral empty status');
 
 echo "RESULT {$passes} PASS {$fails} FAIL\n";

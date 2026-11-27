@@ -97,7 +97,9 @@ final class ChecadorJourneySqlReadService
                 }
                 $membershipKey = $worker . '|' . $workplaceId . '|' . $localDayStartUtc;
                 if (!array_key_exists($membershipKey, $assignmentCache)) {
-                    $assignmentCache[$membershipKey] = ($this->resolveMembership)($worker, $workplaceId, $localDayStartUtc, $recordedAsOf);
+                    $effectiveRfc3339 = str_replace(' ', 'T', $localDayStartUtc) . 'Z';
+                    $recordedRfc3339 = str_replace(' ', 'T', $recordedAsOf) . 'Z';
+                    $assignmentCache[$membershipKey] = ($this->resolveMembership)($worker, $workplaceId, $effectiveRfc3339, $recordedRfc3339);
                 }
                 $membership = $assignmentCache[$membershipKey];
                 $matchesLocality = self::membershipConfirmsWorkplace($membership, $workplaceId);
@@ -335,6 +337,8 @@ final class ChecadorJourneySqlReadService
             $segmentId = $row->id_pareo_segmento === null ? null : (int) $row->id_pareo_segmento;
             if ($segmentId !== null && (!isset($pairingSegmentsById[$segmentId])
                 || (int) $pairingSegmentsById[$segmentId]['id_pareo_jornada'] !== (int) $row->id_pareo_jornada)) return null;
+            if (!self::associationMatchesSegment((string) $row->rol_marcacion, (int) $row->id_marcacion_cruda,
+                $segmentId === null ? null : $pairingSegmentsById[$segmentId])) return null;
             $raw = $rawById[(int) $row->id_marcacion_cruda] ?? null;
             $journeyId = $journeyByPairingId[(int) $row->id_pareo_jornada] ?? null;
             $expected = $journeyId === null ? null : self::pageIdentity($pageRows, $journeyId);
@@ -499,6 +503,15 @@ final class ChecadorJourneySqlReadService
         return $row !== null && (int) $row->id_personal === $workerId && (int) $row->id_estacion === $workplaceId
             && (string) $row->valido_desde <= $workDate
             && ($row->valido_hasta === null || $workDate < (string) $row->valido_hasta);
+    }
+
+    /** ENTRY/EXIT may populate a slot only when its persisted segment references the same raw event. */
+    public static function associationMatchesSegment(string $role, int $rawId, ?array $segment): bool
+    {
+        $role = strtoupper(trim($role));
+        if (!in_array($role, ['ENTRY', 'EXIT'], true)) return true;
+        $column = $role === 'ENTRY' ? 'id_marcacion_entrada' : 'id_marcacion_salida';
+        return $rawId > 0 && $segment !== null && (int) ($segment[$column] ?? 0) === $rawId;
     }
 
     private static function localDayStartUtc(string $date, string $timezone): ?string

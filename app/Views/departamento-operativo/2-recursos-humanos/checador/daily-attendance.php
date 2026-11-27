@@ -92,7 +92,7 @@ $statusPresentation = static fn(string $status): array => match ($status) {
     'incomplete' => ['Información insuficiente', 'bg-transparent border text-info-emphasis'],
     'pending_review' => ['Pendiente de revisión', 'bg-transparent border text-warning-emphasis'],
     'classification_pending' => ['Pendiente de clasificación', 'bg-transparent border text-secondary'],
-    'no_observed_event' => ['Sin marcación observada', 'bg-transparent border text-body-secondary'],
+    'no_observed_event' => ['Sin marcación', 'bg-transparent border text-body-secondary'],
     'punches_unavailable' => ['Marcaciones no disponibles', 'bg-transparent border text-warning-emphasis'],
     'journey_unavailable' => ['Resultado de Jornada no disponible', 'bg-transparent border text-warning-emphasis'],
     'journey_not_evaluated' => ['Jornada pendiente de evaluación', 'bg-transparent border text-secondary'],
@@ -219,7 +219,23 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
             : substr($time, 0, 5);
     }
 
-    $status = $statusPresentation((string) ($attendanceRow['status'] ?? 'unknown'));
+    $rowStatus = (string) ($attendanceRow['status'] ?? 'unknown');
+    $status = $statusPresentation($rowStatus);
+    $hasUnclassifiedEvent = false;
+    foreach (is_array($attendanceRow['additional_events'] ?? null) ? $attendanceRow['additional_events'] : [] as $event) {
+        if (is_array($event) && trim((string) ($event['pairing_role'] ?? '')) === '') $hasUnclassifiedEvent = true;
+    }
+    $entry = $attendanceRow['slots']['ENTRY:1']['event'] ?? null;
+    $exit = $attendanceRow['slots']['EXIT:1']['event'] ?? null;
+    if (in_array($rowStatus, ['incomplete', 'journey_not_evaluated', 'classification_pending'], true)) {
+        if ($hasUnclassifiedEvent) {
+            $status = $statusPresentation('classification_pending');
+        } elseif ($rowStatus === 'incomplete' && is_array($entry) && $exit === null) {
+            $status = ['Salida pendiente', 'bg-transparent border text-info-emphasis'];
+        } elseif ($rowStatus === 'incomplete' && strtoupper((string) ($attendanceRow['p2_status'] ?? '')) === 'PENDING_SYNC') {
+            $status = ['Sincronización pendiente', 'bg-transparent border text-info-emphasis'];
+        }
+    }
     $evaluatedRawEvents = is_array($attendanceRow['evaluated_raw_events'] ?? null)
         ? $attendanceRow['evaluated_raw_events'] : null;
     $evaluatedRawEventCount = is_int($attendanceRow['evaluated_raw_event_count'] ?? null)
@@ -381,12 +397,7 @@ if ($rosterFallbackDisplayed) {
                                     <?php endforeach; ?>
                                     <td>
                                         <span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span>
-                                        <?php if ($viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?>
-                                        <?php if ($viewRow['observed_time_labels'] !== []): ?>
-                                            <span class="d-block small text-body mt-1">
-                                                <?= count($viewRow['observed_time_labels']) === 1 ? 'Marcación observada: ' : 'Marcaciones observadas: ' ?><?= $esc(implode(', ', $viewRow['observed_time_labels'])) ?>
-                                            </span>
-                                        <?php endif; ?>
+                                        <?php if (($viewRow['status'][0] ?? '') === 'Resultado de Jornada no disponible' && $viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($viewRow['incidence_count'] !== null): ?>

@@ -6547,6 +6547,12 @@ final class ChecadorController extends BaseController
                 $row['journey_message'] = (string) ($persistedJourneyRead['message'] ?? 'No fue posible leer los resultados persistidos de Jornada.');
                 $row['schedule'] = null;
                 $row['schedule_error'] = (string) ($persistedJourneyRead['error'] ?? 'sql_unavailable');
+            } elseif ($journey === null && ($persistedJourneyRead['excluded_unverified_count'] ?? 0) > 0) {
+                $row['status'] = 'journey_unavailable';
+                $row['journey_status'] = 'RESULT_NOT_AVAILABLE';
+                $row['journey_message'] = 'Hay jornadas cuya identidad, adscripción o asignación de origen no pudo verificarse.';
+                $row['schedule'] = null;
+                $row['schedule_error'] = 'persisted_journey_unverified';
             } elseif ($journey === null) {
                 $row['journey_message'] = 'Jornada pendiente de evaluación.';
                 $row['schedule'] = null;
@@ -6671,6 +6677,7 @@ final class ChecadorController extends BaseController
         $journeys = [];
         $expectedTotal = null;
         $expectedPages = null;
+        $excludedUnverifiedCount = null;
         $page = 1;
         do {
             $result = $reader->read($workplaceId, $date, $date, $workerId, $page, 100);
@@ -6686,6 +6693,12 @@ final class ChecadorController extends BaseController
                 return ['ok' => false, 'journeys' => [], 'error' => $error, 'message' => $message];
             }
             $data = $result['data'];
+            $excluded = $data['excluded_unverified_count'] ?? null;
+            if (!is_int($excluded) || $excluded < 0 || ($excludedUnverifiedCount !== null && $excludedUnverifiedCount !== $excluded)) {
+                return ['ok' => false, 'journeys' => [], 'error' => 'persisted_data_inconsistent',
+                    'message' => 'No se pudo verificar el conjunto de jornadas excluidas.'];
+            }
+            $excludedUnverifiedCount = $excluded;
             $pagination = is_array($data['pagination'] ?? null) ? $data['pagination'] : [];
             $total = (int) ($pagination['total_records'] ?? -1);
             $pages = (int) ($pagination['total_pages'] ?? 0);
@@ -6727,7 +6740,8 @@ final class ChecadorController extends BaseController
             return ['ok' => false, 'journeys' => [], 'error' => 'persisted_data_inconsistent',
                 'message' => 'La lectura de Jornada devolvió más registros que el total confirmado.'];
         }
-        return ['ok' => true, 'journeys' => $journeys, 'error' => null, 'message' => ''];
+        return ['ok' => true, 'journeys' => $journeys, 'error' => null, 'message' => '',
+            'excluded_unverified_count' => $excludedUnverifiedCount ?? 0];
     }
 
     /** Adapts the stored schedule snapshot for the existing M01 view without resolving or recalculating it. */

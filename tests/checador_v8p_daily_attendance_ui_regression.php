@@ -132,8 +132,9 @@ $assert(str_contains($mainTable, 'Ana García') && str_contains($mainTable, 'EMP
     && str_contains($mainTable, '1.ª salida') && str_contains($mainTable, '2.ª entrada') && str_contains($mainTable, '2.ª salida')
     && str_contains($mainTable, 'Horario efectivo') && str_contains($mainTable, 'Estado'), 'main row retains the prior column layout with current schedule and status labels');
 $assert(str_contains($mainTable, 'Pendiente de clasificación')
-    && str_contains($mainTable, 'Marcaciones observadas: 19:06, 20:11'),
-    'additional observed times appear beside the neutral status without filling entry or exit slots');
+    && !str_contains($mainTable, 'Marcaciones observadas: 19:06, 20:11')
+    && str_contains($html, '19:06') && str_contains($html, '20:11'),
+    'unclassified events remain in detail without repetitive times in the main status');
 $assert(str_contains($mainTable, 'badge bg-transparent border text-secondary')
     && str_contains($mainTable, 'badge bg-transparent border text-body-secondary')
     && !str_contains($mainTable, 'text-bg-light')
@@ -144,9 +145,10 @@ $noObservedVars = $vars;
 $noObservedVars['attendanceRows'][0]['status'] = 'no_observed_event';
 $noObservedVars['attendanceRows'][0]['journey_message'] = 'Jornada pendiente de evaluación.';
 $noObservedHtml = $render($noObservedVars);
-$assert(str_contains($noObservedHtml, 'badge bg-transparent border text-body-secondary">Sin marcación observada')
-    && str_contains($noObservedHtml, 'Jornada pendiente de evaluación'),
-    'neutral attendance and pending-evaluation states use transparent badges');
+preg_match('/<table[^>]*id="checador-daily-attendance-table"[^>]*>([\s\S]*?)<\/table>/', $noObservedHtml, $noObservedTable);
+$assert(str_contains($noObservedTable[0] ?? '', 'badge bg-transparent border text-body-secondary">Sin marcación')
+    && !str_contains($noObservedTable[0] ?? '', 'Jornada pendiente de evaluación.'),
+    'neutral attendance uses a single concise badge');
 $notEvaluatedVars = $vars;
 $notEvaluatedVars['attendanceRows'][0]['status'] = 'journey_not_evaluated';
 $notEvaluatedHtml = $render($notEvaluatedVars);
@@ -174,8 +176,23 @@ $p1PendingHtml = $render($p1PendingVars);
 preg_match('/<table class="table table-striped table-bordered mb-0 text-nowrap align-middle portal-table portal-table--selectable" id="checador-daily-attendance-table">([\s\S]*?)<\/table>/', $p1PendingHtml, $p1PendingTableMatch);
 $p1PendingTable = $p1PendingTableMatch[0] ?? '';
 $assert(str_contains($p1PendingTable, 'Información insuficiente')
-    && str_contains($p1PendingTable, 'completitud de sincronización pendiente'),
-    'persisted P1 incompleteness remains visible when P2 is calculated');
+    && !str_contains($p1PendingTable, 'completitud de sincronización pendiente'),
+    'partial results retain a neutral status without a redundant technical message');
+$partialVars = $vars;
+$partialVars['selectedDate'] = '2026-11-27';
+$partialVars['attendanceRows'][0] = \App\Services\ChecadorAttendanceProjection::workerRow(
+    ['worker_id' => 565, 'full_name' => 'Colaborador de prueba'], [],
+    ['p1_status' => 'PENDING_SYNC_COMPLETION', 'p2_status' => 'PENDING_SYNC', 'pairing_current_status' => 'ready',
+        'persisted_pairing_events' => [['event_uuid' => 'fixture-entry-22', 'pairing_role' => 'ENTRY', 'segment_ordinal' => 1,
+            'ocurrido_at_utc' => '2026-11-27 16:57:04']]], 'America/Mexico_City');
+$partialVars['attendanceRows'][0]['p2_status'] = 'PENDING_SYNC';
+$partialVars['attendanceRows'][0]['journey_message'] = 'P1: completitud de sincronización pendiente';
+$partialHtml = $render($partialVars);
+preg_match('/<table[^>]*id="checador-daily-attendance-table"[^>]*>([\s\S]*?)<\/table>/', $partialHtml, $partialTable);
+$assert(str_contains($partialTable[0] ?? '', '10:57') && str_contains($partialTable[0] ?? '', 'Salida pendiente')
+    && !str_contains($partialTable[0] ?? '', 'Jornada pendiente de evaluación')
+    && !str_contains($partialTable[0] ?? '', 'Marcación observada:'),
+    'persisted partial ENTRY renders local time with a single provisional status');
 $scheduleStateVars = $vars;
 $scheduleStateVars['attendanceRows'][0]['schedule']['estado_jornada'] = 'UNSCHEDULED_DAY';
 $scheduleStateHtml = $render($scheduleStateVars);

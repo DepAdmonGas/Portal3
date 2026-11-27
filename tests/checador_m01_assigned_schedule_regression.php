@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 use App\Services\ChecadorWeeklyScheduleService;
 use App\Services\ChecadorAttendanceProjection;
+use App\Services\ChecadorJourneySqlReadService;
 $worker = ['worker_id'=>565, 'full_name'=>'Fixture'];
 $assignment = ['id'=>30,'id_personal'=>565,'id_estacion'=>1,'id_plantilla'=>8,'tipo_asignacion'=>'HABITUAL','dia_semana'=>'JUEVES','valido_desde'=>'2026-11-01','valido_hasta'=>null,'es_activo'=>1];
 $template = ['id'=>8,'nombre'=>'TURNO 1','segmentos'=>[['hora_inicio_local'=>'06:00:00','hora_fin_local'=>'14:00:00','dia_offset_inicio'=>0,'dia_offset_fin'=>0]]];
@@ -37,6 +38,13 @@ if (ChecadorAttendanceProjection::persistedJourneyStatus($partial) !== 'incomple
     || ($partialRow['slots']['ENTRY:1']['time_local']['time'] ?? '') !== '10:57'
     || ($partialRow['slots']['ENTRY:1']['event']['ocurrido_at_utc'] ?? '') !== '2026-11-27 16:57:04') {
     throw new RuntimeException('partial persisted J1 projection failed');
+}
+$segment = ['id_marcacion_entrada' => 22, 'id_marcacion_salida' => null];
+if (!ChecadorJourneySqlReadService::associationMatchesSegment('ENTRY', 22, $segment)
+    || ChecadorJourneySqlReadService::associationMatchesSegment('EXIT', 22, $segment)
+    || ChecadorJourneySqlReadService::associationMatchesSegment('ENTRY', 21, $segment)
+    || ChecadorJourneySqlReadService::associationMatchesSegment('ENTRY', 22, null)) {
+    throw new RuntimeException('J1 event/segment identity was not verified');
 }
 $conflict = $assignment; $conflict['id']=31;
 $matrix = ChecadorWeeklyScheduleService::matrix([$worker],[565=>[$assignment,$conflict]],[8=>$template],'2026-11-23');
