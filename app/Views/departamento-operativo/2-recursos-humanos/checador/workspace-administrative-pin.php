@@ -85,7 +85,7 @@ $selectedWorkplace = (int) ($selectedWorkplaceId ?? 0);
                                     <td><?= $esc($entry['issued_at_utc'] ?? 'No disponible') ?></td>
                                     <td><?= $esc($entry['actor_name'] ?? 'No disponible') ?></td><td><?= $esc($entry['device_name'] ?? 'No disponible') ?></td>
                                     <td><?= $esc($entry['expires_at_utc'] ?? 'No disponible') ?> UTC</td>
-                                    <td><?= $esc($entry['session_state'] ? 'Consumido · sesión ' . $entry['session_state'] : $entry['state']) ?></td>
+                                    <td><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-info-subtle border border-info-subtle text-body-emphasis"><i class="ti ti-info-circle" aria-hidden="true"></i><?= $esc($entry['session_state'] ? 'Consumido · sesión ' . $entry['session_state'] : $entry['state']) ?></span></td>
                                     <td><?php if (($adminPanel['can_revoke'] ?? false) && ($entry['session_state'] ?? '') === 'ACTIVE' && !empty($entry['session_id'])): ?>
                                         <form method="post" action="/departamento-operativo/recursos-humanos/checador/configuracion/admin-session/<?= rawurlencode((string) $entry['session_id']) ?>/revoke">
                                             <input type="hidden" name="_csrf_token" value="<?= $esc(\App\Core\CsrfToken::token()) ?>"><input type="hidden" name="workplace_id" value="<?= $selectedWorkplace ?>"><?php if (($administrativePinReturnTo ?? '') === 'acceso-temporal'): ?><input type="hidden" name="return_to" value="acceso-temporal"><?php endif; ?>

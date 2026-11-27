@@ -135,24 +135,27 @@ $assert(str_contains($mainTable, 'Pendiente de clasificación')
     && !str_contains($mainTable, 'Marcaciones observadas: 19:06, 20:11')
     && str_contains($html, '19:06') && str_contains($html, '20:11'),
     'unclassified events remain in detail without repetitive times in the main status');
-$assert(str_contains($mainTable, 'badge bg-transparent border text-secondary')
+$assert(str_contains($mainTable, 'badge checador-attendance-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-info-subtle')
     && str_contains($mainTable, 'badge bg-transparent border text-body-secondary')
     && !str_contains($mainTable, 'text-bg-light')
     && str_contains($portalTableStyles, 'tr.selected > * *:not(.dropdown-menu)')
     && str_contains($portalTableStyles, '--portal-table-selection-color: #fff'),
-    'status labels and incidence counters remain legible on the shared blue selected-row background');
+    'status uses existing badge utilities and the shared selection rule remains present');
+$assert(str_contains($portalTableStyles, 'table.table#checador-daily-attendance-table > tbody > tr.selected .checador-attendance-status-badge .ti')
+    && str_contains($portalTableStyles, '-webkit-text-fill-color: var(--bs-emphasis-color) !important;'),
+    'selected M01 status badge and icon retain the theme emphasis color');
 $noObservedVars = $vars;
 $noObservedVars['attendanceRows'][0]['status'] = 'no_observed_event';
 $noObservedVars['attendanceRows'][0]['journey_message'] = 'Jornada pendiente de evaluación.';
 $noObservedHtml = $render($noObservedVars);
 preg_match('/<table[^>]*id="checador-daily-attendance-table"[^>]*>([\s\S]*?)<\/table>/', $noObservedHtml, $noObservedTable);
-$assert(str_contains($noObservedTable[0] ?? '', 'badge bg-transparent border text-body-secondary">Sin marcación')
+$assert(str_contains($noObservedTable[0] ?? '', 'bg-body-secondary border text-body-emphasis') && str_contains($noObservedTable[0] ?? '', 'Sin marcación')
     && !str_contains($noObservedTable[0] ?? '', 'Jornada pendiente de evaluación.'),
     'neutral attendance uses a single concise badge');
 $notEvaluatedVars = $vars;
 $notEvaluatedVars['attendanceRows'][0]['status'] = 'journey_not_evaluated';
 $notEvaluatedHtml = $render($notEvaluatedVars);
-$assert(str_contains($notEvaluatedHtml, 'badge bg-transparent border text-secondary">Jornada pendiente de evaluación'),
+$assert(str_contains($notEvaluatedHtml, 'bg-info-subtle border border-info-subtle text-body-emphasis') && str_contains($notEvaluatedHtml, 'Jornada pendiente de evaluación'),
     'persisted journey-not-evaluated status uses the requested neutral label');
 $detailFooter = '';
 if (preg_match('/<div class="modal-footer">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/', $html, $footerMatches) === 1) {

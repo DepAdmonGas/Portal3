@@ -171,7 +171,7 @@
                                 <td><?= $breakSegments !== [] ? implode('<br>', array_map(static fn(array $segment): string => $endpointMarkup($segment, 'hora_inicio_local', 'dia_offset_inicio'), $breakSegments)) : '—' ?></td>
                                 <td><?= $breakSegments !== [] ? implode('<br>', array_map(static fn(array $segment): string => $endpointMarkup($segment, 'hora_fin_local', 'dia_offset_fin'), $breakSegments)) : '—' ?></td>
                                 <td><?= $workSegments !== [] ? $endpointMarkup($workSegments[array_key_last($workSegments)], 'hora_fin_local', 'dia_offset_fin') : '—' ?></td>
-                                <td><?= (int) ($template['es_activo'] ?? 0) === 1 ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>' ?></td>
+                                <td><?= (int) ($template['es_activo'] ?? 0) === 1 ? '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-success-subtle border border-success-subtle text-body-emphasis"><i class="ti ti-circle-check" aria-hidden="true"></i>Activa</span>' : '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-body-secondary border text-body-emphasis"><i class="ti ti-minus" aria-hidden="true"></i>Inactiva</span>' ?></td>
                                 <?php if (!empty($canManageStationTemplates)): ?>
                                     <td class="text-center">
                                         <?php if (strtoupper((string) ($template['scope'] ?? '')) === 'STATION'

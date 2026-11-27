@@ -196,7 +196,7 @@
                                     && !$hasHabitualAssignmentOnVerifiedDate;
                                 $coverageLabel = (string) ($habitualCoverage['label'] ?? 'No confirmada');
                                 $coverageClass = match ($coverageStatus) {
-                                    'complete' => 'text-bg-success', 'partial' => 'text-bg-warning', 'unassigned' => 'text-bg-secondary', default => 'text-bg-light border text-body',
+                                    'complete' => 'bg-success-subtle border-success-subtle', 'partial' => 'bg-warning-subtle border-warning-subtle', 'unassigned' => 'bg-body-secondary', default => 'bg-body-secondary',
                                 };
                                 $habitualButtonData = htmlspecialchars(json_encode($existingDays, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}', ENT_QUOTES, 'UTF-8');
                                 $replacementSourcesData = htmlspecialchars(json_encode($replacementSources, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8');
@@ -215,7 +215,7 @@
                                             <?php else: ?><span class="small text-muted"><?= htmlspecialchars((string) ($cell['label'] ?? 'Sin asignación confirmada'), ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?>
                                         </td>
                                     <?php endforeach; ?>
-                                    <td><span class="badge <?= $coverageClass ?>"><?= htmlspecialchars($coverageLabel, ENT_QUOTES, 'UTF-8') ?></span><div class="small text-muted mt-1"><?= (int) ($habitualCoverage['covered_days'] ?? 0) ?>/<?= (int) ($habitualCoverage['total_days'] ?? 7) ?> días</div></td>
+                                    <td><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis <?= $coverageClass ?>"><i class="ti ti-info-circle" aria-hidden="true"></i><?= htmlspecialchars($coverageLabel, ENT_QUOTES, 'UTF-8') ?></span><div class="small text-muted mt-1"><?= (int) ($habitualCoverage['covered_days'] ?? 0) ?>/<?= (int) ($habitualCoverage['total_days'] ?? 7) ?> días</div></td>
                                     <td class="text-center">
                                         <div class="dropdown dropstart">
                                             <button class="btn p-0 border-0 bg-transparent text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones de <?= htmlspecialchars($workerName, ENT_QUOTES, 'UTF-8') ?>"><i class="ti ti-dots-vertical fs-6" aria-hidden="true"></i></button>

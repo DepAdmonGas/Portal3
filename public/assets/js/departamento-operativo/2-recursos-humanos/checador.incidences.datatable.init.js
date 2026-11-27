@@ -259,7 +259,7 @@
                         const excerpt = reason.length > 160 ? reason.slice(0, 157) + '…' : reason;
                         return '<span class="text-break" title="' + escapeHtml(reason) + '">' + escapeHtml(excerpt) + '</span>';
                     } },
-                    { data: 'current_status', render: function (value, type) { return type === 'display' ? '<span class="badge ' + (value === 'PENDING_APPROVAL' ? 'text-bg-warning' : 'text-bg-secondary') + '">' + escapeHtml(statusLabel(value)) + '</span>' : value; } },
+                    { data: 'current_status', render: function (value, type) { return type === 'display' ? '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-body-emphasis border ' + (value === 'PENDING_APPROVAL' ? 'bg-warning-subtle border-warning-subtle' : 'bg-body-secondary') + '"><i class="ti ti-info-circle" aria-hidden="true"></i>' + escapeHtml(statusLabel(value)) + '</span>' : value; } },
                     { data: 'created_at_utc', render: function (value, type) { return type === 'display' ? '<span class="text-nowrap">' + escapeHtml(value || 'No disponible') + '</span>' : value; } },
                     { data: null, className: 'text-center', defaultContent: '', render: function (_value, type, row) { return type === 'display' ? renderActions(row, table) : ''; } }
                 ],

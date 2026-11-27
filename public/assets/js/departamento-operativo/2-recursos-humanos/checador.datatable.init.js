@@ -264,9 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
             statusElement.textContent = '';
             var badge = document.createElement('span');
             var knownBadgeClasses = ['text-bg-info', 'text-bg-warning', 'text-bg-danger', 'text-bg-secondary'];
-            badge.className = 'badge ' + (knownBadgeClasses.indexOf(row.processing_status_class) !== -1
-                ? row.processing_status_class
-                : 'text-bg-secondary');
+            badge.className = 'badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis ' + ({'text-bg-info':'bg-info-subtle border-info-subtle','text-bg-warning':'bg-warning-subtle border-warning-subtle','text-bg-danger':'bg-danger-subtle border-danger-subtle','text-bg-secondary':'bg-body-secondary'}[row.processing_status_class] || 'bg-body-secondary');
             badge.textContent = row.processing_status || 'Estado no disponible';
             statusElement.appendChild(badge);
             if (row.processing_explanation) {
@@ -398,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         : 'text-bg-secondary';
                     var labels = {entry:'Entrada', exit:'Salida', surplus:'Marcación adicional', unmatched:'Sin pareja', ambiguous:'Clasificación ambigua', pending:'Pendiente de clasificación', unavailable:'Clasificación no disponible'};
                     var classification = labels[row.j1_classification] || labels.unavailable;
-                    return '<span class="badge ' + badgeClass + '">' + escapeHtml(row.processing_status) + '</span><span class="d-block small">' + escapeHtml(classification) + '</span>';
+                    return '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis ' + ({'text-bg-info':'bg-info-subtle border-info-subtle','text-bg-warning':'bg-warning-subtle border-warning-subtle','text-bg-danger':'bg-danger-subtle border-danger-subtle','text-bg-secondary':'bg-body-secondary'}[badgeClass] || 'bg-body-secondary') + '"><i class="ti ti-info-circle" aria-hidden="true"></i>' + escapeHtml(row.processing_status) + '</span><span class="d-block small">' + escapeHtml(classification) + '</span>';
                 }
             },
             {

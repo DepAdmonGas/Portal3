@@ -1071,9 +1071,7 @@ final class ChecadorController extends BaseController
                 Session::set('checador_admin_pin_feedback',['type'=>'error','message'=>$message,'user_id'=>(int)$actor->id,'workplace_id'=>$workplaceId,'at'=>time()]);
             }
         }
-        $target = ($input['return_to'] ?? '') === 'acceso-temporal'
-            ? '/departamento-operativo/recursos-humanos/checador/acceso-temporal'
-            : '/departamento-operativo/recursos-humanos/checador/configuracion';
+        $target = '/departamento-operativo/recursos-humanos/checador/acceso-temporal';
         if($workplaceId!==null)$target.='?workplace_id='.$workplaceId;
         self::redirect($target);
     }
@@ -2415,13 +2413,7 @@ final class ChecadorController extends BaseController
             'devices' => [], 'history' => [], 'can_issue' => false, 'can_revoke' => false,
             'error' => $demoMode ? 'not_read_in_demo' : 'not_loaded',
         ];
-        $administrativePinFeedback = Session::pull('checador_admin_pin_feedback', null);
-        if (!is_array($administrativePinFeedback)
-            || (int) ($administrativePinFeedback['user_id'] ?? 0) !== (int) ($user->id ?? 0)
-            || (int) ($administrativePinFeedback['workplace_id'] ?? 0) !== (int) ($workplaceId ?? 0)
-            || (int) ($administrativePinFeedback['at'] ?? 0) < time() - 60) {
-            $administrativePinFeedback = null;
-        }
+        $administrativePinFeedback = null;
         if (!$demoMode && $workplaceId !== null && $user !== null) {
             $administrativePinPanel = (new ChecadorAdministrativePinSqlService())
                 ->readForWorkplace($user, $workplaceId);

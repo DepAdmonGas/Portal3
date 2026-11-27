@@ -86,19 +86,19 @@ $slotDefinitions = [
     'EXIT:2' => 'Salida 2',
 ];
 $statusPresentation = static fn(string $status): array => match ($status) {
-    'evaluated' => ['Evaluación disponible', 'bg-transparent border text-success-emphasis'],
-    'review' => ['Requiere revisión', 'bg-transparent border text-warning-emphasis'],
-    'ambiguous' => ['Registros por revisar', 'bg-transparent border text-warning-emphasis'],
-    'incomplete' => ['Información insuficiente', 'bg-transparent border text-info-emphasis'],
-    'pending_review' => ['Pendiente de revisión', 'bg-transparent border text-warning-emphasis'],
-    'classification_pending' => ['Pendiente de clasificación', 'bg-transparent border text-secondary'],
-    'no_observed_event' => ['Sin marcación', 'bg-transparent border text-body-secondary'],
-    'punches_unavailable' => ['Marcaciones no disponibles', 'bg-transparent border text-warning-emphasis'],
-    'journey_unavailable' => ['Resultado de Jornada no disponible', 'bg-transparent border text-warning-emphasis'],
-    'journey_not_evaluated' => ['Jornada pendiente de evaluación', 'bg-transparent border text-secondary'],
-    'calculation_unavailable' => ['Cálculo P2 no disponible', 'bg-transparent border text-warning-emphasis'],
-    'day_off_recorded' => ['Descanso persistido', 'bg-transparent border text-body-secondary'],
-    default => ['No determinado', 'bg-transparent border text-body-secondary'],
+    'evaluated' => ['Evaluación disponible', 'bg-success-subtle border border-success-subtle text-body-emphasis', 'ti-circle-check'],
+    'review' => ['Requiere revisión', 'bg-warning-subtle border border-warning-subtle text-body-emphasis', 'ti-alert-triangle'],
+    'ambiguous' => ['Registros por revisar', 'bg-warning-subtle border border-warning-subtle text-body-emphasis', 'ti-alert-triangle'],
+    'incomplete' => ['Información insuficiente', 'bg-info-subtle border border-info-subtle text-body-emphasis', 'ti-info-circle'],
+    'pending_review' => ['Pendiente de revisión', 'bg-warning-subtle border border-warning-subtle text-body-emphasis', 'ti-clock'],
+    'classification_pending' => ['Pendiente de clasificación', 'bg-info-subtle border border-info-subtle text-body-emphasis', 'ti-clock'],
+    'no_observed_event' => ['Sin marcación', 'bg-body-secondary border text-body-emphasis', 'ti-minus'],
+    'punches_unavailable' => ['Marcaciones no disponibles', 'bg-danger-subtle border border-danger-subtle text-body-emphasis', 'ti-alert-triangle'],
+    'journey_unavailable' => ['Resultado de Jornada no disponible', 'bg-danger-subtle border border-danger-subtle text-body-emphasis', 'ti-alert-triangle'],
+    'journey_not_evaluated' => ['Jornada pendiente de evaluación', 'bg-info-subtle border border-info-subtle text-body-emphasis', 'ti-clock'],
+    'calculation_unavailable' => ['Cálculo P2 no disponible', 'bg-danger-subtle border border-danger-subtle text-body-emphasis', 'ti-alert-triangle'],
+    'day_off_recorded' => ['Descanso persistido', 'bg-primary-subtle border border-primary-subtle text-body-emphasis', 'ti-info-circle'],
+    default => ['No determinado', 'bg-body-secondary border text-body-emphasis', 'ti-info-circle'],
 };
 $scheduleStatusLabel = static fn(string $status): string => match ($status) {
     'DAY_OFF' => 'Descanso programado',
@@ -231,9 +231,9 @@ foreach ($attendanceRows as $rowIndex => $attendanceRow) {
         if ($hasUnclassifiedEvent) {
             $status = $statusPresentation('classification_pending');
         } elseif ($rowStatus === 'incomplete' && is_array($entry) && $exit === null) {
-            $status = ['Salida pendiente', 'bg-transparent border text-info-emphasis'];
+            $status = ['Salida pendiente', 'bg-warning-subtle border border-warning-subtle text-body-emphasis', 'ti-clock'];
         } elseif ($rowStatus === 'incomplete' && strtoupper((string) ($attendanceRow['p2_status'] ?? '')) === 'PENDING_SYNC') {
-            $status = ['Sincronización pendiente', 'bg-transparent border text-info-emphasis'];
+            $status = ['Sincronización pendiente', 'bg-info-subtle border border-info-subtle text-body-emphasis', 'ti-refresh'];
         }
     }
     $evaluatedRawEvents = is_array($attendanceRow['evaluated_raw_events'] ?? null)
@@ -396,7 +396,7 @@ if ($rosterFallbackDisplayed) {
                                         </td>
                                     <?php endforeach; ?>
                                     <td>
-                                        <span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span>
+                                        <span class="badge checador-attendance-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 <?= $esc($viewRow['status'][1]) ?>"><i class="ti <?= $esc($viewRow['status'][2]) ?>" aria-hidden="true"></i><?= $esc($viewRow['status'][0]) ?></span>
                                         <?php if (($viewRow['status'][0] ?? '') === 'Resultado de Jornada no disponible' && $viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?>
                                     </td>
                                     <td>
@@ -459,7 +459,7 @@ if ($rosterFallbackDisplayed) {
                     <div class="modal-body">
                         <div class="row g-2 mb-3">
                             <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Horario efectivo</span><strong><?= $esc($viewRow['schedule']) ?></strong></div></div>
-                            <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Estado disponible</span><span class="badge <?= $esc($viewRow['status'][1]) ?>"><?= $esc($viewRow['status'][0]) ?></span><?php if ($viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?></div></div>
+                            <div class="col-12 col-md-6"><div class="border rounded p-2 h-100"><span class="d-block small text-muted">Estado disponible</span><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 <?= $esc($viewRow['status'][1]) ?>"><i class="ti <?= $esc($viewRow['status'][2]) ?>" aria-hidden="true"></i><?= $esc($viewRow['status'][0]) ?></span><?php if ($viewRow['journey_message'] !== ''): ?><span class="d-block small text-body-secondary mt-1"><?= $esc($viewRow['journey_message']) ?></span><?php endif; ?></div></div>
                         </div>
 
                         <section class="mb-3" aria-labelledby="<?= $esc($viewRow['modal_id']) ?>-slots-title">

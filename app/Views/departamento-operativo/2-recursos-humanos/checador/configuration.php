@@ -233,7 +233,7 @@ $readerProfileItemsJson = htmlspecialchars(
                         <div class="col-12 col-lg-6">
                             <div class="border rounded p-3 h-100">
                                 <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                                    <div><span class="badge text-bg-primary">Configuración vigente</span>
+                                    <div><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-primary-subtle border border-primary-subtle text-body-emphasis"><i class="ti ti-info-circle" aria-hidden="true"></i>Configuración vigente</span>
                                         <p class="small text-muted mt-2 mb-0">Vigente desde <span x-text="current?.effective_from_local_date || '—'"></span></p>
                                     </div>
                                     <i class="ti ti-circle-check text-primary fs-5" aria-hidden="true"></i>
@@ -263,7 +263,7 @@ $readerProfileItemsJson = htmlspecialchars(
                         <div class="col-12 col-lg-6">
                             <div class="border rounded p-3 h-100">
                                 <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                                    <div><span class="badge text-bg-info">Próxima configuración</span>
+                                    <div><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-info-subtle border border-info-subtle text-body-emphasis"><i class="ti ti-clock" aria-hidden="true"></i>Próxima configuración</span>
                                         <p class="small text-muted mt-2 mb-0">Inicia el <span x-text="next?.effective_from_local_date || '—'"></span></p>
                                     </div>
                                     <i class="ti ti-calendar-event text-primary fs-5" aria-hidden="true"></i>
@@ -532,7 +532,7 @@ $readerProfileItemsJson = htmlspecialchars(
                                     <tr data-device-id="<?= (int) ($linkDevice['id'] ?? 0) ?>">
                                         <td><span class="fw-semibold"><?= $esc($linkDevice['name'] ?? 'Dispositivo') ?></span><span class="small text-muted d-block">ID <?= (int) ($linkDevice['id'] ?? 0) ?></span></td>
                                         <td><?= $esc($linkStation['name'] ?? '') ?> · <?= (int) ($linkStation['id'] ?? 0) ?></td>
-                                        <td><span class="badge <?= $linkStatus === 'LINKED' ? 'text-bg-success' : ($linkStatus === 'CONFLICT' ? 'text-bg-warning' : 'text-bg-secondary') ?>"><?= $esc($linkStatusLabel) ?></span><span class="small text-muted d-block">Dispositivo: <?= ($linkDevice['persisted_status'] ?? '') === 'ACTIVE' ? 'activo' : 'inactivo' ?></span><span class="small text-muted d-block">Biometría: <?= ($linkItem['biometric_grant_status'] ?? '') === 'AUTHORIZED' ? 'autorizada' : 'no autorizada' ?></span></td>
+                                        <td><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis <?= $linkStatus === 'LINKED' ? 'bg-success-subtle border-success-subtle' : ($linkStatus === 'CONFLICT' ? 'bg-warning-subtle border-warning-subtle' : 'bg-body-secondary') ?>"><i class="ti ti-info-circle" aria-hidden="true"></i><?= $esc($linkStatusLabel) ?></span><span class="small text-muted d-block">Dispositivo: <?= ($linkDevice['persisted_status'] ?? '') === 'ACTIVE' ? 'activo' : 'inactivo' ?></span><span class="small text-muted d-block">Biometría: <?= ($linkItem['biometric_grant_status'] ?? '') === 'AUTHORIZED' ? 'autorizada' : 'no autorizada' ?></span></td>
                                         <td><?= $esc($linkItem['last_linked_at_utc'] ?? 'Sin vinculación confirmada') ?><?= !empty($linkItem['last_linked_at_utc']) ? ' UTC' : '' ?></td>
                                         <td><span data-pending-expiry><?= $esc($linkItem['pending_token_expires_at_utc'] ?? 'Sin token pendiente') ?></span><?= !empty($linkItem['pending_token_expires_at_utc']) ? ' UTC' : '' ?></td>
                                         <?php if ($canManageDeviceLink): ?>
@@ -574,7 +574,7 @@ $readerProfileItemsJson = htmlspecialchars(
                 <?php if ($canReadDeviceLink && !$canManageDeviceLink): ?><p class="small text-muted mt-2 mb-0">Acceso de consulta; la administración está reservada al Encargado autorizado de la estación.</p><?php endif; ?>
             </div>
 
-            <?php require __DIR__ . '/workspace-administrative-pin.php'; ?>
+            <?php $administrativePinHistoryOnly = true; $administrativePinPanel['can_revoke'] = false; require __DIR__ . '/workspace-administrative-pin.php'; ?>
 
             <?php if (!empty($canEditReaderProfiles) && !empty($m11ConfigurationPostEnabled) && ($demoMode ?? false) !== true): ?>
                 <div class="modal fade" id="m11-reader-profile-modal" tabindex="-1" aria-labelledby="m11-reader-profile-title" aria-hidden="true">
@@ -760,7 +760,7 @@ $readerProfileItemsJson = htmlspecialchars(
                                     <td><?= $esc((string) ($permission['module'] ?? '')) ?></td>
                                     <td><?= $esc((string) ($permission['action'] ?? '')) ?></td>
                                     <td><?= $esc((string) ($permission['scope'] ?? '')) ?></td>
-                                    <td><span class="badge <?= !empty($permission['allowed']) ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= !empty($permission['allowed']) ? 'Permitido' : 'No permitido' ?></span></td>
+                                    <td><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 border text-body-emphasis <?= !empty($permission['allowed']) ? 'bg-success-subtle border-success-subtle' : 'bg-body-secondary' ?>"><i class="ti ti-info-circle" aria-hidden="true"></i><?= !empty($permission['allowed']) ? 'Permitido' : 'No permitido' ?></span></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

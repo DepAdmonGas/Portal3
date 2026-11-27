@@ -311,7 +311,7 @@ $filters = is_array($filters ?? null) ? $filters : [];
                                 <tr>
                                     <td><?= $e($context['fecha_local'] ?? 'No disponible') ?></td>
                                     <td><?= $e($scheduleText) ?></td>
-                                    <td><?= $e($sourceLabel((string) ($journey['journey_status'] ?? 'unavailable'))) ?></td>
+                                    <td><span class="badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-info-subtle border border-info-subtle text-body-emphasis"><i class="ti ti-info-circle" aria-hidden="true"></i><?= $e($sourceLabel((string) ($journey['journey_status'] ?? 'unavailable'))) ?></span></td>
                                     <td><?= $e($duration) ?></td>
                                     <td>P1 <?= $e($provenance['p1_revision'] ?? '—') ?> · P2 <?= $e($provenance['p2_revision'] ?? '—') ?></td>
                                     <td>L2 <?= $e($pairing['estado_completitud_l2'] ?? 'No disponible') ?> · <?= $e($provenance['p2_created_at_utc'] ?? $provenance['p1_created_at_utc'] ?? 'Fecha no disponible') ?></td>

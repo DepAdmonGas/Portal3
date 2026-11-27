@@ -18,9 +18,6 @@ $capabilityBase = '/departamento-operativo/recursos-humanos/checador/configuraci
                 <i class="ti ti-shield-lock" aria-hidden="true"></i>
                 <h1 class="h5 mb-0 text-white">Permisos y capacidades del Checador</h1>
             </div>
-            <a class="btn bg-danger-subtle text-danger" href="/departamento-operativo/recursos-humanos/checador/configuracion">
-                <i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Volver a Configuración
-            </a>
         </div>
         <div class="card-body">
             <?php if (empty($actorAccess['can_write'])): ?>

@@ -105,11 +105,11 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
                                     $validUuid = preg_match('/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/iD', $uuid) === 1;
                                     $statusCode = strtoupper((string) ($coverage['status_code'] ?? ''));
                                     $statusClass = match ($statusCode) {
-                                        'REQUESTED' => 'text-bg-warning',
-                                        'AUTHORIZED' => 'text-bg-success',
-                                        'CANCELLED' => 'text-bg-secondary',
-                                        'REJECTED' => 'text-bg-danger',
-                                        default => 'text-bg-light border',
+                                        'REQUESTED' => 'bg-warning-subtle border border-warning-subtle',
+                                        'AUTHORIZED' => 'bg-success-subtle border border-success-subtle',
+                                        'CANCELLED' => 'bg-body-secondary border',
+                                        'REJECTED' => 'bg-danger-subtle border border-danger-subtle',
+                                        default => 'bg-body-secondary border',
                                     };
                                     $actions = [];
                                     if ($validUuid) {
@@ -128,7 +128,7 @@ $filterWorkers = array_replace(array_fill_keys(array_keys($filterWorkers), ''), 
                                         <td><?= $esc($coverage['home_label'] ?? 'Localidad habitual no disponible') ?></td>
                                         <td><?= $esc($coverage['coverage_label'] ?? 'Localidad de cobertura no disponible') ?></td>
                                         <td data-order="<?= $esc($coverage['from_local'] ?? '') ?>"><?= $esc($coverage['period_label'] ?? 'Periodo no disponible') ?></td>
-                                        <td><span class="badge <?= $esc($statusClass) ?>"><?= $esc($coverage['status_label'] ?? 'Estado no disponible') ?></span></td>
+                                        <td><span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-body-emphasis <?= $esc($statusClass) ?>"><i class="ti ti-info-circle" aria-hidden="true"></i><?= $esc($coverage['status_label'] ?? 'Estado no disponible') ?></span></td>
                                         <td data-order="<?= $esc($coverage['requested_at_utc'] ?? '') ?>"><?= $esc($coverage['requested_at_label'] ?? 'Fecha no disponible') ?></td>
                                         <td class="text-center">
                                             <?php if (count($actions) === 1): ?>

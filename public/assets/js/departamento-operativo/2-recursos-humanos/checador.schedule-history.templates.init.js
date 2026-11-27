@@ -452,7 +452,7 @@
                 cells[2].innerHTML = breaks.length ? breaks.map(segment => this.endpointMarkup(segment, 'hora_inicio_local', 'dia_offset_inicio')).join('<br>') : '—';
                 cells[3].innerHTML = breaks.length ? breaks.map(segment => this.endpointMarkup(segment, 'hora_fin_local', 'dia_offset_fin')).join('<br>') : '—';
                 cells[4].innerHTML = work.length ? this.endpointMarkup(work[work.length - 1], 'hora_fin_local', 'dia_offset_fin') : '—';
-                cells[5].innerHTML = Number(template.es_activo) === 1 ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>';
+                cells[5].innerHTML = Number(template.es_activo) === 1 ? '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-success-subtle border border-success-subtle text-body-emphasis"><i class="ti ti-circle-check" aria-hidden="true"></i>Activa</span>' : '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-body-secondary border text-body-emphasis"><i class="ti ti-minus" aria-hidden="true"></i>Inactiva</span>';
                 cells[6].innerHTML = this.actionMarkup(template);
                 [cells[1], cells[2], cells[3], cells[4]].forEach(cell => cell.removeAttribute('data-order'));
                 formatTableTimes(rowNode);
@@ -475,7 +475,7 @@
                     ['td', breaks.length ? breaks.map(s => this.endpointMarkup(s, 'hora_inicio_local', 'dia_offset_inicio')).join('<br>') : '—'],
                     ['td', breaks.length ? breaks.map(s => this.endpointMarkup(s, 'hora_fin_local', 'dia_offset_fin')).join('<br>') : '—'],
                     ['td', work.length ? this.endpointMarkup(work[work.length - 1], 'hora_fin_local', 'dia_offset_fin') : '—'],
-                    ['td', Number(template.es_activo) === 1 ? '<span class="badge text-bg-success">Activa</span>' : '<span class="badge text-bg-secondary">Inactiva</span>'],
+                    ['td', Number(template.es_activo) === 1 ? '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-success-subtle border border-success-subtle text-body-emphasis"><i class="ti ti-circle-check" aria-hidden="true"></i>Activa</span>' : '<span class="badge checador-status-badge rounded-pill fw-semibold d-inline-flex align-items-center gap-1 bg-body-secondary border text-body-emphasis"><i class="ti ti-minus" aria-hidden="true"></i>Inactiva</span>'],
                     ['td', this.actionMarkup(template)],
                 ];
                 cells.forEach(([tagName, markup], index) => {
